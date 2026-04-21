@@ -1,0 +1,22 @@
+stages:
+  - lint
+
+lint-frontend:
+  stage: lint
+  image: node:20-alpine
+  script:
+    - cd frontend
+    - npm install
+    - npm run lint
+  tags:
+    - docker
+
+lint-backend:
+  stage: lint
+  image: node:20-alpine
+  script:
+    - cd backend
+    - npm install
+    - npm run lint
+  tags:
+    - docker
