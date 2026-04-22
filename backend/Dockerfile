@@ -14,8 +14,6 @@ COPY package*.json ./
 
 COPY prisma ./prisma
 
-RUN npx prisma generate
-
 
 # ─────────────────────── STAGE 2 — DEVELOPMENT ────────────────────
 
@@ -23,7 +21,9 @@ FROM base AS development
 
 ENV NODE_ENV=development
 
-RUN npm ci   
+RUN npm ci  
+
+RUN npx prisma generate
 
 COPY . .
 
@@ -41,19 +41,13 @@ ENV NODE_ENV=production
 
 RUN npm ci --omit=dev
 
+RUN npx prisma generate 
+
 COPY . .
 
 EXPOSE 3000
 
 CMD ["npm", "run", "start"]
-
-
-
-
-
-
-
-
 
 
 
