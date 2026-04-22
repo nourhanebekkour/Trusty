@@ -1,0 +1,740 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum StatusValidation {
+  EN_ATTENTE
+  VALIDE
+  REJETE
+}
+
+enum Role {
+  ETUDIANT
+  PROFESSEUR
+  ADMINISTRATEUR
+  PROFESSIONNEL
+}
+enum Niveau {
+  DEBUTANT
+  INTERMEDIAIRE
+  AVANCE
+  EXPERT
+}
+
+enum StatusUtilisateur {
+  INACTIF
+  ACTIF
+  SUSPENDU
+}
+
+enum NiveauAcces {
+  SUPER_ADMIN
+  ADMIN
+}
+
+enum Filiere {
+  GINF
+  GSEA
+  GSR
+  GIND
+  G2EI
+  CSI
+}
+
+enum Departement {
+  SIC
+  GEI
+  MI
+  LCM
+}
+
+enum TypeProjet {
+  MODULE
+  INTEGRATION
+  PFA
+  PFE
+  STAGE
+  PERSONNEL
+  HACKATHON
+  AUTRE
+}
+
+enum TypeCompetence {
+  TECHNIQUE
+  COMPORTEMENTALE
+}
+
+enum TypeEntite {
+  PROJET
+  STAGE
+  ACTIVITE
+  RECOMMANDATION
+  COMMENTAIRE
+}
+
+enum TypeCible {
+  PROJET
+  COMPETENCE
+  PROFIL
+}
+
+enum TypeLettre {
+  DOUBLE_DIPLOME
+  STAGE
+  PFE
+  MASTER
+  EMPLOI
+  INTERNATIONAL
+}
+
+enum TypeNotification {
+  VALIDATION
+  COMMENTAIRE
+  RECOMMANDATION
+  ATTESTATION
+  SUGGESTION
+}
+
+enum TypeAction {
+  CREATION
+  MODIFICATION
+  SUPPRESSION
+  VALIDATION
+}
+
+enum VisibiliteProfil {
+  PUBLIC
+  PRIVE
+  ENSEIGNANTS_UNIQUEMENT
+  LIEN_PARTAGE
+}
+
+enum TypeActivite {
+  CLUB
+  EVENEMENT
+  HACKATHON
+  COMPETITION
+  ENGAGEMENT
+}
+
+// ============================================================================
+// 1. ENTITES UTILISATEURS
+// ============================================================================
+
+model Utilisateur {
+  id_utilisateur          String    @id @default(cuid())
+  email                   String    @unique @db.VarChar(255)
+  mot_de_passe            String    @db.VarChar(255)
+  nom                     String    @db.VarChar(100)
+  prenom                  String    @db.VarChar(100)
+  telephone               String?   @db.VarChar(20)
+  role                   Role      @default(ETUDIANT)
+  date_creation           DateTime  @default(now())
+  date_modification       DateTime? @updatedAt
+  derniere_connexion      DateTime?
+  status_compte           StatusUtilisateur @default(INACTIF)
+  email_verifie           Boolean   @default(false)
+  token_reinitialisation  String?   @db.VarChar(255)
+  date_expiration_token   DateTime?
+
+  // Relations
+  etudiant                Etudiant?
+  professeur              Professeur?
+  administrateur          Administrateur?
+  professionnel           Professionnel?
+  
+  // Relations fichiers et historiques
+  fichiers_uploades       Fichier[]
+  notifications           Notification[]
+  historique_connexions   HistoriqueConnexion[]
+  historique_actions      HistoriqueAction[]
+  historique_validation      HistoriqueValidation[]
+  commentaires            Commentaire[]
+  consultations           Consultation[]
+  recommandations Recommandation[]
+
+  @@map("utilisateurs")
+}
+
+model Administrateur {
+  id_administrateur String       @id
+  niveau_acces      NiveauAcces  @default(ADMIN)
+  derniere_action   DateTime?
+
+  // Relations
+  utilisateur       Utilisateur  @relation(fields: [id_administrateur], references: [id_utilisateur], onDelete: Cascade)
+  comptes_valides   Professionnel[]
+  modeles_crees     ModelePortfolio[]
+
+  @@map("administrateurs")
+}
+
+model Etudiant {
+  id_etudiant               String    @id
+  numero_etudiant           String?    @unique @db.VarChar(20)
+  filiere                   String?    @db.VarChar(100)
+  annee                     Int?
+  date_naissance            DateTime?
+  adresse                   String?   @db.VarChar(255)
+  ville                     String?   @db.VarChar(100)
+  pays                      String?   @db.VarChar(100) @default("Maroc")
+  biographie                String?   @db.Text
+  linkedin_url              String?   @db.VarChar(500)
+  github_username           String?   @db.VarChar(100)
+  site_web                  String?   @db.VarChar(500)
+  objectif_professionnel    String?   @db.VarChar(100)
+  score_credibilite         Int       @default(0)
+  niveau_credibilite        Niveau    @default(DEBUTANT)
+  visibilite_profil         VisibiliteProfil @default(PUBLIC)
+
+  // Relations
+  utilisateur               Utilisateur @relation(fields: [id_etudiant], references: [id_utilisateur], onDelete: Cascade)
+  
+  // Relations métier
+  portfolio                 Portfolio?
+  participations_projets    ParticipationProjet[]
+  stages                    Stage[]
+  activites_parascolaires   ActiviteParascolaire[]
+  formations                Formation[]
+  competences               EtudiantCompetence[]
+  recommendation        Recommandation[]  
+  lettres_recommandation    LettreRecommandation[]
+  badges                    EtudiantBadge[]
+  depots_github             DepotGitHub[]
+  suggestions               SuggestionSysteme[]
+
+  @@map("etudiants")
+}
+
+model Professeur {
+  id_professeur     String      @id
+  departement       Departement?
+  specialite        String?      @db.VarChar(100)
+  filieres_interv   Filiere[]
+  date_naissance    DateTime?
+  adresse           String?     @db.VarChar(255)
+  ville             String?     @db.VarChar(100)
+  pays              String?     @db.VarChar(100)
+  biographie        String?     @db.Text
+
+  // Relations
+  utilisateur       Utilisateur @relation(fields: [id_professeur], references: [id_utilisateur], onDelete: Cascade)
+  
+  // Validations
+  projets_valides   Projet[]
+  stages_valides    Stage[]
+  activites_valides ActiviteParascolaire[]
+  lettres_redigees  LettreRecommandation[]
+
+  @@map("professeurs")
+}
+
+model Professionnel {
+  id_professionnel      String            @id
+  entreprise            String?            @db.VarChar(200)
+  poste                 String?           @db.VarChar(100)
+  secteur_activite      String?           @db.VarChar(100)
+  email_professionnel   String?            @db.VarChar(255)
+  status_validation     StatusValidation  @default(EN_ATTENTE)
+  date_demande          DateTime          @default(now())
+  date_validation       DateTime?
+  id_validateur         String?
+  id_justificatif       String?           @unique
+
+  // Relations
+  utilisateur           Utilisateur       @relation(fields: [id_professionnel], references: [id_utilisateur], onDelete: Cascade)
+  justificatif          Fichier?          @relation(fields: [id_justificatif], references: [id_fichier], onDelete: SetNull)
+  administrateur        Administrateur?   @relation(fields: [id_validateur], references: [id_administrateur], onDelete: SetNull)
+
+  @@map("professionnels")
+}
+
+// ============================================================================
+// 2. ENTITES METIER
+// ============================================================================
+
+model Projet {
+  id_projet               String            @id @default(cuid())
+  titre                   String            @db.VarChar(200)
+  description             String            @db.Text
+  type_projet             TypeProjet        @default(AUTRE)
+  date_debut              DateTime
+  date_fin                DateTime?
+  lien_github             String?           @db.VarChar(500)
+  lien_youtube            String?           @db.VarChar(500)
+  lien_demo               String?           @db.VarChar(500)
+  resultats_obtenus       String?           @db.Text
+  nombre_collaborateurs   Int               @default(1)
+  status_validation       StatusValidation  @default(EN_ATTENTE)
+  date_soumission         DateTime          @default(now())
+  date_validation         DateTime?
+  commentaire_validation  String?           @db.Text
+  appreciation            String?           @db.VarChar(50)
+  est_mis_en_avant        Boolean           @default(false)
+  est_public              Boolean           @default(true)
+  date_creation           DateTime          @default(now())
+  date_modification       DateTime?         @updatedAt
+  id_validateur           String?
+
+  // Relations
+  validateur              Professeur?       @relation(fields: [id_validateur], references: [id_professeur], onDelete: SetNull)
+  participations          ParticipationProjet[]
+  technologies            ProjetTechnologie[]
+  fichiers                Fichier[]
+  commentaires            Commentaire[]
+
+  @@map("projets")
+}
+
+model ParticipationProjet {
+  id_projet             String
+  id_etudiant           String
+  est_visible_portfolio Boolean   @default(true)
+  role_joue             String    @db.VarChar(100)
+  date_debut            DateTime
+  date_fin              DateTime?
+  est_createur          Boolean   @default(false)
+
+  // Relations
+  projet                Projet    @relation(fields: [id_projet], references: [id_projet], onDelete: Cascade)
+  etudiant              Etudiant  @relation(fields: [id_etudiant], references: [id_etudiant], onDelete: Cascade)
+
+  @@id([id_projet, id_etudiant])
+  @@map("participations_projets")
+}
+
+model Stage {
+  id_stage                String            @id @default(cuid())
+  entreprise              String            @db.VarChar(200)
+  adresse_entreprise      String?           @db.VarChar(255)
+  poste                   String            @db.VarChar(100)
+  date_debut              DateTime
+  date_fin                DateTime?
+  duree_semaines          Int?
+  missions                String            @db.Text
+  encadrant_professionnel String?           @db.VarChar(200)
+  encadrant_academique    String?           @db.VarChar(100)
+  status_validation       StatusValidation  @default(EN_ATTENTE)
+  date_soumission         DateTime          @default(now())
+  date_validation         DateTime?
+  commentaire_validation  String?           @db.Text
+  est_public              Boolean           @default(true)
+  id_etudiant             String
+  id_validateur           String?
+  id_rapport              String?           @unique
+
+  // Relations
+  etudiant                Etudiant          @relation(fields: [id_etudiant], references: [id_etudiant], onDelete: Cascade)
+  validateur              Professeur?       @relation(fields: [id_validateur], references: [id_professeur], onDelete: SetNull)
+  rapport                 Fichier?          @relation(fields: [id_rapport], references: [id_fichier], onDelete: SetNull)
+  technologies            StageTechnologie[]
+
+  @@map("stages")
+}
+
+model ActiviteParascolaire {
+  id_activite             String            @id @default(cuid())
+  type_activite           TypeActivite
+  nom_activite            String            @db.VarChar(200)
+  organisation            String?           @db.VarChar(200)
+  date_debut              DateTime
+  date_fin                DateTime?
+  description             String?           @db.Text
+  role                    String?           @db.VarChar(100)
+  status_validation       StatusValidation  @default(EN_ATTENTE)
+  date_soumission         DateTime          @default(now())
+  date_validation         DateTime?
+  commentaire_validation  String?           @db.Text
+  est_public              Boolean           @default(true)
+  id_etudiant             String
+  id_validateur           String?
+  id_attestation          String?            @unique
+
+  // Relations
+  etudiant                Etudiant          @relation(fields: [id_etudiant], references: [id_etudiant], onDelete: Cascade)
+  validateur              Professeur?       @relation(fields: [id_validateur], references: [id_professeur], onDelete: SetNull)
+  attestation             Fichier?          @relation(fields: [id_attestation], references: [id_fichier], onDelete: SetNull)
+
+  @@map("activites_parascolaires")
+}
+
+// ============================================================================
+// 3. PARCOURS ACADEMIQUE
+// ============================================================================
+
+model Formation {
+  id_formation    String    @id @default(cuid())
+  diplome         String    @db.VarChar(200)
+  etablissement   String    @db.VarChar(200)
+  date_debut      DateTime
+  date_fin        DateTime?
+  description     String?   @db.Text
+  mention         String?   @db.VarChar(50)
+  est_actuelle    Boolean   @default(false)
+  id_etudiant     String
+
+  // Relations
+  etudiant        Etudiant  @relation(fields: [id_etudiant], references: [id_etudiant], onDelete: Cascade)
+
+  @@unique([id_etudiant, etablissement, diplome, date_debut])
+  @@map("formations")
+}
+
+// ============================================================================
+// 4. COMPETENCES ET TECHNOLOGIES
+// ============================================================================
+
+model Competence {
+  id_competence   String    @id @default(cuid())
+  nom             String    @unique @db.VarChar(100)
+  type            TypeCompetence
+  categorie       String?   @db.VarChar(100)
+  description     String?   @db.Text
+  icone           String?   @db.VarChar(500)
+
+  // Relations
+  etudiants       EtudiantCompetence[]
+
+  @@map("competences")
+}
+
+model EtudiantCompetence {
+  id_etudiant       String
+  id_competence     String
+  niveau_maitrise   Int       @default(0)
+  date_ajout        DateTime  @default(now())
+
+  // Relations
+  etudiant          Etudiant    @relation(fields: [id_etudiant], references: [id_etudiant], onDelete: Cascade)
+  competence        Competence  @relation(fields: [id_competence], references: [id_competence], onDelete: Cascade)
+
+  @@id([id_etudiant, id_competence])
+  @@map("etudiants_competences")
+}
+
+model Technologie {
+  id_technologie    String    @id @default(cuid())
+  nom               String    @unique @db.VarChar(100)
+  categorie         String    @db.VarChar(50)
+  sous_categorie    String?   @db.VarChar(50)
+  description       String?   @db.Text
+  icone             String?   @db.VarChar(500)
+
+  // Relations
+  projets           ProjetTechnologie[]
+  stages            StageTechnologie[]
+
+  @@map("technologies")
+}
+
+model ProjetTechnologie {
+  id_projet           String
+  id_technologie      String
+  version             String?   @db.VarChar(50)
+  niveau_utilisation  Niveau    @default(DEBUTANT)
+
+  // Relations
+  projet              Projet        @relation(fields: [id_projet], references: [id_projet], onDelete: Cascade)
+  technologie         Technologie   @relation(fields: [id_technologie], references: [id_technologie], onDelete: Cascade)
+
+  @@id([id_projet, id_technologie])
+  @@map("projets_technologies")
+}
+
+model StageTechnologie {
+  id_stage            String
+  id_technologie      String
+  version             String?   @db.VarChar(50)
+  niveau_utilisation  Niveau    @default(DEBUTANT)
+
+  // Relations
+  stage               Stage         @relation(fields: [id_stage], references: [id_stage], onDelete: Cascade)
+  technologie         Technologie   @relation(fields: [id_technologie], references: [id_technologie], onDelete: Cascade)
+
+  @@id([id_stage, id_technologie])
+  @@map("stages_technologies")
+}
+
+// ============================================================================
+// 5. VALIDATION ET FICHIERS
+// ============================================================================
+
+model HistoriqueValidation {
+  id_validation       String            @id @default(cuid())
+  type_entite         TypeEntite
+  id_entite           String
+  status_validation   StatusValidation
+  date_soumission     DateTime
+  date_decision       DateTime?
+  commentaires        String?           @db.Text
+  appreciation        String?           @db.VarChar(50)
+  id_validateur       String
+
+  // Relations
+  validateur          Utilisateur  @relation(fields: [id_validateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@map("historiques_validations")
+}
+
+model Fichier {
+  id_fichier          String    @id @default(cuid())
+  nom_original        String    @db.VarChar(255)
+  nom_stockage        String    @unique @db.VarChar(255)
+  categorie           String    @db.VarChar(20)
+  chemin_minio        String    @db.VarChar(500)
+  type_mime           String    @db.VarChar(100)
+  taille_octets       Int
+  date_upload         DateTime  @default(now())
+  id_projet           String?
+  id_uploader         String
+
+  // Relations
+  projet              Projet?   @relation(fields: [id_projet], references: [id_projet], onDelete: SetNull)
+  uploader            Utilisateur @relation(fields: [id_uploader], references: [id_utilisateur], onDelete: Cascade)
+  
+  // Relations inverses
+  professionnels      Professionnel?
+  stages              Stage?
+  activites           ActiviteParascolaire?
+  lettres             LettreRecommandation?
+  modeles_portfolio   ModelePortfolio?
+
+
+  @@map("fichiers")
+}
+
+model LettreRecommandation {
+  id_lettre           String            @id @default(cuid())
+  id_etudiant         String
+  id_redacteur        String
+  type_lettre         TypeLettre
+  destinataire        String            @db.VarChar(255)
+  description         String?           @db.Text
+  date_redaction      DateTime          @default(now())
+  date_validation     DateTime?
+  id_fichier_pdf      String          @unique
+
+  // Relations
+  etudiant            Etudiant          @relation(fields: [id_etudiant], references: [id_etudiant], onDelete: Cascade)
+  redacteur           Professeur        @relation(fields: [id_redacteur], references: [id_professeur], onDelete: Cascade)
+  fichier_pdf         Fichier           @relation(fields: [id_fichier_pdf], references: [id_fichier], onDelete: Cascade)
+
+  @@map("lettres_recommandation")
+}
+
+// ============================================================================
+// 6. INTERACTIONS
+// ============================================================================
+
+model Commentaire {
+  id_commentaire      String            @id @default(cuid())
+  id_auteur           String
+  id_etudiant_cible   String
+  id_projet_cible     String?
+  id_competence_cible String?
+  type_cible          TypeCible
+  contenu             String            @db.Text
+  status              StatusValidation  @default(EN_ATTENTE)
+  date_creation       DateTime          @default(now())
+  date_validation     DateTime?
+
+  // Relations
+  auteur              Utilisateur       @relation(fields: [id_auteur], references: [id_utilisateur], onDelete: Cascade)
+  projet              Projet?           @relation(fields: [id_projet_cible], references: [id_projet], onDelete: SetNull)
+
+  @@map("commentaires")
+}
+
+model Recommandation {
+  id_recommandation   String            @id @default(cuid())
+  id_etudiant         String
+  id_recommandeur     String
+  message             String?           @db.Text
+  status              StatusValidation  @default(EN_ATTENTE)
+  date_creation       DateTime          @default(now())
+  date_validation     DateTime?
+
+  // Relations
+  auteur              Utilisateur       @relation(fields: [id_recommandeur], references: [id_utilisateur], onDelete: Cascade)
+  cible      Etudiant    @relation(fields: [id_etudiant], references: [id_etudiant], onDelete: Cascade)
+
+  @@map("recommandations")
+}
+
+model Portfolio {
+  id_portfolio              String    @id @default(cuid())
+  id_etudiant               String    @unique
+  id_modele                 String?
+  titre_personnalise        String?   @db.VarChar(200)
+  sous_titre                String?   @db.VarChar(255)
+  url_publique              String?   @unique @db.VarChar(255)
+  nombre_vues               Int       @default(0)
+  nombre_recommandations    Int       @default(0)
+  est_publie                Boolean   @default(false)
+  date_creation             DateTime  @default(now())
+  date_derniere_maj         DateTime? @updatedAt
+  date_publication          DateTime?
+
+  // Relations
+  etudiant                  Etudiant          @relation(fields: [id_etudiant], references: [id_etudiant], onDelete: Cascade)
+  modele                    ModelePortfolio?  @relation(fields: [id_modele], references: [id_modele], onDelete: SetNull)
+  consultations             Consultation[]
+
+  @@map("portfolios")
+}
+
+model Consultation {
+  id_consultation     String    @id @default(cuid())
+  id_portfolio        String
+  id_utilisateur      String
+  date_consultation   DateTime  @default(now())
+
+  // Relations
+  portfolio           Portfolio @relation(fields: [id_portfolio], references: [id_portfolio], onDelete: Cascade)
+  utilisateur          Utilisateur? @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@map("consultations")
+}
+
+model ModelePortfolio {
+  id_modele           String    @id @default(cuid())
+  nom                 String    @db.VarChar(100)
+  description         String?   @db.Text
+  categorie           String    @db.VarChar(50)
+  fichier_css         String    @db.VarChar(500)
+  est_actif           Boolean   @default(true)
+  date_creation       DateTime  @default(now())
+  id_admin_createur   String
+  id_apercu           String    @unique
+
+  // Relations
+  admin_createur      Administrateur  @relation(fields: [id_admin_createur], references: [id_administrateur], onDelete: Cascade)
+  apercu              Fichier         @relation(fields: [id_apercu], references: [id_fichier], onDelete: Cascade)
+  portfolios          Portfolio[]
+
+  @@map("modeles_portfolios")
+}
+
+// ============================================================================
+// 7. FONCTIONNALITES AVANCEES
+// ============================================================================
+
+model Badge {
+  id_badge              String    @id @default(cuid())
+  nom                   String    @unique @db.VarChar(100)
+  description           String    @db.Text
+  categorie             String    @db.VarChar(50)
+  icone                 String    @db.VarChar(500)
+  condition_attribution String    @db.Text
+  est_actif             Boolean   @default(true)
+
+  // Relations
+  etudiants             EtudiantBadge[]
+
+  @@map("badges")
+}
+
+model EtudiantBadge {
+  id_etudiant       String
+  id_badge          String
+  date_attribution  DateTime  @default(now())
+
+  // Relations
+  etudiant          Etudiant  @relation(fields: [id_etudiant], references: [id_etudiant], onDelete: Cascade)
+  badge             Badge     @relation(fields: [id_badge], references: [id_badge], onDelete: Cascade)
+
+  @@id([id_etudiant, id_badge])
+  @@map("etudiants_badges")
+}
+
+model DepotGitHub {
+  id_depot              String    @id @default(cuid())
+  id_etudiant           String
+  nom_depot             String    @db.VarChar(200)
+  url_github            String    @db.VarChar(500)
+  description_github    String?   @db.Text
+  nombre_commits        Int?
+  langage_principal     String?   @db.VarChar(50)
+  date_dernier_commit   DateTime?
+  date_synchronisation  DateTime?
+
+  // Relations
+  etudiant              Etudiant  @relation(fields: [id_etudiant], references: [id_etudiant], onDelete: Cascade)
+
+  @@map("depots_github")
+}
+
+model SuggestionSysteme {
+  id_suggestion       String    @id @default(cuid())
+  id_etudiant         String
+  type_suggestion     String    @db.VarChar(50)
+  titre               String    @db.VarChar(200)
+  description         String    @db.Text
+  element_suggere     String?   @db.VarChar(200)
+  priorite            String    @db.VarChar(20)
+  justification_ia    String?   @db.Text
+  est_lue             Boolean   @default(false)
+  date_generation     DateTime  @default(now())
+  date_lecture        DateTime?
+
+  // Relations
+  etudiant            Etudiant  @relation(fields: [id_etudiant], references: [id_etudiant], onDelete: Cascade)
+
+  @@map("suggestions_systeme")
+}
+
+model Notification {
+  id_notification     String            @id @default(cuid())
+  id_destinataire     String
+  type_notification   TypeNotification
+  titre               String            @db.VarChar(200)
+  message             String            @db.Text
+  lien_action         String?           @db.VarChar(500)
+  est_lue             Boolean           @default(false)
+  date_creation       DateTime          @default(now())
+  date_lecture        DateTime?
+
+  // Relations
+  destinataire        Utilisateur       @relation(fields: [id_destinataire], references: [id_utilisateur], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model HistoriqueConnexion {
+  id_historique     String    @id @default(cuid())
+  id_utilisateur    String
+  date_connexion    DateTime  @default(now())
+  status            String    @db.VarChar(20)
+  raison_echec      String?   @db.VarChar(100)
+  ip_adresse        String?   @db.VarChar(45)
+  user_agent        String?   @db.Text
+
+  // Relations
+  utilisateur       Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@map("historiques_connexions")
+}
+
+model HistoriqueAction {
+  id_historique       String    @id @default(cuid())
+  id_utilisateur      String
+  type_action         TypeAction
+  entite_concernee    String    @db.VarChar(50)
+  id_entite           String
+  details             String?   @db.Text
+  date_action         DateTime  @default(now())
+
+  // Relations
+  utilisateur         Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
+  @@map("historiques_actions")
+}
