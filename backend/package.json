@@ -7,7 +7,10 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/.bin/jest --verbose"
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --verbose",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
@@ -17,7 +20,8 @@
   },
   "devDependencies": {
     "jest": "^30.3.0",
-    "prisma": "^6.19.3",
-    "supertest": "^7.2.2"
+    "supertest": "^7.2.2",
+    "eslint": "^8.0.0",
+    "prisma": "^6.19.3"
   }
 }

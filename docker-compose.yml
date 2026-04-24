@@ -1,0 +1,51 @@
+
+services:
+
+# ──────────────── SERVICE FRONTEND ────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    networks:
+      - reseau_app
+    depends_on:
+      - backend
+
+ 
+ # ──────────────── SERVICE BACKEND ────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    networks:
+      - reseau_app
+    depends_on:
+      database:
+        condition: service_healthy  
+
+
+# ──────────────── SERVICE DB ────────────────
+  database:
+    image: postgres:16-alpine
+    networks:
+      - reseau_app
+    volumes:
+      - donnees_postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s       
+      timeout: 5s    
+      retries: 5   
+
+# ───────────────── RÉSEAU INTERNE entre les services  ───────────────── 
+
+networks:       
+  reseau_app:
+    driver: bridge 
+
+volumes:
+  donnees_postgres:
