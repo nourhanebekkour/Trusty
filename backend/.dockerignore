@@ -1,0 +1,17 @@
+node_modules/
+
+.env
+.env.*
+
+.git/
+.gitignore
+
+*.log
+npm-debug.log*
+
+prisma/migrations/
+
+README.md
+
+.DS_Store
+
