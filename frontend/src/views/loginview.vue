@@ -81,114 +81,184 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useAuthStore } from '../stores/authstore'
 import { useRouter } from 'vue-router'
 
-
+/*STATE*/
 const email = ref('')
 const password = ref('')
 const remember = ref(false)
-const isSubmitting = ref(false)
-const error = ref('')
 
+const isSubmitting = ref(false)
+const showCaptcha = ref(false)
+
+/* ERRORS */
+const error = ref('')
+const fieldErrors = ref({
+  email: '',
+  password: ''
+})
+
+/* SECURITY UX STATE */
+const loginAttempts = ref(0)
+const lockUntil = ref(null)
+
+/* store + router */
 const auth = useAuthStore()
 const router = useRouter()
 
+/* CONFIG */
+const MAX_ATTEMPTS = 3
+const BASE_LOCK_TIME = 10 * 1000
 
-const MAX_ATTEMPTS = 5
-const TIME_WINDOW = 60_000
+/*HELPERS */
+const normalizeEmail = (v) => v.trim().toLowerCase()
 
-/
-let attempts = JSON.parse(localStorage.getItem('login_attempts') || '[]')
-
-
-const isValidEmail = (value) =>
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
-
-const isStrongPassword = (password) =>
-  /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(password)
-
-const cleanInputs = () => ({
-  email: email.value.trim().toLowerCase(),
-  password: password.value
-})
+const isValidEmail = (v) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
 
 
-const saveAttempts = () => {
-  localStorage.setItem('login_attempts', JSON.stringify(attempts))
+const isStrongPassword = (v) => {
+  if (typeof v !== 'string') return false
+
+  const minLength = v.length >= 8
+  const hasUpper = /[A-Z]/.test(v)
+  const hasLower = /[a-z]/.test(v)
+  const hasNumber = /[0-9]/.test(v)
+  const hasSymbol = /[!@#$%^&*(),.?":{}|<>_\-\\/\[\]=+;]/.test(v)
+
+  return minLength && hasUpper && hasLower && hasNumber && hasSymbol
 }
 
-const cleanAttempts = () => {
-  const now = Date.now()
-  attempts = attempts.filter(t => now - t < TIME_WINDOW)
-  saveAttempts()
+const getCaptchaToken = async () => {
+  if (!showCaptcha.value) return null
+  return 'mock-captcha-token'
 }
 
-const isBlocked = () => {
-  cleanAttempts()
-  return attempts.length >= MAX_ATTEMPTS
+/* LOCK LOGIC */
+const isLocked = computed(() =>
+  lockUntil.value && Date.now() < lockUntil.value
+)
+
+const applyLock = () => {
+  const delay =
+    BASE_LOCK_TIME *
+    Math.pow(2, Math.max(0, loginAttempts.value - MAX_ATTEMPTS))
+
+  lockUntil.value = Date.now() + delay
 }
 
-const addAttempt = () => {
-  attempts.push(Date.now())
-  saveAttempts()
+/* ERROR HANDLING*/
+const clearErrors = () => {
+  error.value = ''
+  fieldErrors.value = { email: '', password: '' }
 }
-
-/* validation */
-const validateForm = (email, password) => {
-  if (!email || !password) return false
-  if (!isValidEmail(email)) return false
-  if (!isStrongPassword(password)) return false
-  return true
-}
-
 
 const setGenericError = () => {
   error.value = 'Email ou mot de passe invalide'
 }
 
-/* main action */
+/* VALIDATION */
+const validateFields = () => {
+  let ok = true
+  fieldErrors.value = { email: '', password: '' }
+
+  /* EMAIL */
+  if (!email.value.trim()) {
+    fieldErrors.value.email = 'Email requis'
+    ok = false
+  } else if (!isValidEmail(email.value)) {
+    fieldErrors.value.email = 'Email invalide'
+    ok = false
+  }
+
+  /* PASSWORD */
+  if (!password.value) {
+    fieldErrors.value.password = 'Mot de passe requis'
+    ok = false
+  } else if (!isStrongPassword(password.value)) {
+    fieldErrors.value.password =
+      'Min 8 caractères, majuscule, minuscule, nombre et symbole'
+    ok = false
+  }
+
+  return ok
+}
+
+/* COMPUTED */
+const isDisabled = computed(() =>
+  isSubmitting.value ||
+  auth.loading ||
+  isLocked.value ||
+  !email.value.trim() ||
+  !password.value
+)
+
+/*LOGIN*/
 const handleLogin = async () => {
-  if (isSubmitting.value) return
-  error.value = ''
+  if (isSubmitting.value || isLocked.value) return
 
-  if (isBlocked()) {
-    error.value = 'Trop de tentatives. Réessayez plus tard.'
-    return
-  }
+  clearErrors()
 
-  const { email: cleanEmail, password: cleanPassword } = cleanInputs()
-
-  if (!validateForm(cleanEmail, cleanPassword)) {
-    setGenericError()
-    return
-  }
+  if (!validateFields()) return
 
   isSubmitting.value = true
 
   try {
-    await auth.loginUser({
+    const cleanEmail = normalizeEmail(email.value)
+    const cleanPassword = password.value
+
+    const captchaToken = await getCaptchaToken()
+
+    const res = await auth.loginUser({
       email: cleanEmail,
       password: cleanPassword,
-      remember: remember.value
+      remember: remember.value,
+      captcha: captchaToken
     })
 
-    if (auth.user && !auth.error) {
+    /* SUCCESS */
+    if (res?.success) {
+      loginAttempts.value = 0
+      lockUntil.value = null
       router.push('/')
-    } else {
-      addAttempt()
-      setGenericError()
+      return
     }
 
-  } catch (err) {
-    addAttempt()
+    /* FAIL */
+    loginAttempts.value++
+
+    if (res?.requireCaptcha) {
+      showCaptcha.value = true
+    }
+
+    if (loginAttempts.value >= MAX_ATTEMPTS) {
+      applyLock()
+    }
+
     setGenericError()
+
+  } catch (err) {
+
+    if (import.meta.env.DEV) {
+      console.error('Login error:', err)
+    }
+
+    loginAttempts.value++
+
+    if (loginAttempts.value >= MAX_ATTEMPTS) {
+      applyLock()
+    }
+
+    setGenericError()
+
   } finally {
     isSubmitting.value = false
   }
 }
 </script>
+db chni banlk fhada mn na7iya d securite ghir frontend
 
 <style scoped>
 * {
