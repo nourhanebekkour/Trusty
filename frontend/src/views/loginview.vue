@@ -81,41 +81,89 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useAuthStore } from '../stores/authstore'
 import { useRouter } from 'vue-router'
+
 
 const email = ref('')
 const password = ref('')
 const remember = ref(false)
-
 const isSubmitting = ref(false)
+const error = ref('')
 
 const auth = useAuthStore()
 const router = useRouter()
 
-/*  Email validation*/
-const isValidEmail = (value) => {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
-}
 
-/* Safe error message */
-const safeError = computed(() => {
-  if (!auth.error) return ''
-  return 'Email ou mot de passe incorrect'
+const MAX_ATTEMPTS = 5
+const TIME_WINDOW = 60_000
+
+/
+let attempts = JSON.parse(localStorage.getItem('login_attempts') || '[]')
+
+
+const isValidEmail = (value) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+
+const isStrongPassword = (password) =>
+  /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(password)
+
+const cleanInputs = () => ({
+  email: email.value.trim().toLowerCase(),
+  password: password.value
 })
 
+
+const saveAttempts = () => {
+  localStorage.setItem('login_attempts', JSON.stringify(attempts))
+}
+
+const cleanAttempts = () => {
+  const now = Date.now()
+  attempts = attempts.filter(t => now - t < TIME_WINDOW)
+  saveAttempts()
+}
+
+const isBlocked = () => {
+  cleanAttempts()
+  return attempts.length >= MAX_ATTEMPTS
+}
+
+const addAttempt = () => {
+  attempts.push(Date.now())
+  saveAttempts()
+}
+
+/* validation */
+const validateForm = (email, password) => {
+  if (!email || !password) return false
+  if (!isValidEmail(email)) return false
+  if (!isStrongPassword(password)) return false
+  return true
+}
+
+
+const setGenericError = () => {
+  error.value = 'Email ou mot de passe invalide'
+}
+
+/* main action */
 const handleLogin = async () => {
   if (isSubmitting.value) return
+  error.value = ''
 
-  const cleanEmail = email.value.trim().toLowerCase()
-  const cleanPassword = password.value.trim()
+  if (isBlocked()) {
+    error.value = 'Trop de tentatives. Réessayez plus tard.'
+    return
+  }
 
-  if (!cleanEmail || !cleanPassword) return
-  if (!isValidEmail(cleanEmail)) return
+  const { email: cleanEmail, password: cleanPassword } = cleanInputs()
 
-  // optional hardening
-  if (cleanPassword.length > 100) return
+  if (!validateForm(cleanEmail, cleanPassword)) {
+    setGenericError()
+    return
+  }
 
   isSubmitting.value = true
 
@@ -126,13 +174,16 @@ const handleLogin = async () => {
       remember: remember.value
     })
 
-    // safer check (user + error)
-    if (!auth.error && auth.user) {
+    if (auth.user && !auth.error) {
       router.push('/')
+    } else {
+      addAttempt()
+      setGenericError()
     }
 
   } catch (err) {
-    console.error('Login error:', err)
+    addAttempt()
+    setGenericError()
   } finally {
     isSubmitting.value = false
   }
