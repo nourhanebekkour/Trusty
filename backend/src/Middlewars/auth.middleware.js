@@ -1,50 +1,41 @@
-const jwt = require('jsonwebtoken');
-const { prisma } = require('../prisma/client');
+import jwt from 'jsonwebtoken';
+import { prisma } from '../prisma/client.js';
 
-async function authMiddleware(req, res, next) {
+const authMiddleware = async (req, res, next) => {
   try {
-    // 1. Récupérer header
+    // 1. Récupérer le header Authorization
     const authHeader = req.headers.authorization;
-
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ message: 'Aucun token fourni' });
     }
-
-    // 2. Extraire token
     const token = authHeader.split(' ')[1];
 
-    // 3. Vérifier JWT
+    // 2. Vérifier la signature du token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // 4. Vérifier user en DB
+    // 3. Vérifier que l'utilisateur existe et est ACTIF
     const user = await prisma.utilisateur.findUnique({
-      where: { id: decoded.userId },
+      where: { id_utilisateur: decoded.userId }, // ← vrai nom du champ
       select: {
-        id: true,
-        status: true,
-        niveauAcces: true
-      }
+        id_utilisateur: true,
+        status_compte: true,   // ← vrai nom du champ
+      },
     });
 
-    if (!user || user.status !== 'ACTIF') {
+    if (!user || user.status_compte !== 'ACTIF') {
       return res.status(401).json({ message: 'Compte inactif ou suspendu' });
     }
 
-    // 5. Attacher user à req
-    req.user = {
-      id: user.id,
-      role: user.niveauAcces
-    };
-
-    next(); // passer à la route
+    // 4. Attacher les infos à la requête
+    req.user = { id: user.id_utilisateur };
+    next();
 
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({ message: 'Token expiré' });
     }
-
     return res.status(401).json({ message: 'Token invalide' });
   }
-}
+};
 
-module.exports = authMiddleware;
+export { authMiddleware };
