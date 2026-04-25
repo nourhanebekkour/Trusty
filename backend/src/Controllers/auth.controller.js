@@ -1,68 +1,57 @@
-const authService = require('../Services/auth.service');
-const { prisma } = require('../prisma/client');
+import * as authService from '../Services/auth.service.js';
+import { prisma } from '../prisma/client.js';
 
-// REGISTER
-async function register(req, res) {
+const register = async (req, res) => {
   try {
-    const { email, password, nom } = req.body;
+    const { email, password, nom, prenom } = req.body; // ← ajouter prenom
 
-    if (!email || !password || !nom) {
-      return res.status(400).json({ message: 'Champs manquants' });
+    // Vérifier que tous les champs sont présents
+    if (!email || !password || !nom || !prenom) {
+      return res.status(400).json({ message: 'Champs manquants (email, password, nom, prenom)' });
     }
 
-    const result = await authService.register(email, password, nom);
-
-    res.status(201).json({
-      message: 'Inscription réussie',
-      ...result
-    });
+    const result = await authService.register(email, password, nom, prenom); // ← passer prenom
+    res.status(201).json({ message: 'Inscription réussie', ...result });
 
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
-}
+};
 
-// LOGIN
-async function login(req, res) {
+const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-
     const result = await authService.login(email, password);
-
-    res.json({
-      message: 'Connexion réussie',
-      ...result
-    });
+    res.json({ message: 'Connexion réussie', ...result });
 
   } catch (err) {
     res.status(401).json({ message: err.message });
   }
-}
+};
 
-// GET ME (profil)
-async function getMe(req, res) {
+const getMe = async (req, res) => {
   try {
     const user = await prisma.utilisateur.findUnique({
-      where: { id: req.user.id },
+      where: { id_utilisateur: req.user.id }, // ← vrai nom du champ
       select: {
-        id: true,
+        id_utilisateur: true,
         email: true,
         nom: true,
-        status: true,
-        niveauAcces: true,
-        createdAt: true
-      }
+        prenom: true,
+        telephone: true,
+        status_compte: true,
+        date_creation: true,
+        derniere_connexion: true,
+        // mot_de_passe absent → jamais renvoyé
+      },
     });
 
-    if (!user) {
-      return res.status(404).json({ message: 'Utilisateur non trouvé' });
-    }
-
+    if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé' });
     res.json(user);
 
   } catch (err) {
     res.status(500).json({ message: 'Erreur serveur' });
   }
-}
+};
 
-module.exports = { register, login, getMe };
+export { register, login, getMe };

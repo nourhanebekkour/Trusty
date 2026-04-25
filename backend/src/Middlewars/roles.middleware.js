@@ -1,22 +1,25 @@
-function requireRole(...roles) {
+// Vérifie le niveau d'accès de l'utilisateur
+// S'utilise APRÈS authMiddleware
+// authMiddleware → "es-tu connecté ?"
+// requireRole → "as-tu le bon rôle ?"
+const requireRole = (...roles) => {
   return (req, res, next) => {
 
-    // vérifier si user existe (authMiddleware doit passer avant)
+    // Vérifier que req.user existe et a un rôle
     if (!req.user || !req.user.role) {
-      return res.status(403).json({
-        message: 'Accès refusé : rôle requis'
-      });
+      return res.status(403).json({ message: 'Accès refusé : rôle requis' });
     }
 
-    // vérifier si rôle autorisé
+    // Vérifier que le rôle est dans la liste autorisée
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
-        message: `Accès refusé. Rôle requis : ${roles.join(' ou ')}`
+        message: `Accès refusé. Rôle requis : ${roles.join(' ou ')}`,
       });
     }
 
-    next(); // autorisé
+    // Rôle valide → on continue
+    next();
   };
-}
+};
 
-module.exports = requireRole;
+export { requireRole };
