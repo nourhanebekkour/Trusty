@@ -61,7 +61,7 @@ jobs:
       - run: npx eslint src/ --max-warnings=50 || true
       - run: npm run build             
   frontend-run:
-    name: Frontend — Run (dev server)
+    name: Frontend — Run 
     runs-on: ubuntu-latest
     defaults:
       run:
