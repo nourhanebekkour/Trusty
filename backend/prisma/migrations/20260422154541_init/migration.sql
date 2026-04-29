@@ -2,6 +2,9 @@
 CREATE TYPE "StatusValidation" AS ENUM ('EN_ATTENTE', 'VALIDE', 'REJETE');
 
 -- CreateEnum
+CREATE TYPE "Role" AS ENUM ('ETUDIANT', 'PROFESSEUR', 'ADMINISTRATEUR', 'PROFESSIONNEL');
+
+-- CreateEnum
 CREATE TYPE "Niveau" AS ENUM ('DEBUTANT', 'INTERMEDIAIRE', 'AVANCE', 'EXPERT');
 
 -- CreateEnum
@@ -51,6 +54,7 @@ CREATE TABLE "utilisateurs" (
     "nom" VARCHAR(100) NOT NULL,
     "prenom" VARCHAR(100) NOT NULL,
     "telephone" VARCHAR(20),
+    "role" "Role" NOT NULL DEFAULT 'ETUDIANT',
     "date_creation" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "date_modification" TIMESTAMP(3),
     "derniere_connexion" TIMESTAMP(3),
@@ -74,9 +78,9 @@ CREATE TABLE "administrateurs" (
 -- CreateTable
 CREATE TABLE "etudiants" (
     "id_etudiant" TEXT NOT NULL,
-    "numero_etudiant" VARCHAR(20) NOT NULL,
-    "filiere" VARCHAR(100) NOT NULL,
-    "annee" INTEGER NOT NULL,
+    "numero_etudiant" VARCHAR(20),
+    "filiere" VARCHAR(100),
+    "annee" INTEGER,
     "date_naissance" TIMESTAMP(3),
     "adresse" VARCHAR(255),
     "ville" VARCHAR(100),
@@ -96,8 +100,8 @@ CREATE TABLE "etudiants" (
 -- CreateTable
 CREATE TABLE "professeurs" (
     "id_professeur" TEXT NOT NULL,
-    "departement" "Departement" NOT NULL,
-    "specialite" VARCHAR(100) NOT NULL,
+    "departement" "Departement",
+    "specialite" VARCHAR(100),
     "filieres_interv" "Filiere"[],
     "date_naissance" TIMESTAMP(3),
     "adresse" VARCHAR(255),
@@ -111,10 +115,10 @@ CREATE TABLE "professeurs" (
 -- CreateTable
 CREATE TABLE "professionnels" (
     "id_professionnel" TEXT NOT NULL,
-    "entreprise" VARCHAR(200) NOT NULL,
-    "poste" VARCHAR(100) NOT NULL,
+    "entreprise" VARCHAR(200),
+    "poste" VARCHAR(100),
     "secteur_activite" VARCHAR(100),
-    "email_professionnel" VARCHAR(255) NOT NULL,
+    "email_professionnel" VARCHAR(255),
     "status_validation" "StatusValidation" NOT NULL DEFAULT 'EN_ATTENTE',
     "date_demande" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "date_validation" TIMESTAMP(3),
