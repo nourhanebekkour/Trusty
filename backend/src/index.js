@@ -10,3 +10,14 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
 });
+
+import express from "express"
+import professeurRoutes from "./Routes/professeurRoute.js"
+app.use("/api/professeur", professeurRoutes)
+import adminRoutes from "./Routes/administrateurRoutes.js"
+app.use("/api/admin", adminRoutes)
+
+
+app.listen(3000,() => {
+  console.log("Server running on port 3000")
+})
