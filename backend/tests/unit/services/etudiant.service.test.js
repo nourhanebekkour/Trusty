@@ -1,20 +1,14 @@
 import { jest } from '@jest/globals';
+import { mockPrisma } from '../../mocks/prismaMock.js';
+
+// au lieu de mockPrisma.etudiant à chaque fois
+const { etudiant } = mockPrisma;
 
 // (1) Mock de Prisma
-const mockFindMany = jest.fn();
-const mockFindUnique = jest.fn();
-const mockUpsert = jest.fn();
 // define the mock before importing the module you want to test
-// quand qlq importe prisma (import { PrismaClient } from '@prisma/client';
-// const prisma = new PrismaClient(); dans le service), donne lui les mock à la place
+// quand qlq importe prisma dans le service), donne lui les mock à la place
 await jest.unstable_mockModule('@prisma/client', () => ({
-    PrismaClient: jest.fn().mockImplementation(() => ({
-        etudiant: {
-            findMany: mockFindMany,
-            findUnique: mockFindUnique,
-            upsert: mockUpsert,
-        }
-    }))
+    PrismaClient: jest.fn().mockImplementation(() => mockPrisma)
 }));
 
 // (2) Import dynamique du Service après le Mock
@@ -33,18 +27,18 @@ describe('Service Profil Étudiant', () => {
 
         test('doit retourner la liste des étudiants', async () => {
             const mockEtudiants = [{ id_etudiant: '1', filiere: 'GINF' }];
-            mockFindMany.mockResolvedValue(mockEtudiants);
+            etudiant.findMany.mockResolvedValue(mockEtudiants);
 
             const result = await recupererTousLesProfils();
 
-            expect(mockFindMany).toHaveBeenCalled();
+            expect(etudiant.findMany).toHaveBeenCalled();
             expect(result).toEqual(mockEtudiants);
         });
 
         // si Prisma lance une erreur → le service ne la gère pas 
         // → elle remonte vers le controller → le controller l'attrape dans son catch
         test('doit propager l\'erreur si Prisma échoue', async () => {
-            mockFindMany.mockRejectedValue(new Error('Erreur Prisma'));
+            etudiant.findMany.mockRejectedValue(new Error('Erreur Prisma'));
 
             await expect(recupererTousLesProfils()).rejects.toThrow('Erreur Prisma');
         });
@@ -55,12 +49,12 @@ describe('Service Profil Étudiant', () => {
 
         test('doit retourner l\'étudiant par ID', async () => {
             const mockEtudiant = { id_etudiant: 'id-1', filiere: 'GINF' };
-            mockFindUnique.mockResolvedValue(mockEtudiant);
+            etudiant.findUnique.mockResolvedValue(mockEtudiant);
 
             const result = await recupererParId('id-1');
 
             // matcher partiel pour ignorer le include
-            expect(mockFindUnique).toHaveBeenCalledWith(expect.objectContaining({
+            expect(etudiant.findUnique).toHaveBeenCalledWith(expect.objectContaining({
                 where: { id_etudiant: 'id-1' }
             }));
             expect(result).toEqual(mockEtudiant);
@@ -68,7 +62,7 @@ describe('Service Profil Étudiant', () => {
 
         test('doit retourner null si étudiant non trouvé', async () => {
             // peu importe l'ID qu'on te passe, retourne toujours null
-            mockFindUnique.mockResolvedValue(null);
+            etudiant.findUnique.mockResolvedValue(null);
 
             // Le service s'exécute, il appelle prisma.etudiant.findUnique() 
             // mais grâce au mock, au lieu d'aller en DB, il reçoit null directement
@@ -78,7 +72,7 @@ describe('Service Profil Étudiant', () => {
         });
 
         test('doit propager l\'erreur si Prisma échoue', async () => {
-            mockFindUnique.mockRejectedValue(new Error('Erreur Prisma'));
+            etudiant.findUnique.mockRejectedValue(new Error('Erreur Prisma'));
 
             await expect(recupererParId('id-1')).rejects.toThrow('Erreur Prisma');
         });
@@ -89,19 +83,19 @@ describe('Service Profil Étudiant', () => {
         test('doit modifier / ajouter un étudiant ', async () => {
             // vérifier que le service retourne ce que Prisma lui donne
             const mockProfil = { id_etudiant: 'id-1', filiere: 'GINF' };
-            mockUpsert.mockResolvedValue(mockProfil);
+            etudiant.upsert.mockResolvedValue(mockProfil);
 
             const donnees = { filiere: 'GINF', ville: 'Tanger', pays: 'Maroc' };
             const result = await ajouterOuModifierEtudiant('id-1', donnees);
 
-            expect(mockUpsert).toHaveBeenCalledWith(expect.objectContaining({
+            expect(etudiant.upsert).toHaveBeenCalledWith(expect.objectContaining({
                 where: { id_etudiant: 'id-1' }
             }));
             expect(result).toEqual(mockProfil);
         });
 
         test('doit propager l\'erreur', async () => {
-            mockUpsert.mockRejectedValue(new Error('Erreur Prisma'));
+            etudiant.upsert.mockRejectedValue(new Error('Erreur Prisma'));
             await expect(ajouterOuModifierEtudiant('id-1', {})).rejects.toThrow('Erreur Prisma');
 
         });
@@ -110,4 +104,3 @@ describe('Service Profil Étudiant', () => {
 
 
 });
-
