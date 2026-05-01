@@ -258,7 +258,6 @@ const handleLogin = async () => {
   }
 }
 </script>
-db chni banlk fhada mn na7iya d securite ghir frontend
 
 <style scoped>
 * {
