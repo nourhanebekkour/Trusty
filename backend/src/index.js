@@ -23,8 +23,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/formations', formationRoutes);
 app.use('/api/competences', competenceRoutes);
 app.use('/api/etudiants', etudiantRoutes);
-
-// Routes
 app.use("/api/professeur", professeurRoutes);
 app.use("/api/admin", adminRoutes);
 
