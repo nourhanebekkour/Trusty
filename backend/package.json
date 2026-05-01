@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "test": "node --experimental-vm-modules node_modules/.bin/jest --verbose",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --verbose --silent=false",
     "lint": "eslint ."
   },
   "dependencies": {

@@ -1,0 +1,146 @@
+// test unitaire du controller
+import { jest } from '@jest/globals';
+
+// 1) On crée les fonctions mock
+const mockRecupererTousLesProfils = jest.fn();
+const mockRecupererParId = jest.fn();
+const mockAjouterOuModifierEtudiant = jest.fn();
+
+// 2) On dit à Jest "quand quelqu'un importe etudiantService,
+//    donne-lui mes fonctions mock à la place"
+await jest.unstable_mockModule('../../../src/Services/etudiantService.js', () => ({
+    recupererTousLesProfils: mockRecupererTousLesProfils,
+    recupererParId: mockRecupererParId,
+    ajouterOuModifierEtudiant: mockAjouterOuModifierEtudiant,
+}));
+
+// 3) SEULEMENT APRÈS on importe le controller
+//    → quand le controller va importer etudiantService,
+//    il va recevoir les mocks au lieu du vrai service 
+const { obtenirTousLesProfils, obtenirProfilParId, traiterProfil } =
+    await import('../../../src/Controllers/etudiantController.js');
+
+describe('Controller Profil Étudiant', () => {
+
+    let req, res;
+
+    beforeEach(() => {
+        req = { params: {}, body: {} };
+        res = {
+            status: jest.fn().mockReturnThis(), // simule res.status()
+            json: jest.fn() // simule res.json()
+        };
+        jest.clearAllMocks();
+    });
+
+    describe('obtenirTousLesProfils', () => {
+
+        // Test 1 : Cas succès
+        // Déclaration du test asynchrone 
+        test('doit retourner 200 avec la liste des étudiants', async () => {
+
+            // Crée de fausses données (ce que la DB retournerait normalement)
+            const mockEtudiants = [{ id_etudiant: '1', filiere: 'GINF' }];
+
+            // Dit au mock : "quand on t'appelle, retourne mockEtudiants comme si
+            // la DB avait répondu"
+            mockRecupererTousLesProfils.mockResolvedValue(mockEtudiants);
+
+            // Appelle le vrai controller avec le faux req et res.
+            // Le controller va appeler recupererTousLesProfils() 
+            // mais au lieu du vrai service, il va tomber sur notre mock 
+            // qui retourne mockEtudiants.
+            await obtenirTousLesProfils(req, res);
+
+            // Vérifie que le controller a bien appelé res.status(200)
+            expect(res.status).toHaveBeenCalledWith(200);
+
+            // Vérifie que le controller a bien retourné mockEtudiants dans la réponse.
+            expect(res.json).toHaveBeenCalledWith(mockEtudiants);
+        });
+
+        test('doit retourner 500 en cas d\'erreur', async () => {
+            mockRecupererTousLesProfils.mockRejectedValue(new Error('Erreur DB'));
+
+            await obtenirTousLesProfils(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(500);
+            expect(res.json).toHaveBeenCalledWith({
+                message: "Erreur lors de la récupération des profils",
+                erreur: "Erreur DB"
+            });
+        });
+
+    });
+
+    describe('obtenirProfilParId', () => {
+
+        test('doit retourner 200 avec l\'étudiant trouvé', async () => {
+            req.params.id = 'id-valide';
+            const mockEtudiant = { id_etudiant: 'id-valide', filiere: 'GINF' };
+            mockRecupererParId.mockResolvedValue(mockEtudiant);
+
+            await obtenirProfilParId(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.json).toHaveBeenCalledWith(mockEtudiant);
+        });
+
+        test('doit retourner 404 si étudiant non trouvé', async () => {
+            req.params.id = 'id-inexistant';
+            mockRecupererParId.mockResolvedValue(null);
+
+            await obtenirProfilParId(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(404);
+            expect(res.json).toHaveBeenCalledWith({ message: "Étudiant non trouvé" });
+        });
+
+        test('doit retourner 500 en cas d\'erreur', async () => {
+            req.params.id = 'id-valide';
+            mockRecupererParId.mockRejectedValue(new Error('Erreur DB'));
+
+            await obtenirProfilParId(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(500);
+            expect(res.json).toHaveBeenCalledWith({
+                message: "Erreur lors de la récupération du profil",
+                erreur: "Erreur DB"
+            });
+        });
+
+    });
+
+    describe('traiterProfil', () => {
+
+        test('doit retourner 200 avec le profil traité', async () => {
+            req.params.id = 'id-valide';
+            req.body = { filiere: 'GINF', ville: 'Tanger' };
+            const mockProfil = { id_etudiant: 'id-valide', filiere: 'GINF' };
+            mockAjouterOuModifierEtudiant.mockResolvedValue(mockProfil);
+
+            await traiterProfil(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.json).toHaveBeenCalledWith({
+                message: "Profil traité avec succès (créé ou mis à jour)",
+                donnees: mockProfil
+            });
+        });
+
+        test('doit retourner 400 en cas d\'erreur', async () => {
+            req.params.id = 'id-valide';
+            mockAjouterOuModifierEtudiant.mockRejectedValue(new Error('Erreur'));
+
+            await traiterProfil(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                message: "Erreur lors du traitement du profil",
+                details: "Erreur"
+            });
+        });
+
+    });
+
+});
