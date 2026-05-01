@@ -1,5 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import prisma from "../Config/prismaClient.js";
 
 const UtilisateurSansMotDePasse = {
     select: {

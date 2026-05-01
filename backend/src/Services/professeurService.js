@@ -1,5 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import prisma from "../Config/prismaClient.js";
 
 export const ajouterOuModifierProfesseur = async (id, donnees) => {
     const donneesProfil = {
@@ -10,10 +9,7 @@ export const ajouterOuModifierProfesseur = async (id, donnees) => {
         ville: donnees.ville,
         pays: donnees.pays || "Maroc",
         biographie: donnees.biographie,
-        // Pour les filières, on suppose que 'donnees.filieres' est un tableau d'IDs
-        filieres_interv: {
-            set: donnees.filieres?.map(idFiliere => ({ id: idFiliere })) || []
-        }
+        filieres_interv: donnees.filieres || []
     };
 
     return await prisma.professeur.upsert({
@@ -77,12 +73,5 @@ export const recupererProfesseurParId = async (id) => {
                 }
             },
         }
-    });
-};
-
-// 3. Supprimer un professeur
-export const supprimerProfesseur = async (id) => {
-    return await prisma.professeur.delete({
-        where: { id_professeur: id }
     });
 };

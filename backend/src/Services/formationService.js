@@ -1,5 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import prisma from "../Config/prismaClient.js";
 
 export const recupererFormationsParEtudiant = async (id_etudiant) => {
     return await prisma.formation.findMany({
@@ -24,17 +23,20 @@ export const ajouterFormation = async (id_etudiant, donnees) => {
             date_fin: donnees.date_fin ? new Date(donnees.date_fin) : null,
             description: donnees.description,
             mention: donnees.mention,
-            est_actuelle: donnees.est_actuelle || false
+            est_actuelle: donnees.est_actuelle === true || donnees.est_actuelle === 'true'
         }
     });
 };
 
 export const modifierFormation = async (id_formation, donnees) => {
+    const donneesUpdate = { ...donnees };
+    
+    if (donneesUpdate.date_debut) donneesUpdate.date_debut = new Date(donneesUpdate.date_debut);
+    if (donneesUpdate.date_fin) donneesUpdate.date_fin = new Date(donneesUpdate.date_fin);
+
     return await prisma.formation.update({
         where: { id_formation },
-        data: {
-            ...donnees,
-        }
+        data: donneesUpdate
     });
 };
 
