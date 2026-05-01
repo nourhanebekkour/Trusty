@@ -100,7 +100,6 @@ describe('Service Profil Étudiant', () => {
             expect(result).toEqual(mockProfil);
         });
 
-
         test('doit propager l\'erreur', async () => {
             mockUpsert.mockRejectedValue(new Error('Erreur Prisma'));
             await expect(ajouterOuModifierEtudiant('id-1', {})).rejects.toThrow('Erreur Prisma');
