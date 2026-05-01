@@ -183,7 +183,7 @@ const handleLogin = async () => {
     })
 
     if (res?.success) {
-      await auth.fetchProfile() // 🔥 مهم
+      await auth.fetchProfile()
       loginAttempts.value = 0
       lockUntil.value = null
       router.push('/')
