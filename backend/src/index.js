@@ -28,16 +28,18 @@ app.use('/api/competences', competenceRoutes);
 app.use('/api/etudiants', etudiantRoutes);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
+import express from "express";
+import professeurRoutes from "./Routes/professeurRoute.js";
+import adminRoutes from "./Routes/administrateurRoutes.js";
+
+const app = express();
+const PORT = 3000;
+
+// Routes
+app.use("/api/professeur", professeurRoutes);
+app.use("/api/admin", adminRoutes);
+
+// Start server
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
 });
-
-import express from "express"
-import professeurRoutes from "./Routes/professeurRoute.js"
-app.use("/api/professeur", professeurRoutes)
-import adminRoutes from "./Routes/administrateurRoutes.js"
-app.use("/api/admin", adminRoutes)
-
-
-
-
