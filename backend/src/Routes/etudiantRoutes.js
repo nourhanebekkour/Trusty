@@ -4,11 +4,18 @@ import {
     obtenirProfilParId, 
     traiterProfil,
 } from '../Controllers/etudiantController.js';
+import { authMiddleware } from '../Middlewars/auth.middleware.js';
 
-const routeur = express.Router();
+const router = express.Router();
 
-routeur.get('/', obtenirTousLesProfils);
-routeur.get('/:id', obtenirProfilParId);
-routeur.put('/:id', traiterProfil);
+router.use(authMiddleware);
 
-export default routeur;
+// Tout le monde peut voir les profils (selon visibilité, mais ici on protège au moins la modif)
+router.get('/',obtenirTousLesProfils);
+router.get('/:id',obtenirProfilParId);
+
+// Seul l'utilisateur connecté peut modifier son profil (ou un admin)
+// Pour l'instant on protège juste avec authMiddleware
+router.put('/:id',traiterProfil);
+
+export default router;
