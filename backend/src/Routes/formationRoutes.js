@@ -5,13 +5,16 @@ import {
     mettreAJourFormation,
     supprimerFormation
 } from '../Controllers/formationController.js';
+import { authMiddleware } from '../Middlewars/auth.middleware.js';
 
-const routeur = express.Router();
+const router = express.Router();
 
+// Toutes les routes de formation nécessitent d'être connecté
+router.use(authMiddleware);
 
-routeur.get('/etudiant/:id_etudiant', obtenirFormations);
-routeur.post('/etudiant/:id_etudiant', ajouterFormation);
-routeur.put('/:id', mettreAJourFormation);
-routeur.delete('/:id', supprimerFormation);
+router.get('/etudiant/:id_etudiant', obtenirFormations);
+router.post('/etudiant/:id_etudiant', ajouterFormation);
+router.put('/:id', mettreAJourFormation);
+router.delete('/:id', supprimerFormation);
 
-export default routeur;
+export default router;
