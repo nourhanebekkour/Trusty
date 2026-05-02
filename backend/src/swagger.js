@@ -2,7 +2,7 @@ import swaggerAutogen from 'swagger-autogen';
 
 const doc = {
   info: {
-    title: 'Projet ghailani',
+    title: 'Projet d\'integration',
     description: 'Documentation automatique des APIs du projet',
   },
   host: 'localhost:3000',
@@ -85,6 +85,30 @@ const doc = {
       sous_categorie: "Library",
       description: "Bibliothèque JavaScript pour interfaces utilisateur",
       icone: "url_vers_icone"
+    },
+    ProjetRequest: {
+      titre: "Mon Projet",
+      description: "Une description détaillée du projet...",
+      type_projet: "PFA",
+      date_debut: "2023-01-01",
+      date_fin: "2023-06-01",
+      lien_github: "https://github.com/user/repo",
+      lien_youtube: "https://youtube.com/watch?v=...",
+      lien_demo: "https://demo.com",
+      resultats_obtenus: "Le projet a permis de...",
+      nombre_collaborateurs: 3,
+      est_public: true
+    },
+    ParticipationProjetRequest: {
+      role_joue: "Développeur Backend",
+      date_debut: "2023-01-01",
+      date_fin: "2023-06-01",
+      est_createur: true,
+      est_visible_portfolio: true
+    },
+    ProjetTechnologieRequest: {
+      version: "18.2.0",
+      niveau_utilisation: "AVANCE"
     },
     StandardResponse: {
       success: true,
