@@ -1,75 +1,57 @@
 import * as ProfesseurService from '../Services/professeurService.js';
-import prisma from "../config/prismaClient.js";
+import sendResponse from '../Utils/responseHandler.js';
 
 export const createOrUpdateProfile = async (req, res) => {
+    // #swagger.tags = ['Professeurs']
+    // #swagger.summary = 'Créer ou mettre à jour un profil professeur'
+    /* #swagger.parameters['body'] = {
+        in: 'body',
+        description: 'Données du profil professeur',
+        required: true,
+        schema: { $ref: '#/definitions/ProfesseurProfileRequest' }
+    } */
     try {
-         const id = req.body.id_professeur;
-         const user = await prisma.utilisateur.findUnique({
-            where: { id_utilisateur: id }
-            });
-
-            if (!user) {
-            return res.status(404).json({
-                error: "Utilisateur introuvable"
-            });
-            }
+        const id = req.params.id;
+        const user = await ProfesseurService.recupererProfesseurParId(id);
+         
+        if (!user) {
+            return sendResponse(res, 404, false, "Utilisateur introuvable");
+        }
+    
         
         const profil = await ProfesseurService.ajouterOuModifierProfesseur(id, req.body);
         
-        res.status(200).json({
-            message: "professeur créé ou mis à jour avec succès",
-            data: profil
-        });
+        return sendResponse(res, 200, true, "Professeur créé ou mis à jour avec succès", profil);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        return sendResponse(res, 500, false, "Erreur lors du traitement du profil", null, error);
     }
 };
 
-export const getProfileByID = async (req, res) => {
+export const obtenirProfilParId = async (req, res) => {
+    // #swagger.tags = ['Professeurs']
+    // #swagger.summary = 'Récupérer un profil professeur par ID'
     try {
         const id = req.params.id;
-
-        
         const profil = await ProfesseurService.recupererProfesseurParId(id);
-         if (!profil) {
-            return res.status(404).json({
-                error: "Utilisateur introuvable"
-            });
-            }
+         
+        if (!profil) {
+            return sendResponse(res, 404, false, "Utilisateur introuvable");
+        }
         
-        res.status(200).json(profil);
+        return sendResponse(res, 200, true, "Profil récupéré avec succès", profil);
     }
      catch (error) {
-        res.status(404).json({ error: error.message });
+        return sendResponse(res, 404, false, error.message, null, error);
     }
 };
 
-export const getProfiles = async (req,res) => {
+export const obtenirTousLesProfils = async (req,res) => {
+    // #swagger.tags = ['Professeurs']
+    // #swagger.summary = 'Récupérer tous les profils professeurs'
     try{
-        
         const profil = await ProfesseurService.recupererTousLesProfesseurs();
-        res.status(200).json(profil)       
+        return sendResponse(res, 200, true, "Profils récupérés avec succès", profil);
     } catch (error){
-        res.status(500).json({error : error.message});
-    }
-}
-
-export const deleteProfesseur = async (req,res) => {
-    try {
-        const id = req.params.id;
-        const professeur = await ProfesseurService.recupererProfesseurParId(id);
-
-        if (!professeur) {
-            return res.status(404).json({
-                error: "Professeur non trouvé"
-            });
-        }
-
-        const supprimer = await ProfesseurService.supprimerProfesseur(id);   
-        res.status(200).json({message:" professeur supprimé avec succé"})
-
-    } catch(error) {
-         res.status(500).json({error : error.message })
-        
+        return sendResponse(res, 500, false, "Erreur lors de la récupération des profils", null, error);
     }
 }

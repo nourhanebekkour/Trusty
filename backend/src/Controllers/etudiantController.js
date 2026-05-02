@@ -1,46 +1,46 @@
 import * as etudiantService from '../Services/etudiantService.js';
+import sendResponse from '../Utils/responseHandler.js';
 
 export const obtenirTousLesProfils = async (req, res) => {
+    // #swagger.tags = ['Etudiants']
+    // #swagger.summary = 'Récupérer tous les profils étudiants'
     try {
         const etudiants = await etudiantService.recupererTousLesProfils();
-        res.status(200).json(etudiants);
+        return sendResponse(res, 200, true, "Profils récupérés avec succès", etudiants);
     } catch (erreur) {
-        res.status(500).json({ 
-            message: "Erreur lors de la récupération des profils", 
-            erreur: erreur.message 
-        });
+        return sendResponse(res, 500, false, "Erreur lors de la récupération des profils", null, erreur);
     }
 };
 
 export const obtenirProfilParId = async (req, res) => {
+    // #swagger.tags = ['Etudiants']
+    // #swagger.summary = 'Récupérer un profil étudiant par ID'
     try {
         const { id } = req.params;
         const etudiant = await etudiantService.recupererParId(id);
         if (!etudiant) {
-            return res.status(404).json({ message: "Étudiant non trouvé" });
+            return sendResponse(res, 404, false, "Étudiant non trouvé");
         }
-        res.status(200).json(etudiant);
+        return sendResponse(res, 200, true, "Profil récupéré avec succès", etudiant);
     } catch (erreur) {
-        res.status(500).json({ 
-            message: "Erreur lors de la récupération du profil", 
-            erreur: erreur.message 
-        });
+        return sendResponse(res, 500, false, "Erreur lors de la récupération du profil", null, erreur);
     }
 };
 
 export const traiterProfil = async (req, res) => {
+    // #swagger.tags = ['Etudiants']
+    // #swagger.summary = 'Créer ou mettre à jour un profil étudiant'
+    /* #swagger.parameters['body'] = {
+        in: 'body',
+        description: 'Données du profil étudiant',
+        required: true,
+        schema: { $ref: '#/definitions/EtudiantProfileRequest' }
+    } */
     try {
         const { id } = req.params;
         const profil = await etudiantService.ajouterOuModifierEtudiant(id, req.body);
-        res.status(200).json({
-            message: "Profil traité avec succès (créé ou mis à jour)",
-            donnees: profil
-        });
+        return sendResponse(res, 200, true, "Profil traité avec succès (créé ou mis à jour)", profil);
     } catch (erreur) {
-        res.status(400).json({ 
-            message: "Erreur lors du traitement du profil", 
-            details: erreur.message 
-        });
+        return sendResponse(res, 400, false, "Erreur lors du traitement du profil", null, erreur);
     }
 };
-

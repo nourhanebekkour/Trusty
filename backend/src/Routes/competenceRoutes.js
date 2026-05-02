@@ -9,20 +9,26 @@ import {
     associerCompetence,
     detacherCompetence
 } from '../Controllers/competenceController.js';
+import { authMiddleware } from '../Middlewars/auth.middleware.js';
+import { requireRole } from '../Middlewars/roles.middleware.js';
 
-const routeur = express.Router();
+const router = express.Router();
 
-// Routes pour le catalogue des compétences
+// --- CATALOGUE (Lecture pour tous les connectés, Ecriture pour ADMIN) ---
 
-routeur.get('/', listerCompetences);
-routeur.get('/:id', recupererCompetence);
-routeur.post('/', ajouterCompetence);
-routeur.put('/:id', modifierCompetence);
-routeur.delete('/:id', supprimerCompetence);
+router.use(authMiddleware);
 
-// Routes pour les compétences spécifiques d'un étudiant
-routeur.get('/etudiant/:id_etudiant', listerCompetencesEtudiant);
-routeur.post('/etudiant/:id_etudiant/:id_competence', associerCompetence);
-routeur.delete('/etudiant/:id_etudiant/:id_competence', detacherCompetence);
+router.get('/', listerCompetences);
+router.get('/:id', recupererCompetence);
 
-export default routeur;
+router.post('/', requireRole('ADMINISTRATEUR'), ajouterCompetence);
+router.put('/:id', requireRole('ADMINISTRATEUR'), modifierCompetence);
+router.delete('/:id', requireRole('ADMINISTRATEUR'), supprimerCompetence);
+
+// --- COMPÉTENCES ÉTUDIANT (Auth requis) ---
+
+router.get('/etudiant/:id_etudiant', listerCompetencesEtudiant);
+router.post('/etudiant/:id_etudiant/:id_competence', associerCompetence);
+router.delete('/etudiant/:id_etudiant/:id_competence', detacherCompetence);
+
+export default router;

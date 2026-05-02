@@ -1,4 +1,4 @@
-import { prisma } from '../prisma/client.js';
+import prisma from "../Config/prismaClient.js";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -35,8 +35,8 @@ async function register(email, password, nom, prenom) {
   // 4. Générer le token JWT
   const token = jwt.sign(
     { userId: user.id_utilisateur },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN }
+    process.env.JWT_SECRET || 'secret_key_123',
+    { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
   );
 
   return { token, user };
@@ -68,8 +68,8 @@ async function login(email, password) {
   // 4. Générer le JWT
   const token = jwt.sign(
     { userId: user.id_utilisateur },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN }
+    process.env.JWT_SECRET || 'secret_key_123',
+    { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
   );
 
   // Exclure mot_de_passe de la réponse

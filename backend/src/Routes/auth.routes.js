@@ -27,7 +27,7 @@ router.get('/me', authMiddleware, authController.getMe);
 router.get(
   '/admin-only',
   authMiddleware,
-  requireRole('SUPER_ADMIN', 'ADMIN'),
+  requireRole('ADMINISTRATEUR'),
   (req, res) => res.json({ message: 'Accès admin' })
 );
 
