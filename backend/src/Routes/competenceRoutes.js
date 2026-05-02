@@ -9,14 +9,10 @@ import {
     associerCompetence,
     detacherCompetence
 } from '../Controllers/competenceController.js';
-import { authMiddleware } from '../Middlewars/auth.middleware.js';
 import { requireRole } from '../Middlewars/roles.middleware.js';
 
 const router = express.Router();
 
-// --- CATALOGUE (Lecture pour tous les connectés, Ecriture pour ADMIN) ---
-
-router.use(authMiddleware);
 
 router.get('/', listerCompetences);
 router.get('/:id', recupererCompetence);
