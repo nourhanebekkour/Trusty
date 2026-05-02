@@ -1,56 +1,57 @@
 import * as AdminService from '../Services/administrateurService.js';
-import prisma from "../config/prismaClient.js";
+import sendResponse from '../Utils/responseHandler.js';
+import prisma from '../Config/prismaClient.js';
 
 export const createOrUpdateProfile = async (req, res) => {
+    // #swagger.tags = ['Administrateurs']
+    // #swagger.summary = 'Créer ou mettre à jour un profil administrateur'
+    /* #swagger.parameters['body'] = {
+        in: 'body',
+        description: 'Données du profil admin',
+        required: true,
+        schema: { $ref: '#/definitions/AdminProfileRequest' }
+    } */
     try {
-         const id = req.body.id_administrateur;
-         const user = await prisma.utilisateur.findUnique({
-            where: { id_utilisateur: id }
-            });
-
-            if (!user) {
-            return res.status(404).json({
-                error: "Utilisateur introuvable"
-            });
-            }
+         const id = req.params.id;
+        const user = await AdminService.recupererAdminParId(id);
+        
+        if (!user) {
+            return sendResponse(res, 404, false, "Utilisateur introuvable");
+        }
         
         const profil = await AdminService.ajouterOuModifierAdmin(id, req.body);
         
-        res.status(200).json({
-            message: "administrateur créé ou mis à jour avec succès",
-            data: profil
-        });
+        return sendResponse(res, 200, true, "Administrateur créé ou mis à jour avec succès", profil);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        return sendResponse(res, 500, false, "Erreur lors du traitement du profil", null, error);
     }
 };
 
 export const getProfileByID = async (req, res) => {
+    // #swagger.tags = ['Administrateurs']
+    // #swagger.summary = 'Récupérer un profil administrateur par ID'
     try {
         const id = req.params.id;
-
-        
         const profil = await AdminService.recupererAdminParId(id);
-         if (!profil) {
-            return res.status(404).json({
-                error: "Utilisateur introuvable"
-            });
-            }
         
-        res.status(200).json(profil);
+        if (!profil) {
+            return sendResponse(res, 404, false, "Utilisateur introuvable");
+        }
+        
+        return sendResponse(res, 200, true, "Profil récupéré avec succès", profil);
     }
      catch (error) {
-        res.status(404).json({ error: error.message });
+        return sendResponse(res, 404, false, error.message, null, error);
     }
 };
 
 export const getProfiles = async (req,res) => {
+    // #swagger.tags = ['Administrateurs']
+    // #swagger.summary = 'Récupérer tous les profils administrateurs'
     try{
-        
         const profil = await AdminService.recupererTousLesAdmins();
-        res.status(200).json(profil)       
+        return sendResponse(res, 200, true, "Profils récupérés avec succès", profil);
     } catch (error){
-        res.status(500).json({error : error.message});
+        return sendResponse(res, 500, false, "Erreur lors de la récupération des profils", null, error);
     }
 }
-
