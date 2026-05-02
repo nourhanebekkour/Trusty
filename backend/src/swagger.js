@@ -79,6 +79,13 @@ const doc = {
       mention: 'Bien',
       est_actuelle: true
     },
+    TechnologieRequest: {
+      nom: "React",
+      categorie: "Frontend",
+      sous_categorie: "Library",
+      description: "Bibliothèque JavaScript pour interfaces utilisateur",
+      icone: "url_vers_icone"
+    },
     StandardResponse: {
       success: true,
       message: 'Message de succès ou erreur',
