@@ -2,7 +2,7 @@ import swaggerAutogen from 'swagger-autogen';
 
 const doc = {
   info: {
-    title: 'Projet ghailani',
+    title: 'Projet d\'integration',
     description: 'Documentation automatique des APIs du projet',
   },
   host: 'localhost:3000',
