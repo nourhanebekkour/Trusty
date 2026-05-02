@@ -9,6 +9,7 @@ import etudiantRoutes from './etudiantRoutes.js';
 import professeurRoutes from "./professeurRoutes.js";
 import adminRoutes from "./administrateurRoutes.js";
 import technologieRoutes from "./technologieRoutes.js";
+import projetRoutes from "./projetRoutes.js";
 import { authMiddleware } from '../Middlewars/auth.middleware.js';
 
 
@@ -25,10 +26,11 @@ router.use('/auth', authRoutes);
 router.use(authMiddleware);
 router.use('/formations', formationRoutes);
 router.use('/competences', competenceRoutes);
-router.use('/etudiants', etudiantRoutes);
 router.use('/technologies', technologieRoutes);
+router.use('/projets', projetRoutes);
 
 
+router.use('/etudiants', etudiantRoutes);
 router.use("/professeur", professeurRoutes);
 router.use("/admin", adminRoutes);
 
