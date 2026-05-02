@@ -171,7 +171,8 @@ describe('Controller Formation', () => {
 
             req.params.id = '3';
             await supprimerFormation(req, res);
-
+            
+            expect(mockSupprimerFormation).toHaveBeenCalledWith('3');
             expect(res.status).toHaveBeenCalledWith(200);
 
             expect(res.json).toHaveBeenCalledWith({
