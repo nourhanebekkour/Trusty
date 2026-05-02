@@ -51,7 +51,7 @@ export const modifierTechnologie = async (req, res) => {
             in: 'body',
             description: 'Informations de la technologie à modifier',
             required: true,
-            schema: { $ref: '#/definitions/Technologie' }
+            schema: { $ref: '#/definitions/TechnologieRequest' }
     } */
     try {
         const { id } = req.params;
