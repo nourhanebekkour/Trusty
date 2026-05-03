@@ -8,6 +8,9 @@ import competenceRoutes from './competenceRoutes.js';
 import etudiantRoutes from './etudiantRoutes.js';
 import professeurRoutes from "./professeurRoutes.js";
 import adminRoutes from "./administrateurRoutes.js";
+import technologieRoutes from "./technologieRoutes.js";
+import projetRoutes from "./projetRoutes.js";
+import { authMiddleware } from '../Middlewars/auth.middleware.js';
 
 
 // Middleware global : permet de lire le body JSON
@@ -20,11 +23,14 @@ const router = Router();
 router.use('/auth', authRoutes);
 
 
+router.use(authMiddleware);
 router.use('/formations', formationRoutes);
 router.use('/competences', competenceRoutes);
+router.use('/technologies', technologieRoutes);
+router.use('/projets', projetRoutes);
+
+
 router.use('/etudiants', etudiantRoutes);
-
-
 router.use("/professeur", professeurRoutes);
 router.use("/admin", adminRoutes);
 
