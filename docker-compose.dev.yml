@@ -1,0 +1,42 @@
+
+#──────────────────────────────── OVERRIDE DEV ────────────────────────────────
+services:
+
+# ──────────────── SERVICE FRONTEND ────────────────
+  frontend:
+    build:
+      target: development
+    ports:
+      - "5173:5173"
+    # volumes:
+    #   - ./frontend:/app
+    #   - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:3000
+
+ # ──────────────── SERVICE BACKEND ────────────────
+  backend:
+    build:
+      target: development
+    ports:
+      - "3000:3000"
+    # volumes:
+    #   - ./backend:/app
+    #   - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}
+      - JWT_SECRET=${JWT_SECRET}
+
+# ──────────────── SERVICE DB ────────────────
+  database:
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+
+
+# Commande : docker-compose -f docker-compose.yml -f docker-compose.dev.yml --env-file .env.dev up
