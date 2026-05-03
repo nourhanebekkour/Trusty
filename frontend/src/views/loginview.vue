@@ -89,7 +89,7 @@ import { useRouter } from 'vue-router'
 const email = ref('')
 const password = ref('')
 const remember = ref(false)
-
+const showCaptcha = ref(false)
 const isSubmitting = ref(false)
 
 /* ERRORS */
