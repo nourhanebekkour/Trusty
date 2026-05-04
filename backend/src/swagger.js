@@ -110,6 +110,23 @@ const doc = {
       version: "18.2.0",
       niveau_utilisation: "AVANCE"
     },
+    StageRequest: {
+      entreprise: "Google",
+      adresse_entreprise: "123 Rue Tech",
+      poste: "Développeur Backend",
+      date_debut: "2024-06-01",
+      date_fin: "2024-08-31",
+      duree_semaines: 10,
+      missions: "Développement d'une API REST",
+      encadrant_professionnel: "M. Ghailani",
+      encadrant_academique: "Pr. Ghailani",
+      est_public: true,
+      id_etudiant: "cuid_etudiant"
+    },
+    StageTechnologieRequest: {
+      version: "18.2.0",
+      niveau_utilisation: "AVANCE"
+    },
     StandardResponse: {
       success: true,
       message: 'Message de succès ou erreur',
@@ -120,6 +137,6 @@ const doc = {
 };
 
 const outputFile = './src/swagger-output.json';
-const endpointsFiles = ['./src/app.js']; 
+const endpointsFiles = ['./src/app.js'];
 
 swaggerAutogen()(outputFile, endpointsFiles, doc);
