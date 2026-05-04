@@ -83,7 +83,7 @@ describe('Service Competence', () => {
             const result = await creerCompetence(donnees);
 
             expect(competence.create).toHaveBeenCalledWith(
-                { data: expect.objectContaining({ ...donnees }) }
+                { data: expect.objectContaining(donnees) }
             );
             expect(result).toEqual(mockData);
         });
