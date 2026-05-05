@@ -89,7 +89,7 @@ import { useRouter } from 'vue-router'
 const email = ref('')
 const password = ref('')
 const remember = ref(false)
-
+const showCaptcha = ref(false)
 const isSubmitting = ref(false)
 
 /* ERRORS */
@@ -100,6 +100,7 @@ const fieldErrors = ref({
 })
 
 /* SECURITY */
+/* SECURITY UX STATE */
 const loginAttempts = ref(0)
 const lockUntil = ref(null)
 
@@ -109,15 +110,34 @@ const router = useRouter()
 
 /* CONFIG */
 const MAX_ATTEMPTS = 3
-const BASE_LOCK_TIME = 10000
+const BASE_LOCK_TIME = 10 * 1000
 
-/* HELPERS */
+/*HELPERS */
 const normalizeEmail = (v) => v.trim().toLowerCase()
 
 const isValidEmail = (v) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
 
 /* LOCK */
+
+const isStrongPassword = (v) => {
+  if (typeof v !== 'string') return false
+
+  const minLength = v.length >= 8
+  const hasUpper = /[A-Z]/.test(v)
+  const hasLower = /[a-z]/.test(v)
+  const hasNumber = /[0-9]/.test(v)
+  const hasSymbol = /[!@#$%^&*(),.?":{}|<>_\-\\/\[\]=+;]/.test(v)
+
+  return minLength && hasUpper && hasLower && hasNumber && hasSymbol
+}
+
+const getCaptchaToken = async () => {
+  if (!showCaptcha.value) return null
+  return 'mock-captcha-token'
+}
+
+/* LOCK LOGIC */
 const isLocked = computed(() =>
   lockUntil.value && Date.now() < lockUntil.value
 )
@@ -130,7 +150,7 @@ const applyLock = () => {
   lockUntil.value = Date.now() + delay
 }
 
-/* ERRORS */
+/* ERROR HANDLING*/
 const clearErrors = () => {
   error.value = ''
   fieldErrors.value = { email: '', password: '' }
@@ -147,6 +167,7 @@ const validateFields = () => {
   let ok = true
   fieldErrors.value = { email: '', password: '' }
 
+  /* EMAIL */
   if (!email.value.trim()) {
     fieldErrors.value.email = 'Email requis'
     ok = false
@@ -155,18 +176,29 @@ const validateFields = () => {
     ok = false
   }
 
+  /* PASSWORD */
   if (!password.value) {
     fieldErrors.value.password = 'Mot de passe requis'
     ok = false
-  } else if (password.value.length < 8) {
-    fieldErrors.value.password = 'Minimum 8 caractères'
+  } else if (!isStrongPassword(password.value)) {
+    fieldErrors.value.password =
+      'Min 8 caractères, majuscule, minuscule, nombre et symbole'
     ok = false
   }
 
   return ok
 }
 
-/* LOGIN */
+/* COMPUTED */
+const isDisabled = computed(() =>
+  isSubmitting.value ||
+  auth.loading ||
+  isLocked.value ||
+  !email.value.trim() ||
+  !password.value
+)
+
+/*LOGIN*/
 const handleLogin = async () => {
   if (isSubmitting.value || isLocked.value) return
 
@@ -177,20 +209,32 @@ const handleLogin = async () => {
   isSubmitting.value = true
 
   try {
+    const cleanEmail = normalizeEmail(email.value)
+    const cleanPassword = password.value
+
+    const captchaToken = await getCaptchaToken()
+
     const res = await auth.loginUser({
-      email: normalizeEmail(email.value),
-      password: password.value
+      email: cleanEmail,
+      password: cleanPassword,
+      remember: remember.value,
+      captcha: captchaToken
     })
 
+    /* SUCCESS */
     if (res?.success) {
-      await auth.fetchProfile()
       loginAttempts.value = 0
       lockUntil.value = null
       router.push('/')
       return
     }
 
+    /* FAIL */
     loginAttempts.value++
+
+    if (res?.requireCaptcha) {
+      showCaptcha.value = true
+    }
 
     if (loginAttempts.value >= MAX_ATTEMPTS) {
       applyLock()
@@ -199,7 +243,10 @@ const handleLogin = async () => {
     setGenericError()
 
   } catch (err) {
-    console.error(err)
+
+    if (import.meta.env.DEV) {
+      console.error('Login error:', err)
+    }
 
     loginAttempts.value++
 
