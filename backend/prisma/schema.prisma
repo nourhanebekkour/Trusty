@@ -17,6 +17,12 @@ enum StatusValidation {
   REJETE
 }
 
+enum Role {
+  ETUDIANT
+  PROFESSEUR
+  ADMINISTRATEUR
+  PROFESSIONNEL
+}
 enum Niveau {
   DEBUTANT
   INTERMEDIAIRE
@@ -131,6 +137,7 @@ model Utilisateur {
   nom                     String    @db.VarChar(100)
   prenom                  String    @db.VarChar(100)
   telephone               String?   @db.VarChar(20)
+  role                   Role      @default(ETUDIANT)
   date_creation           DateTime  @default(now())
   date_modification       DateTime? @updatedAt
   derniere_connexion      DateTime?
@@ -173,9 +180,9 @@ model Administrateur {
 
 model Etudiant {
   id_etudiant               String    @id
-  numero_etudiant           String    @unique @db.VarChar(20)
-  filiere                   String    @db.VarChar(100)
-  annee                     Int
+  numero_etudiant           String?    @unique @db.VarChar(20)
+  filiere                   String?    @db.VarChar(100)
+  annee                     Int?
   date_naissance            DateTime?
   adresse                   String?   @db.VarChar(255)
   ville                     String?   @db.VarChar(100)
@@ -210,8 +217,8 @@ model Etudiant {
 
 model Professeur {
   id_professeur     String      @id
-  departement       Departement
-  specialite        String      @db.VarChar(100)
+  departement       Departement?
+  specialite        String?      @db.VarChar(100)
   filieres_interv   Filiere[]
   date_naissance    DateTime?
   adresse           String?     @db.VarChar(255)
@@ -233,10 +240,10 @@ model Professeur {
 
 model Professionnel {
   id_professionnel      String            @id
-  entreprise            String            @db.VarChar(200)
-  poste                 String            @db.VarChar(100)
+  entreprise            String?            @db.VarChar(200)
+  poste                 String?           @db.VarChar(100)
   secteur_activite      String?           @db.VarChar(100)
-  email_professionnel   String            @db.VarChar(255)
+  email_professionnel   String?            @db.VarChar(255)
   status_validation     StatusValidation  @default(EN_ATTENTE)
   date_demande          DateTime          @default(now())
   date_validation       DateTime?

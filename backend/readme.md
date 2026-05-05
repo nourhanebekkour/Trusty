@@ -14,3 +14,6 @@ Modifiez la ligne DATABASE_URL avec vos identifiants PostgreSQL locaux.
 ### 3. Synchroniser la base (Créer les tables)
 npx prisma migrate dev
 
+### 4. Generer documentation swagger
+npm run swagger
+
