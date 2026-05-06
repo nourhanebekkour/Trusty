@@ -44,8 +44,8 @@ services:
 # ───────────────── RÉSEAU INTERNE entre les services  ───────────────── 
 
 networks:       
-  reseau_app:
-    driver: bridge 
+  reseau_app:  
+    driver: bridge  
 
 volumes:
-  donnees_postgres:
+  donnees_postgres: 
