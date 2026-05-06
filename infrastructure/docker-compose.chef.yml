@@ -159,6 +159,7 @@ services:
       - backend
     networks:
       - trusty_network
+      - reseau_app
     restart: unless-stopped
 
   owasp-zap:
