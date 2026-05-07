@@ -10,6 +10,8 @@ backend/node_modules/
 .env.adjoint
 .env.chef-db
 .env.adjoint-db
+.env.prod-db
+.env.staging-db
 
 frontend/dist/
 
