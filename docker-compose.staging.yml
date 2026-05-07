@@ -6,6 +6,8 @@ services:
   frontend:
     build:
       target: production
+    ports:
+      -"8080:80"
     environment:
       - NODE_ENV=production
       - VITE_API_URL=http://${VM2_IP}:3001
