@@ -5,14 +5,15 @@ import { requireRole } from '../Middlewars/roles.middleware.js';
 
 const router = Router();
 
-// ---- ROUTES PUBLIQUES ----
-// Pas besoin de token
-
 // POST /api/auth/register → inscription
 router.post('/register', authController.register);
 
 // POST /api/auth/login → connexion, retourne un token
 router.post('/login', authController.login);
+
+router.post('/forgot-password', authController.oublierMDP);
+
+router.post('/reset-password', authController.changerMDP);
 
 // ---- ROUTES PROTÉGÉES ----
 // authMiddleware vérifie le token avant le controller
