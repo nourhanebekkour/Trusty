@@ -6,8 +6,6 @@ services:
   frontend:
     build:
       target: production
-    ports:
-      - "8080:80"
     environment:
       - NODE_ENV=production
       - VITE_API_URL=http://${VM2_IP}:3001
@@ -19,7 +17,7 @@ services:
       - "3001:3000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_HOST}:5432/${POSTGRES_DB}
       - JWT_SECRET=${JWT_SECRET}
     restart: on-failure
 
