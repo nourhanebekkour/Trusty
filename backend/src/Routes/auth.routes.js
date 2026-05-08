@@ -2,18 +2,19 @@ import { Router } from 'express';
 import * as authController from '../Controllers/auth.controller.js';
 import { authMiddleware } from '../Middlewars/auth.middleware.js';
 import { requireRole } from '../Middlewars/roles.middleware.js';
+import validate from '../Middlewars/validate.middleware.js';
+import { registerSchema,loginSchema,forgotPasswordSchema,resetPasswordSchema} from '../Validators/auth.validator.js';
+
 
 const router = Router();
 
 // POST /api/auth/register → inscription
-router.post('/register', authController.register);
+router.post('/register', validate(registerSchema), authController.register);
 
 // POST /api/auth/login → connexion, retourne un token
-router.post('/login', authController.login);
-
-router.post('/forgot-password', authController.oublierMDP);
-
-router.post('/reset-password', authController.changerMDP);
+router.post('/login', validate(loginSchema), authController.login);
+router.post('/forgot-password', validate(forgotPasswordSchema), authController.oublierMDP);
+router.post('/reset-password', validate(resetPasswordSchema), authController.changerMDP);
 
 // ---- ROUTES PROTÉGÉES ----
 // authMiddleware vérifie le token avant le controller
