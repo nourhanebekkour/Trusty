@@ -1,0 +1,186 @@
+<template>
+  <div class="navbar-wrapper">
+    <nav class="navbar">
+      <div class="navbar-left">
+        <img :src="iconTrusty" class="logo-icon" alt="Trusty" />
+        <span class="logo-text">TRUSTY</span>
+      </div>
+
+      <div class="navbar-right">
+        <div class="notif-wrap">
+          <img :src="iconNotifications" class="notif-icon" alt="notifications" />
+          <span class="notif-badge"></span>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="user-info">
+          <div class="user-text">
+            <div class="user-name">{{ userName }}</div>
+            <div class="user-role">{{ userRole }}</div>
+          </div>
+
+          <!-- Avatar image si disponible, sinon initiales -->
+          <div class="user-avatar" v-if="!userAvatar">
+            {{ userInitials }}
+          </div>
+          <img
+            v-else
+            :src="userAvatar"
+            class="user-avatar user-avatar--img"
+            alt="photo profil"
+          />
+        </div>
+      </div>
+    </nav>
+  </div>
+</template>
+
+<script setup>
+import { computed, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/authstore'
+import iconTrusty       from '@/assets/icons/trusty.svg'
+import iconNotifications from '@/assets/icons/notifications.svg'
+
+const authStore = useAuthStore()
+
+// ── Charger le profil si pas encore chargé ────────────────────────────────────
+onMounted(async () => {
+  if (!authStore.user) {
+    await authStore.fetchProfile()
+  }
+})
+
+// ── Données affichées ─────────────────────────────────────────────────────────
+const userName = computed(() =>
+  authStore.user?.name ?? 'YEL'
+)
+
+const userRole = computed(() =>
+  authStore.user?.role ?? authStore.user?.specialite ?? 'Étudiant'
+)
+
+const userAvatar = computed(() =>
+  authStore.user?.avatar ?? null
+)
+
+const userInitials = computed(() => {
+  const name = authStore.user?.name ?? ''
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+})
+</script>
+
+<style scoped>
+.navbar-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  left: 0;
+}
+
+.navbar {
+  height: 56px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E8E6DF;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.logo-text {
+  font-size: 16px;
+  font-weight: 700;
+  color: #5C8C6A;
+  letter-spacing: 1.5px;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.notif-wrap {
+  position: relative;
+  cursor: pointer;
+}
+
+.notif-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.notif-badge {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  width: 8px;
+  height: 8px;
+  background: #5C8C6A;
+  border-radius: 50%;
+  border: 1.5px solid white;
+}
+
+.divider {
+  width: 1px;
+  height: 32px;
+  background: #E8E6DF;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.user-text {
+  text-align: right;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #3D3D3D;
+}
+
+.user-role {
+  font-size: 12px;
+  color: #8A8A8A;
+}
+
+/* Avatar initiales */
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #D6EDE8;
+  background: #5C8C6A;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Avatar image */
+.user-avatar--img {
+  object-fit: cover;
+  background: transparent;
+}
+</style>
