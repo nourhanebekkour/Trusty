@@ -1,0 +1,43 @@
+---
+- name: Cloner le projet Trusty
+  git:
+    repo: https://github.com/nourhanebekkour/Trusty.git
+    dest: /home/aya/Trusty
+    version: feature/docker-infrastructure
+    force: yes
+
+- name: Créer .env.staging-db pour VM-Chef-DB
+  template:
+    src: env.staging-db.j2
+    dest: /home/aya/Trusty/.env.staging-db
+  when: inventory_hostname == '192.168.20.12'
+
+- name: Créer .env.prod-db pour VM-Adjoint-DB
+  template:
+    src: env.prod-db.j2
+    dest: /home/aya/Trusty/.env.prod-db
+  when: inventory_hostname == '192.168.20.13'
+
+- name: Lancer PostgreSQL sur VM-Chef-DB
+  shell: |
+    cd /home/aya/Trusty
+    docker compose -f infrastructure/docker-compose.db.yml \
+                   --env-file .env.staging-db \
+                   up -d
+  when: inventory_hostname == '192.168.20.12'
+
+- name: Lancer PostgreSQL sur VM-Adjoint-DB
+  shell: |
+    cd /home/aya/Trusty
+    docker compose -f infrastructure/docker-compose.db.yml \
+                   --env-file .env.prod-db \
+                   up -d
+  when: inventory_hostname == '192.168.20.13'
+
+- name: Vérifier les containers DB
+  shell: docker ps
+  register: db_containers
+
+- name: Afficher les containers DB
+  debug:
+    msg: "{{ db_containers.stdout }}"
