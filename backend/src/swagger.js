@@ -127,6 +127,17 @@ const doc = {
       version: "18.2.0",
       niveau_utilisation: "AVANCE"
     },
+    ActiviteRequest: {
+      type_activite: "CLUB",
+      nom_activite: "CSC",
+      organisation: "ENSA Tanger",
+      date_debut: "2024-01-01",
+      date_fin: "2024-06-01",
+      description: "Description de l activité",
+      role: "Membre",
+      est_public: true,
+      id_etudiant: "cuid_etudiant"
+    },
     StandardResponse: {
       success: true,
       message: 'Message de succès ou erreur',
