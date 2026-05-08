@@ -1,0 +1,40 @@
+---
+- name: Ajouter la clé GPG Docker
+  apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Ajouter le repo Docker
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable"
+    state: present
+
+- name: Installer Docker
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+    state: present
+    update_cache: yes
+
+- name: Ajouter aya au groupe docker
+  user:
+    name: aya
+    groups: docker
+    append: yes
+
+- name: Démarrer et activer Docker
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Vérifier Docker
+  command: docker --version
+  register: docker_version
+
+- name: Afficher version Docker
+  debug:
+    msg: "{{ docker_version.stdout }}"
