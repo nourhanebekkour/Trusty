@@ -8,6 +8,7 @@ import competenceRoutes from './competenceRoutes.js';
 import etudiantRoutes from './etudiantRoutes.js';
 import professeurRoutes from "./professeurRoutes.js";
 import adminRoutes from "./administrateurRoutes.js";
+import professionnelRoutes from "./professionnelRoutes.js"
 
 
 // Middleware global : permet de lire le body JSON
@@ -27,5 +28,6 @@ router.use('/etudiants', etudiantRoutes);
 
 router.use("/professeur", professeurRoutes);
 router.use("/admin", adminRoutes);
+router.use("/professionnel",professionnelRoutes);
 
 export default router;
