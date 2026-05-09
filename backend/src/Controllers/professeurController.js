@@ -4,32 +4,26 @@ import sendResponse from '../Utils/responseHandler.js';
 export const createOrUpdateProfile = async (req, res) => {
     // #swagger.tags = ['Professeurs']
     // #swagger.summary = 'Créer ou mettre à jour un profil professeur'
+    /* #swagger.parameters['id'] = { in: 'path' } */
     /* #swagger.parameters['body'] = {
         in: 'body',
-        description: 'Données du profil professeur',
+        description: 'Informations du profil professeur',
         required: true,
         schema: { $ref: '#/definitions/ProfesseurProfileRequest' }
     } */
     try {
         const id = req.params.id;
-        const user = await ProfesseurService.recupererProfesseurParId(id);
-         
-        if (!user) {
-            return sendResponse(res, 404, false, "Utilisateur introuvable");
-        }
-    
-        
         const profil = await ProfesseurService.ajouterOuModifierProfesseur(id, req.body);
-        
         return sendResponse(res, 200, true, "Professeur créé ou mis à jour avec succès", profil);
     } catch (error) {
-        return sendResponse(res, 500, false, "Erreur lors du traitement du profil", null, error);
+        return sendResponse(res, 500, false, "Erreur lors du traitement du profil", null, error.message);
     }
 };
 
 export const obtenirProfilParId = async (req, res) => {
     // #swagger.tags = ['Professeurs']
     // #swagger.summary = 'Récupérer un profil professeur par ID'
+    /* #swagger.parameters['id'] = { in: 'path' } */
     try {
         const id = req.params.id;
         const profil = await ProfesseurService.recupererProfesseurParId(id);
@@ -37,11 +31,10 @@ export const obtenirProfilParId = async (req, res) => {
         if (!profil) {
             return sendResponse(res, 404, false, "Utilisateur introuvable");
         }
-        
         return sendResponse(res, 200, true, "Profil récupéré avec succès", profil);
     }
      catch (error) {
-        return sendResponse(res, 404, false, error.message, null, error);
+        return sendResponse(res, 500, false, "Erreur lors de la récupération du profil", null, error.message);
     }
 };
 
@@ -49,9 +42,38 @@ export const obtenirTousLesProfils = async (req,res) => {
     // #swagger.tags = ['Professeurs']
     // #swagger.summary = 'Récupérer tous les profils professeurs'
     try{
-        const profil = await ProfesseurService.recupererTousLesProfesseurs();
-        return sendResponse(res, 200, true, "Profils récupérés avec succès", profil);
+        const profils = await ProfesseurService.recupererTousLesProfesseurs();
+        return sendResponse(res, 200, true, "Profils récupérés avec succès", profils);
     } catch (error){
-        return sendResponse(res, 500, false, "Erreur lors de la récupération des profils", null, error);
+        return sendResponse(res, 500, false, "Erreur lors de la récupération des profils", null, error.message);
     }
-}
+};
+
+/**
+ * Upload de la photo de profil (Avatar)
+ */
+export const uploadAvatar = async (req, res) => {
+    // #swagger.tags = ['Professeurs']
+    // #swagger.summary = 'Uploader la photo de profil'
+    // #swagger.consumes = ['multipart/form-data']
+    /* #swagger.parameters['id'] = { in: 'path' } */
+    /* #swagger.parameters['fichier'] = {
+        in: 'formData',
+        type: 'file',
+        required: 'true',
+        description: 'Photo de profil (Avatar)',
+    } */
+    try {
+        const { id } = req.params;
+        if (!req.file) {
+            return sendResponse(res, 400, false, "Aucun fichier fourni");
+        }
+
+        const result = await ProfesseurService.mettreAJourAvatar(id, req.file, req.user.id);
+
+        return sendResponse(res, 200, true, "Photo de profil mise à jour", result);
+    } catch (error) {
+        const status = error.message === "Professeur non trouvé" ? 404 : 500;
+        return sendResponse(res, status, false, error.message || "Erreur lors de l'upload de l'avatar", null, error.message);
+    }
+};

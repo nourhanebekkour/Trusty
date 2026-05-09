@@ -1,5 +1,19 @@
 import prisma from "../Config/prismaClient.js";
 
+// Fonction utilitaire pour vérifier l'accès (Admin ou Propriétaire)
+const verifierAccesFormation = async (id_formation, userId, userRole) => {
+    const formation = await prisma.formation.findUnique({ 
+        where: { id_formation }
+    });
+    
+    if (!formation) throw new Error("Formation non trouvée");
+
+    if (userRole !== 'ADMINISTRATEUR' && formation.id_etudiant !== userId) {
+        throw new Error("Vous n'êtes pas autorisé à accéder à cette ressource");
+    }
+    return formation;
+};
+
 export const recupererFormationsParEtudiant = async (id_etudiant) => {
     return await prisma.formation.findMany({
         where: { id_etudiant },
@@ -28,7 +42,9 @@ export const ajouterFormation = async (id_etudiant, donnees) => {
     });
 };
 
-export const modifierFormation = async (id_formation, donnees) => {
+export const modifierFormation = async (id_formation, donnees, userId, userRole) => {
+    await verifierAccesFormation(id_formation, userId, userRole);
+
     const donneesUpdate = { ...donnees };
     
     if (donneesUpdate.date_debut) donneesUpdate.date_debut = new Date(donneesUpdate.date_debut);
@@ -40,7 +56,9 @@ export const modifierFormation = async (id_formation, donnees) => {
     });
 };
 
-export const supprimerFormation = async (id_formation) => {
+export const supprimerFormation = async (id_formation, userId, userRole) => {
+    await verifierAccesFormation(id_formation, userId, userRole);
+
     return await prisma.formation.delete({
         where: { id_formation }
     });

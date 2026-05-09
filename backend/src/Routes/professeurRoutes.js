@@ -1,16 +1,14 @@
 import express from 'express';
-import { 
-    createOrUpdateProfile,
-    obtenirProfilParId,
-    obtenirTousLesProfils,
-} from '../Controllers/professeurController.js';
+import { createOrUpdateProfile, obtenirProfilParId, obtenirTousLesProfils, uploadAvatar } from '../Controllers/professeurController.js';
+import upload from '../Middlewars/uploadMiddleware.js';
+import { requireRole, requireOwnerOrAdmin } from '../Middlewars/roles.middleware.js';
 
 const router = express.Router();
 
+router.get('/', requireRole('ADMINISTRATEUR'), obtenirTousLesProfils);
+router.get('/:id', requireOwnerOrAdmin('id'), obtenirProfilParId);
 
-router.get("/",  obtenirTousLesProfils);
-router.get("/:id", obtenirProfilParId);
-
-router.put("/:id", createOrUpdateProfile);
+router.put('/:id', requireOwnerOrAdmin('id'), createOrUpdateProfile);
+router.post('/:id/avatar', requireOwnerOrAdmin('id'), upload.single('fichier'), uploadAvatar);
 
 export default router;
