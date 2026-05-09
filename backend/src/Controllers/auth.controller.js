@@ -63,7 +63,8 @@ const oublierMDP = async (req, res) => {
     await authService.oublierMDP(email);
     return sendResponse(res, 200, true, 'Email de réinitialisation envoyé');
   } catch (err) {
-    return sendResponse(res, 400, false,"Erreur lors de l'envoi de l'email");
+    console.error("Erreur Forget Password:", err);
+    return sendResponse(res, 400, false, "Erreur lors de l'envoi de l'email", null, err.message || err);
   }
 };
 const changerMDP = async (req, res) => {
