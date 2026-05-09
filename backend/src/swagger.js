@@ -2,7 +2,7 @@ import swaggerAutogen from 'swagger-autogen';
 
 const doc = {
   info: {
-    title: 'Projet d\'integration',
+    title: 'Projet',
     description: 'Documentation automatique des APIs du projet',
   },
   host: 'localhost:3000',
@@ -53,7 +53,6 @@ const doc = {
       niveau_acces: 'ADMIN'
     },
     ProfesseurProfileRequest: {
-      id_professeur: 'cuid_de_l_utilisateur',
       departement: 'SIC',
       specialite: 'Informatique',
       filieres: ['GINF', 'GSR'],
@@ -68,7 +67,6 @@ const doc = {
       type: 'TECHNIQUE',
       categorie: 'Backend',
       description: 'Développement serveur avec Node.js',
-      icone: 'https://icon-url.com'
     },
     FormationRequest: {
       diplome: 'Cycle d\'ingénieur',
@@ -84,7 +82,6 @@ const doc = {
       categorie: "Frontend",
       sous_categorie: "Library",
       description: "Bibliothèque JavaScript pour interfaces utilisateur",
-      icone: "url_vers_icone"
     },
     ProjetRequest: {
       titre: "Mon Projet",
@@ -121,7 +118,6 @@ const doc = {
       encadrant_professionnel: "M. Ghailani",
       encadrant_academique: "Pr. Ghailani",
       est_public: true,
-      id_etudiant: "cuid_etudiant"
     },
     StageTechnologieRequest: {
       version: "18.2.0",
@@ -136,7 +132,9 @@ const doc = {
       description: "Description de l activité",
       role: "Membre",
       est_public: true,
-      id_etudiant: "cuid_etudiant"
+    },
+    AssocierCompetenceRequest: {
+      niveau_maitrise: 'INTERMEDIAIRE'
     },
     StandardResponse: {
       success: true,

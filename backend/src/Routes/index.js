@@ -3,6 +3,8 @@
 import { Router } from 'express';
 
 import authRoutes from './auth.routes.js';
+import utilisateurRoutes from './utilisateurRoutes.js';
+import fileRoutes from './fileRoutes.js';
 import formationRoutes from './formationRoutes.js';
 import competenceRoutes from './competenceRoutes.js';
 import etudiantRoutes from './etudiantRoutes.js';
@@ -26,6 +28,8 @@ router.use('/auth', authRoutes);
 
 
 router.use(authMiddleware);
+router.use('/utilisateurs', utilisateurRoutes);
+router.use('/files', fileRoutes);
 router.use('/formations', formationRoutes);
 router.use('/competences', competenceRoutes);
 router.use('/technologies', technologieRoutes);
@@ -35,7 +39,7 @@ router.use('/activites', activiteParascolaireRoutes);
 
 
 router.use('/etudiants', etudiantRoutes);
-router.use("/professeur", professeurRoutes);
-router.use("/admin", adminRoutes);
+router.use("/professeurs", professeurRoutes);
+router.use("/administrateurs", adminRoutes);
 
 export default router;
