@@ -7,8 +7,8 @@ const { etudiant } = mockPrisma;
 // (1) Mock de Prisma
 // define the mock before importing the module you want to test
 // quand qlq importe prisma dans le service), donne lui les mock à la place
-await jest.unstable_mockModule('@prisma/client', () => ({
-    PrismaClient: jest.fn().mockImplementation(() => mockPrisma)
+await jest.unstable_mockModule('../../../src/Config/prismaClient.js', () => ({
+    default: mockPrisma
 }));
 
 // (2) Import dynamique du Service après le Mock
