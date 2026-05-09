@@ -5,13 +5,13 @@ import prisma from '../Config/prismaClient.js';
 const register = async (req, res) => {
   
   try {
-    const { email, password, nom, prenom, role } = req.body;
+    const { email, password, nom, prenom} = req.body;
 
     if (!email || !password || !nom || !prenom) {
       return sendResponse(res, 400, false, 'Champs manquants (email, password, nom, prenom)');
     }
 
-    const result = await authService.register(email, password, nom, prenom, role);
+    const result = await authService.register(email, password, nom, prenom);
     return sendResponse(res, 201, true, 'Inscription réussie', result);
 
   } catch (err) {
