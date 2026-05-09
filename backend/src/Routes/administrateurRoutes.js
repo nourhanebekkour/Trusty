@@ -5,12 +5,10 @@ import {
   getProfileByID,
   getProfiles
 } from '../Controllers/administrateurController.js';
-import { authMiddleware } from '../Middlewars/auth.middleware.js';
 import { requireRole } from '../Middlewars/roles.middleware.js';
 
 const router = express.Router();
 
-router.use(authMiddleware);
 router.use(requireRole('ADMINISTRATEUR'));
 
 router.get("/",getProfiles)

@@ -12,5 +12,12 @@ export const mockPrisma = {
         create: jest.fn(),
         delete: jest.fn(),
         deleteMany: jest.fn(),
+    },
+    formation: {
+        findMany: jest.fn(),
+        findUnique: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
     }
 };
