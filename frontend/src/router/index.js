@@ -11,7 +11,7 @@ import Profile from '@/views/Profile.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    
+  
     {
       path: '/',
       name: 'home',
@@ -61,7 +61,8 @@ const router = createRouter({
       path:'/stage',
       name:'stage',
       component: StageList,
-    }
+    },
+    
   ],
 })
 
