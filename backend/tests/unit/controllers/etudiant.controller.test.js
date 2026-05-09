@@ -20,6 +20,7 @@ await jest.unstable_mockModule('../../../src/Services/etudiantService.js', () =>
 const { obtenirTousLesProfils, obtenirProfilParId, traiterProfil } =
     await import('../../../src/Controllers/etudiantController.js');
 
+
 describe('Controller Profil Étudiant', () => {
 
     let req, res;
@@ -56,7 +57,13 @@ describe('Controller Profil Étudiant', () => {
             expect(res.status).toHaveBeenCalledWith(200);
 
             // Vérifie que le controller a bien retourné mockEtudiants dans la réponse.
-            expect(res.json).toHaveBeenCalledWith(mockEtudiants);
+            expect(res.json).toHaveBeenCalledWith({
+                status: 200,
+                success: true,
+                message: "Profils récupérés avec succès",
+                data: mockEtudiants,
+                erreur: null
+            });
         });
 
         test('doit retourner 500 en cas d\'erreur', async () => {
@@ -66,8 +73,11 @@ describe('Controller Profil Étudiant', () => {
 
             expect(res.status).toHaveBeenCalledWith(500);
             expect(res.json).toHaveBeenCalledWith({
+                status: 500,
+                success: false,
                 message: "Erreur lors de la récupération des profils",
-                erreur: "Erreur DB"
+                data: null,
+                erreur: expect.any(Error)
             });
         });
 
@@ -83,7 +93,14 @@ describe('Controller Profil Étudiant', () => {
             await obtenirProfilParId(req, res);
 
             expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith(mockEtudiant);
+            expect(res.json).toHaveBeenCalledWith({
+                status: 200,
+                success: true,
+                message: "Profil récupéré avec succès",
+                data: mockEtudiant,
+                erreur: null
+            }
+            );
         });
 
         test('doit retourner 404 si étudiant non trouvé', async () => {
@@ -93,7 +110,13 @@ describe('Controller Profil Étudiant', () => {
             await obtenirProfilParId(req, res);
 
             expect(res.status).toHaveBeenCalledWith(404);
-            expect(res.json).toHaveBeenCalledWith({ message: "Étudiant non trouvé" });
+            expect(res.json).toHaveBeenCalledWith({
+                status: 404,
+                success: false,
+                message: "Étudiant non trouvé",
+                data: null,
+                erreur: null
+            });
         });
 
         test('doit retourner 500 en cas d\'erreur', async () => {
@@ -104,8 +127,11 @@ describe('Controller Profil Étudiant', () => {
 
             expect(res.status).toHaveBeenCalledWith(500);
             expect(res.json).toHaveBeenCalledWith({
+                status: 500,
+                success: false,
                 message: "Erreur lors de la récupération du profil",
-                erreur: "Erreur DB"
+                data: null,
+                erreur: expect.any(Error)
             });
         });
 
@@ -123,21 +149,27 @@ describe('Controller Profil Étudiant', () => {
 
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
+                status: 200,
+                success: true,
                 message: "Profil traité avec succès (créé ou mis à jour)",
-                donnees: mockProfil
+                data: mockProfil,
+                erreur: null
             });
         });
 
         test('doit retourner 400 en cas d\'erreur', async () => {
             req.params.id = 'id-valide';
-            mockAjouterOuModifierEtudiant.mockRejectedValue(new Error('Erreur'));
+            mockAjouterOuModifierEtudiant.mockRejectedValue(new Error('Erreur DB'));
 
             await traiterProfil(req, res);
 
             expect(res.status).toHaveBeenCalledWith(400);
             expect(res.json).toHaveBeenCalledWith({
+                status: 400,
+                success: false,
                 message: "Erreur lors du traitement du profil",
-                details: "Erreur"
+                data: null,
+                erreur: expect.any(Error)
             });
         });
 
