@@ -1,6 +1,8 @@
 import prisma from "../Config/prismaClient.js";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import { envoyerEmailReinitialisation } from './email.service.js';
 
 async function register(email, password, nom, prenom) {
 
@@ -76,5 +78,51 @@ async function login(email, password) {
   const { mot_de_passe, ...userSafe } = user;
   return { token, user: userSafe };
 }
-
-export { register, login };
+async function oublierMDP(email) {
+  // 1. Chercher l'utilisateur par email
+  const user = await prisma.utilisateur.findUnique({ where: { email } });
+  if (!user) return;
+  //2. Générer un token de réinitialisation
+  const token = crypto.randomBytes(32).toString('hex');
+  const expires = new Date(Date.now() + 3600000); // 1 heure
+  
+  // 3. Sauvegarder le token et sa date d'expiration en BDD
+  await prisma.utilisateur.update({
+    where: { email },
+    data: {
+      token_reinitialisation: token,
+      date_expiration_token : expires
+    }
+  });
+  
+  // 4. Envoyer l'email de réinitialisation
+  await envoyerEmailReinitialisation(email, token);
+}
+async function changerMDP(token, newPassword) {
+  // 1. Trouver l'utilisateur avec le token 
+  const user = await prisma.utilisateur.findFirst({
+    where: { token_reinitialisation: token }
+  });
+  if (!user) {
+    throw new Error('Token de réinitialisation invalide');
+  }
+  
+  // 2. Vérifier que le token n'est pas expiré
+  if (user.date_expiration_token < new Date()) {
+    throw new Error('ce lien a expiré');
+  }
+  // 3. Hasher le nouveau mot de passe
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
+  
+  // 4. Mettre à jour le mot de passe en BDD et supprimer le token
+  await prisma.utilisateur.update({
+    where: { id_utilisateur: user.id_utilisateur },
+    data: {
+      mot_de_passe: hashedPassword,
+      token_reinitialisation: null,
+      date_expiration_token : null
+    }
+  });
+}
+export { register, login, oublierMDP, changerMDP };
