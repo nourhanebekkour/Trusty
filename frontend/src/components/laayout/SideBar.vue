@@ -118,7 +118,7 @@ export default {
 /* Dans SideBar.vue */
 .sidebar {
   width: 235px;
-  background-color: #F4F2EC;
+  background-color: #3D3D3D;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -145,11 +145,14 @@ export default {
 }
 
 .toggle-btn {
-  background: transparent;
+  background: #0D2B2B;
   border: none;
   cursor: pointer;
-  color: #3D3D3D;
-  padding: 8px;
+  color: #D6EDE8;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left:14px ;
+  padding-right:14px ;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -177,8 +180,8 @@ export default {
   box-sizing: border-box;
   height: 40px; 
   padding: 0 12px; 
-  color: #3D3D3D;
-  background-color: #EDEADE;
+  color: #D6EDE8;
+  background-color: #0D2B2B;
   font-family: Inter, sans-serif; 
   font-size: 14px; 
   line-height: 22px; 

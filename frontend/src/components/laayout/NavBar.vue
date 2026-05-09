@@ -81,8 +81,8 @@ const userInitials = computed(() => {
 
 .navbar {
   height: 56px;
-  background: #FFFFFF;
-  border-bottom: 1px solid #E8E6DF;
+  background: #3D3D3D;
+  border-bottom: 1px solid #3D3D3D;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -149,17 +149,18 @@ const userInitials = computed(() => {
 
 .user-text {
   text-align: right;
+  color: #D6EDE8;
 }
 
 .user-name {
   font-size: 14px;
   font-weight: 600;
-  color: #3D3D3D;
+  color: #D6EDE8;
 }
 
 .user-role {
   font-size: 12px;
-  color: #8A8A8A;
+  color: #D6EDE8;
 }
 
 /* Avatar initiales */
