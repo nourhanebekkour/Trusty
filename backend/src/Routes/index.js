@@ -8,6 +8,7 @@ import competenceRoutes from './competenceRoutes.js';
 import etudiantRoutes from './etudiantRoutes.js';
 import professeurRoutes from "./professeurRoutes.js";
 import adminRoutes from "./administrateurRoutes.js";
+import professionnelRoutes from "./professionnelRoutes.js"
 import technologieRoutes from "./technologieRoutes.js";
 import projetRoutes from "./projetRoutes.js";
 import stageRoutes from "./stageRoutes.js";
@@ -37,5 +38,6 @@ router.use('/activites', activiteParascolaireRoutes);
 router.use('/etudiants', etudiantRoutes);
 router.use("/professeur", professeurRoutes);
 router.use("/admin", adminRoutes);
+router.use("/professionnel",professionnelRoutes);
 
 export default router;
