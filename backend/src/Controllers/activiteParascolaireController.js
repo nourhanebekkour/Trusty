@@ -3,18 +3,19 @@ import sendResponse from '../Utils/responseHandler.js';
 
 export const creerActivite = async (req, res) => {
     // #swagger.tags = ['Activités Parascolaires']
-    // #swagger.summary = 'Créer une nouvelle activité'
-    /*  #swagger.parameters['body'] = {
-            in: 'body',
-            description: 'Informations de l activité',
-            required: true,
-            schema: { $ref: '#/definitions/ActiviteRequest' }
+    // #swagger.summary = 'Créer une nouvelle activité pour un étudiant'
+    /* #swagger.parameters['id_etudiant'] = { in: 'path' } */
+    /* #swagger.parameters['body'] = {
+        in: 'body',
+        description: 'Informations de l\'activité',
+        required: true,
+        schema: { $ref: '#/definitions/ActiviteRequest' }
     } */
     try {
+        const { id_etudiant } = req.params;
         const donnees = {
             ...req.body,
-            date_debut: new Date(req.body.date_debut),
-            date_fin: req.body.date_fin ? new Date(req.body.date_fin) : null,
+            id_etudiant
         };
 
         const nouvelleActivite = await activiteParascolaireService.creerActivite(donnees);
@@ -29,8 +30,8 @@ export const listerActivites = async (req, res) => {
     // #swagger.tags = ['Activités Parascolaires']
     // #swagger.summary = 'Lister toutes les activités'
     try {
-        const activites = await activiteParascolaireService.recupererToutesLesActivites(req.query);
-        sendResponse(res, 200, true, "Activités récupérées avec succès", activites);
+        const activitesAvecUrls = await activiteParascolaireService.recupererToutesLesActivites(req.query);
+        sendResponse(res, 200, true, "Activités récupérées avec succès", activitesAvecUrls);
     } catch (erreur) {
         sendResponse(res, 500, false, "Erreur lors de la récupération des activités", null, erreur.message);
     }
@@ -39,6 +40,7 @@ export const listerActivites = async (req, res) => {
 export const obtenirActivite = async (req, res) => {
     // #swagger.tags = ['Activités Parascolaires']
     // #swagger.summary = 'Obtenir une activité par ID'
+    /* #swagger.parameters['id'] = { in: 'path' } */
     try {
         const { id } = req.params;
         const activite = await activiteParascolaireService.recupererActiviteParId(id);
@@ -54,10 +56,11 @@ export const obtenirActivite = async (req, res) => {
 export const listerActivitesParEtudiant = async (req, res) => {
     // #swagger.tags = ['Activités Parascolaires']
     // #swagger.summary = 'Lister les activités d un étudiant'
+    /* #swagger.parameters['id_etudiant'] = { in: 'path' } */
     try {
         const { id_etudiant } = req.params;
-        const activites = await activiteParascolaireService.recupererActivitesParEtudiant(id_etudiant);
-        sendResponse(res, 200, true, "Activités récupérées avec succès", activites);
+        const activitesAvecUrls = await activiteParascolaireService.recupererActivitesParEtudiant(id_etudiant);
+        sendResponse(res, 200, true, "Activités récupérées avec succès", activitesAvecUrls);
     } catch (erreur) {
         sendResponse(res, 500, false, "Erreur lors de la récupération des activités", null, erreur.message);
     }
@@ -66,33 +69,80 @@ export const listerActivitesParEtudiant = async (req, res) => {
 export const modifierActivite = async (req, res) => {
     // #swagger.tags = ['Activités Parascolaires']
     // #swagger.summary = 'Modifier une activité existante'
-    /*  #swagger.parameters['body'] = {
-            in: 'body',
-            description: 'Informations de l activité à modifier',
-            required: true,
-            schema: { $ref: '#/definitions/ActiviteRequest' }
+    /* #swagger.parameters['id'] = { in: 'path' } */
+    /* #swagger.parameters['body'] = {
+        in: 'body',
+        description: 'Informations de l\'activité à modifier',
+        required: true,
+        schema: { $ref: '#/definitions/ActiviteRequest' }
     } */
     try {
         const { id } = req.params;
-        const donnees = { ...req.body };
-        if (donnees.date_debut) donnees.date_debut = new Date(donnees.date_debut);
-        if (donnees.date_fin) donnees.date_fin = new Date(donnees.date_fin);
-
-        const activiteModifiee = await activiteParascolaireService.modifierActivite(id, donnees);
+        const activiteModifiee = await activiteParascolaireService.modifierActivite(id, req.body, req.user.id, req.user.role);
         sendResponse(res, 200, true, "Activité modifiée avec succès", activiteModifiee);
     } catch (erreur) {
-        sendResponse(res, 400, false, "Erreur lors de la modification de l'activité", null, erreur.message);
+        const status = erreur.message.includes("autorisé") ? 403 : 400;
+        sendResponse(res, status, false, "Erreur lors de la modification de l'activité", null, erreur.message);
     }
 };
 
 export const supprimerActivite = async (req, res) => {
     // #swagger.tags = ['Activités Parascolaires']
     // #swagger.summary = 'Supprimer une activité'
+    /* #swagger.parameters['id'] = { in: 'path' } */
     try {
         const { id } = req.params;
-        await activiteParascolaireService.supprimerActivite(id);
+        await activiteParascolaireService.supprimerActivite(id, req.user.id, req.user.role);
         sendResponse(res, 200, true, "Activité supprimée avec succès");
     } catch (erreur) {
-        sendResponse(res, 400, false, "Erreur lors de la suppression de l'activité", null, erreur.message);
+        const status = erreur.message.includes("autorisé") ? 403 : (erreur.message === "Activité non trouvée" ? 404 : 400);
+        sendResponse(res, status, false, "Erreur lors de la suppression de l'activité", null, erreur.message);
+    }
+};
+
+/**
+ * Upload de l'attestation d'activité
+ */
+export const uploadAttestation = async (req, res) => {
+    // #swagger.tags = ['Activités Parascolaires']
+    // #swagger.summary = 'Uploader l attestation d activité'
+    // #swagger.consumes = ['multipart/form-data']
+    /* #swagger.parameters['id'] = { in: 'path' } */
+    /* #swagger.parameters['fichier'] = {
+        in: 'formData',
+        type: 'file',
+        required: 'true',
+        description: 'Attestation d\'activité (PDF, Image, etc.)',
+    } */
+    try {
+        const { id } = req.params;
+        if (!req.file) {
+            return sendResponse(res, 400, false, "Aucun fichier fourni");
+        }
+
+        const userId = req.user.id;
+        const fileRecord = await activiteParascolaireService.associerAttestation(id, req.file, userId, req.user.role);
+        
+        sendResponse(res, 200, true, "Attestation uploadée avec succès", fileRecord);
+    } catch (error) {
+        const status = error.message.includes("autorisé") ? 403 : (error.message === "Activité non trouvée" ? 404 : 500);
+        sendResponse(res, status, false, "Erreur lors de l'upload de l'attestation", null, error.message);
+    }
+};
+
+/**
+ * Suppression de l'attestation d'activité
+ */
+export const supprimerAttestation = async (req, res) => {
+    // #swagger.tags = ['Activités Parascolaires']
+    // #swagger.summary = 'Supprimer l attestation d activité'
+    /* #swagger.parameters['id'] = { in: 'path' } */
+    try {
+        const { id } = req.params;
+        await activiteParascolaireService.supprimerAttestation(id, req.user.id, req.user.role);
+        sendResponse(res, 200, true, "Attestation supprimée avec succès");
+    } catch (error) {
+        const status = error.message.includes("autorisé") ? 403 : (error.message.includes("non trouvée") || error.message.includes("Aucune attestation") ? 404 : 500);
+        sendResponse(res, status, false, "Erreur lors de la suppression de l'attestation", null, error.message);
     }
 };

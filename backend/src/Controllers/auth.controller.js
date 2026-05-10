@@ -5,13 +5,13 @@ import prisma from '../Config/prismaClient.js';
 const register = async (req, res) => {
   
   try {
-    const { email, password, nom, prenom, role } = req.body;
+    const { email, password, nom, prenom} = req.body;
 
     if (!email || !password || !nom || !prenom) {
       return sendResponse(res, 400, false, 'Champs manquants (email, password, nom, prenom)');
     }
 
-    const result = await authService.register(email, password, nom, prenom, role);
+    const result = await authService.register(email, password, nom, prenom);
     return sendResponse(res, 201, true, 'Inscription réussie', result);
 
   } catch (err) {
@@ -63,7 +63,8 @@ const oublierMDP = async (req, res) => {
     await authService.oublierMDP(email);
     return sendResponse(res, 200, true, 'Email de réinitialisation envoyé');
   } catch (err) {
-    return sendResponse(res, 400, false,"Erreur lors de l'envoi de l'email");
+    console.error("Erreur Forget Password:", err);
+    return sendResponse(res, 400, false, "Erreur lors de l'envoi de l'email", null, err.message || err);
   }
 };
 const changerMDP = async (req, res) => {
