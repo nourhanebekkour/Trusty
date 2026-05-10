@@ -137,6 +137,7 @@ model Utilisateur {
   nom                     String    @db.VarChar(100)
   prenom                  String    @db.VarChar(100)
   telephone               String?   @db.VarChar(20)
+  photo                   String?   @db.VarChar(500)
   role                   Role      @default(ETUDIANT)
   date_creation           DateTime  @default(now())
   date_modification       DateTime? @updatedAt
@@ -399,7 +400,6 @@ model Competence {
   type            TypeCompetence
   categorie       String?   @db.VarChar(100)
   description     String?   @db.Text
-  icone           String?   @db.VarChar(500)
 
   // Relations
   etudiants       EtudiantCompetence[]
@@ -410,7 +410,7 @@ model Competence {
 model EtudiantCompetence {
   id_etudiant       String
   id_competence     String
-  niveau_maitrise   Int       @default(0)
+  niveau_maitrise   Niveau    @default(DEBUTANT)
   date_ajout        DateTime  @default(now())
 
   // Relations
@@ -427,7 +427,6 @@ model Technologie {
   categorie         String    @db.VarChar(50)
   sous_categorie    String?   @db.VarChar(50)
   description       String?   @db.Text
-  icone             String?   @db.VarChar(500)
 
   // Relations
   projets           ProjetTechnologie[]
