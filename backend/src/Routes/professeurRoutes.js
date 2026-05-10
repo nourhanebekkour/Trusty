@@ -1,11 +1,12 @@
 import express from 'express';
-import { createOrUpdateProfile, obtenirProfilParId, obtenirTousLesProfils, uploadAvatar } from '../Controllers/professeurController.js';
+import { createOrUpdateProfile, obtenirProfilParId, obtenirTousLesProfils, uploadAvatar, obtenirProfesseursParFiliere } from '../Controllers/professeurController.js';
 import upload from '../Middlewars/uploadMiddleware.js';
 import { requireRole, requireOwnerOrAdmin } from '../Middlewars/roles.middleware.js';
 
 const router = express.Router();
 
 router.get('/', requireRole('ADMINISTRATEUR'), obtenirTousLesProfils);
+router.get('/filiere/:filiere', obtenirProfesseursParFiliere);
 router.get('/:id', requireOwnerOrAdmin('id'), obtenirProfilParId);
 
 router.put('/:id', requireOwnerOrAdmin('id'), createOrUpdateProfile);

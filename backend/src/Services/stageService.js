@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import * as notificationService from './notificationService.js';
 import * as minioService from '../Utils/minioService.js';
 
 const prisma = new PrismaClient();
@@ -21,15 +22,97 @@ const verifierAccesStage = async (id_stage, userId, userRole) => {
 // --- GESTION DES STAGES ---
 
 export const creerStage = async (donnees) => {
+    const { id_etudiant, id_validateur, ...stageData } = donnees;
+
+    if (!id_etudiant) {
+        throw new Error("L'ID de l'étudiant est requis");
+    }
+
+    // Vérification de la filière si un validateur est choisi
+    if (id_validateur) {
+        const etudiant = await prisma.etudiant.findUnique({
+            where: { id_etudiant },
+            select: { filiere: true }
+        });
+
+        const professeur = await prisma.professeur.findUnique({
+            where: { id_professeur: id_validateur },
+            select: { filieres_interv: true }
+        });
+
+        if (!professeur) {
+            throw new Error("Le professeur choisi n'existe pas");
+        }
+
+        if (!professeur.filieres_interv.includes(etudiant.filiere)) {
+            throw new Error("Le professeur choisi n'intervient pas dans la filière " + etudiant.filiere);
+        }
+    }
+
     const data = {
-        ...donnees,
-        date_debut: new Date(donnees.date_debut),
-        date_fin: donnees.date_fin ? new Date(donnees.date_fin) : null,
+        ...stageData,
+        id_etudiant,
+        id_validateur,
+        date_debut: new Date(stageData.date_debut),
+        date_fin: stageData.date_fin ? new Date(stageData.date_fin) : null,
     };
 
-    return await prisma.stage.create({
+    const nouveauStage = await prisma.stage.create({
         data
     });
+
+    if (id_validateur) {
+        await notificationService.creerNotification(
+            id_validateur, 
+            "VALIDATION", 
+            "Nouveau stage à valider", 
+            "Un nouveau stage chez " + nouveauStage.entreprise + " attend votre validation."
+        );
+    }
+
+    return nouveauStage;
+};
+
+export const validerStage = async (id_stage, id_validateur, decision, commentaire) => {
+    const stage = await prisma.stage.findUnique({ where: { id_stage } });
+    if (!stage) throw new Error("Stage non trouvé");
+
+    if (stage.id_validateur !== id_validateur) {
+        throw new Error("Vous n'êtes pas le validateur désigné pour ce stage");
+    }
+
+    const updateData = {
+        status_validation: decision,
+        date_validation: new Date(),
+        commentaire_validation: commentaire
+    };
+
+    const stageMisAJour = await prisma.stage.update({
+        where: { id_stage },
+        data: updateData
+    });
+
+    await notificationService.creerNotification(
+        stageMisAJour.id_etudiant, 
+        "VALIDATION", 
+        "Stage " + (decision === "VALIDE" ? "validé" : "rejeté"), 
+        "Votre stage chez " + stageMisAJour.entreprise + " a été " + decision.toLowerCase() + "."
+    );
+
+    // Créer un historique
+    await prisma.historiqueValidation.create({
+        data: {
+            type_entite: 'STAGE',
+            id_entite: id_stage,
+            status_validation: decision,
+            date_soumission: stage.date_soumission,
+            date_decision: new Date(),
+            commentaires: commentaire,
+            id_validateur: id_validateur
+        }
+    });
+
+    return stageMisAJour;
 };
 
 export const recupererTousLesStages = async (filtres = {}) => {
@@ -68,6 +151,37 @@ export const recupererStageParId = async (id_stage) => {
     if (!stage) return null;
 
     return await minioService.enrichEntityWithFileUrls(stage, 'rapport');
+};
+
+export const recupererStagesAValider = async (id_professeur) => {
+    const stages = await prisma.stage.findMany({
+        where: {
+            id_validateur: id_professeur,
+            status_validation: "EN_ATTENTE"
+        },
+        include: {
+            etudiant: {
+                include: {
+                    utilisateur: {
+                        select: {
+                            nom: true,
+                            prenom: true,
+                            photo: true
+                        }
+                    }
+                }
+            },
+            technologies: {
+                include: {
+                    technologie: true
+                }
+            },
+            rapport: true
+        },
+        orderBy: { date_soumission: "asc" }
+    });
+
+    return await minioService.enrichEntitiesWithFileUrls(stages, "rapport");
 };
 
 // un étudiant doit pouvoir voir ses propres stages.
