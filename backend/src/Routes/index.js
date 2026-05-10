@@ -9,6 +9,7 @@ import formationRoutes from './formationRoutes.js';
 import competenceRoutes from './competenceRoutes.js';
 import etudiantRoutes from './etudiantRoutes.js';
 import professeurRoutes from "./professeurRoutes.js";
+import notificationRoutes from './notificationRoutes.js';
 import adminRoutes from "./administrateurRoutes.js";
 import professionnelRoutes from "./professionnelRoutes.js"
 import technologieRoutes from "./technologieRoutes.js";
@@ -37,6 +38,7 @@ router.use('/technologies', technologieRoutes);
 router.use('/projets', projetRoutes);
 router.use('/stages', stageRoutes);
 router.use('/activites', activiteParascolaireRoutes);
+router.use('/notifications', notificationRoutes);
 
 
 router.use('/etudiants', etudiantRoutes);

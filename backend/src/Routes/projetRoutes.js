@@ -1,15 +1,20 @@
 import express from 'express';
-import * as  projetController from '../Controllers/projetController.js';
+import * as projetController from '../Controllers/projetController.js';
 import upload from '../Middlewars/uploadMiddleware.js';
+import { requireRole } from '../Middlewars/roles.middleware.js';
 
 const routeur = express.Router();
 
 // Routes pour les projets
 routeur.post('/', projetController.creerProjet);
 routeur.get('/', projetController.listerProjets);
+routeur.get('/a-valider', requireRole('PROFESSEUR'), projetController.listerProjetsAValider);
 routeur.get('/:id', projetController.obtenirProjet);
 routeur.put('/:id', projetController.modifierProjet);
 routeur.delete('/:id', projetController.supprimerProjet);
+
+// Route de validation (Professeur uniquement)
+routeur.post('/:id/valider', requireRole('PROFESSEUR'), projetController.validerProjet);
 
 // Routes pour les fichiers du projet
 routeur.post('/:id/fichiers', upload.single('fichier'), projetController.ajouterFichierAuProjet);
