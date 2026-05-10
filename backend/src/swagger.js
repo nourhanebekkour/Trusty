@@ -47,7 +47,8 @@ const doc = {
       objectif_professionnel: 'Développeur Fullstack',
       score_credibilite: 0,
       niveau_credibilite: 'DEBUTANT',
-      visibilite_profil: 'PUBLIC'
+      visibilite_profil: 'PUBLIC',
+      id_validateur: null
     },
     AdminProfileRequest: {
       niveau_acces: 'ADMIN'

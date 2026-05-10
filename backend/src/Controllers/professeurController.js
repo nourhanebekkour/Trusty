@@ -49,6 +49,19 @@ export const obtenirTousLesProfils = async (req,res) => {
     }
 };
 
+export const obtenirProfesseursParFiliere = async (req, res) => {
+    // #swagger.tags = ['Professeurs']
+    // #swagger.summary = 'Récupérer les professeurs par filière'
+    /* #swagger.parameters['filiere'] = { in: 'path' } */
+    try {
+        const { filiere } = req.params;
+        const profils = await ProfesseurService.recupererProfesseursParFiliere(filiere.toUpperCase());
+        return sendResponse(res, 200, true, `Professeurs de la filière ${filiere} récupérés avec succès`, profils);
+    } catch (error) {
+        return sendResponse(res, 500, false, "Erreur lors de la récupération des professeurs", null, error.message);
+    }
+};
+
 /**
  * Upload de la photo de profil (Avatar)
  */

@@ -2,7 +2,7 @@ import * as formationService from '../Services/formationService.js';
 import sendResponse from '../Utils/responseHandler.js';
 
 export const obtenirFormations = async (req, res) => {
-    // #swagger.tags = ['Formations']
+    // #swagger.tags = ['Etudiants - Formations']
     // #swagger.summary = 'Récupérer les formations d\'un étudiant'
     /* #swagger.parameters['id_etudiant'] = { in: 'path' } */
     try {
@@ -15,7 +15,7 @@ export const obtenirFormations = async (req, res) => {
 };
 
 export const ajouterFormation = async (req, res) => {
-    // #swagger.tags = ['Formations']
+    // #swagger.tags = ['Etudiants - Formations']
     // #swagger.summary = 'Ajouter une formation à un étudiant'
     /* #swagger.parameters['id_etudiant'] = { in: 'path' } */
     /* #swagger.parameters['body'] = {
@@ -34,7 +34,7 @@ export const ajouterFormation = async (req, res) => {
 };
 
 export const mettreAJourFormation = async (req, res) => {
-    // #swagger.tags = ['Formations']
+    // #swagger.tags = ['Etudiants - Formations']
     // #swagger.summary = 'Modifier une formation'
     /* #swagger.parameters['id'] = { in: 'path' } */
     /* #swagger.parameters['body'] = {
@@ -54,7 +54,7 @@ export const mettreAJourFormation = async (req, res) => {
 };
 
 export const supprimerFormation = async (req, res) => {
-    // #swagger.tags = ['Formations']
+    // #swagger.tags = ['Etudiants - Formations']
     // #swagger.summary = 'Supprimer une formation'
     /* #swagger.parameters['id'] = { in: 'path' } */
     try {

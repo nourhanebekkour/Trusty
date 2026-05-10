@@ -68,6 +68,17 @@ export const listerStagesParEtudiant = async (req, res) => {
     }
 };
 
+export const listerStagesAValider = async (req, res) => {
+    // #swagger.tags = ['Tableaux de Bord - Professeurs']
+    // #swagger.summary = "Lister les stages en attente de ma validation"
+    try {
+        const stages = await stageService.recupererStagesAValider(req.user.id);
+        sendResponse(res, 200, true, "Stages à valider récupérés avec succès", stages);
+    } catch (erreur) {
+        sendResponse(res, 500, false, "Erreur lors de la récupération des stages à valider", null, erreur.message);
+    }
+};
+
 export const modifierStage = async (req, res) => {
     // #swagger.tags = ['Stages']
     // #swagger.summary = 'Modifier un stage existant'
@@ -85,6 +96,21 @@ export const modifierStage = async (req, res) => {
     } catch (erreur) {
         const status = erreur.message.includes("autorisé") ? 403 : 400;
         sendResponse(res, status, false, "Erreur lors de la modification du stage", null, erreur.message);
+    }
+};
+
+export const validerStage = async (req, res) => {
+    // #swagger.tags = ['Tableaux de Bord - Professeurs']
+    // #swagger.summary = 'Valider ou rejeter un stage (Professeur uniquement)'
+    /* #swagger.parameters['id'] = { in: 'path' } */
+    try {
+        const { id } = req.params;
+        const { decision, commentaire } = req.body;
+        const stageValide = await stageService.validerStage(id, req.user.id, decision, commentaire);
+        sendResponse(res, 200, true, `Stage ${decision.toLowerCase()} avec succès`, stageValide);
+    } catch (erreur) {
+        const status = erreur.message.includes("validateur") ? 403 : 400;
+        sendResponse(res, status, false, "Erreur lors de la validation du stage", null, erreur.message);
     }
 };
 
@@ -152,7 +178,7 @@ export const supprimerRapport = async (req, res) => {
 // --- GESTION DES TECHNOLOGIES DU STAGE ---
 
 export const ajouterTechnologie = async (req, res) => {
-    // #swagger.tags = ['Technologies Stages']
+    // #swagger.tags = ['Stages - Technologies']
     // #swagger.summary = 'Ajouter une technologie à un stage'
     /* #swagger.parameters['id_stage'] = { in: 'path' } */
     /* #swagger.parameters['id_technologie'] = { in: 'path' } */
@@ -173,7 +199,7 @@ export const ajouterTechnologie = async (req, res) => {
 };
 
 export const modifierTechnologie = async (req, res) => {
-    // #swagger.tags = ['Technologies Stages']
+    // #swagger.tags = ['Stages - Technologies']
     // #swagger.summary = 'Modifier l utilisation d une technologie dans un stage'
     /* #swagger.parameters['id_stage'] = { in: 'path' } */
     /* #swagger.parameters['id_technologie'] = { in: 'path' } */
@@ -194,7 +220,7 @@ export const modifierTechnologie = async (req, res) => {
 };
 
 export const retirerTechnologie = async (req, res) => {
-    // #swagger.tags = ['Technologies Stages']
+    // #swagger.tags = ['Stages - Technologies']
     // #swagger.summary = 'Retirer une technologie d un stage'
     /* #swagger.parameters['id_stage'] = { in: 'path' } */
     /* #swagger.parameters['id_technologie'] = { in: 'path' } */
