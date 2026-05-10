@@ -1,4 +1,28 @@
 import prisma from "../Config/prismaClient.js";
+import * as minioService from "../Utils/minioService.js";
+
+const UtilisateurSansMotDePasse = {
+    select: {
+        email: true,
+        nom: true,
+        prenom: true,
+        telephone: true,
+        photo: true,
+        date_creation: true,
+        status_compte: true,
+        email_verifie: true
+    }
+};
+
+/**
+ * Enrichit un profil professeur avec l'URL de sa photo
+ */
+const enrichirProfil = async (professeur) => {
+    if (professeur && professeur.utilisateur && professeur.utilisateur.photo) {
+        professeur.utilisateur.photo_url = await minioService.getFileUrl(professeur.utilisateur.photo);
+    }
+    return professeur;
+};
 
 export const ajouterOuModifierProfesseur = async (id, donnees) => {
     const donneesProfil = {
@@ -12,7 +36,7 @@ export const ajouterOuModifierProfesseur = async (id, donnees) => {
         filieres_interv: donnees.filieres || []
     };
 
-    return await prisma.professeur.upsert({
+    const professeur = await prisma.professeur.upsert({
         where: { id_professeur: id },
         update: donneesProfil,
         create: {
@@ -20,58 +44,58 @@ export const ajouterOuModifierProfesseur = async (id, donnees) => {
             ...donneesProfil
         },
         include: {
-            utilisateur: {
-                select: {
-                    email: true,
-                    nom: true,
-                    prenom: true,
-                    telephone: true,
-                    date_creation: true,
-                    status_compte: true,
-                    email_verifie: true
-
-                }
-            }
+            utilisateur: UtilisateurSansMotDePasse
         }
     });
+
+    return await enrichirProfil(professeur);
 };
 
 // 1. Afficher tous les professeurs
 export const recupererTousLesProfesseurs = async () => {
-    return await prisma.professeur.findMany({
+    const professeurs = await prisma.professeur.findMany({
         include: {
-            utilisateur: {
-                select: {
-                    email: true,
-                    nom: true,
-                    prenom: true,
-                    telephone: true,
-                    date_creation: true,
-                    status_compte: true,
-                    email_verifie: true
-                }
-            }
+            utilisateur: UtilisateurSansMotDePasse
         }
     });
+    return await Promise.all(professeurs.map(enrichirProfil));
 };
 
 // 2. Afficher un professeur par son ID
 export const recupererProfesseurParId = async (id) => {
-             
-    return await prisma.professeur.findUnique({
+    const professeur = await prisma.professeur.findUnique({
         where: { id_professeur: id },
         include: {
-            utilisateur: {
-                select: {
-                    email: true,
-                    nom: true,
-                    prenom: true,
-                    telephone: true,
-                    date_creation: true,
-                    status_compte: true,
-                    email_verifie: true
-                }
-            },
+            utilisateur: UtilisateurSansMotDePasse
         }
     });
+    return await enrichirProfil(professeur);
+};
+
+export const mettreAJourAvatar = async (id, fichier, userId) => {
+    const professeur = await recupererProfesseurParId(id);
+    if (!professeur) {
+        throw new Error("Professeur non trouvé");
+    }
+
+    // Supprimer l'ancienne photo si elle existe
+    if (professeur.utilisateur && professeur.utilisateur.photo) {
+        try {
+            await minioService.deleteFile(professeur.utilisateur.photo);
+        } catch (error) {
+            console.error("Erreur lors de la suppression de l'ancien avatar:", error);
+        }
+    }
+
+    const fileRecord = await minioService.uploadAndSaveFile(fichier, userId, 'AVATAR');
+    
+    await prisma.utilisateur.update({
+        where: { id_utilisateur: id },
+        data: { photo: fileRecord.nom_stockage }
+    });
+
+    return {
+        url: fileRecord.url,
+        nom_stockage: fileRecord.nom_stockage
+    };
 };

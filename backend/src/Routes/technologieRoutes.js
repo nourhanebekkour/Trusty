@@ -6,12 +6,10 @@ import {
     modifierTechnologie,
     supprimerTechnologie
 } from '../Controllers/technologieController.js';
-import { authMiddleware } from '../Middlewars/auth.middleware.js';
 import { requireRole } from '../Middlewars/roles.middleware.js';
 
 const router = express.Router();
 
-router.use(authMiddleware);
 router.get('/', listerTechnologies);
 router.get('/:id', obtenirTechnologie);
 
