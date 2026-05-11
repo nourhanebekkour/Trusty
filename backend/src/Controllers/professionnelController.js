@@ -16,14 +16,14 @@ export const afficherProfessionnelEnAttente= async (req,res) =>{
 
 export const validerProfessionnel = async (req,res) => {
   // #swagger.tags = ['Tableaux de Bord - Admin']
-  // #swagger.summary = "Valider ou rejeter un professionnel (Admin uniquement)"
+  // #swagger.summary = 'Valider ou rejeter un professionnel (Admin uniquement)'
   /* #swagger.parameters['id'] = { in: 'path' } */
   /* #swagger.parameters['body'] = {
         in: 'body',
-        description: "Action à effectuer sur le professionnel (VALIDE ou REJETE)",
+        description: 'Action à effectuer sur le professionnel (VALIDE ou REJETE)',
         required: true,
         schema: {
-          action: "VALIDE" // ou "REJETE"
+          $action: 'VALIDE',
         }
     } */
   try {
