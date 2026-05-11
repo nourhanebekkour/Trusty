@@ -17,6 +17,7 @@ import projetRoutes from "./projetRoutes.js";
 import stageRoutes from "./stageRoutes.js";
 import activiteParascolaireRoutes from "./activiteParascolaireRoutes.js";
 import historiqueActionRoutes from "./historiqueActionRoutes.js";
+import badgeRoutes from "./badgeRoutes.js";
 import { authMiddleware } from '../Middlewars/auth.middleware.js';
 
 
@@ -41,6 +42,7 @@ router.use('/stages', stageRoutes);
 router.use('/activites', activiteParascolaireRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/historique-actions', historiqueActionRoutes);
+router.use('/badges', badgeRoutes);
 
 
 router.use('/etudiants', etudiantRoutes);
