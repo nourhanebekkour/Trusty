@@ -8,10 +8,11 @@ import StageList from '@/views/StageList.vue'
 import Recommendations from '@/views/Recommendations.vue'
 import Notification from '@/views/Notification.vue'
 import Profile from '@/views/Profile.vue'
+import ProfessionalView from '@/views/ProfessionalView.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    
+  
     {
       path: '/',
       name: 'home',
@@ -61,7 +62,12 @@ const router = createRouter({
       path:'/stage',
       name:'stage',
       component: StageList,
-    }
+    },
+    {
+  path: '/professional',
+  name: 'professional',
+  component: ProfessionalView,
+  },
   ],
 })
 
