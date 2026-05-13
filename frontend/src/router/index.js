@@ -10,10 +10,12 @@ import Notification from '@/views/Notification.vue'
 import Profile from '@/views/Profile.vue'
 import Modele from '@/views/Modele.vue'
 import Portfolio from '@/views/Portfolio.vue'
+import ProfessionalView from '@/views/ProfessionalView.vue'
+import ProfessorView from '@/views/ProfessorView.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    
+  
     {
       path: '/',
       name: 'home',
@@ -73,9 +75,19 @@ const router = createRouter({
       path:'/portfolio',
       name:'portfolio',
       component: Portfolio,
-    }
-
-  ],
+    },
+    {
+      path: '/professional',
+      name: 'professional',
+      component: ProfessionalView,
+    },
+    {
+      path: '/professor',
+      name: 'professor',
+      component: ProfessorView,
+    } 
+  ]
+      
 })
 
 export default router
