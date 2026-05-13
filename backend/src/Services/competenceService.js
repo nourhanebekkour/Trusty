@@ -42,18 +42,18 @@ export const supprimerCompetence = async (id_competence) => {
 // --- SERVICES ÉTUDIANT ---
 
 
-export const lierCompetenceAEtudiant = async (id_etudiant, id_competence, niveau_maitrise = 0) => {
+export const lierCompetenceAEtudiant = async (id_etudiant, id_competence, niveau_maitrise = 'DEBUTANT') => {
     return await prisma.etudiantCompetence.upsert({
         where: {
             id_etudiant_id_competence: { id_etudiant, id_competence }
         },
         update: {
-            niveau_maitrise: parseInt(niveau_maitrise)
+            niveau_maitrise
         },
         create: {
             id_etudiant,
             id_competence,
-            niveau_maitrise: parseInt(niveau_maitrise)
+            niveau_maitrise
         },
         include: {
             competence: true

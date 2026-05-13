@@ -59,7 +59,7 @@ describe('Integration API : Compétence', () => {
 
         etudiantId = etudiant.id_utilisateur;
         await prisma.etudiant.create({
-            data: { id_etudiant: etudiant.id_utilisateur }
+            data: { id_etudiant: etudiant.id_utilisateur, filiere:'GINF'}
         });
 
         // --- LOGIN ADMIN ---
@@ -191,10 +191,10 @@ describe('Integration API : Compétence', () => {
             const res = await request(app)
                 .post(`/api/competences/etudiant/${etudiantId}/${competenceId}`)
                 .set('Authorization', `Bearer ${tokenEtudiant}`)
-                .send({ niveau_maitrise: 3 });
+                .send({ niveau_maitrise: 'INTERMEDIAIRE' });
 
             expect(res.status).toBe(200);
-            expect(res.body.data.niveau_maitrise).toBe(3);
+            expect(res.body.data.niveau_maitrise).toBe('INTERMEDIAIRE');
         });
     });
 
