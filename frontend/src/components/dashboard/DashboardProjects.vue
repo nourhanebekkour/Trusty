@@ -45,7 +45,7 @@
           <div class="project-card__icons">
             <span v-for="tag in project.tags" :key="tag" class="tag">{{ tag }}</span>
           </div>
-          <button class="btn btn--link" @click.stop="$router.push(`/projets/${project.id}`)">
+          <button class="btn btn--link" @click.stop="$router.push(`/projets`)">
             Détails ↗
           </button>
         </div>
