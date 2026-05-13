@@ -34,15 +34,6 @@ async function register(email, password, nom, prenom) {
     },
   });
 
-  // 4. Générer le token JWT
-  const token = jwt.sign(
-    { userId: user.id_utilisateur },
-    process.env.JWT_SECRET || 'secret_key_123',
-    { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
-  );
-
-  return { token, user };
-}
 
 async function login(email, password) {
 
