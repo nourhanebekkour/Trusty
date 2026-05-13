@@ -106,62 +106,51 @@ describe('Service Formation', () => {
     // UPDATE
     describe('modifierFormation', () => {
         test('doit modifier la formation', async () => {
-            const mockFormation = { id_formation: '1' };
+            const mockFormation = { id_formation: '1', id_etudiant: 'user-1' };
+            // verifierAccesFormation appelle findUnique avant update
+            formation.findUnique.mockResolvedValue(mockFormation);
             formation.update.mockResolvedValue(mockFormation);
 
-            const donnees = {
-                diplome: 'Médecine',
-                etablissement: 'FMPT',
-                mention: 'TB'
-            }
+            const donnees = { diplome: 'Médecine', etablissement: 'FMPT', mention: 'TB' };
 
-            const result = await modifierFormation('1', donnees);
+            const result = await modifierFormation('1', donnees, 'user-1', 'ETUDIANT');
             expect(formation.update).toHaveBeenCalledWith(
                 expect.objectContaining({
                     where: { id_formation: '1' },
-                    data: expect.objectContaining({
-                        ...donnees // spread operator 
-                    })
+                    data: expect.objectContaining({ ...donnees })
                 })
             );
-
             expect(result).toEqual(mockFormation);
-
         });
 
         test('doit propager l\'erreur si Prisma échoue', async () => {
+            formation.findUnique.mockResolvedValue({ id_formation: '1', id_etudiant: 'user-1' });
             formation.update.mockRejectedValue(new Error('Erreur Prisma'));
 
-            await expect(modifierFormation('1', {})).rejects.toThrow('Erreur Prisma');
+            await expect(modifierFormation('1', {}, 'user-1', 'ETUDIANT')).rejects.toThrow('Erreur Prisma');
         });
-
     });
 
 
     // DELETE
     describe('supprimerFormation', () => {
         test('doit supprimer une formation', async () => {
-            const mockFormation = { id_formation: '1' };
+            const mockFormation = { id_formation: '1', id_etudiant: 'user-1' };
+            // verifierAccesFormation appelle findUnique avant delete
+            formation.findUnique.mockResolvedValue(mockFormation);
             formation.delete.mockResolvedValue(mockFormation);
-            const result = await supprimerFormation('1');
 
-            // vérifier appel Prisma
-            expect(formation.delete).toHaveBeenCalledWith({
-                where: { id_formation: '1' }
-            });
+            const result = await supprimerFormation('1', 'user-1', 'ETUDIANT');
 
-            // vérifier retour
+            expect(formation.delete).toHaveBeenCalledWith({ where: { id_formation: '1' } });
             expect(result).toEqual(mockFormation);
         });
 
         test('doit propager l\'erreur si Prisma échoue', async () => {
-
+            formation.findUnique.mockResolvedValue({ id_formation: '1', id_etudiant: 'user-1' });
             formation.delete.mockRejectedValue(new Error('Erreur Prisma'));
 
-            await expect(
-                supprimerFormation('1')
-            ).rejects.toThrow('Erreur Prisma');
+            await expect(supprimerFormation('1', 'user-1', 'ETUDIANT')).rejects.toThrow('Erreur Prisma');
         });
-
     });
 });

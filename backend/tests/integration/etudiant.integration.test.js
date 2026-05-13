@@ -7,22 +7,24 @@ const prisma = new PrismaClient();
 
 describe('Integration API : Profil Étudiant', () => {
     let utilisateurId;
-    let token; // token JWT pour les requêtes protégées
+    let adminId;
+    let token;
+    let tokenAdmin;
 
     beforeAll(async () => {
 
-        // Nettoyer avant 
+        // Nettoyer avant
         await prisma.etudiant.deleteMany({
             where: { utilisateur: { email: 'test.integration@etudiant.com' } }
         });
-
+        await prisma.administrateur.deleteMany({
+            where: { utilisateur: { email: 'admin.integration@etudiant.com' } }
+        });
         await prisma.utilisateur.deleteMany({
-            where: { email: 'test.integration@etudiant.com' }
+            where: { email: { in: ['test.integration@etudiant.com', 'admin.integration@etudiant.com'] } }
         });
 
-        // Création utilisateur test pour la contrainte DB
-        // Utilisateur avec statut ACTIF pour pouvoir se connecter 
-        // et mdp hashé avec bcrypt (login compare hash)
+        // Création utilisateur étudiant
         const user = await prisma.utilisateur.create({
             data: {
                 email: 'test.integration@etudiant.com',
@@ -30,52 +32,72 @@ describe('Integration API : Profil Étudiant', () => {
                 nom: 'Test',
                 prenom: 'Integration',
                 role: 'ETUDIANT',
-                status_compte: 'ACTIF' // sinon login échoue
+                status_compte: 'ACTIF'
             }
         });
         utilisateurId = user.id_utilisateur;
 
-        // Login pour récuperer le token JWT
+        // Création admin
+        const admin = await prisma.utilisateur.create({
+            data: {
+                email: 'admin.integration@etudiant.com',
+                mot_de_passe: await bcrypt.hash('password', 10),
+                nom: 'Admin',
+                prenom: 'Integration',
+                role: 'ADMINISTRATEUR',
+                status_compte: 'ACTIF'
+            }
+        });
+        adminId = admin.id_utilisateur;
+        await prisma.administrateur.create({ data: { id_administrateur: adminId } });
+
+        // Login étudiant
         const loginRes = await request(app)
             .post('/api/auth/login')
-            .send({
-                email: 'test.integration@etudiant.com',
-                password: 'password'
-            });
-
+            .send({ email: 'test.integration@etudiant.com', password: 'password' });
         token = loginRes.body.data.token;
 
-
+        // Login admin
+        const loginAdmin = await request(app)
+            .post('/api/auth/login')
+            .send({ email: 'admin.integration@etudiant.com', password: 'password' });
+        tokenAdmin = loginAdmin.body.data.token;
     });
-
 
     // Nettoyer après les tests
     afterAll(async () => {
         await prisma.etudiant.deleteMany({ where: { id_etudiant: utilisateurId } });
-        await prisma.utilisateur.delete({ where: { id_utilisateur: utilisateurId } });
-        // Fermer les connexions après les tests
+        await prisma.administrateur.deleteMany({ where: { id_administrateur: adminId } });
+        await prisma.utilisateur.deleteMany({
+            where: { email: { in: ['test.integration@etudiant.com', 'admin.integration@etudiant.com'] } }
+        });
         await prisma.$disconnect();
     });
 
-    // TEST API GET
+    // TEST API GET requiert ADMINISTRATEUR
     describe('GET /api/etudiants', () => {
-        test('doit retourner 200 avec la liste des étudiants', async () => {
-            // construit une requête HTTP 
+        test('doit retourner 200 avec la liste des étudiants (admin)', async () => {
+            const res = await request(app)
+                .get('/api/etudiants')
+                .set('Authorization', `Bearer ${tokenAdmin}`);
+            expect(res.status).toBe(200);
+            expect(res.body.data).toBeInstanceOf(Array);
+        });
+
+        test('doit retourner 403 si non admin', async () => {
             const res = await request(app)
                 .get('/api/etudiants')
                 .set('Authorization', `Bearer ${token}`);
-            // on simule un utilisateur connecté
-            expect(res.status).toBe(200);
-            expect(res.body.data).toBeInstanceOf(Array);
+            expect(res.status).toBe(403);
         });
     });
 
     // TEST API GET PAR ID
     describe('GET /api/etudiants/:id', () => {
-        test('doit retourner 404 si étudiant inexistant', async () => {
+        test('doit retourner 404 si étudiant inexistant (admin)', async () => {
             const res = await request(app)
                 .get('/api/etudiants/id-inexistant')
-                .set('Authorization', `Bearer ${token}`);
+                .set('Authorization', `Bearer ${tokenAdmin}`);
             expect(res.status).toBe(404);
         });
 
@@ -98,37 +120,30 @@ describe('Integration API : Profil Étudiant', () => {
 
     // TEST API PUT
     describe('PUT /api/etudiants/:id', () => {
-        // contrainte DB : on peut pas créer un étudiant sans que l'utilisateur existe d'abord
-        // Etudiant.id_etudiant doit réferencer Utilisateur.id_utilisateur
-
         test('doit créer ou modifier un profil', async () => {
             const res = await request(app)
                 .put(`/api/etudiants/${utilisateurId}`)
                 .set('Authorization', `Bearer ${token}`)
                 .send({ filiere: 'GINF', ville: 'Tanger' });
 
-            // Vérification HTTP
             expect(res.status).toBe(200);
             expect(res.body.message).toMatch(/succès/i);
-
-            // Vérification API Response
             expect(res.body.data.filiere).toBe('GINF');
             expect(res.body.data.ville).toBe('Tanger');
 
-            // Vérification en base
             const dbCheck = await prisma.etudiant.findUnique({
                 where: { id_etudiant: utilisateurId }
             });
             expect(dbCheck.ville).toBe('Tanger');
         });
 
-        test('doit retourner 400 si utilisateur inexistant', async () => {
+        test('doit retourner 400 si utilisateur inexistant (admin)', async () => {
             const res = await request(app)
                 .put('/api/etudiants/id-qui-nexiste-pas')
-                .set('Authorization', `Bearer ${token}`)
+                .set('Authorization', `Bearer ${tokenAdmin}`)
                 .send({ filiere: 'GINF' });
             expect(res.status).toBe(400);
         });
     });
 
-}); 
+});
