@@ -109,7 +109,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useAuthStore } from '../stores/authstor'
+import { useAuthStore } from '../stores/authstore'  
 import { useRouter } from 'vue-router'
 
 const email = ref('')
