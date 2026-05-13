@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { envoyerEmailReinitialisation } from './email.service.js';
+const ROLES_AUTORISES = ['ETUDIANT', 'PROFESSEUR', 'PROFESSIONNEL'];
 
 async function register(email, password, nom, prenom) {
 
@@ -12,8 +13,12 @@ async function register(email, password, nom, prenom) {
     throw new Error('Cet email est déjà utilisé');
   }
 }
+
+  //  Valider le rôle — ADMINISTRATEUR interdit à l'inscription
+  const roleValide = ROLES_AUTORISES.includes(role) ? role : 'ETUDIANT';
+
   // 2. Hasher le mot de passe
-  const salt = await bcrypt.genSalt(10);
+  const salt = await bcrypt.genSalt(12);  
   const hashedPassword = await bcrypt.hash(password, salt);
 
   // 3. Créer l'utilisateur en BDD
@@ -23,6 +28,7 @@ async function register(email, password, nom, prenom) {
       mot_de_passe: hashedPassword,
       nom,
       prenom,
+      role: roleValide,
       status_compte: 'INACTIF', // ← valeur correcte de l'enum
     },
     select: {
@@ -33,7 +39,7 @@ async function register(email, password, nom, prenom) {
       date_creation: true,
     },
   });
-
+ 
 
 async function login(email, password) {
 
@@ -69,6 +75,24 @@ async function login(email, password) {
   const { mot_de_passe, ...userSafe } = user;
   return { token, user: userSafe };
 }
+async function getMe(id_utilisateur) {
+  const user = await prisma.utilisateur.findUnique({
+    where: { id_utilisateur },
+    select: {
+      id_utilisateur: true,
+      email: true,
+      nom: true,
+      prenom: true,
+      telephone: true,
+      role: true,
+      status_compte: true,
+      date_creation: true,
+      derniere_connexion: true,
+    },
+  });
+  return user;
+}
+
 async function oublierMDP(email) {
   // 1. Chercher l'utilisateur par email
   const user = await prisma.utilisateur.findUnique({ where: { email } });
@@ -116,4 +140,4 @@ async function changerMDP(token, newPassword) {
     }
   });
 }
-export { register, login, oublierMDP, changerMDP }
+export { register, login, oublierMDP, changerMDP, getMe }
