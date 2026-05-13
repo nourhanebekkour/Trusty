@@ -11,7 +11,7 @@ async function register(email, password, nom, prenom) {
   if (existingUser) {
     throw new Error('Cet email est déjà utilisé');
   }
-
+}
   // 2. Hasher le mot de passe
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
@@ -116,4 +116,4 @@ async function changerMDP(token, newPassword) {
     }
   });
 }
-export { register, login, oublierMDP, changerMDP };
+export { register, login, oublierMDP, changerMDP }
