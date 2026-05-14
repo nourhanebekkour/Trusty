@@ -146,6 +146,8 @@ model Utilisateur {
   email_verifie           Boolean   @default(false)
   token_reinitialisation  String?   @db.VarChar(255)
   date_expiration_token   DateTime?
+  refresh_token           String?   @db.VarChar(500)
+  date_expiration_refresh DateTime?
 
   // Relations
   etudiant                Etudiant?
