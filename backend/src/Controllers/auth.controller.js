@@ -28,6 +28,12 @@ const register = async (req, res) => {
   }
 };
 
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: false,
+  sameSite: 'strict',
+};
+
 const login = async (req, res) => {
 
   // #swagger.tags = ['Authentification']
@@ -40,12 +46,51 @@ const login = async (req, res) => {
   } */
   try {
     const { email, password } = req.body;
-    const result = await authService.login(email, password);
-    return sendResponse(res, 200, true, 'Connexion réussie', result);
+    const { accessToken, refreshToken, user } = await authService.login(email, password);
+
+    res.cookie('accessToken', accessToken, {
+      ...COOKIE_OPTIONS,
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      ...COOKIE_OPTIONS,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return sendResponse(res, 200, true, 'Connexion réussie', { user });
 
   } catch (err) {
     console.error('[login]', err);
     return sendResponse(res, 401, false, err.message);
+  }
+};
+
+const refresh = async (req, res) => {
+  try {
+    const token = req.cookies.refreshToken;
+    if (!token) {
+      return sendResponse(res, 401, false, 'Refresh token manquant');
+    }
+    const { accessToken } = await authService.refreshToken(token);
+    res.cookie('accessToken', accessToken, {
+      ...COOKIE_OPTIONS,
+      maxAge: 15 * 60 * 1000,
+    });
+    return sendResponse(res, 200, true, 'Token renouvelé');
+  } catch (err) {
+    return sendResponse(res, 401, false, err.message);
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    await authService.logout(req.user.id);
+    res.clearCookie('accessToken', COOKIE_OPTIONS);
+    res.clearCookie('refreshToken', COOKIE_OPTIONS);
+    return sendResponse(res, 200, true, 'Déconnexion réussie');
+  } catch (err) {
+    return sendResponse(res, 500, false, 'Erreur serveur');
   }
 };
 
@@ -87,4 +132,4 @@ const changerMDP = async (req, res) => {
     return sendResponse(res, 400, false, err.message);
   }    
 }
-export { register, login, getMe , oublierMDP,changerMDP};
+export { register, login, refresh, logout, getMe, oublierMDP, changerMDP };
