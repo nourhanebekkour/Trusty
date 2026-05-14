@@ -7,7 +7,7 @@ const mockModifierFormation = jest.fn();
 const mockSupprimerFormation = jest.fn();
 
 // mock du service
-await jest.unstable_mockModule('../../../src/Services/formationService.js', () => ({
+await jest.unstable_mockModule('#Modules/cursus/formation/formation.service.js', () => ({
     recupererFormationsParEtudiant: mockRecupererFormationsParEtudiant,
     recupererFormationParId: mockRecupererFormationParId,
     ajouterFormation: mockAjouterFormation,
@@ -17,7 +17,7 @@ await jest.unstable_mockModule('../../../src/Services/formationService.js', () =
 
 // import du controller après le mock
 const { obtenirFormations, ajouterFormation, mettreAJourFormation, supprimerFormation }
-    = await import('../../../src/Controllers/formationController.js');
+    = await import('#Modules/cursus/formation/formation.controller.js');
 
 describe('Controller Formation', () => {
 

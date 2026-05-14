@@ -4,14 +4,14 @@ import { mockPrisma } from '../../mocks/prismaMock.js'
 // mock
 const formation = mockPrisma.formation;
 
-await jest.unstable_mockModule('../../../src/Config/prismaClient.js', () => ({
+await jest.unstable_mockModule('#Config/prismaClient.js', () => ({
     default: mockPrisma
 }));
 //plus précis que remplacer le package officiel @prisma/client
 
 // import après mock
 const { recupererFormationsParEtudiant, recupererFormationParId, ajouterFormation, modifierFormation, supprimerFormation }
-    = await import('../../../src/Services/formationService.js');
+    = await import('#Modules/cursus/formation/formation.service.js');
 
 describe('Service Formation', () => {
     beforeEach(() => { jest.clearAllMocks(); });

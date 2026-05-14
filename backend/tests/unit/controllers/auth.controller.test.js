@@ -4,14 +4,14 @@ import { jest } from '@jest/globals';
 const mockRegister = jest.fn();
 const mockLogin = jest.fn();
 
-await jest.unstable_mockModule('../../../src/Services/auth.service.js', () => ({
+await jest.unstable_mockModule('#Modules/identite/authentification/authentification.service.js', () => ({
     register: mockRegister,
     login: mockLogin
 }));
 
 // Mock prisma 
 const mockFindUnique = jest.fn();
-await jest.unstable_mockModule('../../../src/Config/prismaClient.js', () => ({
+await jest.unstable_mockModule('#Config/prismaClient.js', () => ({
     default: {
         utilisateur: {
             findUnique: mockFindUnique
@@ -19,7 +19,7 @@ await jest.unstable_mockModule('../../../src/Config/prismaClient.js', () => ({
     }
 }));
 
-const { register, login, getMe } = await import('../../../src/Controllers/auth.controller.js');
+const { register, login, getMe } = await import('#Modules/identite/authentification/authentification.controller.js');
 
 describe('Controller Auth', () => {
 

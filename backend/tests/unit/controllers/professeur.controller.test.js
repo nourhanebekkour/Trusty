@@ -8,7 +8,7 @@ const mockRecupererProfesseursParFiliere = jest.fn();
 const mockMettreAJourAvatar = jest.fn();
 
 // Mock du module service
-await jest.unstable_mockModule('../../../src/Services/professeurService.js', () => ({
+await jest.unstable_mockModule('#Modules/identite/professeur/professeur.service.js', () => ({
     ajouterOuModifierProfesseur: mockAjouterOuModifierProfesseur,
     recupererProfesseurParId: mockRecupererProfesseurParId,
     recupererTousLesProfesseurs: mockRecupererTousLesProfesseurs,
@@ -18,7 +18,7 @@ await jest.unstable_mockModule('../../../src/Services/professeurService.js', () 
 
 // Import dynamique du controller après le mock
 const { createOrUpdateProfile, obtenirProfilParId, obtenirTousLesProfils, obtenirProfesseursParFiliere, uploadAvatar }
-    = await import('../../../src/Controllers/professeurController.js');
+    = await import('#Modules/identite/professeur/professeur.controller.js');
 
 
 describe('Controller Professeur', () => {
