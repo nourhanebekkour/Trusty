@@ -2,6 +2,8 @@ import * as ProfessionnelService from '../Services/professionnelService.js';
 import sendResponse from '../Utils/responseHandler.js';
 
 export const afficherProfessionnelEnAttente= async (req,res) =>{
+  // #swagger.tags = ['Tableaux de Bord - Admin']
+  // #swagger.summary = "Afficher les professionnels en attente de validation"
   try {
     const professionnels = await ProfessionnelService.professionnelEnAttente();
      return sendResponse(res, 200, "Les professionnels en attente de validation : ", professionnels);
@@ -13,6 +15,17 @@ export const afficherProfessionnelEnAttente= async (req,res) =>{
 
 
 export const validerProfessionnel = async (req,res) => {
+  // #swagger.tags = ['Tableaux de Bord - Admin']
+  // #swagger.summary = 'Valider ou rejeter un professionnel (Admin uniquement)'
+  /* #swagger.parameters['id'] = { in: 'path' } */
+  /* #swagger.parameters['body'] = {
+        in: 'body',
+        description: 'Action à effectuer sur le professionnel (VALIDE ou REJETE)',
+        required: true,
+        schema: {
+          $action: 'VALIDE',
+        }
+    } */
   try {
       const id = req.params.id;
      const donnee = req.body;

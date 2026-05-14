@@ -2,7 +2,7 @@ import swaggerAutogen from 'swagger-autogen';
 
 const doc = {
   info: {
-    title: 'Projet',
+    title: 'Projet intergration',
     description: 'Documentation automatique des APIs du projet',
   },
   host: 'localhost:3000',
@@ -47,7 +47,8 @@ const doc = {
       objectif_professionnel: 'Développeur Fullstack',
       score_credibilite: 0,
       niveau_credibilite: 'DEBUTANT',
-      visibilite_profil: 'PUBLIC'
+      visibilite_profil: 'PUBLIC',
+      id_validateur: null
     },
     AdminProfileRequest: {
       niveau_acces: 'ADMIN'
@@ -132,6 +133,17 @@ const doc = {
       description: "Description de l activité",
       role: "Membre",
       est_public: true,
+    },
+    BadgeRequest: {
+      nom: 'Badge de Champion',
+      description: 'Attribué aux étudiants ayant complété tous les projets GINF',
+      categorie: 'ACADEMIQUE',
+      icone: 'badge-champion.png',
+      condition_attribution: 'Compléter 5 projets validés',
+      est_actif: true
+    },
+    AttributionBadgeRequest: {
+      id_etudiant: 'cl...id_etudiant'
     },
     AssocierCompetenceRequest: {
       niveau_maitrise: 'INTERMEDIAIRE'

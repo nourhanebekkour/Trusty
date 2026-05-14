@@ -26,10 +26,10 @@ describe('Controller Profil Étudiant', () => {
     let req, res;
 
     beforeEach(() => {
-        req = { params: {}, body: {} };
+        req = { params: {}, body: {}, user: { id: 'user-1', role: 'ETUDIANT' } };
         res = {
-            status: jest.fn().mockReturnThis(), // simule res.status()
-            json: jest.fn() // simule res.json()
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn()
         };
         jest.clearAllMocks();
     });
@@ -77,7 +77,7 @@ describe('Controller Profil Étudiant', () => {
                 success: false,
                 message: "Erreur lors de la récupération des profils",
                 data: null,
-                erreur: expect.any(Error)
+                erreur: expect.any(String)
             });
         });
 
@@ -131,7 +131,7 @@ describe('Controller Profil Étudiant', () => {
                 success: false,
                 message: "Erreur lors de la récupération du profil",
                 data: null,
-                erreur: expect.any(Error)
+                erreur: expect.any(String)
             });
         });
 
@@ -151,7 +151,7 @@ describe('Controller Profil Étudiant', () => {
             expect(res.json).toHaveBeenCalledWith({
                 status: 200,
                 success: true,
-                message: "Profil traité avec succès (créé ou mis à jour)",
+                message: "Profil traité avec succès",
                 data: mockProfil,
                 erreur: null
             });
@@ -169,7 +169,7 @@ describe('Controller Profil Étudiant', () => {
                 success: false,
                 message: "Erreur lors du traitement du profil",
                 data: null,
-                erreur: expect.any(Error)
+                erreur: expect.any(String)
             });
         });
 
