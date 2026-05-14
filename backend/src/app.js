@@ -1,5 +1,5 @@
 import express from 'express';
-import apiRouter from './Routes/index.js';
+import apiRouter from './modules/index.js';
 import swaggerUi from 'swagger-ui-express';
 import { createRequire } from 'module';
 import cookieParser from 'cookie-parser';
