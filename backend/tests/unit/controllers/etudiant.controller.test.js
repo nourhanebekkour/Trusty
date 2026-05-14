@@ -8,17 +8,17 @@ const mockAjouterOuModifierEtudiant = jest.fn();
 
 // 2) On dit à Jest "quand quelqu'un importe etudiantService,
 //    donne-lui mes fonctions mock à la place"
-await jest.unstable_mockModule('../../../src/Services/etudiantService.js', () => ({
+await jest.unstable_mockModule('#Modules/identite/etudiant/etudiant.service.js', () => ({
     recupererTousLesProfils: mockRecupererTousLesProfils,
     recupererParId: mockRecupererParId,
     ajouterOuModifierEtudiant: mockAjouterOuModifierEtudiant,
 }));
 
 // 3) SEULEMENT APRÈS on importe le controller
-//    → quand le controller va importer etudiantService,
+//    → quand le controller va importe etudiantService,
 //    il va recevoir les mocks au lieu du vrai service 
 const { obtenirTousLesProfils, obtenirProfilParId, traiterProfil } =
-    await import('../../../src/Controllers/etudiantController.js');
+    await import('#Modules/identite/etudiant/etudiant.controller.js');
 
 
 describe('Controller Profil Étudiant', () => {

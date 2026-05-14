@@ -4,12 +4,12 @@ import { mockPrisma } from '../../mocks/prismaMock'
 // mock services
 const competence = mockPrisma.competence;
 const etudiantCompetence = mockPrisma.etudiantCompetence;
-await jest.unstable_mockModule('../../../src/Config/prismaClient.js', () => ({
+await jest.unstable_mockModule('#Config/prismaClient.js', () => ({
     default: mockPrisma
 }));
 
 const { recupererToutesLesCompetences, recupererCompetenceParId, creerCompetence, modifierCompetence, supprimerCompetence, lierCompetenceAEtudiant, retirerCompetenceEtudiant, recupererCompetencesEtudiant }
-    = await import('../../../src/Services/competenceService.js');
+    = await import('#Modules/cursus/competence/competence.service.js');
 
 describe('Service Competence', () => {
     beforeEach(() => { jest.clearAllMocks(); }); // remet tous les mocks à zéro avant chaque test
