@@ -72,6 +72,21 @@ export const recupererProfesseurParId = async (id) => {
     return await enrichirProfil(professeur);
 };
 
+// 3. Récupérer les professeurs par filière
+export const recupererProfesseursParFiliere = async (filiere) => {
+    const professeurs = await prisma.professeur.findMany({
+        where: {
+            filieres_interv: {
+                has: filiere
+            }
+        },
+        include: {
+            utilisateur: UtilisateurSansMotDePasse
+        }
+    });
+    return await Promise.all(professeurs.map(enrichirProfil));
+};
+
 export const mettreAJourAvatar = async (id, fichier, userId) => {
     const professeur = await recupererProfesseurParId(id);
     if (!professeur) {

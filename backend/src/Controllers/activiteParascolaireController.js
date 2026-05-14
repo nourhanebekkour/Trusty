@@ -66,6 +66,17 @@ export const listerActivitesParEtudiant = async (req, res) => {
     }
 };
 
+export const listerActivitesAValider = async (req, res) => {
+    // #swagger.tags = ['Tableaux de Bord - Professeurs']
+    // #swagger.summary = "Lister les activités en attente de ma validation"
+    try {
+        const activites = await activiteParascolaireService.recupererActivitesAValider(req.user.id);
+        sendResponse(res, 200, true, "Activités à valider récupérés avec succès", activites);
+    } catch (erreur) {
+        sendResponse(res, 500, false, "Erreur lors de la récupération des activités à valider", null, erreur.message);
+    }
+};
+
 export const modifierActivite = async (req, res) => {
     // #swagger.tags = ['Activités Parascolaires']
     // #swagger.summary = 'Modifier une activité existante'
@@ -83,6 +94,21 @@ export const modifierActivite = async (req, res) => {
     } catch (erreur) {
         const status = erreur.message.includes("autorisé") ? 403 : 400;
         sendResponse(res, status, false, "Erreur lors de la modification de l'activité", null, erreur.message);
+    }
+};
+
+export const validerActivite = async (req, res) => {
+    // #swagger.tags = ['Tableaux de Bord - Professeurs']
+    // #swagger.summary = 'Valider ou rejeter une activité (Professeur uniquement)'
+    /* #swagger.parameters['id'] = { in: 'path' } */
+    try {
+        const { id } = req.params;
+        const { decision, commentaire } = req.body;
+        const activiteValide = await activiteParascolaireService.validerActivite(id, req.user.id, decision, commentaire);
+        sendResponse(res, 200, true, `Activité ${decision.toLowerCase()} avec succès`, activiteValide);
+    } catch (erreur) {
+        const status = erreur.message.includes("validateur") ? 403 : 400;
+        sendResponse(res, status, false, "Erreur lors de la validation de l'activité", null, erreur.message);
     }
 };
 
@@ -104,7 +130,7 @@ export const supprimerActivite = async (req, res) => {
  * Upload de l'attestation d'activité
  */
 export const uploadAttestation = async (req, res) => {
-    // #swagger.tags = ['Activités Parascolaires']
+    // #swagger.tags = ['Activités Parascolaires - Attestation']
     // #swagger.summary = 'Uploader l attestation d activité'
     // #swagger.consumes = ['multipart/form-data']
     /* #swagger.parameters['id'] = { in: 'path' } */
@@ -134,7 +160,7 @@ export const uploadAttestation = async (req, res) => {
  * Suppression de l'attestation d'activité
  */
 export const supprimerAttestation = async (req, res) => {
-    // #swagger.tags = ['Activités Parascolaires']
+    // #swagger.tags = ['Activités Parascolaires - Attestation']
     // #swagger.summary = 'Supprimer l attestation d activité'
     /* #swagger.parameters['id'] = { in: 'path' } */
     try {

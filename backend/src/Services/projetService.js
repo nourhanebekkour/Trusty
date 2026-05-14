@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import * as notificationService from './notificationService.js';
 import * as minioService from '../Utils/minioService.js';
 
 const prisma = new PrismaClient();
@@ -24,14 +25,36 @@ const verifierAccesProjet = async (id_projet, userId, userRole) => {
 // --- GESTION DES PROJETS ---
 
 export const creerProjet = async (donnees) => {
-    const { id_etudiant, role_joue, ...projetData } = donnees;
+    const { id_etudiant, role_joue, id_validateur, ...projetData } = donnees;
 
     if (!id_etudiant) {
         throw new Error("L'ID de l'étudiant créateur est requis");
     }
 
+    // Vérification de la filière si un validateur est choisi
+    if (id_validateur) {
+        const etudiant = await prisma.etudiant.findUnique({
+            where: { id_etudiant },
+            select: { filiere: true }
+        });
+
+        const professeur = await prisma.professeur.findUnique({
+            where: { id_professeur: id_validateur },
+            select: { filieres_interv: true }
+        });
+
+        if (!professeur) {
+            throw new Error("Le professeur choisi n'existe pas");
+        }
+
+        if (!professeur.filieres_interv.includes(etudiant.filiere)) {
+            throw new Error("Le professeur choisi n'intervient pas dans la filière " + etudiant.filiere);
+        }
+    }
+
     const data = {
         ...projetData,
+        id_validateur,
         date_debut: new Date(projetData.date_debut),
         date_fin: projetData.date_fin ? new Date(projetData.date_fin) : null,
         participations: {
@@ -46,7 +69,7 @@ export const creerProjet = async (donnees) => {
         }
     };
 
-    return await prisma.projet.create({
+    const nouveauProjet = await prisma.projet.create({
         data,
         include: {
             participations: true,
@@ -57,6 +80,62 @@ export const creerProjet = async (donnees) => {
             }
         }
     });
+
+    if (id_validateur) {
+        await notificationService.creerNotification(
+            id_validateur, 
+            "VALIDATION", 
+            "Nouveau projet à valider", 
+            "Le projet \"" + nouveauProjet.titre + "\" attend votre validation."
+        );
+    }
+
+    return nouveauProjet;
+};
+
+export const validerProjet = async (id_projet, id_validateur, decision, commentaire, appreciation) => {
+    const projet = await prisma.projet.findUnique({ where: { id_projet } });
+    if (!projet) throw new Error("Projet non trouvé");
+
+    if (projet.id_validateur !== id_validateur) {
+        throw new Error("Vous n'êtes pas le validateur désigné pour ce projet");
+    }
+
+    const updateData = {
+        status_validation: decision,
+        date_validation: new Date(),
+        commentaire_validation: commentaire,
+        appreciation: appreciation
+    };
+
+    const projetMisAJour = await prisma.projet.update({
+        where: { id_projet },
+        data: updateData,
+        include: { participations: true }
+    });
+
+    await notificationService.creerNotification(
+        projetMisAJour.participations[0].id_etudiant, 
+        "VALIDATION", 
+        "Projet " + (decision === "VALIDE" ? "validé" : "rejeté"), 
+        "Votre projet \"" + projetMisAJour.titre + "\" a été " + decision.toLowerCase() + " par le professeur."
+    );
+
+    // Créer un historique
+    await prisma.historiqueValidation.create({
+        data: {
+            type_entite: 'PROJET',
+            id_entite: id_projet,
+            status_validation: decision,
+            date_soumission: projet.date_soumission,
+            date_decision: new Date(),
+            commentaires: commentaire,
+            appreciation: appreciation,
+            id_validateur: id_validateur
+        }
+    });
+
+    return projetMisAJour;
 };
 
 export const recupererTousLesProjets = async (filtres = {}) => {
@@ -103,6 +182,41 @@ export const recupererProjetParId = async (id_projet) => {
     if (!projet) return null;
 
     return await minioService.enrichEntityWithFileUrls(projet, 'fichiers');
+};
+
+export const recupererProjetsAValider = async (id_professeur) => {
+    const projets = await prisma.projet.findMany({
+        where: {
+            id_validateur: id_professeur,
+            status_validation: "EN_ATTENTE"
+        },
+        include: {
+            participations: {
+                include: {
+                    etudiant: {
+                        include: {
+                            utilisateur: {
+                                select: {
+                                    nom: true,
+                                    prenom: true,
+                                    photo: true
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            technologies: {
+                include: {
+                    technologie: true
+                }
+            },
+            fichiers: true
+        },
+        orderBy: { date_soumission: "asc" }
+    });
+
+    return await minioService.enrichEntitiesWithFileUrls(projets, "fichiers");
 };
 
 export const modifierProjet = async (id_projet, donnees, userId, userRole) => {

@@ -54,6 +54,17 @@ export const obtenirProjet = async (req, res) => {
     }
 };
 
+export const listerProjetsAValider = async (req, res) => {
+    // #swagger.tags = ["Tableaux de Bord - Professeurs"]
+    // #swagger.summary = "Lister les projets en attente de ma validation"
+    try {
+        const projets = await projetService.recupererProjetsAValider(req.user.id);
+        sendResponse(res, 200, true, "Projets à valider récupérés avec succès", projets);
+    } catch (erreur) {
+        sendResponse(res, 500, false, "Erreur lors de la récupération des projets à valider", null, erreur.message);
+    }
+};
+
 export const modifierProjet = async (req, res) => {
     // #swagger.tags = ['Projets']
     // #swagger.summary = 'Modifier un projet existant'
@@ -74,6 +85,29 @@ export const modifierProjet = async (req, res) => {
     } catch (erreur) {
         const status = erreur.message.includes("autorisé") ? 403 : 400;
         sendResponse(res, status, false, "Erreur lors de la modification du projet", null, erreur.message);
+    }
+};
+
+export const validerProjet = async (req, res) => {
+    // #swagger.tags = ['Tableaux de Bord - Professeurs']
+    // #swagger.summary = 'Valider ou rejeter un projet (Professeur uniquement)'
+    /* #swagger.parameters['id'] = { in: 'path' } */
+    /* #swagger.parameters['body'] = {
+        in: 'body',
+        schema: {
+            decision: 'VALIDE',
+            commentaire: 'Excellent travail',
+            appreciation: 'A+'
+        }
+    } */
+    try {
+        const { id } = req.params;
+        const { decision, commentaire, appreciation } = req.body;
+        const projetValide = await projetService.validerProjet(id, req.user.id, decision, commentaire, appreciation);
+        sendResponse(res, 200, true, `Projet ${decision.toLowerCase()} avec succès`, projetValide);
+    } catch (erreur) {
+        const status = erreur.message.includes("validateur") ? 403 : 400;
+        sendResponse(res, status, false, "Erreur lors de la validation du projet", null, erreur.message);
     }
 };
 
@@ -167,7 +201,7 @@ export const supprimerFichierDuProjet = async (req, res) => {
 // --- GESTION DES PARTICIPATIONS AU PROJET ---
 
 export const ajouterParticipant = async (req, res) => {
-    // #swagger.tags = ['Participations Projets']
+    // #swagger.tags = ['Projets - Participants']
     // #swagger.summary = 'Ajouter un étudiant comme participant à un projet'
     /* #swagger.parameters['id_projet'] = {
         in: 'path',
@@ -194,7 +228,7 @@ export const ajouterParticipant = async (req, res) => {
 };
 
 export const modifierParticipant = async (req, res) => {
-    // #swagger.tags = ['Participations Projets']
+    // #swagger.tags = ['Projets - Participants']
     // #swagger.summary = 'Modifier le rôle d un participant dans un projet'
     /* #swagger.parameters['id_projet'] = {
         in: 'path',
@@ -221,7 +255,7 @@ export const modifierParticipant = async (req, res) => {
 };
 
 export const retirerParticipant = async (req, res) => {
-    // #swagger.tags = ['Participations Projets']
+    // #swagger.tags = ['Projets - Participants']
     // #swagger.summary = 'Retirer un participant d un projet'
     /* #swagger.parameters['id_projet'] = {
         in: 'path',
@@ -244,7 +278,7 @@ export const retirerParticipant = async (req, res) => {
 // --- GESTION DES TECHNOLOGIES DU PROJET ---
 
 export const ajouterTechnologie = async (req, res) => {
-    // #swagger.tags = ['Technologies Projets']
+    // #swagger.tags = ['Projets - Technologies']
     // #swagger.summary = 'Ajouter une technologie à un projet'
     /* #swagger.parameters['id_projet'] = {
         in: 'path',
@@ -271,7 +305,7 @@ export const ajouterTechnologie = async (req, res) => {
 };
 
 export const modifierTechnologie = async (req, res) => {
-    // #swagger.tags = ['Technologies Projets']
+    // #swagger.tags = ['Projets - Technologies']
     // #swagger.summary = 'Modifier l utilisation d une technologie dans un projet'
     /* #swagger.parameters['id_projet'] = {
         in: 'path',
@@ -298,7 +332,7 @@ export const modifierTechnologie = async (req, res) => {
 };
 
 export const retirerTechnologie = async (req, res) => {
-    // #swagger.tags = ['Technologies Projets']
+    // #swagger.tags = ['Projets - Technologies']
     // #swagger.summary = 'Retirer une technologie d un projet'
     /* #swagger.parameters['id_projet'] = {
         in: 'path',

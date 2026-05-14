@@ -1,11 +1,26 @@
 import prisma from '../Config/prismaClient.js';
+import * as minioService from '../Utils/minioService.js';
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Enrichit un badge avec l'URL de son icône
+ */
+const enrichirBadge = async (badge) => {
+    if (badge && badge.icone) {
+        badge.icone_url = await minioService.getFileUrl(badge.icone);
+    }
+    return badge;
+};
 
 // ============================================================================
 // CRUD BADGES
 // ============================================================================
 
 export const creerBadge = async (donnees) => {
-    return await prisma.badge.create({
+    const badge = await prisma.badge.create({
         data: {
             nom: donnees.nom,
             description: donnees.description,
@@ -15,6 +30,7 @@ export const creerBadge = async (donnees) => {
             est_actif: donnees.est_actif ?? true,
         },
     });
+    return await enrichirBadge(badge);
 };
 
 export const recupererTousLesBadges = async (filtres = {}) => {
@@ -41,20 +57,23 @@ export const recupererTousLesBadges = async (filtres = {}) => {
         prisma.badge.count({ where }),
     ]);
 
-    return { badges, total, page, pages: Math.ceil(total / limite) };
+    const badgesEnrichis = await Promise.all(badges.map(enrichirBadge));
+
+    return { badges: badgesEnrichis, total, page, pages: Math.ceil(total / limite) };
 };
 
 export const recupererBadgeParId = async (id_badge) => {
-    return await prisma.badge.findUnique({
+    const badge = await prisma.badge.findUnique({
         where: { id_badge },
         include: {
             _count: { select: { etudiants: true } },
         },
     });
+    return await enrichirBadge(badge);
 };
 
 export const modifierBadge = async (id_badge, donnees) => {
-    return await prisma.badge.update({
+    const badge = await prisma.badge.update({
         where: { id_badge },
         data: {
             ...(donnees.nom !== undefined && { nom: donnees.nom }),
@@ -65,13 +84,55 @@ export const modifierBadge = async (id_badge, donnees) => {
             ...(donnees.est_actif !== undefined && { est_actif: donnees.est_actif }),
         },
     });
+    return await enrichirBadge(badge);
 };
 
 export const supprimerBadge = async (id_badge) => {
-    // Cascade supprime automatiquement etudiants_badges via Prisma schema
+    // Récupérer le badge pour avoir le nom de l'icone avant suppression
+    const badge = await prisma.badge.findUnique({ where: { id_badge } });
+    
+    // Supprimer l'icône de MinIO si elle existe
+    if (badge && badge.icone) {
+        try {
+            await minioService.deleteFile(badge.icone);
+        } catch (error) {
+            console.error("Erreur lors de la suppression de l'icône du badge:", error);
+        }
+    }
+
     return await prisma.badge.delete({
         where: { id_badge },
     });
+};
+
+/**
+ * Upload de l'icône du badge
+ */
+export const mettreAJourIcone = async (id_badge, fichier, userId) => {
+    const badge = await prisma.badge.findUnique({ where: { id_badge } });
+    if (!badge) {
+        throw new Error("Badge non trouvé");
+    }
+
+    // Supprimer l'ancienne icône si elle existe
+    if (badge.icone) {
+        try {
+            await minioService.deleteFile(badge.icone);
+        } catch (error) {
+            console.error("Erreur lors de la suppression de l'ancienne icône:", error);
+        }
+    }
+
+    // Upload vers MinIO avec la catégorie ICONE (ou BADGE)
+    const fileRecord = await minioService.uploadAndSaveFile(fichier, userId, 'ICONE');
+    
+    // Mettre à jour le badge avec le nom de stockage
+    const badgeMisAJour = await prisma.badge.update({
+        where: { id_badge },
+        data: { icone: fileRecord.nom_stockage }
+    });
+
+    return await enrichirBadge(badgeMisAJour);
 };
 
 // ============================================================================
@@ -89,7 +150,7 @@ export const attribuerBadge = async (id_etudiant, id_badge) => {
     if (!etudiant) throw new Error('Étudiant introuvable');
 
     // Crée l'attribution (l'index unique @@id empêche les doublons)
-    return await prisma.etudiantBadge.create({
+    const attribution = await prisma.etudiantBadge.create({
         data: { id_etudiant, id_badge },
         include: {
             badge: true,
@@ -100,6 +161,13 @@ export const attribuerBadge = async (id_etudiant, id_badge) => {
             },
         },
     });
+
+    // Enrichir le badge dans l'attribution
+    if (attribution.badge) {
+        attribution.badge = await enrichirBadge(attribution.badge);
+    }
+
+    return attribution;
 };
 
 export const retirerBadge = async (id_etudiant, id_badge) => {
@@ -119,9 +187,15 @@ export const recupererBadgesEtudiant = async (id_etudiant) => {
         orderBy: { date_attribution: 'desc' },
     });
 
+    // Enrichir tous les badges
+    const attributionsEnrichies = await Promise.all(attributions.map(async (attr) => {
+        attr.badge = await enrichirBadge(attr.badge);
+        return attr;
+    }));
+
     return {
         total: attributions.length,
-        badges: attributions,
+        badges: attributionsEnrichies,
     };
 };
 
@@ -142,7 +216,7 @@ export const recupererEtudiantsDuBadge = async (id_badge) => {
     });
 
     return {
-        badge,
+        badge: await enrichirBadge(badge),
         total: attributions.length,
         etudiants: attributions,
     };

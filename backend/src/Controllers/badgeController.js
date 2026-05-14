@@ -90,6 +90,38 @@ export const supprimerBadge = async (req, res) => {
     }
 };
 
+/**
+ * Upload de l'icône du badge
+ */
+export const uploadIcone = async (req, res) => {
+    // #swagger.tags = ['Badges']
+    // #swagger.summary = 'Uploader l\'icône du badge'
+    // #swagger.consumes = ['multipart/form-data']
+    /* #swagger.parameters['id'] = {
+        in: 'path',
+        description: 'ID du badge'
+    } */
+    /* #swagger.parameters['icone'] = {
+        in: 'formData',
+        type: 'file',
+        required: 'true',
+        description: 'Icône du badge',
+    } */
+    try {
+        const { id } = req.params; 
+        if (!req.file) {
+            return sendResponse(res, 400, false, "Aucun fichier fourni");
+        }
+
+        const result = await badgeService.mettreAJourIcone(id, req.file, req.user.id);
+
+        return sendResponse(res, 200, true, "Icône du badge mise à jour", result);
+    } catch (error) {
+        const status = error.message === "Badge non trouvé" ? 404 : 500;
+        return sendResponse(res, status, false, error.message || "Erreur lors de l'upload de l'icône", null, error.message);
+    }
+};
+
 // ============================================================================
 // ATTRIBUTION DES BADGES AUX ÉTUDIANTS
 // ============================================================================
