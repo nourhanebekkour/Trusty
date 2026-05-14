@@ -3,7 +3,7 @@ import { mockPrisma } from '../../mocks/prismaMock'
 
 // MOCK PRISMA
 const utilisateur = mockPrisma.utilisateur;
-await jest.unstable_mockModule('../../../src/Config/prismaClient.js', () => ({
+await jest.unstable_mockModule('#Config/prismaClient.js', () => ({
     default: mockPrisma
 }));
 
@@ -29,7 +29,7 @@ await jest.unstable_mockModule('jsonwebtoken', () => ({
 
 
 // Import after tous les MOCKS
-const { register, login } = await import('../../../src/Services/auth.service.js');
+const { register, login } = await import('#Modules/identite/authentification/authentification.service.js');
 
 // --- REGISTER --
 

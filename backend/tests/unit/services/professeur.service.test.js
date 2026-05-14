@@ -4,7 +4,7 @@ import { mockPrisma } from '../../mocks/prismaMock.js';
 const { professeur, utilisateur } = mockPrisma;
 
 // Mock Prisma
-await jest.unstable_mockModule('../../../src/Config/prismaClient.js', () => ({
+await jest.unstable_mockModule('#Config/prismaClient.js', () => ({
     default: mockPrisma
 }));
 
@@ -16,7 +16,7 @@ const mockUploadAndSaveFile = jest.fn().mockResolvedValue({
     nom_stockage: 'photo.jpg'
 });
 
-await jest.unstable_mockModule('../../../src/Utils/minioService.js', () => ({
+await jest.unstable_mockModule('#Services/minio.service.js', () => ({
     getFileUrl: mockGetFileUrl,
     deleteFile: mockDeleteFile,
     uploadAndSaveFile: mockUploadAndSaveFile
@@ -29,7 +29,7 @@ const {
     recupererProfesseurParId,
     recupererProfesseursParFiliere,
     mettreAJourAvatar
-} = await import('../../../src/Services/professeurService.js');
+} = await import('#Modules/identite/professeur/professeur.service.js');
 
 
 describe('Service Professeur', () => {
