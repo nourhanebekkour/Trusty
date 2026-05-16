@@ -81,8 +81,13 @@
 </template>
 
 <script setup>
+<<<<<<< HEAD
+import { ref } from 'vue'
+import { useAuthStore } from '../stores/authstore'  
+=======
 import { ref, computed } from 'vue'
 import { useAuthStore } from '../stores/authstore'
+>>>>>>> 6125bcbd56aa606e47c8a944dcf28bf322777a0f
 import { useRouter } from 'vue-router'
 
 /* STATE */
