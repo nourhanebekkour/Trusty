@@ -42,3 +42,7 @@ pids
 *.pid
 *.seed
 *.pid.lock
+/src/generated/prisma
+
+#swagger
+/src/swagger-output.json

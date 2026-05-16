@@ -1,7 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView  from '../views/HomeView.vue'
-import LoginView from '../views/LoginView.vue'
+import HomeView from '../views/HomeView.vue'
 import AdminLayout from '../components/admin/AdminLayout.vue'
+import LoginView from '../views/loginview.vue'
+import Dashboard from '@/views/Dashboard.vue'
+import ProjectList from '@/views/ProjectList.vue'
+import Settings from '@/views/Settings.vue'
+import StageList from '@/views/StageList.vue'
+import Recommendations from '@/views/Recommendations.vue'
+import Notification from '@/views/Notification.vue'
+import Profile from '@/views/Profile.vue'
+import Modele from '@/views/Modele.vue'
+import Portfolio from '@/views/Portfolio.vue'
+import ProfessionalView from '@/views/ProfessionalView.vue'
+import ProfessorView from '@/views/ProfessorView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -25,12 +36,12 @@ const router = createRouter({
     // ── Admin ──────────────────────────────────────────
     {
       path: '/admin',
-      component: AdminLayout,          // ← Topbar + Sidebar wrapper
+      component: AdminLayout,
       meta: { requiresAuth: true },
       children: [
         {
-          path: '',                    // /admin → redirect to dashboard
-          redirect: '/admin/dashboard'
+          path: '',
+          redirect: '/admin/dashboard',
         },
         {
           path: 'dashboard',
@@ -54,18 +65,76 @@ const router = createRouter({
         },
       ],
     },
-  ],
+
+    // ── Student / User routes ──────────────────────────
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: Dashboard,
+    },
+    {
+      path: '/notifications',
+      name: 'notifications',
+      component: Notification,
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: Profile,
+    },
+    {
+      path: '/projets',
+      name: 'projets',
+      component: ProjectList,
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: Settings,
+    },
+    {
+      path: '/recommendations',
+      name: 'recommendations',
+      component: Recommendations,
+    },
+    {
+      path: '/stage',
+      name: 'stage',
+      component: StageList,
+    },
+    {
+      path: '/modele',
+      name: 'modele',
+      component: Modele,
+    },
+    {
+      path: '/portfolio',
+      name: 'portfolio',
+      component: Portfolio,
+    },
+    {
+      path: '/professional',
+      name: 'professional',
+      component: ProfessionalView,
+    },
+    {
+      path: '/professor',
+      name: 'professor',
+      component: ProfessorView,
+    },
+  ],  // ← fermeture correcte du tableau routes
 })
 
 // ── Auth guard ─────────────────────────────────────────
 router.beforeEach((to, from, next) => {
- // const token = localStorage.getItem('token')
- // if (to.meta.requiresAuth && !token) {
-  //  next({ name: 'login' })          // named route — never appends to current path
-  //} else if (to.name === 'login' && token) {
-  //  next({ path: '/admin/dashboard' }) // already logged in → skip login
-  //} else {
-    next()
-  })
+  // const token = localStorage.getItem('token')
+  // if (to.meta.requiresAuth && !token) {
+  //   next({ name: 'login' })
+  // } else if (to.name === 'login' && token) {
+  //   next({ path: '/admin/dashboard' })
+  // } else {
+  next()
+  // }
+})
 
 export default router
