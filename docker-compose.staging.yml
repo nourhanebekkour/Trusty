@@ -1,0 +1,35 @@
+#──────────────────────────────── OVERRIDE STAGING ────────────────────────────────
+# Même image que prod — seule la config change
+
+services:
+
+  frontend:
+    build:
+      target: production
+    ports:
+      - "8080:80"
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=http://${VM2_IP}:3001
+
+  backend:
+    build:
+      target: production
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}
+      - JWT_SECRET=${JWT_SECRET}
+    restart: on-failure
+
+  database:
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+
+
+# Commande : docker-compose -f docker-compose.yml -f docker-compose.staging.yml --env-file .env.staging up
+
+
