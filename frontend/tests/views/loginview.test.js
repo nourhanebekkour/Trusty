@@ -4,12 +4,14 @@ import { setActivePinia, createPinia } from 'pinia'
 import { createRouter, createMemoryHistory } from 'vue-router'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
-vi.mock('../src/stores/authstore', () => ({
+// ✅
+vi.mock('../../src/stores/authstore', () => ({
   useAuthStore: vi.fn(),
 }))
 
-import { useAuthStore } from '../src/stores/authstore'
-import LoginView from '../src/views/loginview.vue'
+import { useAuthStore } from '../../src/stores/authstore'
+// ✅
+import LoginView from '../../src/views/loginview.vue'
 
 // ─── Router minimal ───────────────────────────────────────────────────────────
 const router = createRouter({
