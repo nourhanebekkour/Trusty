@@ -10,6 +10,7 @@ export const mockPrisma = {
     },
     utilisateur: {
         findUnique: jest.fn(),
+        findFirst: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
         delete: jest.fn(),
