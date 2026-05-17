@@ -13,7 +13,6 @@ frontend/dist/
 *.log
 npm-debug.log*
 .env.dev
-<<<<<<< HEAD
-=======
 .env
->>>>>>> 1f0179e97c7dbcc131e5bfbb3b91f776f34069c9
+
+.env.test
