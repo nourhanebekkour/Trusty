@@ -52,7 +52,6 @@ describe('Integration API : Auth', () => {
                 });
 
             expect(res.status).toBe(201);
-            expect(res.body.data.token).toBeDefined();
             expect(res.body.data.user.email).toBe('register.test@test.com');
         });
 
@@ -87,8 +86,10 @@ describe('Integration API : Auth', () => {
                 .send({ email: 'login.test@test.com', password: 'password' });
 
             expect(res.status).toBe(200);
-            expect(res.body.data.token).toBeDefined();
-            token = res.body.data.token; // on sauvegarde pour getMe
+            const cookies = res.headers['set-cookie'] || [];
+            const accessCookie = cookies.find(c => c.startsWith('accessToken=')) || '';
+            token = accessCookie.split(';')[0].replace('accessToken=', '');
+            expect(token).toBeTruthy();
         });
 
         test('doit retourner 401 si mot de passe incorrect', async () => {
