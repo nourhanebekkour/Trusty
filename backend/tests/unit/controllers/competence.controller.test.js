@@ -72,7 +72,7 @@ describe('Controller Compétence', () => {
                 success: false,
                 message: "Erreur lors de la récupération des compétences",
                 data: null,
-                erreur: expect.any(Error)
+                erreur: expect.any(String)
             });
         });
     });
@@ -128,7 +128,7 @@ describe('Controller Compétence', () => {
                 success: false,
                 message: "Erreur lors de la récupération",
                 data: null,
-                erreur: expect.any(Error)
+                erreur: expect.any(String)
             });
         });
 
@@ -219,7 +219,7 @@ describe('Controller Compétence', () => {
                 success: false,
                 message: "Erreur lors de la modification de la compétence",
                 data: null,
-                erreur: expect.any(Error)
+                erreur: expect.any(String)
             });
         })
     });
@@ -294,7 +294,7 @@ describe('Controller Compétence', () => {
                 success: false,
                 message: "Erreur lors de la récupération",
                 data: null,
-                erreur: expect.any(Error)
+                erreur: expect.any(String)
             });
         });
     });
@@ -346,7 +346,7 @@ describe('Controller Compétence', () => {
                 success: false,
                 message: "Erreur lors de l'association",
                 data: null,
-                erreur: expect.any(Error)
+                erreur: expect.any(String)
             });
         });
 
@@ -391,7 +391,7 @@ describe('Controller Compétence', () => {
                 success: false,
                 message: "Erreur lors du retrait",
                 data: null,
-                erreur: expect.any(Error)
+                erreur: expect.any(String)
             });
         });
     });
