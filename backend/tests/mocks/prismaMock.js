@@ -9,6 +9,7 @@ export const mockPrisma = {
         deleteMany: jest.fn(),
     },
     utilisateur: {
+        findMany: jest.fn(),
         findUnique: jest.fn(),
         findFirst: jest.fn(),
         create: jest.fn(),
