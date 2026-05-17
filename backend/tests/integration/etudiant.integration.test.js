@@ -55,13 +55,17 @@ describe('Integration API : Profil Étudiant', () => {
         const loginRes = await request(app)
             .post('/api/auth/login')
             .send({ email: 'test.integration@etudiant.com', password: 'password' });
-        token = loginRes.body.data.token;
+        const cookiesEtudiant = loginRes.headers['set-cookie'] || [];
+        const accessCookieEtudiant = cookiesEtudiant.find(c => c.startsWith('accessToken=')) || '';
+        token = accessCookieEtudiant.split(';')[0].replace('accessToken=', '');
 
         // Login admin
         const loginAdmin = await request(app)
             .post('/api/auth/login')
             .send({ email: 'admin.integration@etudiant.com', password: 'password' });
-        tokenAdmin = loginAdmin.body.data.token;
+        const cookiesAdmin = loginAdmin.headers['set-cookie'] || [];
+        const accessCookieAdmin = cookiesAdmin.find(c => c.startsWith('accessToken=')) || '';
+        tokenAdmin = accessCookieAdmin.split(';')[0].replace('accessToken=', '');
     });
 
     // Nettoyer après les tests

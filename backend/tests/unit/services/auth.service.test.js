@@ -35,7 +35,7 @@ const { register, login } = await import('#Modules/identite/authentification/aut
 
 describe('register', () => {
 
-    test('doit créer un utilisateur et retourner un token', async () => {
+    test('doit créer un utilisateur et le retourner', async () => {
 
         utilisateur.findUnique.mockResolvedValue(null); // email pas encore utilisé
 
@@ -45,14 +45,12 @@ describe('register', () => {
         const mockUser = { id_utilisateur: 'u1', email: 'test@test.com', nom: 'Test', prenom: 'User', date_creation: new Date() };
 
         utilisateur.create.mockResolvedValue(mockUser);
-        mockSign.mockReturnValue('test-token');
 
         const result = await register('test@test.com', 'password', 'Test', 'User');
 
         expect(utilisateur.findUnique).toHaveBeenCalledWith({ where: { email: 'test@test.com' } });
         expect(utilisateur.create).toHaveBeenCalled();
-        expect(mockSign).toHaveBeenCalled();
-        expect(result).toEqual({ token: 'test-token', user: mockUser });
+        expect(result).toEqual({ user: mockUser });
     });
 
     test('doit lever une erreur si email déjà utilisé', async () => {
@@ -79,7 +77,7 @@ describe('register', () => {
 
 describe('login', () => {
 
-    test('doit retourner un token si connexion réussie', async () => {
+    test('doit retourner accessToken et refreshToken si connexion réussie', async () => {
 
         const mockUser = {
             id_utilisateur: 'u1',
@@ -89,13 +87,15 @@ describe('login', () => {
         };
 
         utilisateur.findUnique.mockResolvedValue(mockUser);
+        utilisateur.update.mockResolvedValue({});
         mockBcrypt.compare.mockResolvedValue(true);
         mockSign.mockReturnValue('test-token');
 
         const result = await login('test@test.com', 'password');
 
         expect(mockBcrypt.compare).toHaveBeenCalledWith('password', 'hashedPassword');
-        expect(result.token).toBe('test-token');
+        expect(result.accessToken).toBe('test-token');
+        expect(result.refreshToken).toBeDefined();
         expect(result.user).not.toHaveProperty('mot_de_passe'); // mot de passe exclu
     });
 
