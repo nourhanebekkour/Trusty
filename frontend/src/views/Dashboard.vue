@@ -10,9 +10,9 @@
       </div>
     </header>
 
-    <DashboardStats :stats="stats" />
-    <DashboardProjects :projects="projects" :loading="loadingProjects" />
-    <DashboardRecos   :recos="recommandations" :loading="loadingRecos" />
+    <DashboardStats    :stats="stats" />
+    <DashboardProjects :projects="projects"     :loading="loadingProjects" />
+    <DashboardRecos    :recos="recommandations" :loading="loadingRecos" />
 
     <div class="cta-banner">
       <div class="cta-banner__content">
@@ -31,10 +31,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAuthStore }  from '@/stores/authstore'
 import DashboardStats    from '@/components/dashboard/DashboardStats.vue'
 import DashboardProjects from '@/components/dashboard/DashboardProjects.vue'
 import DashboardRecos    from '@/components/dashboard/DashboardRecos.vue'
 import { fetchStats, fetchProjects, fetchRecos } from '@/services/dashboardservices'
+
+const authStore  = useAuthStore()
+const idEtudiant = authStore.user?.id_utilisateur ?? null
 
 const stats           = ref(null)
 const projects        = ref([])
@@ -42,15 +46,31 @@ const recommandations = ref([])
 const loadingProjects = ref(true)
 const loadingRecos    = ref(true)
 
-
-
 onMounted(async () => {
-  stats.value           = await fetchStats()
-  projects.value        = await fetchProjects()
+  if (!idEtudiant) {
+    console.warn('[Dashboard] id_utilisateur introuvable dans le store auth')
+    loadingProjects.value = false
+    loadingRecos.value    = false
+    return
+  }
+
+  // Appels en parallèle — chaque service gère son propre fallback mock
+  const [statsData, projectsData, recosData] = await Promise.all([
+    fetchStats(idEtudiant),
+    fetchProjects(idEtudiant),
+    fetchRecos(idEtudiant),
+  ])
+
+  stats.value           = statsData
+  projects.value        = projectsData
   loadingProjects.value = false
-  recommandations.value = await fetchRecos()
+  recommandations.value = recosData
   loadingRecos.value    = false
 })
+
+function generateUrl() {
+  console.log('generateUrl — endpoint à définir')
+}
 </script>
 
 <style scoped>

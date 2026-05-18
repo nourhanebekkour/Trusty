@@ -660,6 +660,7 @@ function validerProjet(projet) {
   font-family: 'DM Sans', sans-serif;
   transition: all 0.15s;
   border: none;
+  background: var(--olive);
 }
 .btn-primary { background: #D6EDE8; color: #0D2B2B; font-weight: 700; }
 .btn-primary:hover { opacity: 0.85; }

@@ -18,7 +18,7 @@
 
       <div class="profile-grid">
         <div class="sidebar">
-          <ProfileCard  :user="user" @edit="openEditModal" />
+          <ProfileCard  :user="user" @edit="openEditModal" @avatar-change="onAvatarChange" />
           <ProfileStats :user="user" />
         </div>
         <div class="content">
@@ -36,7 +36,7 @@
         :user="user"
         :saving="saving"
         @close="closeEditModal"
-        @save="saveProfile"
+        @save="onSaveProfile"
       />
 
       <SkillModal
@@ -60,15 +60,17 @@ import ProfileRepos        from '@/components/profile/ProfileRepos.vue'
 import ProfileProjects     from '@/components/profile/ProfileProjects.vue'
 import ProfileEditModal    from '@/components/profile/ProfileEditModal.vue'
 import SkillModal          from '@/components/profile/SkillModal.vue'
-import { getProfile, patchProfile, addSkill } from '@/services/profileservices'
+import { getProfile, saveProfile, addSkill, uploadAvatar } from '@/services/profileservices'
 
-const authStore      = useAuthStore()
-const user           = ref(null)
-const loading        = ref(false)
-const error          = ref(null)
-const saving         = ref(false)
+const authStore       = useAuthStore()
+const user            = ref(null)
+const loading         = ref(false)
+const error           = ref(null)
+const saving          = ref(false)
 const showEditModal   = ref(false)
 const showSkillsModal = ref(false)
+
+// ── Chargement ────────────────────────────────────────────────────────────────
 
 const loadProfile = async () => {
   loading.value = true
@@ -84,13 +86,21 @@ const loadProfile = async () => {
   }
 }
 
+// ── Édition du profil ─────────────────────────────────────────────────────────
+
 const openEditModal  = () => { showEditModal.value = true }
 const closeEditModal = () => { showEditModal.value = false }
 
-const saveProfile = async (formData) => {
+/**
+ Il faut ajouter
+ * saveProfile() orchestre automatiquement les deux appels :
+ *   PATCH /utilisateurs/{id}  
+ *   PUT   /etudiants/{id}     → ville, biographie...
+ */
+const onSaveProfile = async (formData) => {
   saving.value = true
   try {
-    const res      = await patchProfile(user.value.id_utilisateur, formData)
+    const res      = await saveProfile(user.value.id_utilisateur, formData)
     user.value     = res.data
     authStore.user = res.data
     closeEditModal()
@@ -101,20 +111,43 @@ const saveProfile = async (formData) => {
   }
 }
 
-const onSkillAdded = async (skillName) => {
+// ── Avatar ────────────────────────────────────────────────────────────────────
+
+/**
+ * Appelé par ProfileCard quand l'utilisateur choisit un nouveau fichier avatar.
+ * @param {File} file
+ */
+const onAvatarChange = async (file) => {
   try {
-    const res = await addSkill(skillName)
+    const res = await uploadAvatar(user.value.id_utilisateur, file)
+    // Mettre à jour uniquement le champ photo pour éviter de re-fetcher tout le profil
+    user.value = { ...user.value, photo: res.data.photo }
+    authStore.user = user.value
+  } catch (err) {
+    alert(err.response?.data?.message || "Erreur lors de l'upload de la photo.")
+  }
+}
+
+// ── Compétences ───────────────────────────────────────────────────────────────
+
+const onSkillAdded = async (skillName) => {
+  const idEtudiant = user.value.id_utilisateur
+  try {
+    const res = await addSkill(idEtudiant, skillName)
     if (!user.value.etudiant) user.value.etudiant = {}
     if (!user.value.etudiant.competences) user.value.etudiant.competences = []
     user.value.etudiant.competences.push(res.data)
   } catch {
-    // fallback local si addSkill échoue
+    // Fallback local si l'API échoue (mode dégradé)
     if (!user.value.etudiant.competences) user.value.etudiant.competences = []
     user.value.etudiant.competences.push({
-      competence: { id_competence: Date.now().toString(), nom: skillName },
+      competence:      { id_competence: Date.now().toString(), nom: skillName, type: 'TECHNIQUE' },
+      niveau_maitrise: 'DEBUTANT',
     })
   }
 }
+
+// ── Portfolio ─────────────────────────────────────────────────────────────────
 
 const generatePortfolio = () => alert('Fonctionnalité bientôt disponible !')
 

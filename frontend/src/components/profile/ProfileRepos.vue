@@ -12,11 +12,14 @@
             <a :href="repo.url_github ?? '#'" target="_blank" class="repo-name">{{ repo.nom_depot }}</a>
             <span class="ext-link">↗</span>
           </div>
-          <p class="repo-desc">{{ repo.description_github }}</p>
+          <p class="repo-desc" v-if="repo.description_github">{{ repo.description_github }}</p>
           <p class="repo-lang">
             <span class="lang-dot" :style="{ background: langColor(repo.langage_principal) }"></span>
             {{ repo.langage_principal }}
           </p>
+          <p class="repo-meta" v-if="repo.date_dernier_commit">
+  Dernier commit : {{ new Date(repo.date_dernier_commit).toLocaleDateString('fr-FR') }}
+</p>
         </div>
       </div>
     </div>

@@ -17,13 +17,15 @@
       <div class="gen-icon">✨</div>
       <h4>Générer mon portfolio</h4>
       <p>Créez un portfolio professionnel certifié à partir de vos projets et badges validés.</p>
-      <button class="btn-primary" @click="$router.push('/portfolio')">🔗 Lancer la génération</button>
+      <button class="btn-primary" @click="router.push('/portfolio')">🔗 Lancer la génération</button>
     </div>
   </div>
 </template>
 
 <script setup>
 defineProps({ user: Object })
+import { useRouter } from 'vue-router'
+const router = useRouter()
 
 </script>
 <style scoped>

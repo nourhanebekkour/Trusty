@@ -17,6 +17,7 @@
       <div class="skill-modal-body">
         <h2 class="skill-modal-title">Ajouter une compétence</h2>
         <p class="skill-modal-subtitle">Ajoutez une compétence à votre profil pour la mettre en avant.</p>
+
         <label class="skill-input-label">Nom de la compétence</label>
         <div class="skill-input-wrapper">
           <svg class="skill-input-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -30,6 +31,7 @@
             @keyup.enter="submit"
           />
         </div>
+
         <div class="skill-suggestions">
           <span class="skill-suggestions-label">Suggestions</span>
           <div class="skill-suggestions-tags">
@@ -45,8 +47,8 @@
 
       <div class="skill-modal-footer">
         <button class="skill-btn-cancel" @click="$emit('close')">Annuler</button>
-        <button class="skill-btn-submit" :disabled="!newSkill.trim()" @click="submit">
-          + Ajouter au profil
+        <button class="skill-btn-submit" :disabled="!newSkill.trim() || adding" @click="submit">
+          {{ adding ? 'Ajout en cours...' : '+ Ajouter au profil' }}
         </button>
       </div>
 
@@ -65,29 +67,46 @@
 <script setup>
 import { ref } from 'vue'
 
-const props  = defineProps({ user: Object })
-const emit   = defineEmits(['close', 'added'])
+const props = defineProps({ user: Object })
+// "added" émet l'objet { competence, niveau_maitrise } retourné par addSkill()
+const emit  = defineEmits(['close', 'added'])
 
 const newSkill    = ref('')
 const showSuccess = ref(false)
 const lastAdded   = ref('')
+const adding      = ref(false)
 
 const suggestionTags = ['Vue.js', 'JavaScript', 'PHP', 'Laravel', 'CSS', 'HTML', 'Python', 'Git', 'Machine Learning']
 
-function submit() {
+async function submit() {
   const skill = newSkill.value.trim()
   if (!skill) return
 
-  const exists = props.user.etudiant?.competences?.some(ec => ec.competence.nom === skill)
-  if (exists) { alert('Cette compétence est déjà dans votre profil.'); newSkill.value = ''; return }
+  // Vérification côté client : évite d'ajouter un doublon visible
+  const exists = props.user.etudiant?.competences?.some(
+    ec => ec.competence.nom.toLowerCase() === skill.toLowerCase()
+  )
+  if (exists) {
+    alert('Cette compétence est déjà dans votre profil.')
+    newSkill.value = ''
+    return
+  }
 
-  emit('added', skill)
-  lastAdded.value  = skill
-  newSkill.value   = ''
-  showSuccess.value = true
-  setTimeout(() => { showSuccess.value = false }, 3000)
+  adding.value = true
+  try {
+    // On émet le nom — le parent (ProfilePage) appelle addSkill(idEtudiant, nom)
+    // et gère l'erreur API. Le modal reste ouvert en cas d'erreur.
+    emit('added', skill)
+    lastAdded.value   = skill
+    newSkill.value    = ''
+    showSuccess.value = true
+    setTimeout(() => { showSuccess.value = false }, 3000)
+  } finally {
+    adding.value = false
+  }
 }
 </script>
+
 <style scoped>
 @import '@/assets/Profile.css';
 </style>

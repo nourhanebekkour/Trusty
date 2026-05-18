@@ -365,7 +365,7 @@
 
 .badge--status { font-size: 0.72rem; }
 .badge--status-ok       { background-color: rgba(214, 237, 232, 0.9); color: #3a6e54; }
-.badge--status-wait     { background-color: rgba(245, 220, 130, 0.3); color: #8a6a10; }
+.badge--status-wait     { background-color: rgba(245, 220, 130, 0.3); color: #D6EDE8; }
 .badge--status-progress { background-color: rgba(92, 140, 106, 0.15); color: var(--color-olive); }
 
 .badge__dot {
@@ -470,7 +470,7 @@
   font-style: italic;
   font-size: 0.9rem;
   line-height: 1.7;
-  color: var(--color-text);
+  color: #D6EDE8;
   margin: 0 0 18px;
 }
 
