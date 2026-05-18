@@ -2,17 +2,26 @@ import { Router } from 'express';
 import * as authController from '../Controllers/auth.controller.js';
 import { authMiddleware } from '../Middlewars/auth.middleware.js';
 import { requireRole } from '../Middlewars/roles.middleware.js';
+import validate from '../Middlewars/validate.middleware.js';
+import { registerSchema,loginSchema,forgotPasswordSchema,resetPasswordSchema} from '../Validators/auth.validator.js';
+import { loginLimiter, forgotPasswordLimiter } from '../Middlewars/rateLimiter.middleware.js';
 
 const router = Router();
 
-// ---- ROUTES PUBLIQUES ----
-// Pas besoin de token
-
 // POST /api/auth/register → inscription
-router.post('/register', authController.register);
+router.post('/register', validate(registerSchema), authController.register);
 
-// POST /api/auth/login → connexion, retourne un token
-router.post('/login', authController.login);
+// POST /api/auth/login → connexion, stocke les tokens dans cookies HttpOnly
+router.post('/login', loginLimiter, validate(loginSchema), authController.login);
+
+// POST /api/auth/refresh-token → renouveler l'access token via le refresh token
+router.post('/refresh-token', authController.refresh);
+
+// POST /api/auth/logout → déconnexion, supprime les cookies
+router.post('/logout', authMiddleware, authController.logout);
+
+router.post('/forgot-password', forgotPasswordLimiter, validate(forgotPasswordSchema), authController.oublierMDP);
+router.post('/reset-password', validate(resetPasswordSchema), authController.changerMDP);
 
 // ---- ROUTES PROTÉGÉES ----
 // authMiddleware vérifie le token avant le controller

@@ -80,7 +80,7 @@ export const supprimerCompetence = async (req, res) => {
 // --- CONTRÔLEURS ÉTUDIANT ---
 
 export const listerCompetencesEtudiant = async (req, res) => {
-    // #swagger.tags = ['Compétences Étudiant']
+    // #swagger.tags = ['Etudiants - Compétences']
     // #swagger.summary = 'Lister les compétences d\'un étudiant'
     try {
         const { id_etudiant } = req.params;
@@ -92,7 +92,7 @@ export const listerCompetencesEtudiant = async (req, res) => {
 };
 
 export const associerCompetence = async (req, res) => {
-    // #swagger.tags = ['Compétences Étudiant']
+    // #swagger.tags = ['Etudiants - Compétences']
     // #swagger.summary = 'Associer une compétence à un étudiant'
     /* #swagger.parameters['body'] = {
         in: 'body',
@@ -111,7 +111,7 @@ export const associerCompetence = async (req, res) => {
 };
 
 export const detacherCompetence = async (req, res) => {
-    // #swagger.tags = ['Compétences Étudiant']
+    // #swagger.tags = ['Etudiants - Compétences']
     // #swagger.summary = 'Retirer une compétence d\'un étudiant'
     try {
         const { id_etudiant, id_competence } = req.params;
