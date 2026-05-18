@@ -2,7 +2,7 @@ import swaggerAutogen from 'swagger-autogen';
 
 const doc = {
   info: {
-    title: 'Projet intergration',
+    title: 'Projet d intergration',
     description: 'Documentation automatique des APIs du projet',
   },
   host: 'localhost:3000',
@@ -147,6 +147,16 @@ const doc = {
     },
     AssocierCompetenceRequest: {
       niveau_maitrise: 'INTERMEDIAIRE'
+    },
+    CommentaireRequest: {
+      id_etudiant_cible: 'cl...id_etudiant',
+      id_projet_cible: 'cl...id_projet',
+      type_cible: 'PROJET',
+      contenu: 'Très bon travail sur ce projet !'
+    },
+    RecommandationRequest: {
+      id_etudiant: 'cl...id_etudiant',
+      message: 'Je recommande vivement cet étudiant pour son sérieux.'
     },
     StandardResponse: {
       success: true,
