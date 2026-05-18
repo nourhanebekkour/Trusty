@@ -1,7 +1,5 @@
 import * as Minio from 'minio';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import process from '#Config/env.js';
 
 const minioClient = new Minio.Client({
   endPoint: process.env.MINIO_ENDPOINT || 'localhost',
