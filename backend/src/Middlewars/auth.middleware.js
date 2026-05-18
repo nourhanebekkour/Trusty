@@ -4,12 +4,15 @@ import sendResponse from '../Utils/responseHandler.js';
 
 const authMiddleware = async (req, res, next) => {
   try {
-    // 1. Récupérer le header Authorization
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return sendResponse(res, 401, false, 'Aucun token fourni');
+    // 1. Récupérer le token depuis le cookie ou le header Authorization
+    let token = req.cookies?.accessToken;
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return sendResponse(res, 401, false, 'Aucun token fourni');
+      }
+      token = authHeader.split(' ')[1];
     }
-    const token = authHeader.split(' ')[1];
 
     // 2. Vérifier la signature du token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key_123');

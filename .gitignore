@@ -2,8 +2,16 @@ node_modules/
 frontend/node_modules/
 backend/node_modules/
 
+.env.dev
 .env.prod
 .env.staging
+
+.env.chef
+.env.adjoint
+.env.chef-db
+.env.adjoint-db
+.env.prod-db
+.env.staging-db
 
 frontend/dist/
 
@@ -12,5 +20,5 @@ frontend/dist/
 
 *.log
 npm-debug.log*
-.env.dev
+
 .env

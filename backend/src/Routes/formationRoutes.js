@@ -5,15 +5,13 @@ import {
     mettreAJourFormation,
     supprimerFormation
 } from '../Controllers/formationController.js';
-import { authMiddleware } from '../Middlewars/auth.middleware.js';
+import { requireOwnerOrAdmin } from '../Middlewars/roles.middleware.js';
 
 const router = express.Router();
 
-// Toutes les routes de formation nécessitent d'être connecté
-router.use(authMiddleware);
 
-router.get('/etudiant/:id_etudiant', obtenirFormations);
-router.post('/etudiant/:id_etudiant', ajouterFormation);
+router.get('/etudiant/:id_etudiant', requireOwnerOrAdmin('id_etudiant'), obtenirFormations);
+router.post('/etudiant/:id_etudiant', requireOwnerOrAdmin('id_etudiant'), ajouterFormation);
 router.put('/:id', mettreAJourFormation);
 router.delete('/:id', supprimerFormation);
 

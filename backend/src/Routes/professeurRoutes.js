@@ -1,20 +1,15 @@
 import express from 'express';
-import { 
-    createOrUpdateProfile,
-    obtenirProfilParId,
-    obtenirTousLesProfils,
-} from '../Controllers/professeurController.js';
-import { authMiddleware } from '../Middlewars/auth.middleware.js';
+import { createOrUpdateProfile, obtenirProfilParId, obtenirTousLesProfils, uploadAvatar, obtenirProfesseursParFiliere } from '../Controllers/professeurController.js';
+import upload from '../Middlewars/uploadMiddleware.js';
+import { requireRole, requireOwnerOrAdmin } from '../Middlewars/roles.middleware.js';
 
 const router = express.Router();
 
-router.use(authMiddleware);
+router.get('/', requireRole('ADMINISTRATEUR'), obtenirTousLesProfils);
+router.get('/filiere/:filiere', obtenirProfesseursParFiliere);
+router.get('/:id', requireOwnerOrAdmin('id'), obtenirProfilParId);
 
-// Routes publiques ou avec auth de base
-router.get("/",  obtenirTousLesProfils);
-router.get("/:id", obtenirProfilParId);
-
-// Routes protégées : Seul l'admin ou le professeur concerné peut modifier/supprimer
-router.put("/:id", createOrUpdateProfile);
+router.put('/:id', requireOwnerOrAdmin('id'), createOrUpdateProfile);
+router.post('/:id/avatar', requireOwnerOrAdmin('id'), upload.single('fichier'), uploadAvatar);
 
 export default router;

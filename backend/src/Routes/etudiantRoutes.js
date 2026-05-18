@@ -3,19 +3,18 @@ import {
     obtenirTousLesProfils, 
     obtenirProfilParId, 
     traiterProfil,
+    uploadAvatar
 } from '../Controllers/etudiantController.js';
-import { authMiddleware } from '../Middlewars/auth.middleware.js';
+import upload from '../Middlewars/uploadMiddleware.js';
+import { requireRole, requireOwnerOrAdmin } from '../Middlewars/roles.middleware.js';
 
 const router = express.Router();
 
-router.use(authMiddleware);
 
-// Tout le monde peut voir les profils (selon visibilité, mais ici on protège au moins la modif)
-router.get('/',obtenirTousLesProfils);
-router.get('/:id',obtenirProfilParId);
+router.get('/', requireRole('ADMINISTRATEUR'), obtenirTousLesProfils);
+router.get('/:id', requireOwnerOrAdmin('id'), obtenirProfilParId);
 
-// Seul l'utilisateur connecté peut modifier son profil (ou un admin)
-// Pour l'instant on protège juste avec authMiddleware
-router.put('/:id',traiterProfil);
+router.put('/:id', requireOwnerOrAdmin('id'), traiterProfil);
+router.post('/:id/avatar', requireOwnerOrAdmin('id'), upload.single('fichier'), uploadAvatar);
 
 export default router;

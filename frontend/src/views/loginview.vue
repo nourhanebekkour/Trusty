@@ -92,6 +92,7 @@ const email = ref('')
 const password = ref('')
 const remember = ref(false)
 const showCaptcha = ref(false)
+
 const isSubmitting = ref(false)
 
 /* ERRORS */
@@ -102,6 +103,7 @@ const fieldErrors = ref({
 })
 
 /* SECURITY UX STATE */
+/* SECURITY */
 const loginAttempts = ref(0)
 const lockUntil = ref(null)
 
