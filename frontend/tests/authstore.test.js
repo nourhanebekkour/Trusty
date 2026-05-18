@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useAuthStore } from '../src/stores/authstore'
+import { useAuthStore } from '../src/stores/auth'
 
 // ─── Mock du service auth ─────────────────────────────────────────────────────
 vi.mock('../src/services/authservices', () => ({
@@ -8,7 +8,7 @@ vi.mock('../src/services/authservices', () => ({
   getProfile: vi.fn(),
 }))
 
-import { login, getProfile } from '../src/services/authservices'
+import { login, getProfile } from '../src/services/auth.service.jgrs'
 
 // ─── Mock localStorage ────────────────────────────────────────────────────────
 const localStorageMock = (() => {

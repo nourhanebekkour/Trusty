@@ -8,7 +8,7 @@ vi.mock('../src/stores/authstore', () => ({
   useAuthStore: vi.fn(),
 }))
 
-import { useAuthStore } from '../src/stores/authstore'
+import { useAuthStore } from '../src/stores/auth'
 import LoginView from '../src/views/loginview.vue'
 
 // ─── Router minimal ───────────────────────────────────────────────────────────
