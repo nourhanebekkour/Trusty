@@ -1,43 +1,70 @@
 import { defineStore } from 'pinia'
-import { login, getProfile } from '../services/authservices'
+import { authService } from '../services/auth.service.jgrs'
+import api from '../api'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    user: null,
-    token: localStorage.getItem('token') || null,
+    user: null,       
     loading: false,
     error: null
   }),
 
+  getters: {
+    isAuthenticated: (state) => !!state.user,
+    isAdmin: (state) => state.user?.role === 'ADMINISTRATEUR',
+    isEtudiant: (state) => state.user?.role === 'ETUDIANT'
+  },
+
   actions: {
-    async loginUser(credentials) {
+
+    // Login 
+    async login(email, password) {
       this.loading = true
       this.error = null
       try {
-        const response = await login(credentials)
-        this.token = response.data.token
-        this.user = response.data.user
-        localStorage.setItem('token', this.token)
+        await authService.login({ email, password })
+        // Fetch user 
+        await this.fetchUser()
+        return true
       } catch (err) {
-        this.error = err.response?.data?.message || 'Erreur de connexion'
+        this.error = err.response?.data?.message || 'Erreur connexion'
+        return false
       } finally {
         this.loading = false
       }
     },
 
-    async fetchProfile() {
+    // Register
+    async register(data) {
+      this.loading = true
+      this.error = null
       try {
-        const response = await getProfile()
-        this.user = response.data
+        await authService.register(data)
+        return true
       } catch (err) {
-        console.error(err)
+        this.error = err.response?.data?.message || 'Erreur inscription'
+        return false
+      } finally {
+        this.loading = false
       }
     },
 
-    logout() {
+    // Fetch user 
+    async fetchUser() {
+      try {
+        const res = await authService.getMe()
+        this.user = res.data
+      } catch {
+        this.user = null
+      }
+    },
+
+    // Logout
+    async logout() {
+      try {
+        await api.post('/auth/logout') 
+      } catch {}
       this.user = null
-      this.token = null
-      localStorage.removeItem('token')
     }
   }
 })
