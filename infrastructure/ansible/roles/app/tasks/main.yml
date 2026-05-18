@@ -1,0 +1,44 @@
+---
+- name: Cloner le projet Trusty
+  git:
+    repo: https://github.com/nourhanebekkour/Trusty.git
+    dest: /home/aya/Trusty
+    version: feature/docker-infrastructure
+    force: yes
+
+- name: Créer swagger-output.json vide
+  copy:
+    content: "{}"
+    dest: /home/aya/Trusty/backend/src/swagger-output.json
+
+- name: Créer .env.staging pour VM-Chef
+  template:
+    src: env.staging.j2
+    dest: /home/aya/Trusty/.env.staging
+  when: inventory_hostname == '192.168.20.10'
+
+- name: Créer .env.prod pour VM-Adjoint
+  template:
+    src: env.prod.j2
+    dest: /home/aya/Trusty/.env.prod
+  when: inventory_hostname == '192.168.20.11'
+
+- name: Lancer les containers sur VM-Chef
+  shell: |
+    cd /home/aya/Trusty
+    docker compose -f docker-compose.yml \
+                   -f infrastructure/docker-compose.chef.yml \
+                   -f docker-compose.staging.yml \
+                   --env-file .env.staging \
+                   up -d --scale database=0
+  when: inventory_hostname == '192.168.20.10'
+
+- name: Lancer les containers sur VM-Adjoint
+  shell: |
+    cd /home/aya/Trusty
+    docker compose -f docker-compose.yml \
+                   -f infrastructure/docker-compose.chef.yml \
+                   -f docker-compose.prod.yml \
+                   --env-file .env.prod \
+                   up -d --scale database=0
+  when: inventory_hostname == '192.168.20.11'

@@ -1,0 +1,39 @@
+---
+- name: Mettre à jour apt
+  apt:
+    update_cache: yes
+    upgrade: yes
+
+- name: Installer outils de base
+  apt:
+    name:
+      - git
+      - curl
+      - wget
+      - unzip
+      - net-tools
+      - ca-certificates
+      - gnupg
+      - lsb-release
+      - software-properties-common
+    state: present
+
+- name: Configurer le hostname VM-Chef
+  hostname:
+    name: vm-chef
+  when: inventory_hostname == '192.168.20.10'
+
+- name: Configurer le hostname VM-Adjoint
+  hostname:
+    name: vm-adjoint
+  when: inventory_hostname == '192.168.20.11'
+
+- name: Configurer le hostname VM-Chef-DB
+  hostname:
+    name: vm-chef-db
+  when: inventory_hostname == '192.168.20.12'
+
+- name: Configurer le hostname VM-Adjoint-DB
+  hostname:
+    name: vm-adjoint-db
+  when: inventory_hostname == '192.168.20.13'
