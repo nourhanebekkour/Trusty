@@ -30,6 +30,6 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
 
 
-# Commande : docker-compose -f docker-compose.yml -f docker-compose.staging.yml --env-file .env.staging up
+# Commande : docker-compose -f docker-compose.yml -f docker-compose.staging.yml --env-file .env.staging up 
 
 

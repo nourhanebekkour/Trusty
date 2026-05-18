@@ -37,14 +37,16 @@ describe('Integration API : Formations', () => {
 
         // Création étudiant lié (contrainte FK)
         await prisma.etudiant.create({
-            data: { id_etudiant: utilisateurId }
+            data: { id_etudiant: utilisateurId, filiere: 'GINF' }
         });
 
         // Login pour récupérer le token JWT
         const loginRes = await request(app)
             .post('/api/auth/login')
             .send({ email: 'test.integration@formation.com', password: 'password' });
-        token = loginRes.body.data.token;
+        const cookies = loginRes.headers['set-cookie'] || [];
+        const accessCookie = cookies.find(c => c.startsWith('accessToken=')) || '';
+        token = accessCookie.split(';')[0].replace('accessToken=', '');
     });
 
     afterAll(async () => {
@@ -139,11 +141,11 @@ describe('Integration API : Formations', () => {
             });
             expect(dbCheck).toBeNull();
         });
-        test('doit retourner 400 si formation inexistante', async () => {
+        test('doit retourner 404 si formation inexistante', async () => {
             const res = await request(app)
                 .delete('/api/formations/id-inexistant')
                 .set('Authorization', `Bearer ${token}`);
-            expect(res.status).toBe(400);
+            expect(res.status).toBe(404);
         });
     });
 

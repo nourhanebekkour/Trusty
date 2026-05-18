@@ -4,14 +4,14 @@ import { mockPrisma } from '../../mocks/prismaMock.js'
 // mock
 const formation = mockPrisma.formation;
 
-await jest.unstable_mockModule('../../../src/Config/prismaClient.js', () => ({
+await jest.unstable_mockModule('#Config/prismaClient.js', () => ({
     default: mockPrisma
 }));
 //plus précis que remplacer le package officiel @prisma/client
 
 // import après mock
 const { recupererFormationsParEtudiant, recupererFormationParId, ajouterFormation, modifierFormation, supprimerFormation }
-    = await import('../../../src/Services/formationService.js');
+    = await import('#Modules/cursus/formation/formation.service.js');
 
 describe('Service Formation', () => {
     beforeEach(() => { jest.clearAllMocks(); });
@@ -106,62 +106,87 @@ describe('Service Formation', () => {
     // UPDATE
     describe('modifierFormation', () => {
         test('doit modifier la formation', async () => {
-            const mockFormation = { id_formation: '1' };
+            const mockFormation = { id_formation: '1', id_etudiant: 'user-1' };
+            // verifierAccesFormation appelle findUnique avant update
+            formation.findUnique.mockResolvedValue(mockFormation);
             formation.update.mockResolvedValue(mockFormation);
 
-            const donnees = {
-                diplome: 'Médecine',
-                etablissement: 'FMPT',
-                mention: 'TB'
-            }
+            const donnees = { diplome: 'Médecine', etablissement: 'FMPT', mention: 'TB' };
 
-            const result = await modifierFormation('1', donnees);
+            const result = await modifierFormation('1', donnees, 'user-1', 'ETUDIANT');
             expect(formation.update).toHaveBeenCalledWith(
                 expect.objectContaining({
                     where: { id_formation: '1' },
-                    data: expect.objectContaining({
-                        ...donnees // spread operator 
-                    })
+                    data: expect.objectContaining({ ...donnees })
                 })
             );
-
             expect(result).toEqual(mockFormation);
-
         });
 
         test('doit propager l\'erreur si Prisma échoue', async () => {
+            formation.findUnique.mockResolvedValue({ id_formation: '1', id_etudiant: 'user-1' });
             formation.update.mockRejectedValue(new Error('Erreur Prisma'));
 
-            await expect(modifierFormation('1', {})).rejects.toThrow('Erreur Prisma');
+            await expect(modifierFormation('1', {}, 'user-1', 'ETUDIANT')).rejects.toThrow('Erreur Prisma');
         });
 
+        test('doit lever une erreur si la formation n\'existe pas', async () => {
+            formation.findUnique.mockResolvedValue(null);
+
+            await expect(modifierFormation('id-inexistant', {}, 'user-1', 'ETUDIANT'))
+                .rejects.toThrow('Formation non trouvée');
+
+            expect(formation.update).not.toHaveBeenCalled();
+        });
+
+        test('doit lever une erreur si l\'utilisateur n\'est pas propriétaire ni admin', async () => {
+            formation.findUnique.mockResolvedValue({ id_formation: '1', id_etudiant: 'autre-user' });
+
+            await expect(modifierFormation('1', {}, 'user-1', 'ETUDIANT'))
+                .rejects.toThrow('Vous n\'êtes pas autorisé à accéder à cette ressource');
+
+            expect(formation.update).not.toHaveBeenCalled();
+        });
     });
 
 
     // DELETE
     describe('supprimerFormation', () => {
         test('doit supprimer une formation', async () => {
-            const mockFormation = { id_formation: '1' };
+            const mockFormation = { id_formation: '1', id_etudiant: 'user-1' };
+            // verifierAccesFormation appelle findUnique avant delete
+            formation.findUnique.mockResolvedValue(mockFormation);
             formation.delete.mockResolvedValue(mockFormation);
-            const result = await supprimerFormation('1');
 
-            // vérifier appel Prisma
-            expect(formation.delete).toHaveBeenCalledWith({
-                where: { id_formation: '1' }
-            });
+            const result = await supprimerFormation('1', 'user-1', 'ETUDIANT');
 
-            // vérifier retour
+            expect(formation.delete).toHaveBeenCalledWith({ where: { id_formation: '1' } });
             expect(result).toEqual(mockFormation);
         });
 
         test('doit propager l\'erreur si Prisma échoue', async () => {
-
+            formation.findUnique.mockResolvedValue({ id_formation: '1', id_etudiant: 'user-1' });
             formation.delete.mockRejectedValue(new Error('Erreur Prisma'));
 
-            await expect(
-                supprimerFormation('1')
-            ).rejects.toThrow('Erreur Prisma');
+            await expect(supprimerFormation('1', 'user-1', 'ETUDIANT')).rejects.toThrow('Erreur Prisma');
         });
 
+        test('doit lever une erreur si la formation n\'existe pas', async () => {
+            formation.findUnique.mockResolvedValue(null);
+
+            await expect(supprimerFormation('id-inexistant', 'user-1', 'ETUDIANT'))
+                .rejects.toThrow('Formation non trouvée');
+
+            expect(formation.delete).not.toHaveBeenCalled();
+        });
+
+        test('doit lever une erreur si l\'utilisateur n\'est pas propriétaire ni admin', async () => {
+            formation.findUnique.mockResolvedValue({ id_formation: '1', id_etudiant: 'autre-user' });
+
+            await expect(supprimerFormation('1', 'user-1', 'ETUDIANT'))
+                .rejects.toThrow('Vous n\'êtes pas autorisé à accéder à cette ressource');
+
+            expect(formation.delete).not.toHaveBeenCalled();
+        });
     });
 });

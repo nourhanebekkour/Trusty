@@ -6,7 +6,7 @@ ARG NODE_VERSION=24-alpine
 
 FROM node:${NODE_VERSION} AS base
 
-WORKDIR /app
+WORKDIR /app 
 
 RUN apk add --no-cache openssl
 
@@ -23,7 +23,7 @@ ENV NODE_ENV=development
 
 RUN npm ci  
 
-RUN npx prisma generate
+RUN npx prisma generate 
 
 COPY . .
 

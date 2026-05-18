@@ -2,7 +2,7 @@ import swaggerAutogen from 'swagger-autogen';
 
 const doc = {
   info: {
-    title: 'Projet d\'integration',
+    title: 'Projet d intergration',
     description: 'Documentation automatique des APIs du projet',
   },
   host: 'localhost:3000',
@@ -47,13 +47,13 @@ const doc = {
       objectif_professionnel: 'Développeur Fullstack',
       score_credibilite: 0,
       niveau_credibilite: 'DEBUTANT',
-      visibilite_profil: 'PUBLIC'
+      visibilite_profil: 'PUBLIC',
+      id_validateur: null
     },
     AdminProfileRequest: {
       niveau_acces: 'ADMIN'
     },
     ProfesseurProfileRequest: {
-      id_professeur: 'cuid_de_l_utilisateur',
       departement: 'SIC',
       specialite: 'Informatique',
       filieres: ['GINF', 'GSR'],
@@ -68,7 +68,6 @@ const doc = {
       type: 'TECHNIQUE',
       categorie: 'Backend',
       description: 'Développement serveur avec Node.js',
-      icone: 'https://icon-url.com'
     },
     FormationRequest: {
       diplome: 'Cycle d\'ingénieur',
@@ -84,7 +83,6 @@ const doc = {
       categorie: "Frontend",
       sous_categorie: "Library",
       description: "Bibliothèque JavaScript pour interfaces utilisateur",
-      icone: "url_vers_icone"
     },
     ProjetRequest: {
       titre: "Mon Projet",
@@ -110,6 +108,56 @@ const doc = {
       version: "18.2.0",
       niveau_utilisation: "AVANCE"
     },
+    StageRequest: {
+      entreprise: "Google",
+      adresse_entreprise: "123 Rue Tech",
+      poste: "Développeur Backend",
+      date_debut: "2024-06-01",
+      date_fin: "2024-08-31",
+      duree_semaines: 10,
+      missions: "Développement d'une API REST",
+      encadrant_professionnel: "M. Ghailani",
+      encadrant_academique: "Pr. Ghailani",
+      est_public: true,
+    },
+    StageTechnologieRequest: {
+      version: "18.2.0",
+      niveau_utilisation: "AVANCE"
+    },
+    ActiviteRequest: {
+      type_activite: "CLUB",
+      nom_activite: "CSC",
+      organisation: "ENSA Tanger",
+      date_debut: "2024-01-01",
+      date_fin: "2024-06-01",
+      description: "Description de l activité",
+      role: "Membre",
+      est_public: true,
+    },
+    BadgeRequest: {
+      nom: 'Badge de Champion',
+      description: 'Attribué aux étudiants ayant complété tous les projets GINF',
+      categorie: 'ACADEMIQUE',
+      icone: 'badge-champion.png',
+      condition_attribution: 'Compléter 5 projets validés',
+      est_actif: true
+    },
+    AttributionBadgeRequest: {
+      id_etudiant: 'cl...id_etudiant'
+    },
+    AssocierCompetenceRequest: {
+      niveau_maitrise: 'INTERMEDIAIRE'
+    },
+    CommentaireRequest: {
+      id_etudiant_cible: 'cl...id_etudiant',
+      id_projet_cible: 'cl...id_projet',
+      type_cible: 'PROJET',
+      contenu: 'Très bon travail sur ce projet !'
+    },
+    RecommandationRequest: {
+      id_etudiant: 'cl...id_etudiant',
+      message: 'Je recommande vivement cet étudiant pour son sérieux.'
+    },
     StandardResponse: {
       success: true,
       message: 'Message de succès ou erreur',
@@ -120,6 +168,6 @@ const doc = {
 };
 
 const outputFile = './src/swagger-output.json';
-const endpointsFiles = ['./src/app.js']; 
+const endpointsFiles = ['./src/app.js'];
 
 swaggerAutogen()(outputFile, endpointsFiles, doc);
