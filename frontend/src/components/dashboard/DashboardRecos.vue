@@ -83,5 +83,5 @@ const getInitials = (prenom = '', nom = '') =>
 </script>
 
 <style scoped>
-@import '@/assets/Dashboard.css';
+@import '@/assets/dashboard.css';
 </style>
