@@ -13,7 +13,7 @@ import Modele from '@/views/Modele.vue'
 import Portfolio from '@/views/Portfolio.vue'
 import ProfessionalView from '@/views/ProfessionalView.vue'
 import ProfessorView from '@/views/ProfessorView.vue'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '@/stores/authstore'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -72,7 +72,7 @@ const router = createRouter({
       path: '/dashboard',
       name: 'dashboard',
       component: Dashboard,
-      meta: { requiresAuth: true }
+      //meta: { requiresAuth: true }
     },
     {
       path: '/notifications',
@@ -84,7 +84,7 @@ const router = createRouter({
       path: '/profile',
       name: 'profile',
       component: Profile,
-      meta: { requiresAuth: true } 
+      //meta: { requiresAuth: true } 
     },
     {
       path: '/projets',
@@ -130,7 +130,7 @@ const router = createRouter({
       name: 'professor',
       component: ProfessorView,
     },
-  ],  // ← fermeture correcte du tableau routes
+  ],  
 })
 
 router.beforeEach(async (to, from, next) => {
