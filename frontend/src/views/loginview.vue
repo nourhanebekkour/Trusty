@@ -9,9 +9,7 @@
         </svg>
         <strong>TRUSTY</strong>
       </div>
-
       <h1>Certifiez votre excellence <span class="accent">académique.</span></h1>
-
       <p class="subtitle">
         La première plateforme de portfolios numériques qui transforme vos projets en preuves irréfutables de compétences.
       </p>
@@ -33,6 +31,7 @@
             required
             autocomplete="username"
           />
+          <p v-if="fieldErrors.email" class="error">{{ fieldErrors.email }}</p>
         </div>
 
         <div class="field">
@@ -45,6 +44,7 @@
             minlength="6"
             autocomplete="current-password"
           />
+          <p v-if="fieldErrors.password" class="error">{{ fieldErrors.password }}</p>
         </div>
 
         <div class="remember">
@@ -52,16 +52,16 @@
           <label for="remember">Se souvenir de moi</label>
         </div>
 
-        <p v-if="auth.error" class="error">
+        <p v-if="authStore.error || error" class="error">
           {{ safeError }}
         </p>
 
         <button
           type="submit"
           class="btn-login"
-          :disabled="isSubmitting || auth.loading || !email || !password"
+          :disabled="isDisabled"
         >
-          {{ (isSubmitting || auth.loading) ? 'Connexion...' : 'Se connecter →' }}
+          {{ (isSubmitting || authStore.loading) ? 'Connexion...' : 'Se connecter →' }}
         </button>
 
         <div class="divider">OU CONTINUER EN TANT QU'INVITÉ</div>
@@ -69,7 +69,7 @@
         <button
           type="button"
           class="btn-guest"
-          :disabled="isSubmitting || auth.loading"
+          :disabled="isSubmitting || authStore.loading"
         >
           Consulter les portfolios publics
         </button>
@@ -82,7 +82,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useAuthStore } from '../stores/authstore'
+import { useAuthStore } from '../stores/auth' 
 import { useRouter } from 'vue-router'
 
 /* STATE */
@@ -99,36 +99,31 @@ const fieldErrors = ref({
   password: ''
 })
 
-/* SECURITY */
 /* SECURITY UX STATE */
 const loginAttempts = ref(0)
 const lockUntil = ref(null)
 
 /* store + router */
-const auth = useAuthStore()
+const authStore = useAuthStore()
 const router = useRouter()
 
 /* CONFIG */
 const MAX_ATTEMPTS = 3
 const BASE_LOCK_TIME = 10 * 1000
 
-/*HELPERS */
+/* HELPERS */
 const normalizeEmail = (v) => v.trim().toLowerCase()
 
 const isValidEmail = (v) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
 
-/* LOCK */
-
 const isStrongPassword = (v) => {
   if (typeof v !== 'string') return false
-
   const minLength = v.length >= 8
   const hasUpper = /[A-Z]/.test(v)
   const hasLower = /[a-z]/.test(v)
   const hasNumber = /[0-9]/.test(v)
   const hasSymbol = /[!@#$%^&*(),.?":{}|<>_\-\\/\[\]=+;]/.test(v)
-
   return minLength && hasUpper && hasLower && hasNumber && hasSymbol
 }
 
@@ -146,17 +141,17 @@ const applyLock = () => {
   const delay =
     BASE_LOCK_TIME *
     Math.pow(2, Math.max(0, loginAttempts.value - MAX_ATTEMPTS))
-
   lockUntil.value = Date.now() + delay
 }
 
-/* ERROR HANDLING*/
+/* ERROR HANDLING */
 const clearErrors = () => {
   error.value = ''
+  authStore.error = null 
   fieldErrors.value = { email: '', password: '' }
 }
 
-const safeError = computed(() => auth.error || error.value)
+const safeError = computed(() => authStore.error || error.value)
 
 const setGenericError = () => {
   error.value = 'Email ou mot de passe invalide'
@@ -167,7 +162,6 @@ const validateFields = () => {
   let ok = true
   fieldErrors.value = { email: '', password: '' }
 
-  /* EMAIL */
   if (!email.value.trim()) {
     fieldErrors.value.email = 'Email requis'
     ok = false
@@ -176,7 +170,6 @@ const validateFields = () => {
     ok = false
   }
 
-  /* PASSWORD */
   if (!password.value) {
     fieldErrors.value.password = 'Mot de passe requis'
     ok = false
@@ -192,13 +185,12 @@ const validateFields = () => {
 /* COMPUTED */
 const isDisabled = computed(() =>
   isSubmitting.value ||
-  auth.loading ||
+  authStore.loading ||
   isLocked.value ||
   !email.value.trim() ||
   !password.value
 )
 
-/*LOGIN*/
 const handleLogin = async () => {
   if (isSubmitting.value || isLocked.value) return
 
@@ -211,51 +203,28 @@ const handleLogin = async () => {
   try {
     const cleanEmail = normalizeEmail(email.value)
     const cleanPassword = password.value
-
     const captchaToken = await getCaptchaToken()
 
-    const res = await auth.loginUser({
-      email: cleanEmail,
-      password: cleanPassword,
-      remember: remember.value,
-      captcha: captchaToken
-    })
+    //  authStore.login 
+    const success = await authStore.login(cleanEmail, cleanPassword)
 
-    /* SUCCESS */
-    if (res?.success) {
+    if (success) {
       loginAttempts.value = 0
       lockUntil.value = null
-      router.push('/')
+      router.push('/dashboard') 
       return
     }
 
     /* FAIL */
     loginAttempts.value++
-
-    if (res?.requireCaptcha) {
-      showCaptcha.value = true
-    }
-
-    if (loginAttempts.value >= MAX_ATTEMPTS) {
-      applyLock()
-    }
-
+    if (loginAttempts.value >= MAX_ATTEMPTS) applyLock()
     setGenericError()
 
   } catch (err) {
-
-    if (import.meta.env.DEV) {
-      console.error('Login error:', err)
-    }
-
+    if (import.meta.env.DEV) console.error('Login error:', err)
     loginAttempts.value++
-
-    if (loginAttempts.value >= MAX_ATTEMPTS) {
-      applyLock()
-    }
-
+    if (loginAttempts.value >= MAX_ATTEMPTS) applyLock()
     setGenericError()
-
   } finally {
     isSubmitting.value = false
   }
@@ -276,7 +245,6 @@ const handleLogin = async () => {
   background: #1a2e2a;
 }
 
-/* LEFT */
 .left {
   width: 45%;
   background: #2a3d38;
@@ -310,7 +278,6 @@ h1 {
   font-size: 15px;
 }
 
-/* RIGHT */
 .right {
   width: 55%;
   padding: 80px;

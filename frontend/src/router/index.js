@@ -10,6 +10,7 @@ import Notification from '@/views/Notification.vue'
 import Profile from '@/views/Profile.vue'
 import ProfessionalView from '@/views/ProfessionalView.vue'
 import ProfessorView from '@/views/ProfessorView.vue'
+import { useAuthStore } from '@/stores/auth'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -33,36 +34,43 @@ const router = createRouter({
       path:'/dashboard',
       name:'dashboard',
       component: Dashboard,
+      meta: { requiresAuth: true }
     },
     {
       path:'/notifications',
       name:'notifications',
       component: Notification,
+      meta: { requiresAuth: true } 
     },
     {
       path:'/profile',
       name:'profile',
       component: Profile,
+      meta: { requiresAuth: true } 
     },
     {
       path:'/projets',
       name:'projets',
       component: ProjectList,
+      meta: { requiresAuth: true }
     },
     {
       path:'/Settings',
       name:'Settings',
       component: Settings,
+      meta: { requiresAuth: true }
     },
     {
       path:'/recommendations',
       name:'recommendations',
       component: Recommendations,
+      meta: { requiresAuth: true }
     },
     {
       path:'/stage',
       name:'stage',
       component: StageList,
+      meta: { requiresAuth: true }
     },
     {
       path: '/professional',
@@ -75,6 +83,20 @@ const router = createRouter({
       component: ProfessorView,
     }
       ]
+})
+
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore()
+
+  if (!authStore.user && to.meta.requiresAuth) {
+    await authStore.fetchUser()
+  }
+
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    next('/login')
+  } else {
+    next()
+  }
 })
 
 export default router
