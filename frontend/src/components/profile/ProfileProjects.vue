@@ -19,7 +19,7 @@
       </div>
     </div>
     <p class="empty-msg" v-else>Aucun projet académique.</p>
-    <button class="link-btn" @click="$router.push('/projets')">
+    <button class="link-btn" @click="router.push('/projets')">
   Voir tous les projets
 </button>
   </div>
@@ -27,7 +27,8 @@
 
 <script setup>
 defineProps({ user: Object })
-
+import { useRouter } from 'vue-router'
+const router = useRouter()
 const formatStatut = (s) => ({ VALIDE: 'Validé', EN_ATTENTE: 'En attente', REJETE: 'Rejeté' }[s] ?? s)
 const statusClass  = (s) => ({ 'status-green': s === 'VALIDE', 'status-amber': s === 'EN_ATTENTE', 'status-gray': s === 'REJETE' })
 </script>

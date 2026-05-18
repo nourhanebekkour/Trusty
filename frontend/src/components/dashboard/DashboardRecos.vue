@@ -29,23 +29,38 @@
           <p class="reco-featured__quote-icon">❝❝</p>
           <p class="reco-featured__text">{{ recos[0].message }}</p>
           <div class="author">
-            <div class="author__avatar">{{ getInitials(recos[0].auteur?.nom, recos[0].auteur?.prenom) }}</div>
+            <div class="author__avatar">
+              {{ getInitials(recos[0].auteur?.prenom, recos[0].auteur?.nom) }}
+            </div>
             <div class="author__info">
-              <p class="author__name">{{ recos[0].auteur?.prenom }} {{ recos[0].auteur?.nom }}</p>
-              <p class="author__role">{{ recos[0].auteur?.poste }}</p>
+              <p class="author__name">
+                {{ recos[0].auteur?.prenom }} {{ recos[0].auteur?.nom }}
+              </p>
+              <p class="author__role" v-if="getAuteurLabel(recos[0].auteur)">
+                {{ getAuteurLabel(recos[0].auteur) }}
+              </p>
             </div>
           </div>
         </div>
       </div>
 
       <div v-if="recos.length > 1" class="reco-grid">
-        <div v-for="reco in recos.slice(1, 3)" :key="reco.id_recommandation" class="reco-card">
+        <div
+          v-for="reco in recos.slice(1, 3)"
+          :key="reco.id_recommandation"
+          class="reco-card"
+        >
           <div class="reco-card__header">
             <div class="author">
-              <div class="author__avatar author__avatar--sm">{{ getInitials(reco.auteur?.nom, reco.auteur?.prenom) }}</div>
+              <div class="author__avatar author__avatar--sm">
+                {{ getInitials(reco.auteur?.prenom, reco.auteur?.nom) }}
+              </div>
               <div class="author__info">
-                <p class="author__name">{{ reco.auteur?.prenom }} {{ reco.auteur?.nom }}
-                  <span class="text-muted"> • {{ reco.auteur?.poste }}</span>
+                <p class="author__name">
+                  {{ reco.auteur?.prenom }} {{ reco.auteur?.nom }}
+                  <span v-if="getAuteurLabel(reco.auteur)" class="text-muted">
+                    · {{ getAuteurLabel(reco.auteur) }}
+                  </span>
                 </p>
               </div>
             </div>
@@ -59,11 +74,14 @@
 </template>
 
 <script setup>
+import { getAuteurLabel } from '@/services/dashboardservices'
+
 defineProps({ recos: Array, loading: Boolean })
 
-const getInitials = (nom = '', prenom = '') =>
+const getInitials = (prenom = '', nom = '') =>
   ((prenom?.[0] ?? '') + (nom?.[0] ?? '')).toUpperCase()
 </script>
+
 <style scoped>
 @import '@/assets/Dashboard.css';
 </style>
