@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { authService } from '../services/auth.service'
+import { authService } from '../services/auth.service.jgrs'
 import api from '../api'
 
 export const useAuthStore = defineStore('auth', {
