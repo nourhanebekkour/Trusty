@@ -33,5 +33,5 @@ const formatStatut = (s) => ({ VALIDE: 'Validé', EN_ATTENTE: 'En attente', REJE
 const statusClass  = (s) => ({ 'status-green': s === 'VALIDE', 'status-amber': s === 'EN_ATTENTE', 'status-gray': s === 'REJETE' })
 </script>
 <style scoped>
-@import '@/assets/Profile.css';
+@import '@/assets/profile.css';
 </style>

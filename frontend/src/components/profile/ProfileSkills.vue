@@ -18,5 +18,5 @@ defineProps({ user: Object })
 defineEmits(['add'])
 </script>
 <style scoped>
-@import '@/assets/Profile.css';
+@import '@/assets/profile.css';
 </style>

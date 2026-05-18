@@ -108,5 +108,5 @@ async function submit() {
 </script>
 
 <style scoped>
-@import '@/assets/Profile.css';
+@import '@/assets/profile.css';
 </style>
