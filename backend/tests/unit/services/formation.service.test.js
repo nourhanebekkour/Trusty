@@ -129,6 +129,24 @@ describe('Service Formation', () => {
 
             await expect(modifierFormation('1', {}, 'user-1', 'ETUDIANT')).rejects.toThrow('Erreur Prisma');
         });
+
+        test('doit lever une erreur si la formation n\'existe pas', async () => {
+            formation.findUnique.mockResolvedValue(null);
+
+            await expect(modifierFormation('id-inexistant', {}, 'user-1', 'ETUDIANT'))
+                .rejects.toThrow('Formation non trouvée');
+
+            expect(formation.update).not.toHaveBeenCalled();
+        });
+
+        test('doit lever une erreur si l\'utilisateur n\'est pas propriétaire ni admin', async () => {
+            formation.findUnique.mockResolvedValue({ id_formation: '1', id_etudiant: 'autre-user' });
+
+            await expect(modifierFormation('1', {}, 'user-1', 'ETUDIANT'))
+                .rejects.toThrow('Vous n\'êtes pas autorisé à accéder à cette ressource');
+
+            expect(formation.update).not.toHaveBeenCalled();
+        });
     });
 
 
@@ -151,6 +169,24 @@ describe('Service Formation', () => {
             formation.delete.mockRejectedValue(new Error('Erreur Prisma'));
 
             await expect(supprimerFormation('1', 'user-1', 'ETUDIANT')).rejects.toThrow('Erreur Prisma');
+        });
+
+        test('doit lever une erreur si la formation n\'existe pas', async () => {
+            formation.findUnique.mockResolvedValue(null);
+
+            await expect(supprimerFormation('id-inexistant', 'user-1', 'ETUDIANT'))
+                .rejects.toThrow('Formation non trouvée');
+
+            expect(formation.delete).not.toHaveBeenCalled();
+        });
+
+        test('doit lever une erreur si l\'utilisateur n\'est pas propriétaire ni admin', async () => {
+            formation.findUnique.mockResolvedValue({ id_formation: '1', id_etudiant: 'autre-user' });
+
+            await expect(supprimerFormation('1', 'user-1', 'ETUDIANT'))
+                .rejects.toThrow('Vous n\'êtes pas autorisé à accéder à cette ressource');
+
+            expect(formation.delete).not.toHaveBeenCalled();
         });
     });
 });
