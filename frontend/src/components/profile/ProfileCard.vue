@@ -58,7 +58,7 @@ const formatDate = (d) =>
 </script>
 
 <style scoped>
-@import '@/assets/Profile.css';
+@import '@/assets/profile.css';
 
 .avatar { cursor: pointer; position: relative; }
 .avatar-overlay {

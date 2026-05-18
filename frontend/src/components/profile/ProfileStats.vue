@@ -40,5 +40,5 @@ const totalBadges = computed(() =>
 </script>
 
 <style scoped>
-@import '@/assets/Profile.css';
+@import '@/assets/profile.css';
 </style>
