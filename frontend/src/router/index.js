@@ -2,15 +2,15 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import AdminLayout from '../components/admin/AdminLayout.vue'
 import LoginView from '../views/loginview.vue'
-import Dashboard from '@/views/Dashboard.vue'
-import ProjectList from '@/views/ProjectList.vue'
+import Dashboard from '@/views/Etudiant/Dashboard.vue'
+import ProjectList from '@/views/Etudiant/ProjectList.vue'
 import Settings from '@/views/Settings.vue'
-import StageList from '@/views/StageList.vue'
-import Recommendations from '@/views/Recommendations.vue'
-import Notification from '@/views/Notification.vue'
-import Profile from '@/views/Profile.vue'
-import Modele from '@/views/Modele.vue'
-import Portfolio from '@/views/Portfolio.vue'
+import StageList from '@/views/Etudiant/StageList.vue'
+import Recommendations from '@/views/Etudiant/Recommendations.vue'
+import Notification from '@/views/Etudiant/Notification.vue'
+import Profile from '@/views/Etudiant/Profile.vue'
+import Modele from '@/views/Etudiant/Modele.vue'
+import Portfolio from '@/views/Etudiant/Portfolio.vue'
 import ProfessionalView from '@/views/ProfessionalView.vue'
 import ProfessorView from '@/views/ProfessorView.vue'
 import { useAuthStore } from '@/stores/authstore'
@@ -133,18 +133,17 @@ const router = createRouter({
   ],  
 })
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, from) => {
   const authStore = useAuthStore()
 
-  if (!authStore.user && to.meta.requiresAuth) {
-    await authStore.fetchUser()
+  if (!authStore.user) {
+    await authStore.fetchUser()   // ← appel API /auth/me
   }
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    next('/login')
-  } else {
-    next()
+    return '/login'   // ← redirige si pas authentifié
   }
+})
 // ── Auth guard ─────────────────────────────────────────
 //router.beforeEach((to, from, next) => {
   // const token = localStorage.getItem('token')
@@ -155,6 +154,6 @@ router.beforeEach(async (to, from, next) => {
   // } else {
   //next()
   // }
-})
+
 
 export default router
