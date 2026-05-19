@@ -11,7 +11,10 @@ const authStore = useAuthStore()
 const route = useRoute()
 
 onMounted(async () => {
-  await authStore.fetchUser()
+  const publicRoutes = ['login', 'home', 'about', 'professional', 'professor']
+  if (route.name && !publicRoutes.includes(route.name)) {
+    await authStore.fetchUser()
+  }
 })
 
 // Routes qui utilisent le layout complet (sidebar + navbar)
