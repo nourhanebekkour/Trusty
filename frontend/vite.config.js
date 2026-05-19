@@ -15,9 +15,19 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
-   test: {
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+        cookieDomainRewrite: 'localhost',
+        cookiePathRewrite: '/',
+}
+    }
+  },
+  test: {
     globals: true,
     environment: 'jsdom'
   }
 })
-

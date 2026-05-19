@@ -37,36 +37,36 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'  
 import { useAuthStore } from '@/stores/authstore'
-import iconTrusty       from '@/assets/icons/trusty.svg'
+import iconTrusty        from '@/assets/icons/trusty.svg'
 import iconNotifications from '@/assets/icons/notifications.svg'
 
 const authStore = useAuthStore()
 
-// ── Charger le profil si pas encore chargé ────────────────────────────────────
-onMounted(async () => {
-  if (!authStore.user) {
-    await authStore.fetchProfile()
-  }
+
+const userName = computed(() => {
+  const u = authStore.user
+  if (!u) return ''
+  return `${u.prenom ?? ''} ${u.nom ?? ''}`.trim() || 'Utilisateur'
 })
 
-// ── Données affichées ─────────────────────────────────────────────────────────
-const userName = computed(() =>
-  authStore.user?.name ?? 'YEL'
-)
+const userRole = computed(() => {
+  const roles = {
+    ETUDIANT:       'Étudiant',
+    PROFESSEUR:     'Professeur',
+    ADMINISTRATEUR: 'Administrateur',
+    PROFESSIONNEL:  'Professionnel',
+  }
+  return roles[authStore.user?.role] ?? 'Étudiant'
+})
 
-const userRole = computed(() =>
-  authStore.user?.role ?? authStore.user?.specialite ?? 'Étudiant'
-)
-
-const userAvatar = computed(() =>
-  authStore.user?.avatar ?? null
-)
+const userAvatar = computed(() => authStore.user?.photo ?? null)
 
 const userInitials = computed(() => {
-  const name = authStore.user?.name ?? ''
-  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+  const p = authStore.user?.prenom?.[0] ?? ''
+  const n = authStore.user?.nom?.[0]    ?? ''
+  return (p + n).toUpperCase() || '?'
 })
 </script>
 
