@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { authService } from '../services/auth.service.jgrs'
+import { authService } from '../services/auth.service.js'
 import api from '../api'
 
 export const useAuthStore = defineStore('auth', {
@@ -23,7 +23,6 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
       try {
         await authService.login({ email, password })
-        // Fetch user 
         await this.fetchUser()
         return true
       } catch (err) {
@@ -50,14 +49,16 @@ export const useAuthStore = defineStore('auth', {
     },
 
     // Fetch user 
-    async fetchUser() {
-      try {
-        const res = await authService.getMe()
-        this.user = res.data
-      } catch {
-        this.user = null
-      }
-    },
+   async fetchUser() {
+  try {
+    const res = await authService.getMe()
+    // res = { status, success, message, data: { id_utilisateur, email, nom, ... } }
+    this.user = res?.data ?? res?.user ?? res ?? null
+  } catch {
+    this.user = null
+  }
+},
+
 
     // Logout
     async logout() {
