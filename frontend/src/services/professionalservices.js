@@ -1,110 +1,46 @@
 /**
  * professionalservices.js
- * Couche service pour le module Professional.
- * Remplacez les fonctions mock par de vrais appels API (axios / fetch).
+ * Utilise src/services/api.js (instance Axios partagée avec token JWT)
+ *
+ * Routes backend :
+ *   GET  /etudiants                     → liste des candidats
+ *   GET  /recommandations/mes-recommandations-recus  → non applicable ici
+ *   POST /recommandations               → envoyer une recommandation
+ *   GET  /notifications                 → notifications du professionnel connecté
+ *   PUT  /notifications/:id/lire        → marquer lue
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? '/api'
+import api from './api.js'
 
-// ── Candidats ────────────────────────────────────────────────────────────────
-
-/**
- * Récupère la liste des candidats disponibles pour recommandation.
- * @returns {Promise<Array>}
- */
+// ── Candidats ─────────────────────────────────────────────────────────────────
 export async function fetchCandidats() {
-  const res = await fetch(`${BASE_URL}/candidats`)
-  if (!res.ok) throw new Error('Erreur lors de la récupération des candidats')
-  return res.json()
-}
-
-/**
- * Récupère le détail d'un candidat par son id.
- * @param {number} id
- * @returns {Promise<Object>}
- */
-export async function fetchCandidatById(id) {
-  const res = await fetch(`${BASE_URL}/candidats/${id}`)
-  if (!res.ok) throw new Error(`Candidat ${id} introuvable`)
-  return res.json()
+  const { data } = await api.get('/etudiants')
+  return data.data ?? []
 }
 
 // ── Recommandations ───────────────────────────────────────────────────────────
 
 /**
- * Envoie une recommandation pour un candidat.
- * @param {Object} payload
- * @param {number} payload.candidatId
- * @param {string} payload.texte
- * @param {'rapide'|'officielle'} payload.type
- * @returns {Promise<Object>} recommandation créée
- */
-export async function envoyerRecommandation(payload) {
-  const res = await fetch(`${BASE_URL}/recommandations`, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify(payload),
-  })
-  if (!res.ok) throw new Error('Erreur lors de l\'envoi de la recommandation')
-  return res.json()
-}
-
-/**
- * Récupère toutes les recommandations émises par le professionnel connecté.
- * @returns {Promise<Array>}
+ * Récupère les recommandations émises par le professionnel connecté.
+ * Le backend filtre par id_recommandeur = req.user.id
  */
 export async function fetchRecommandationsEmises() {
-  const res = await fetch(`${BASE_URL}/recommandations/mes`)
-  if (!res.ok) throw new Error('Erreur lors de la récupération des recommandations')
-  return res.json()
+  // La route GET /recommandations est admin only.
+  // On retourne [] — les recs émises sont trackées localement (optimistic).
+  return []
 }
 
-// ── Favoris ───────────────────────────────────────────────────────────────────
-
-/**
- * Ajoute un candidat aux favoris.
- * @param {number} candidatId
- * @returns {Promise<void>}
- */
-export async function ajouterFavori(candidatId) {
-  const res = await fetch(`${BASE_URL}/favoris`, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ candidatId }),
-  })
-  if (!res.ok) throw new Error('Erreur lors de l\'ajout aux favoris')
-}
-
-/**
- * Supprime un candidat des favoris.
- * @param {number} candidatId
- * @returns {Promise<void>}
- */
-export async function supprimerFavori(candidatId) {
-  const res = await fetch(`${BASE_URL}/favoris/${candidatId}`, { method: 'DELETE' })
-  if (!res.ok) throw new Error('Erreur lors de la suppression du favori')
+export async function envoyerRecommandation(id_etudiant, message) {
+  const { data } = await api.post('/recommandations', { id_etudiant, message })
+  return data.data
 }
 
 // ── Notifications ─────────────────────────────────────────────────────────────
-
-/**
- * Récupère les notifications d'activité récente.
- * @returns {Promise<Array>}
- */
 export async function fetchNotifications() {
-  const res = await fetch(`${BASE_URL}/notifications`)
-  if (!res.ok) throw new Error('Erreur lors de la récupération des notifications')
-  return res.json()
+  const { data } = await api.get('/notifications')
+  return data.data ?? []
 }
 
-// ── Stats ─────────────────────────────────────────────────────────────────────
-
-/**
- * Récupère les statistiques d'activité du professionnel.
- * @returns {Promise<{ consultes: number, totalRecs: number }>}
- */
-export async function fetchStats() {
-  const res = await fetch(`${BASE_URL}/professional/stats`)
-  if (!res.ok) throw new Error('Erreur lors de la récupération des stats')
-  return res.json()
+export async function marquerNotificationLue(id_notification) {
+  await api.put(`/notifications/${id_notification}/lire`)
 }

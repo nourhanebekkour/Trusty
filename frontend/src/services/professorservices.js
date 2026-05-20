@@ -1,67 +1,60 @@
 /**
  * professorservices.js
- * Couche service pour le module Professor.
- * Remplacez les fonctions mock par de vrais appels API.
+ * Utilise src/services/api.js (instance Axios partagée avec token JWT)
+ *
+ * Routes backend :
+ *   GET  /projets/a-valider         → projets en attente du professeur connecté
+ *   POST /projets/:id/valider       → valider/rejeter un projet
+ *   GET  /stages/a-valider          → stages en attente du professeur connecté
+ *   POST /stages/:id/valider        → valider/rejeter un stage
+ *   GET  /etudiants                 → liste des étudiants
+ *   GET  /notifications             → notifications du professeur
+ *   PUT  /notifications/:id/lire    → marquer lue
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? '/api'
+import api from './api.js'
 
 // ── Projets ───────────────────────────────────────────────────────────────────
-
-export async function fetchProjets() {
-  const res = await fetch(`${BASE_URL}/projets`)
-  if (!res.ok) throw new Error('Erreur récupération projets')
-  return res.json()
+export async function fetchProjetsAValider() {
+  const { data } = await api.get('/projets/a-valider')
+  return data.data ?? []
 }
 
-export async function validerProjet(projetId) {
-  const res = await fetch(`${BASE_URL}/projets/${projetId}/valider`, { method: 'PATCH' })
-  if (!res.ok) throw new Error('Erreur validation projet')
-  return res.json()
-}
-
-// ── Lettres de recommandation ─────────────────────────────────────────────────
-
-export async function fetchLettres() {
-  const res = await fetch(`${BASE_URL}/lettres`)
-  if (!res.ok) throw new Error('Erreur récupération lettres')
-  return res.json()
-}
-
-export async function signerLettre(lettreId) {
-  const res = await fetch(`${BASE_URL}/lettres/${lettreId}/signer`, { method: 'PATCH' })
-  if (!res.ok) throw new Error('Erreur signature lettre')
-  return res.json()
-}
-
-// ── Étudiants ─────────────────────────────────────────────────────────────────
-
-export async function fetchEtudiants() {
-  const res = await fetch(`${BASE_URL}/etudiants`)
-  if (!res.ok) throw new Error('Erreur récupération étudiants')
-  return res.json()
+export async function validerProjet(id_projet, decision, commentaire = '', appreciation = '') {
+  const { data } = await api.post(`/projets/${id_projet}/valider`, {
+    decision,
+    commentaire,
+    appreciation,
+  })
+  return data.data
 }
 
 // ── Stages ────────────────────────────────────────────────────────────────────
+export async function fetchStagesAValider() {
+  const { data } = await api.get('/stages/a-valider')
+  return data.data ?? []
+}
 
-export async function fetchStages() {
-  const res = await fetch(`${BASE_URL}/stages`)
-  if (!res.ok) throw new Error('Erreur récupération stages')
-  return res.json()
+export async function validerStage(id_stage, decision, commentaire = '') {
+  const { data } = await api.post(`/stages/${id_stage}/valider`, {
+    decision,
+    commentaire,
+  })
+  return data.data
+}
+
+// ── Étudiants ─────────────────────────────────────────────────────────────────
+export async function fetchEtudiants() {
+  const { data } = await api.get('/etudiants')
+  return data.data ?? []
 }
 
 // ── Notifications ─────────────────────────────────────────────────────────────
-
 export async function fetchNotifications() {
-  const res = await fetch(`${BASE_URL}/professor/notifications`)
-  if (!res.ok) throw new Error('Erreur récupération notifications')
-  return res.json()
+  const { data } = await api.get('/notifications')
+  return data.data ?? []
 }
 
-// ── Stats ─────────────────────────────────────────────────────────────────────
-
-export async function fetchStats() {
-  const res = await fetch(`${BASE_URL}/professor/stats`)
-  if (!res.ok) throw new Error('Erreur récupération stats')
-  return res.json()
+export async function marquerNotificationLue(id_notification) {
+  await api.put(`/notifications/${id_notification}/lire`)
 }
