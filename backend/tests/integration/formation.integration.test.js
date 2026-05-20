@@ -44,7 +44,9 @@ describe('Integration API : Formations', () => {
         const loginRes = await request(app)
             .post('/api/auth/login')
             .send({ email: 'test.integration@formation.com', password: 'password' });
-        token = loginRes.body.data.token;
+        const cookies = loginRes.headers['set-cookie'] || [];
+        const accessCookie = cookies.find(c => c.startsWith('accessToken=')) || '';
+        token = accessCookie.split(';')[0].replace('accessToken=', '');
     });
 
     afterAll(async () => {

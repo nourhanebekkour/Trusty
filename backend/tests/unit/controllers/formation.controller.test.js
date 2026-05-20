@@ -134,6 +134,22 @@ describe('Controller Formation', () => {
                 erreur: expect.any(String)
             });
         });
+
+        test('doit retourner 403 si l\'utilisateur n\'est pas autorisé', async () => {
+            req.params.id = '1';
+            mockModifierFormation.mockRejectedValue(new Error("Vous n'êtes pas autorisé à accéder à cette ressource"));
+
+            await mettreAJourFormation(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(403);
+            expect(res.json).toHaveBeenCalledWith({
+                status: 403,
+                success: false,
+                message: "Erreur lors de la modification",
+                data: null,
+                erreur: expect.any(String)
+            });
+        });
     });
 
 
@@ -154,11 +170,44 @@ describe('Controller Formation', () => {
                 erreur: null
             });
         });
-
-        test('doit retourner 400 en cas d\'erreur', async () => {
+// le cas où le service throw une erreur qui n'est ni une erreur d'autorisation ni une formation introuvable 
+// par exemple une erreur Prisma/base de données, un timeout, n'importe quelle exception inattendue
+        test('doit retourner 400 en cas d\'erreur générique', async () => {
             mockSupprimerFormation.mockRejectedValue(new Error('Erreur DB'));
             await supprimerFormation(req, res);
             expect(res.status).toHaveBeenCalledWith(400);
+        });
+
+        test('doit retourner 403 si l\'utilisateur n\'est pas autorisé', async () => {
+            req.params.id = '1';
+            mockSupprimerFormation.mockRejectedValue(new Error("Vous n'êtes pas autorisé à accéder à cette ressource"));
+
+            await supprimerFormation(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(403);
+            expect(res.json).toHaveBeenCalledWith({
+                status: 403,
+                success: false,
+                message: "Erreur lors de la suppression",
+                data: null,
+                erreur: expect.any(String)
+            });
+        });
+
+        test('doit retourner 404 si la formation n\'existe pas', async () => {
+            req.params.id = 'id-inexistant';
+            mockSupprimerFormation.mockRejectedValue(new Error('Formation non trouvée'));
+
+            await supprimerFormation(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(404);
+            expect(res.json).toHaveBeenCalledWith({
+                status: 404,
+                success: false,
+                message: "Erreur lors de la suppression",
+                data: null,
+                erreur: expect.any(String)
+            });
         });
     });
 });

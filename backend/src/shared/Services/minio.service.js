@@ -1,13 +1,14 @@
 import minioClient from '#Config/minio.js';
 import prisma from '#Config/prismaClient.js';
-import dotenv from 'dotenv';
+import process from '#Config/env.js';
 
-dotenv.config();
+const env = process.env.NODE_ENV || 'development';
+const prefix = env === 'production' ? 'prod' : env === 'test' ? 'test' : 'dev';
 
 // Buckets configuration
 export const BUCKETS = {
-  PUBLIC: process.env.MINIO_PUBLIC_BUCKET || 'public-assets',
-  PRIVATE: process.env.MINIO_PRIVATE_BUCKET || 'private-documents'
+  PUBLIC: process.env.MINIO_PUBLIC_BUCKET || `${prefix}-public`,
+  PRIVATE: process.env.MINIO_PRIVATE_BUCKET || `${prefix}-private`
 };
 
 // S'assurer que les buckets existent
@@ -52,6 +53,7 @@ const getBucketByCategory = (category) => {
  * Upload d'un fichier vers MinIO et enregistrement dans la base de données
  */
 export const uploadAndSaveFile = async (file, userId, category, relationData = {}) => {
+  ensureBucketsExist();
   const bucket = getBucketByCategory(category);
   const timestamp = Date.now();
   const sanitizedOriginalName = file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');

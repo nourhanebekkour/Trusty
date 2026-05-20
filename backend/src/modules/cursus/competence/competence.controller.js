@@ -10,7 +10,7 @@ export const listerCompetences = async (req, res) => {
         const competences = await competenceService.recupererToutesLesCompetences();
         return sendResponse(res, 200, true, "Compétences récupérées avec succès", competences);
     } catch (erreur) {
-        return sendResponse(res, 500, false, "Erreur lors de la récupération des compétences", null, erreur);
+        return sendResponse(res, 500, false, "Erreur lors de la récupération des compétences", null, erreur.message);
     }
 };
 
@@ -26,7 +26,7 @@ export const recupererCompetence = async (req, res) => {
             return sendResponse(res, 404, false, "Compétence non trouvée");
         }
     } catch (erreur) {
-        return sendResponse(res, 500, false, "Erreur lors de la récupération", null, erreur);
+        return sendResponse(res, 500, false, "Erreur lors de la récupération", null, erreur.message);
     }
 };
 
@@ -43,7 +43,7 @@ export const ajouterCompetence = async (req, res) => {
         const nouvelleCompetence = await competenceService.creerCompetence(req.body);
         return sendResponse(res, 201, true, "Compétence créée avec succès", nouvelleCompetence);
     } catch (erreur) {
-        return sendResponse(res, 400, false, "Erreur lors de la création de la compétence", null, erreur);
+        return sendResponse(res, 400, false, "Erreur lors de la création de la compétence", null, erreur.message);
     }
 };
 
@@ -61,7 +61,7 @@ export const modifierCompetence = async (req, res) => {
         const competenceModifiee = await competenceService.modifierCompetence(id, req.body);
         return sendResponse(res, 200, true, "Compétence modifiée avec succès", competenceModifiee);
     } catch (erreur) {
-        return sendResponse(res, 400, false, "Erreur lors de la modification de la compétence", null, erreur);
+        return sendResponse(res, 400, false, "Erreur lors de la modification de la compétence", null, erreur.message);
     }
 };
 
@@ -73,7 +73,7 @@ export const supprimerCompetence = async (req, res) => {
         await competenceService.supprimerCompetence(id);
         return sendResponse(res, 200, true, "Compétence supprimée avec succès");
     } catch (erreur) {
-        return sendResponse(res, 400, false, "Erreur lors de la suppression", null, erreur);
+        return sendResponse(res, 400, false, "Erreur lors de la suppression", null, erreur.message);
     }
 };
 
@@ -87,7 +87,7 @@ export const listerCompetencesEtudiant = async (req, res) => {
         const competences = await competenceService.recupererCompetencesEtudiant(id_etudiant);
         return sendResponse(res, 200, true, "Compétences de l'étudiant récupérées avec succès", competences);
     } catch (erreur) {
-        return sendResponse(res, 500, false, "Erreur lors de la récupération", null, erreur);
+        return sendResponse(res, 500, false, "Erreur lors de la récupération", null, erreur.message);
     }
 };
 
@@ -106,7 +106,7 @@ export const associerCompetence = async (req, res) => {
         const association = await competenceService.lierCompetenceAEtudiant(id_etudiant, id_competence, niveau_maitrise);
         return sendResponse(res, 200, true, "Compétence associée avec succès", association);
     } catch (erreur) {
-        return sendResponse(res, 400, false, "Erreur lors de l'association", null, erreur);
+        return sendResponse(res, 400, false, "Erreur lors de l'association", null, erreur.message);
     }
 };
 
@@ -118,6 +118,6 @@ export const detacherCompetence = async (req, res) => {
         await competenceService.retirerCompetenceEtudiant(id_etudiant, id_competence);
         return sendResponse(res, 200, true, "Compétence retirée de l'étudiant avec succès");
     } catch (erreur) {
-        return sendResponse(res, 400, false, "Erreur lors du retrait", null, erreur);
+        return sendResponse(res, 400, false, "Erreur lors du retrait", null, erreur.message);
     }
 };

@@ -66,13 +66,17 @@ describe('Integration API : Compétence', () => {
         const loginAdmin = await request(app)
             .post('/api/auth/login')
             .send({ email: 'admin.competence@test.com', password: 'password' });
-        tokenAdmin = loginAdmin.body.data.token;
+        const cookiesAdmin = loginAdmin.headers['set-cookie'] || [];
+        const accessCookieAdmin = cookiesAdmin.find(c => c.startsWith('accessToken=')) || '';
+        tokenAdmin = accessCookieAdmin.split(';')[0].replace('accessToken=', '');
 
         // --- LOGIN ÉTUDIANT ---
         const loginEtudiant = await request(app)
             .post('/api/auth/login')
             .send({ email: 'etudiant.competence@test.com', password: 'password' });
-        tokenEtudiant = loginEtudiant.body.data.token;
+        const cookiesEtudiant = loginEtudiant.headers['set-cookie'] || [];
+        const accessCookieEtudiant = cookiesEtudiant.find(c => c.startsWith('accessToken=')) || '';
+        tokenEtudiant = accessCookieEtudiant.split(';')[0].replace('accessToken=', '');
 
     }); // fin beforeAll
 

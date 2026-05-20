@@ -1,3 +1,4 @@
+import prisma from '#Config/prismaClient.js';
 import * as ProfessionnelService from './professionnel.service.js';
 import sendResponse from '#Utils/response.handler.js';
 
@@ -6,11 +7,11 @@ export const afficherProfessionnelEnAttente= async (req,res) =>{
   // #swagger.summary = "Afficher les professionnels en attente de validation"
   try {
     const professionnels = await ProfessionnelService.professionnelEnAttente();
-     return sendResponse(res, 200, "Les professionnels en attente de validation : ", professionnels);
+     return sendResponse(res, 200, true, "Les professionnels en attente de validation", professionnels);
   }
   catch (error) {
-        return sendResponse(res, 500, "Erreur lors de la récupération des profils", null, error);
-      
+        return sendResponse(res, 500, false, "Erreur lors de la récupération des profils", null, error.message);
+
 }}
 
 
@@ -43,6 +44,6 @@ export const validerProfessionnel = async (req,res) => {
     return sendResponse(res,200,true,`Professionnel ${donnee.action} avec succés`,valider)
 
   } catch (error) {
-     return sendResponse(res, 500, "Erreur lors de la validation du professionnel", null, error.message);
+     return sendResponse(res, 500, false, "Erreur lors de la validation du professionnel", null, error.message);
   }
 }

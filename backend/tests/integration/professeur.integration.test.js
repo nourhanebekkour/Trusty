@@ -80,19 +80,25 @@ describe('Integration API : Professeur', () => {
         const loginProf = await request(app)
             .post('/api/auth/login')
             .send({ email: 'prof.integration@test.com', password: 'password' });
-        tokenProfesseur = loginProf.body.data.token;
+        const cookiesProf = loginProf.headers['set-cookie'] || [];
+        const accessCookieProf = cookiesProf.find(c => c.startsWith('accessToken=')) || '';
+        tokenProfesseur = accessCookieProf.split(';')[0].replace('accessToken=', '');
 
         // Login admin
         const loginAdmin = await request(app)
             .post('/api/auth/login')
             .send({ email: 'admin.prof@test.com', password: 'password' });
-        tokenAdmin = loginAdmin.body.data.token;
+        const cookiesAdmin = loginAdmin.headers['set-cookie'] || [];
+        const accessCookieAdmin = cookiesAdmin.find(c => c.startsWith('accessToken=')) || '';
+        tokenAdmin = accessCookieAdmin.split(';')[0].replace('accessToken=', '');
 
         // Login autre professeur
         const loginAutre = await request(app)
             .post('/api/auth/login')
             .send({ email: 'autre.prof@test.com', password: 'password' });
-        tokenAutreProfesseur = loginAutre.body.data.token;
+        const cookiesAutre = loginAutre.headers['set-cookie'] || [];
+        const accessCookieAutre = cookiesAutre.find(c => c.startsWith('accessToken=')) || '';
+        tokenAutreProfesseur = accessCookieAutre.split(';')[0].replace('accessToken=', '');
     });
 
     afterAll(async () => {
