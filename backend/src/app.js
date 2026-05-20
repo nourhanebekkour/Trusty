@@ -1,3 +1,4 @@
+import '#Config/env.js';
 import express from 'express';
 import apiRouter from './modules/index.js';
 import swaggerUi from 'swagger-ui-express';
