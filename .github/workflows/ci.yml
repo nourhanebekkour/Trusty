@@ -21,6 +21,7 @@ jobs:
       - run: npm ci
       - run: npx eslint src/ --max-warnings=50 || true
   backend-test:
+  
     name: Backend — Test
     runs-on: ubuntu-latest
     needs: backend-lint
@@ -54,6 +55,8 @@ jobs:
       - run: npm ci
       - name: Run Prisma migrations
         run: npx prisma migrate deploy
+      - name: Generate Swagger
+        run: npm run swagger   # ou node swagger.js, selon ton setup
       - name: Run backend tests
         run: npm test
   backend-run:
