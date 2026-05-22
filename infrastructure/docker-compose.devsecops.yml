@@ -60,7 +60,7 @@ services:
     hostname: gitlab.trusty.local
     environment:
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'http://${VM2_IP}:8929'
+        external_url 'http://${SERVER_IP}:8929'
         gitlab_rails['gitlab_shell_ssh_port'] = 2224
     ports:
       - "8929:8929"
