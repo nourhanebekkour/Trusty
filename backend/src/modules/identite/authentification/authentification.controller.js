@@ -108,6 +108,14 @@ const getMe = async (req, res) => {
   }
 };
 const oublierMDP = async (req, res) => {
+  // #swagger.tags = ['Authentification']
+  // #swagger.summary = 'Demande de réinitialisation de mot de passe'
+  /* #swagger.parameters['body'] = {
+        in: 'body',
+        description: 'Email de l\'utilisateur',
+        required: true,
+        schema: { $ref: '#/definitions/ForgotPasswordRequest' }
+  } */
   try {
     const { email } = req.body;
     if(!email) {
@@ -121,6 +129,14 @@ const oublierMDP = async (req, res) => {
   }
 };
 const changerMDP = async (req, res) => {
+  // #swagger.tags = ['Authentification']
+  // #swagger.summary = 'Réinitialiser le mot de passe avec un token'
+  /* #swagger.parameters['body'] = {
+        in: 'body',
+        description: 'Token de réinitialisation et nouveau mot de passe',
+        required: true,
+        schema: { $ref: '#/definitions/ResetPasswordRequest' }
+  } */
   try {
     const { token, nouveauMotDePasse } = req.body;
     if (!token || !nouveauMotDePasse) {
