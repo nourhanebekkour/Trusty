@@ -32,7 +32,6 @@ router.get('/me', authMiddleware, authentificationController.getMe);
 
 // ---- ROUTES ADMIN ----
 // authMiddleware + requireRole vérifient token ET rôle
-
 // GET /api/auth/admin-only → accessible uniquement aux admins
 router.get(
   '/admin-only',
