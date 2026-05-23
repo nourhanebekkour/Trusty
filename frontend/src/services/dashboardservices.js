@@ -1,6 +1,6 @@
-import api from '@/services/api'
+import api from '@/api'
 
-// ─── Helper : libellé du poste selon le rôle de l'auteur ─────────────────────
+// ─── Helper ───────────────────────────────────────────────────────────────────
 export function getAuteurLabel(auteur) {
   if (!auteur) return ''
   if (auteur.role === 'PROFESSIONNEL') {
@@ -13,7 +13,6 @@ export function getAuteurLabel(auteur) {
 }
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
-
 const MOCK_STATS = {
   projetsCertifies: 4,
   credibilite:      78,
@@ -59,29 +58,16 @@ const MOCK_RECOS = [
     id_recommandation: 'rec1',
     message:           'Étudiant sérieux et très impliqué dans ses projets. Je recommande vivement.',
     status:            'VALIDE',
-    auteur: {
-      nom:        'Dupont',
-      prenom:     'Marie',
-      role:       'PROFESSIONNEL',
-      poste:      'Responsable RH',
-      entreprise: 'TechCorp',
-    },
+    auteur: { nom: 'Dupont', prenom: 'Marie', role: 'PROFESSIONNEL', poste: 'Responsable RH', entreprise: 'TechCorp' },
   },
   {
     id_recommandation: 'rec2',
     message:           'Excellent travail en équipe, très bon niveau technique.',
     status:            'VALIDE',
-    auteur: {
-      nom:         'Martin',
-      prenom:      'Jean',
-      role:        'PROFESSEUR',
-      specialite:  'Génie logiciel',
-      departement: 'SIC',
-    },
+    auteur: { nom: 'Martin', prenom: 'Jean', role: 'PROFESSEUR', specialite: 'Génie logiciel', departement: 'SIC' },
   },
 ]
 
-// ─── Helper interne : vérifie si un tableau est vide ou invalide ──────────────
 function isEmpty(value) {
   if (value === null || value === undefined) return true
   if (Array.isArray(value)) return value.length === 0
@@ -92,7 +78,8 @@ function isEmpty(value) {
 // ─── fetchStats ───────────────────────────────────────────────────────────────
 export async function fetchStats(idEtudiant) {
   try {
-    const res      = await api.get(`/api/etudiants/${idEtudiant}`)
+    // ← '/etudiants/...' sans '/api/' (déjà dans baseURL)
+    const res      = await api.get(`/etudiants/${idEtudiant}`)
     const etudiant = res.data?.data ?? res.data
 
     if (isEmpty(etudiant)) {
@@ -107,14 +94,12 @@ export async function fetchStats(idEtudiant) {
       recommandations:  etudiant._count?.recommendation,
     }
 
-    // Si tous les champs sont undefined/null → API n'inclut pas encore ces données
     const allEmpty = Object.values(result).every(v => v === undefined || v === null)
     if (allEmpty) {
-      console.warn('[fetchStats] champs manquants dans la réponse → mock')
+      console.warn('[fetchStats] champs manquants → mock')
       return MOCK_STATS
     }
 
-    // Fallback champ par champ si certains manquent
     return {
       projetsCertifies: result.projetsCertifies ?? MOCK_STATS.projetsCertifies,
       credibilite:      result.credibilite      ?? MOCK_STATS.credibilite,
@@ -130,25 +115,22 @@ export async function fetchStats(idEtudiant) {
 // ─── fetchProjects ────────────────────────────────────────────────────────────
 export async function fetchProjects(idEtudiant) {
   try {
-    const res  = await api.get('/api/projets/')
+    const res  = await api.get('/projets/')
     const data = Array.isArray(res.data?.data) ? res.data.data
                : Array.isArray(res.data)        ? res.data
-               : null  // null = réponse invalide
+               : null
 
-    // Réponse invalide ou vide
     if (isEmpty(data)) {
-      console.warn('[fetchProjects] réponse vide ou invalide → mock')
+      console.warn('[fetchProjects] réponse vide → mock')
       return MOCK_PROJECTS
     }
 
     const filtered = data.reduce((acc, projet) => {
-      if (!Array.isArray(projet.participations)) return acc
-      const participation = projet.participations.find(
-        p => p.id_etudiant === idEtudiant
-      )
+    const parts = projet.participations ?? projet.participants ?? []
+    const participation = parts.find(p => p.id_etudiant === idEtudiant || p.id_utilisateur === idEtudiant)
+      if (!participation) return acc
       if (!participation)                                return acc
       if (participation.est_visible_portfolio === false) return acc
-
       acc.push({
         ...projet,
         est_visible_portfolio: participation.est_visible_portfolio ?? true,
@@ -158,9 +140,8 @@ export async function fetchProjects(idEtudiant) {
       return acc
     }, [])
 
-    // Après filtrage : aucun projet pour cet étudiant → mock
     if (isEmpty(filtered)) {
-      console.warn('[fetchProjects] aucun projet pour cet étudiant → mock')
+      console.warn('[fetchProjects] aucun projet → mock')
       return MOCK_PROJECTS
     }
 
@@ -172,10 +153,9 @@ export async function fetchProjects(idEtudiant) {
 }
 
 // ─── fetchRecos ───────────────────────────────────────────────────────────────
-// ⚠️  GET /api/recommandations/etudiant/{id} absent de la spec — à créer backend
 export async function fetchRecos(idEtudiant) {
   try {
-    const res  = await api.get(`/api/recommandations/etudiant/${idEtudiant}?status=VALIDE`)
+    const res  = await api.get(`/recommandations/public/etudiant/${idEtudiant}`)
     const data = Array.isArray(res.data?.data) ? res.data.data
                : Array.isArray(res.data)        ? res.data
                : null
@@ -186,7 +166,6 @@ export async function fetchRecos(idEtudiant) {
     }
 
     const valides = data.filter(r => r.status === 'VALIDE')
-
     if (isEmpty(valides)) {
       console.warn('[fetchRecos] aucune reco VALIDE → mock')
       return MOCK_RECOS

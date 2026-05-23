@@ -64,7 +64,7 @@
         <span class="nav-label" v-show="!isCollapsed">Paramètres</span>
       </router-link>
 
-      <button class="nav-item logout-btn" @click="$emit('logout')">
+      <button class="nav-item logout-btn" @click="handleLogout">
         <img :src="iconLogout" class="nav-icon" />
         <span class="nav-label" v-show="!isCollapsed">Déconnexion</span>
       </button>
@@ -73,42 +73,34 @@
   </aside>
 </template>
 
-<script>
-import iconDashboard from '@/assets/icons/dashboard.svg'
-import iconProfile from '@/assets/icons/profile.svg'
-import iconParcours from '@/assets/icons/parcours.svg'
-import iconStages from '@/assets/icons/stages.svg'
-import iconProjets from '@/assets/icons/projets.svg'
-import iconSettings from '@/assets/icons/settings.svg'
-import iconLogout from '@/assets/icons/logout.svg'
-import iconRecommandations from '@/assets/icons/recommandations.svg'
-import iconNotifications from '@/assets/icons/notifications.svg'
-import iconModeles from '@/assets/icons/modeles.svg'
-import iconPortfolioComplet from '@/assets/icons/portfoliocomplet.svg' 
+<script setup>
+import { ref } from 'vue'
+import { useAuthStore } from '@/stores/authstore'
+import { useRouter } from 'vue-router'
 
-export default {
-  name: 'Sidebar',
-  data() {
-    return {
-      isCollapsed: false, // <-- Nouvelle variable d'état
-      iconDashboard,
-      iconProfile,
-      iconParcours,
-      iconStages,
-      iconProjets,
-      iconSettings,
-      iconLogout,
-      iconRecommandations,
-      iconNotifications,
-      iconModeles,
-      iconPortfolioComplet
-    }
-  },
-  methods: {
-    toggleSidebar() {
-      this.isCollapsed = !this.isCollapsed; // Inverse l'état
-    }
-  }
+import iconDashboard        from '@/assets/icons/dashboard.svg'
+import iconProfile          from '@/assets/icons/profile.svg'
+import iconParcours         from '@/assets/icons/parcours.svg'
+import iconStages           from '@/assets/icons/stages.svg'
+import iconProjets          from '@/assets/icons/projets.svg'
+import iconSettings         from '@/assets/icons/settings.svg'
+import iconLogout           from '@/assets/icons/logout.svg'
+import iconRecommandations  from '@/assets/icons/recommandations.svg'
+import iconNotifications    from '@/assets/icons/notifications.svg'
+import iconModeles          from '@/assets/icons/modeles.svg'
+import iconPortfolioComplet from '@/assets/icons/portfoliocomplet.svg'
+
+const isCollapsed = ref(false)
+const authStore   = useAuthStore()
+const router      = useRouter()
+
+function toggleSidebar() {
+  isCollapsed.value = !isCollapsed.value
+}
+
+async function handleLogout() {
+  await authStore.logout()
+  router.push('/login')
 }
 </script>
 

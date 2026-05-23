@@ -74,7 +74,7 @@ watch(() => props.user, (u) => {
 </script>
 
 <style scoped>
-@import '@/assets/Profile.css';
+@import '@/assets/profile.css';
 .modal-section-label {
   font-size: 11px;
   font-weight: 500;

@@ -29,5 +29,5 @@ const router = useRouter()
 
 </script>
 <style scoped>
-@import '@/assets/Profile.css';
+@import '@/assets/profile.css';
 </style>
