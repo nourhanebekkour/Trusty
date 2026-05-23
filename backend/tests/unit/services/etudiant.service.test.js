@@ -1,19 +1,30 @@
 import { jest } from '@jest/globals';
 import { mockPrisma } from '../../mocks/prismaMock.js';
 
-// au lieu de mockPrisma.etudiant à chaque fois
 const { etudiant } = mockPrisma;
 
-// (1) Mock de Prisma
-// define the mock before importing the module you want to test
-// quand qlq importe prisma dans le service), donne lui les mock à la place
-await jest.unstable_mockModule('@prisma/client', () => ({
-    PrismaClient: jest.fn().mockImplementation(() => mockPrisma)
+// Mock Prisma
+await jest.unstable_mockModule('#Config/prismaClient.js', () => ({
+    default: mockPrisma
 }));
 
-// (2) Import dynamique du Service après le Mock
-const { recupererTousLesProfils, recupererParId, ajouterOuModifierEtudiant } =
-    await import('../../../src/Services/etudiantService.js');
+// Mock minioService — nécessaire pour enrichirProfil et mettreAJourAvatar
+const mockGetFileUrl = jest.fn().mockResolvedValue('http://minio/photo.jpg');
+const mockDeleteFile = jest.fn().mockResolvedValue(undefined);
+const mockUploadAndSaveFile = jest.fn().mockResolvedValue({
+    url: 'http://minio/photo.jpg',
+    nom_stockage: 'photo.jpg'
+});
+
+await jest.unstable_mockModule('#Services/minio.service.js', () => ({
+    getFileUrl: mockGetFileUrl,
+    deleteFile: mockDeleteFile,
+    uploadAndSaveFile: mockUploadAndSaveFile
+}));
+
+// Import dynamique du Service après les mocks
+const { recupererTousLesProfils, recupererParId, ajouterOuModifierEtudiant, mettreAJourAvatar } =
+    await import('#Modules/identite/etudiant/etudiant.service.js');
 
 // (3) Tests des services
 describe('Service Profil Étudiant', () => {
@@ -79,10 +90,8 @@ describe('Service Profil Étudiant', () => {
     });
 
     describe('ajouterOuModifierEtudiant', () => {
-        // test : etudiant ajouté / modifié avec succès
         test('doit modifier / ajouter un étudiant ', async () => {
-            // vérifier que le service retourne ce que Prisma lui donne
-            const mockProfil = { id_etudiant: 'id-1', filiere: 'GINF' };
+            const mockProfil = { id_etudiant: 'id-1', filiere: 'GINF', utilisateur: { photo: null } };
             etudiant.upsert.mockResolvedValue(mockProfil);
 
             const donnees = { filiere: 'GINF', ville: 'Tanger', pays: 'Maroc' };
@@ -97,10 +106,57 @@ describe('Service Profil Étudiant', () => {
         test('doit propager l\'erreur', async () => {
             etudiant.upsert.mockRejectedValue(new Error('Erreur Prisma'));
             await expect(ajouterOuModifierEtudiant('id-1', {})).rejects.toThrow('Erreur Prisma');
+        });
+    });
 
+    describe('mettreAJourAvatar', () => {
+
+        test('doit uploader la photo et retourner l\'URL', async () => {
+            const mockEtudiant = { id_etudiant: 'id-1', utilisateur: { photo: null } };
+            etudiant.findUnique.mockResolvedValue(mockEtudiant);
+            mockUploadAndSaveFile.mockResolvedValue({ url: 'http://minio/photo.jpg', nom_stockage: 'photo.jpg' });
+            mockPrisma.utilisateur.update.mockResolvedValue({});
+
+            const fichier = { originalname: 'photo.jpg', buffer: Buffer.from('test') };
+            const result = await mettreAJourAvatar('id-1', fichier, 'user-1');
+
+            expect(mockUploadAndSaveFile).toHaveBeenCalledWith(fichier, 'user-1', 'AVATAR');
+            expect(mockPrisma.utilisateur.update).toHaveBeenCalledWith({
+                where: { id_utilisateur: 'id-1' },
+                data: { photo: 'photo.jpg' }
+            });
+            expect(result.url).toBe('http://minio/photo.jpg');
         });
 
-    })
+        test('doit supprimer l\'ancienne photo avant d\'uploader la nouvelle', async () => {
+            const mockEtudiant = { id_etudiant: 'id-1', utilisateur: { photo: 'ancienne.jpg' } };
+            etudiant.findUnique.mockResolvedValue(mockEtudiant);
+            mockGetFileUrl.mockResolvedValue('http://minio/ancienne.jpg');
+            mockDeleteFile.mockResolvedValue(undefined);
+            mockUploadAndSaveFile.mockResolvedValue({ url: 'http://minio/photo.jpg', nom_stockage: 'photo.jpg' });
+            mockPrisma.utilisateur.update.mockResolvedValue({});
 
+            await mettreAJourAvatar('id-1', { originalname: 'photo.jpg' }, 'user-1');
+
+            expect(mockDeleteFile).toHaveBeenCalledWith('ancienne.jpg');
+        });
+
+        test('doit lever une erreur si étudiant non trouvé', async () => {
+            etudiant.findUnique.mockResolvedValue(null);
+
+            await expect(mettreAJourAvatar('id-inexistant', {}, 'user-1'))
+                .rejects.toThrow('Étudiant non trouvé');
+
+            expect(mockUploadAndSaveFile).not.toHaveBeenCalled();
+        });
+
+        test('doit propager l\'erreur si l\'upload échoue', async () => {
+            const mockEtudiant = { id_etudiant: 'id-1', utilisateur: { photo: null } };
+            etudiant.findUnique.mockResolvedValue(mockEtudiant);
+            mockUploadAndSaveFile.mockRejectedValue(new Error('Erreur MinIO'));
+
+            await expect(mettreAJourAvatar('id-1', {}, 'user-1')).rejects.toThrow('Erreur MinIO');
+        });
+    });
 
 });

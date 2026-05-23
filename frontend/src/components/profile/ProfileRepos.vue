@@ -38,5 +38,5 @@ const langColors = {
 const langColor = (lang) => langColors[lang] ?? '#6b7280'
 </script>
 <style scoped>
-@import '@/assets/Profile.css';
+@import '@/assets/profile.css';
 </style>

@@ -29,5 +29,5 @@ const statItems = [
 </script>
 
 <style scoped>
-@import '@/assets/Dashboard.css';
+@import '@/assets/dashboard.css';
 </style>
