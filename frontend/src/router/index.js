@@ -72,7 +72,7 @@ const router = createRouter({
       path: '/dashboard',
       name: 'dashboard',
       component: Dashboard,
-      //meta: { requiresAuth: true }
+      meta: { requiresAuth: true }
     },
     {
       path: '/notifications',
@@ -84,7 +84,7 @@ const router = createRouter({
       path: '/profile',
       name: 'profile',
       component: Profile,
-      //meta: { requiresAuth: true } 
+      meta: { requiresAuth: true } 
     },
     {
       path: '/projets',
