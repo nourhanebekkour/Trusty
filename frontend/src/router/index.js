@@ -15,6 +15,14 @@ import ProfessionalView from '@/views/ProfessionalView.vue'
 import ProfessorView from '@/views/ProfessorView.vue'
 import { useAuthStore } from '@/stores/authstore'
 
+// ──  Roles autorisés par section ──────────────────────────────
+const ROLES = {
+  ADMIN:        'ADMIN',
+  STUDENT:      'ETUDIANT',
+  PROFESSOR:    'PROFESSEUR',
+  PROFESSIONAL: 'PROFESSIONNEL',
+}
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -32,18 +40,16 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: LoginView,
+      meta: { guestOnly: true },
     },
 
     // ── Admin ──────────────────────────────────────────
     {
       path: '/admin',
       component: AdminLayout,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, roles: [ROLES.ADMIN] },
       children: [
-        {
-          path: '',
-          redirect: '/admin/dashboard',
-        },
+        { path: '', redirect: '/admin/dashboard' },
         {
           path: 'dashboard',
           name: 'admin-dashboard',
@@ -72,48 +78,49 @@ const router = createRouter({
       path: '/dashboard',
       name: 'dashboard',
       component: Dashboard,
-      //meta: { requiresAuth: true }
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
       path: '/notifications',
       name: 'notifications',
       component: Notification,
-      meta: { requiresAuth: true } 
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
       path: '/profile',
       name: 'profile',
       component: Profile,
-      //meta: { requiresAuth: true } 
+      meta: { requiresAuth: true },
     },
     {
       path: '/projets',
       name: 'projets',
       component: ProjectList,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
       path: '/settings',
       name: 'settings',
       component: Settings,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/recommendations',
       name: 'recommendations',
       component: Recommendations,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
       path: '/stage',
       name: 'stage',
       component: StageList,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
       path: '/modele',
       name: 'modele',
       component: Modele,
+      meta: { requiresAuth: true },
     },
     {
       path: '/portfolio',
@@ -124,36 +131,70 @@ const router = createRouter({
       path: '/professional',
       name: 'professional',
       component: ProfessionalView,
+      meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
     },
     {
       path: '/professor',
       name: 'professor',
       component: ProfessorView,
+      meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
     },
-  ],  
+
+    // Pages d'erreur
+    {
+      path: '/403',
+      name: 'forbidden',
+      component: () => import('../views/ForbiddenView.vue'),
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('../views/NotFoundView.vue'),
+    },
+  ],
 })
 
+// ── Guard principal ────────────────────────────────────────────
 router.beforeEach(async (to, from) => {
   const authStore = useAuthStore()
 
-  if (!authStore.user) {
-    await authStore.fetchUser()   // ← appel API /auth/me
+
+  if (!authStore.isInitialized) {
+    try {
+      await authStore.fetchUser()
+    } catch (e) {
+      console.error('[Router] Impossible de récupérer la session utilisateur :', e)
+      
+    }
   }
 
+  
+  if (to.meta.guestOnly && authStore.isAuthenticated) {
+    return redirectByRole(authStore.user?.role)
+  }
+
+  
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return '/login'   // ← redirige si pas authentifié
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
+
+    if (to.meta.roles && to.meta.roles.length > 0) {
+    const userRole = authStore.user?.role?.toUpperCase()
+    if (!userRole || !to.meta.roles.includes(userRole)) {
+      return { name: 'forbidden' }
+    }
   }
 })
-// ── Auth guard ─────────────────────────────────────────
-//router.beforeEach((to, from, next) => {
-  // const token = localStorage.getItem('token')
-  // if (to.meta.requiresAuth && !token) {
-  //   next({ name: 'login' })
-  // } else if (to.name === 'login' && token) {
-  //   next({ path: '/admin/dashboard' })
-  // } else {
-  //next()
-  // }
 
+// Redirige selon le rôle après login
+function redirectByRole(role) {
+  switch (role?.toUpperCase()) {
+    case ROLES.ADMIN:        return '/admin/dashboard'
+    case ROLES.STUDENT:      return '/dashboard'
+    case ROLES.PROFESSOR:    return '/professor'
+    case ROLES.PROFESSIONAL: return '/professional'
+    default:                 return '/'
+  }
+}
 
 export default router

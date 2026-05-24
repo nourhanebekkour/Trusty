@@ -42,6 +42,7 @@
         ? 'Ajoutez un court commentaire professionnel sur ce candidat...'
         : 'Rédigez une recommandation formelle qui sera épinglée sur le portfolio de l\'étudiant...'"
       rows="4"
+      maxlength="500"
     ></textarea>
 
     <div class="rec-form-footer">
@@ -59,7 +60,7 @@
     <div class="action-bar-form">
       <button
         class="btn-primary btn-action"
-        :disabled="!recTexte.trim() || recTexte.length > 500"
+        :disabled="!canSubmit"
         @click="envoyer"
       >
         <i class="ti ti-send"></i>
@@ -73,7 +74,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const props = defineProps({
   candidat: { type: Object, default: null },
@@ -84,12 +85,35 @@ const emit = defineEmits(['envoyer', 'fermer'])
 const recTexte = ref('')
 const recType  = ref('officielle')
 
+const VALID_TYPES = ['rapide', 'officielle']
+
+
+const sanitizeText = (val, maxLen = 500) =>
+  typeof val === 'string'
+    ? val.trim().replace(/[\u0000-\u001F\u007F]/g, '').slice(0, maxLen)
+    : ''
+
+const canSubmit = computed(() =>
+  recTexte.value.trim().length > 0 &&
+  recTexte.value.length <= 500 &&
+  VALID_TYPES.includes(recType.value)
+)
+
 function envoyer() {
-  if (!recTexte.value.trim() || recTexte.value.length > 500) return
+  if (!canSubmit.value) return
+
+  if (!props.candidat?.id_etudiant || typeof props.candidat.id_etudiant !== 'number') {
+    if (import.meta.env.DEV) {
+      console.warn('[RecommandationForm] candidat.id_etudiant invalide', props.candidat)
+    }
+    return
+  }
+
   emit('envoyer', {
-    texte: recTexte.value,
-    type:  recType.value,
+    texte: sanitizeText(recTexte.value),
+    type:  recType.value, 
   })
+
   recTexte.value = ''
   recType.value  = 'officielle'
 }
