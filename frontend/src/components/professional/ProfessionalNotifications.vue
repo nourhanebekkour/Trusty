@@ -9,6 +9,8 @@
       :key="notif.id"
       class="notif-item"
       :class="{ 'no-border': notif.last }"
+      style="cursor: pointer"
+      @click="store.marquerLue(notif.id)"
     >
       <span class="notif-dot" :style="{ background: notif.color }"></span>
       <div>
@@ -22,7 +24,11 @@
 </template>
 
 <script setup>
+import { useProfessionalStore } from '@/stores/professionalStore'
+
 defineProps({
   notifications: { type: Array, default: () => [] },
 })
+
+const store = useProfessionalStore()
 </script>

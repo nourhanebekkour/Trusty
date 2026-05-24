@@ -1,81 +1,54 @@
 <template>
-  <div class="layout">
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="logo">Trusty<span>.io</span></div>
+  <div class="professional-page">
 
-      <p class="nav-label">Principal</p>
-      <div class="nav-item"><i class="ti ti-layout-dashboard"></i> Tableau de bord</div>
-      <div class="nav-item active"><i class="ti ti-users-group"></i> Explorer <span class="badge">24</span></div>
-      <div class="nav-item"><i class="ti ti-bookmark"></i> Favoris <span class="badge">5</span></div>
+    <!-- Topbar -->
+    <ProfessionalTopbar />
 
-      <p class="nav-label">Recommandations</p>
-      <div class="nav-item"><i class="ti ti-message-star"></i> Mes recommandations <span class="badge">{{ store.totalRecs }}</span></div>
-      <div class="nav-item"><i class="ti ti-history"></i> Historique</div>
+    <!-- Stats -->
+    <ProfessionalStats
+      :candidats-en-attente="store.candidatsEnAttente"
+      :total-recs="store.totalRecs"
+      :consultes="store.consultes"
+      :favoris-count="store.favoris.length"
+    />
 
-      <p class="nav-label">Gestion</p>
-      <div class="nav-item"><i class="ti ti-bell"></i> Notifications <span class="badge">3</span></div>
-      <div class="nav-item"><i class="ti ti-settings"></i> Paramètres</div>
+    <!-- Colonnes -->
+    <div class="columns">
+      <!-- Gauche -->
+      <div class="left-col">
+        <ProfessionalCandidates
+          :candidats="store.candidats"
+          :selected-id="selectedId"
+          :recs-emises="store.recsEmises"
+          @select="handleSelect"
+          @ouvrir-formulaire="handleOuvrirFormulaire"
+        />
 
-      <div class="sidebar-footer">
-        <div class="avatar-sm">DT</div>
-        <div>
-          <div class="prof-name">DataTech SAS</div>
-          <div class="prof-dept">Professionnel vérifié</div>
-        </div>
+        <RecommendationForm
+          :candidat="selectedCandidat"
+          @envoyer="handleEnvoyer"
+          @fermer="handleFermer"
+        />
       </div>
-    </aside>
 
-    <!-- MAIN -->
-    <main class="main">
-      <!-- Topbar -->
-      <ProfessionalTopbar />
+      <!-- Droite -->
+      <div class="right-col">
+        <FavoriteCandidates
+          :candidats="store.candidatsFavoris"
+          @select="handleSelect"
+        />
 
-      <!-- Stats -->
-      <ProfessionalStats
-        :candidats-en-attente="store.candidatsEnAttente"
-        :total-recs="store.totalRecs"
-        :consultes="store.statsActivite.consultes"
-        :favoris-count="store.favoris.length"
-      />
+        <RecommendationsList :recs="store.recsEmises" />
 
-      <!-- Colonnes -->
-      <div class="columns">
-        <!-- Gauche -->
-        <div class="left-col">
-          <ProfessionalCandidates
-            :candidats="store.candidats"
-            :selected-id="selectedId"
-            :recs-emises="store.recsEmises"
-            @select="handleSelect"
-            @ouvrir-formulaire="handleOuvrirFormulaire"
-          />
-
-          <RecommendationForm
-            :candidat="selectedCandidat"
-            @envoyer="handleEnvoyer"
-            @fermer="handleFermer"
-          />
-        </div>
-
-        <!-- Droite -->
-        <div class="right-col">
-          <FavoriteCandidates
-            :candidats="store.candidatsFavoris"
-            @select="handleSelect"
-          />
-
-          <RecommendationsList :recs="store.recsEmises" />
-
-          <ProfessionalNotifications :notifications="store.notifications" />
-        </div>
+        <ProfessionalNotifications :notifications="store.notifications" />
       </div>
-    </main>
+    </div>
+
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useProfessionalStore } from '@/stores/professionalStore'
 
 import ProfessionalTopbar       from '@/components/professional/ProfessionalTopbar.vue'
@@ -89,6 +62,8 @@ import ProfessionalNotifications from '@/components/professional/ProfessionalNot
 import '@/assets/professional.css'
 
 const store = useProfessionalStore()
+
+onMounted(() => store.init())
 
 const selectedId       = ref(null)
 const selectedCandidat = ref(null)
