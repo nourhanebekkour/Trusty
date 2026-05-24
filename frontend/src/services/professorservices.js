@@ -1,17 +1,3 @@
-/**
- * professorservices.js
- * Utilise src/services/api.js (instance Axios partagée avec token JWT)
- *
- * Routes backend :
- *   GET  /projets/a-valider         → projets en attente du professeur connecté
- *   POST /projets/:id/valider       → valider/rejeter un projet
- *   GET  /stages/a-valider          → stages en attente du professeur connecté
- *   POST /stages/:id/valider        → valider/rejeter un stage
- *   GET  /etudiants                 → liste des étudiants
- *   GET  /notifications             → notifications du professeur
- *   PUT  /notifications/:id/lire    → marquer lue
- */
-
 import api from './api.js'
 
 // ── Projets ───────────────────────────────────────────────────────────────────
@@ -41,12 +27,6 @@ export async function validerStage(id_stage, decision, commentaire = '') {
     commentaire,
   })
   return data.data
-}
-
-// ── Étudiants ─────────────────────────────────────────────────────────────────
-export async function fetchEtudiants() {
-  const { data } = await api.get('/etudiants')
-  return data.data ?? []
 }
 
 // ── Notifications ─────────────────────────────────────────────────────────────

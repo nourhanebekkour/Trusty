@@ -1,31 +1,29 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import SideBar from './components/laayout/SideBar.vue'
 import NavBar from './components/laayout/NavBar.vue'
 import AppFooter from './components/laayout/Footer.vue'
+import ProfessionalSideBar from './components/professional/ProfessionalSideBar.vue'
+import ProfessorSideBar    from './components/professor/ProfessorSideBar.vue'
 import { useAuthStore } from './stores/authstore'
-import { onMounted } from 'vue'
 
 const authStore = useAuthStore()
 const route = useRoute()
 
 onMounted(async () => {
-  const publicRoutes = ['login', 'home', 'about', 'professional', 'professor']
+  const publicRoutes = ['login', 'home', 'about']
   if (route.name && !publicRoutes.includes(route.name)) {
     await authStore.fetchUser()
   }
 })
 
-// Routes qui utilisent le layout complet (sidebar + navbar)
-const studentRoutes = [
-  'dashboard', 'notifications', 'profile', 'projets',
-  'settings', 'recommendations', 'stage', 'modele', 'portfolio'
-]
-
 const isPublicPage = computed(() =>
-  ['home', 'login', 'about', 'professional', 'professor'].includes(route.name)
+  ['home', 'login', 'about'].includes(route.name)
 )
+
+const isProfessionalPage = computed(() => route.name === 'professional')
+const isProfessorPage    = computed(() => route.name === 'professor')
 
 const isAdminPage = computed(() => route.path.startsWith('/admin'))
 
@@ -59,6 +57,28 @@ const isStudentPage = computed(() => {
       </main>
     </div>
     <AppFooter />
+  </div>
+
+  <!-- ── Pages Professionnel ── -->
+  <div v-else-if="isProfessionalPage" class="app">
+    <NavBar />
+    <div class="layout">
+      <ProfessionalSideBar />
+      <main class="content">
+        <RouterView />
+      </main>
+    </div>
+  </div>
+
+  <!-- ── Pages Professeur ── -->
+  <div v-else-if="isProfessorPage" class="app">
+    <NavBar />
+    <div class="layout">
+      <ProfessorSideBar />
+      <main class="content">
+        <RouterView />
+      </main>
+    </div>
   </div>
 
   <!-- ── Fallback ── -->

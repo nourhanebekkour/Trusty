@@ -1,36 +1,39 @@
+
 resource "vmworkstation_vm" "vm_chef" {
   denomination = "VM-Chef"
   description  = "Serveur DevSecOps Staging"
-  cpus         = var.vm_cpu
+  processors   = var.vm_cpu
   memory       = var.vm_ram
-  path         = "/home/aya/vmware/VM-Chef"
+  sourceid     = var.source_vm_id
+  path         = "C:\\Users\\aya el jebari\\Documents\\Virtual Machines\\VM-Chef\\VM-Chef.vmx"
 }
 
 
 resource "vmworkstation_vm" "vm_adjoint" {
   denomination = "VM-Adjoint"
   description  = "Serveur DevSecOps Production"
-  cpus         = var.vm_cpu
+  processors   = var.vm_cpu
   memory       = var.vm_ram
-  path         = "/home/aya/vmware/VM-Adjoint"
+  sourceid     = var.source_vm_id
+  path         = "C:\\Users\\aya el jebari\\Documents\\Virtual Machines\\VM-Adjoint\\VM-Adjoint.vmx"
 }
-
 
 
 resource "vmworkstation_vm" "vm_chef_db" {
   denomination = "VM-Chef-DB"
   description  = "Serveur PostgreSQL Staging"
-  cpus         = 1
+  processors   = 1
   memory       = 1024
-  path         = "/home/aya/vmware/VM-Chef-DB"
+  sourceid     = var.source_vm_id
+  path         = "C:\\Users\\aya el jebari\\Documents\\Virtual Machines\\VM-Chef-DB\\VM-Chef-DB.vmx"
 }
-
 
 
 resource "vmworkstation_vm" "vm_adjoint_db" {
   denomination = "VM-Adjoint-DB"
   description  = "Serveur PostgreSQL Production"
-  cpus         = 1
+  processors   = 1
   memory       = 1024
-  path         = "/home/aya/vmware/VM-Adjoint-DB"
+  sourceid     = var.source_vm_id
+  path         = "C:\\Users\\aya el jebari\\Documents\\Virtual Machines\\VM-Adjoint-DB\\VM-Adjoint-DB.vmx"
 }

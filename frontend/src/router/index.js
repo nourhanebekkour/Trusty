@@ -120,16 +120,18 @@ const router = createRouter({
       name: 'portfolio',
       component: Portfolio,
     },
-    {
-      path: '/professional',
-      name: 'professional',
-      component: ProfessionalView,
-    },
-    {
-      path: '/professor',
-      name: 'professor',
-      component: ProfessorView,
-    },
+      {
+  path: '/professional',
+  name: 'professional',
+  component: ProfessionalView,
+ // meta: { requiresAuth: true }
+},
+{
+  path: '/professor',
+  name: 'professor',
+  component: ProfessorView,
+ // meta: { requiresAuth: true }
+},
   ],  
 })
 
