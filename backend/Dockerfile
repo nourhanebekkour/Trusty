@@ -44,6 +44,8 @@ ENV NODE_ENV=production
 
 RUN npm ci --omit=dev
 
+RUN npm install swagger-autogen
+
 RUN npx prisma generate
 
 COPY . .
