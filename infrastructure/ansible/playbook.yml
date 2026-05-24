@@ -1,0 +1,24 @@
+- name: Configuration commune
+  hosts: all_vms
+  roles:
+    - common
+
+
+
+- name: Configuration serveurs DevSecOps
+  hosts:
+    - vm_chef
+    - vm_adjoint
+  roles:
+    - docker
+    - app
+
+
+
+- name: Configuration serveurs Base de données
+  hosts:
+    - vm_chef_db
+    - vm_adjoint_db
+  roles:
+    - docker
+    - db

@@ -1,6 +1,5 @@
 import { jest } from '@jest/globals'
 // mock des fonctions service
-// créer une liste de fonctions vides
 const mockRecupererFormationsParEtudiant = jest.fn();
 const mockRecupererFormationParId = jest.fn();
 const mockAjouterFormation = jest.fn();
@@ -8,7 +7,7 @@ const mockModifierFormation = jest.fn();
 const mockSupprimerFormation = jest.fn();
 
 // mock du service
-await jest.unstable_mockModule('../../../src/Services/formationService.js', () => ({
+await jest.unstable_mockModule('#Modules/cursus/formation/formation.service.js', () => ({
     recupererFormationsParEtudiant: mockRecupererFormationsParEtudiant,
     recupererFormationParId: mockRecupererFormationParId,
     ajouterFormation: mockAjouterFormation,
@@ -18,13 +17,17 @@ await jest.unstable_mockModule('../../../src/Services/formationService.js', () =
 
 // import du controller après le mock
 const { obtenirFormations, ajouterFormation, mettreAJourFormation, supprimerFormation }
-    = await import('../../../src/Controllers/formationController.js');
+    = await import('#Modules/cursus/formation/formation.controller.js');
 
 describe('Controller Formation', () => {
 
     let req, res;
     beforeEach(() => {
-        req = { params: {}, body: {} };
+        req = {
+            params: {},
+            body: {},
+            user: { id: 'user-1', role: 'ETUDIANT' }
+        };
         res = {
             status: jest.fn().mockReturnThis(),
             json: jest.fn()
@@ -33,16 +36,12 @@ describe('Controller Formation', () => {
     });
 
     describe('obtenirFormations', () => {
-        // Cas succès
         test('doit retourner 200 avec les formations', async () => {
-
             const mockData = [{ id_formation: '1' }];
             mockRecupererFormationsParEtudiant.mockResolvedValue(mockData);
 
             await obtenirFormations(req, res);
-            // Vérifie que le controller a bien appelé res.status(200)
             expect(res.status).toHaveBeenCalledWith(200);
-
             expect(res.json).toHaveBeenCalledWith({
                 status: 200,
                 success: true,
@@ -50,10 +49,8 @@ describe('Controller Formation', () => {
                 data: mockData,
                 erreur: null
             });
-
         });
 
-        // Cas Erreur
         test('doit retourner 500 en cas d\'erreur', async () => {
             mockRecupererFormationsParEtudiant.mockRejectedValue(new Error('Erreur DB'));
 
@@ -65,24 +62,18 @@ describe('Controller Formation', () => {
                 success: false,
                 message: "Erreur lors de la récupération des formations",
                 data: null,
-                erreur: expect.any(Error)
+                erreur: expect.any(String)
             });
-
         });
     });
 
 
     describe('ajouterFormation', () => {
-
         test('doit retourner 201 avec la formation ajoutée', async () => {
             const mockData = { id_formation: '1' };
             mockAjouterFormation.mockResolvedValue(mockData);
-            // simulation de la requête
             req.params.id_etudiant = 'id-1';
-            req.body = {
-                diplome: 'ING',
-                etablissement: 'ENSAT'
-            }
+            req.body = { diplome: 'ING', etablissement: 'ENSAT' };
 
             await ajouterFormation(req, res);
             expect(res.status).toHaveBeenCalledWith(201);
@@ -105,37 +96,21 @@ describe('Controller Formation', () => {
                 success: false,
                 message: "Erreur lors de l'ajout de la formation",
                 data: null,
-                erreur: expect.any(Error)
+                erreur: expect.any(String)
             });
-
         });
     });
 
-    // "est-ce que le controller utilise bien le service + renvoie la bonne réponse ?"
-    // pas est-ce que la formation est modifiée 
     describe('mettreAJourFormation', () => {
         test('doit retourner 200 et modifier la formation', async () => {
-            // ce qui viendrait de la vraie requête HTTP
-            // req.params.id = '1' psq on modifie par id
-            // req.body = { diplome: 'Ingénierie', etablissement: 'ENSAT'} ce qu'on veut modifier
-            req.params.id = '1'
-            req.body = {
-                diplome: 'ING',
-                etablissement: 'ENSAT'
-            };
-
-            // mockData = formation modifiée, ce que le service est censé retourner 
-            const mockData = {
-                id_formation: '1',
-                diplome: 'ING',
-                etablissement: 'ENSAT'
-            };
-
+            req.params.id = '1';
+            req.body = { diplome: 'ING', etablissement: 'ENSAT' };
+            const mockData = { id_formation: '1', diplome: 'ING', etablissement: 'ENSAT' };
             mockModifierFormation.mockResolvedValue(mockData);
 
             await mettreAJourFormation(req, res);
 
-            expect(mockModifierFormation).toHaveBeenCalledWith('1', req.body);
+            expect(mockModifierFormation).toHaveBeenCalledWith('1', req.body, 'user-1', 'ETUDIANT');
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
                 status: 200,
@@ -145,7 +120,6 @@ describe('Controller Formation', () => {
                 erreur: null
             });
         });
-
 
         test('doit retourner 400 en cas d\'erreur', async () => {
             mockModifierFormation.mockRejectedValue(new Error('Erreur DB'));
@@ -157,24 +131,37 @@ describe('Controller Formation', () => {
                 success: false,
                 message: "Erreur lors de la modification",
                 data: null,
-                erreur: expect.any(Error)
+                erreur: expect.any(String)
             });
         });
 
+        test('doit retourner 403 si l\'utilisateur n\'est pas autorisé', async () => {
+            req.params.id = '1';
+            mockModifierFormation.mockRejectedValue(new Error("Vous n'êtes pas autorisé à accéder à cette ressource"));
+
+            await mettreAJourFormation(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(403);
+            expect(res.json).toHaveBeenCalledWith({
+                status: 403,
+                success: false,
+                message: "Erreur lors de la modification",
+                data: null,
+                erreur: expect.any(String)
+            });
+        });
     });
 
 
     describe('supprimerFormation', () => {
         test('doit retourner 200 et supprimer la formation', async () => {
-
             mockSupprimerFormation.mockResolvedValue({ id_formation: '1' });
-
             req.params.id = '3';
-            await supprimerFormation(req, res);
-            
-            expect(mockSupprimerFormation).toHaveBeenCalledWith('3');
-            expect(res.status).toHaveBeenCalledWith(200);
 
+            await supprimerFormation(req, res);
+
+            expect(mockSupprimerFormation).toHaveBeenCalledWith('3', 'user-1', 'ETUDIANT');
+            expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith({
                 status: 200,
                 success: true,
@@ -182,14 +169,45 @@ describe('Controller Formation', () => {
                 data: null,
                 erreur: null
             });
-
         });
-        test('doit retourner 400 en cas d\'erreur', async () => {
+// le cas où le service throw une erreur qui n'est ni une erreur d'autorisation ni une formation introuvable 
+// par exemple une erreur Prisma/base de données, un timeout, n'importe quelle exception inattendue
+        test('doit retourner 400 en cas d\'erreur générique', async () => {
             mockSupprimerFormation.mockRejectedValue(new Error('Erreur DB'));
             await supprimerFormation(req, res);
             expect(res.status).toHaveBeenCalledWith(400);
         });
 
-    });
+        test('doit retourner 403 si l\'utilisateur n\'est pas autorisé', async () => {
+            req.params.id = '1';
+            mockSupprimerFormation.mockRejectedValue(new Error("Vous n'êtes pas autorisé à accéder à cette ressource"));
 
+            await supprimerFormation(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(403);
+            expect(res.json).toHaveBeenCalledWith({
+                status: 403,
+                success: false,
+                message: "Erreur lors de la suppression",
+                data: null,
+                erreur: expect.any(String)
+            });
+        });
+
+        test('doit retourner 404 si la formation n\'existe pas', async () => {
+            req.params.id = 'id-inexistant';
+            mockSupprimerFormation.mockRejectedValue(new Error('Formation non trouvée'));
+
+            await supprimerFormation(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(404);
+            expect(res.json).toHaveBeenCalledWith({
+                status: 404,
+                success: false,
+                message: "Erreur lors de la suppression",
+                data: null,
+                erreur: expect.any(String)
+            });
+        });
+    });
 });

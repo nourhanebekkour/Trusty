@@ -5,20 +5,22 @@ import { jest } from '@jest/globals';
 const mockRecupererTousLesProfils = jest.fn();
 const mockRecupererParId = jest.fn();
 const mockAjouterOuModifierEtudiant = jest.fn();
+const mockMettreAJourAvatar = jest.fn();
 
 // 2) On dit à Jest "quand quelqu'un importe etudiantService,
 //    donne-lui mes fonctions mock à la place"
-await jest.unstable_mockModule('../../../src/Services/etudiantService.js', () => ({
+await jest.unstable_mockModule('#Modules/identite/etudiant/etudiant.service.js', () => ({
     recupererTousLesProfils: mockRecupererTousLesProfils,
     recupererParId: mockRecupererParId,
     ajouterOuModifierEtudiant: mockAjouterOuModifierEtudiant,
+    mettreAJourAvatar: mockMettreAJourAvatar,
 }));
 
 // 3) SEULEMENT APRÈS on importe le controller
-//    → quand le controller va importer etudiantService,
-//    il va recevoir les mocks au lieu du vrai service 
-const { obtenirTousLesProfils, obtenirProfilParId, traiterProfil } =
-    await import('../../../src/Controllers/etudiantController.js');
+//    → quand le controller va importe etudiantService,
+//    il va recevoir les mocks au lieu du vrai service
+const { obtenirTousLesProfils, obtenirProfilParId, traiterProfil, uploadAvatar } =
+    await import('#Modules/identite/etudiant/etudiant.controller.js');
 
 
 describe('Controller Profil Étudiant', () => {
@@ -26,10 +28,10 @@ describe('Controller Profil Étudiant', () => {
     let req, res;
 
     beforeEach(() => {
-        req = { params: {}, body: {} };
+        req = { params: {}, body: {}, user: { id: 'user-1', role: 'ETUDIANT' } };
         res = {
-            status: jest.fn().mockReturnThis(), // simule res.status()
-            json: jest.fn() // simule res.json()
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn()
         };
         jest.clearAllMocks();
     });
@@ -77,7 +79,7 @@ describe('Controller Profil Étudiant', () => {
                 success: false,
                 message: "Erreur lors de la récupération des profils",
                 data: null,
-                erreur: expect.any(Error)
+                erreur: expect.any(String)
             });
         });
 
@@ -131,7 +133,7 @@ describe('Controller Profil Étudiant', () => {
                 success: false,
                 message: "Erreur lors de la récupération du profil",
                 data: null,
-                erreur: expect.any(Error)
+                erreur: expect.any(String)
             });
         });
 
@@ -151,7 +153,7 @@ describe('Controller Profil Étudiant', () => {
             expect(res.json).toHaveBeenCalledWith({
                 status: 200,
                 success: true,
-                message: "Profil traité avec succès (créé ou mis à jour)",
+                message: "Profil traité avec succès",
                 data: mockProfil,
                 erreur: null
             });
@@ -169,7 +171,81 @@ describe('Controller Profil Étudiant', () => {
                 success: false,
                 message: "Erreur lors du traitement du profil",
                 data: null,
-                erreur: expect.any(Error)
+                erreur: expect.any(String)
+            });
+        });
+
+    });
+
+    describe('uploadAvatar', () => {
+
+        test('doit retourner 200 avec l\'URL de la photo uploadée', async () => {
+            req.params.id = 'id-valide';
+            req.file = { originalname: 'photo.jpg', buffer: Buffer.from('test') };
+            const mockResult = { url: 'http://minio/photo.jpg', nom_stockage: 'photo.jpg' };
+            mockMettreAJourAvatar.mockResolvedValue(mockResult);
+
+            await uploadAvatar(req, res);
+
+            expect(mockMettreAJourAvatar).toHaveBeenCalledWith('id-valide', req.file, 'user-1');
+            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.json).toHaveBeenCalledWith({
+                status: 200,
+                success: true,
+                message: "Photo de profil mise à jour",
+                data: mockResult,
+                erreur: null
+            });
+        });
+
+        test('doit retourner 400 si aucun fichier fourni', async () => {
+            req.params.id = 'id-valide';
+            req.file = undefined;
+
+            await uploadAvatar(req, res);
+
+            expect(mockMettreAJourAvatar).not.toHaveBeenCalled();
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                status: 400,
+                success: false,
+                message: "Aucun fichier fourni",
+                data: null,
+                erreur: null
+            });
+        });
+
+        test('doit retourner 404 si étudiant non trouvé', async () => {
+            req.params.id = 'id-inexistant';
+            req.file = { originalname: 'photo.jpg' };
+            mockMettreAJourAvatar.mockRejectedValue(new Error('Étudiant non trouvé'));
+
+            await uploadAvatar(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(404);
+            expect(res.json).toHaveBeenCalledWith({
+                status: 404,
+                success: false,
+                message: "Étudiant non trouvé",
+                data: null,
+                erreur: expect.any(String)
+            });
+        });
+
+        test('doit retourner 500 en cas d\'erreur serveur (ex: MinIO)', async () => {
+            req.params.id = 'id-valide';
+            req.file = { originalname: 'photo.jpg' };
+            mockMettreAJourAvatar.mockRejectedValue(new Error('Erreur MinIO'));
+
+            await uploadAvatar(req, res);
+
+            expect(res.status).toHaveBeenCalledWith(500);
+            expect(res.json).toHaveBeenCalledWith({
+                status: 500,
+                success: false,
+                message: "Erreur MinIO",
+                data: null,
+                erreur: expect.any(String)
             });
         });
 
