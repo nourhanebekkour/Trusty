@@ -53,6 +53,13 @@
           <i class="ti ti-plus" style="font-size:10px;"></i> Ajouter
         </button>
         <button class="btn-ghost btn-sm" @click.stop="emit('select', candidat)">Détails</button>
+        <button
+          class="btn-ghost btn-sm"
+          :class="{ 'ok-border': estFavori(candidat.id) }"
+          @click.stop="store.toggleFavori(candidat.id)"
+        >
+          <i :class="estFavori(candidat.id) ? 'ti ti-bookmark-filled' : 'ti ti-bookmark'"></i>
+        </button>
       </div>
     </div>
   </div>
@@ -60,6 +67,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useProfessionalStore } from '@/stores/professionalStore'
 
 const props = defineProps({
   candidats:   { type: Array,  default: () => [] },
@@ -67,12 +75,17 @@ const props = defineProps({
   recsEmises:  { type: Array,  default: () => [] },
 })
 
-const emit = defineEmits(['select', 'ouvrir-formulaire'])
+const emit  = defineEmits(['select', 'ouvrir-formulaire'])
+const store = useProfessionalStore()
 
 const tabs      = ['Portfolios', 'Stages', 'Activités']
 const activeTab = ref('Portfolios')
 
 function aRecommande(id) {
   return props.recsEmises.some(r => r.candidatId === id)
+}
+
+function estFavori(id) {
+  return store.favoris.includes(id)
 }
 </script>

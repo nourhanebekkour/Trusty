@@ -1,35 +1,25 @@
-/**
- * professionalservices.js
- * Utilise src/services/api.js (instance Axios partagée avec token JWT)
- *
- * Routes backend :
- *   GET  /etudiants                     → liste des candidats
- *   GET  /recommandations/mes-recommandations-recus  → non applicable ici
- *   POST /recommandations               → envoyer une recommandation
- *   GET  /notifications                 → notifications du professionnel connecté
- *   PUT  /notifications/:id/lire        → marquer lue
- */
-
 import api from './api.js'
 
-// ── Candidats ─────────────────────────────────────────────────────────────────
+// ── Candidats ──────────────────────────────────────────────────────────────────
+// GET /etudiants requires ADMINISTRATEUR — not accessible to PROFESSIONNEL.
+// Workaround: derive unique students from the public stages list.
+// Limitation: utilisateur (nom/prenom) is not included in GET /stages response.
 export async function fetchCandidats() {
-  const { data } = await api.get('/etudiants')
-  return data.data ?? []
+  const { data } = await api.get('/stages')
+  const stages = data.data ?? []
+  const seen = new Set()
+  const etudiants = []
+  for (const stage of stages) {
+    const e = stage.etudiant
+    if (e?.id_etudiant && !seen.has(e.id_etudiant)) {
+      seen.add(e.id_etudiant)
+      etudiants.push(e)
+    }
+  }
+  return etudiants
 }
 
 // ── Recommandations ───────────────────────────────────────────────────────────
-
-/**
- * Récupère les recommandations émises par le professionnel connecté.
- * Le backend filtre par id_recommandeur = req.user.id
- */
-export async function fetchRecommandationsEmises() {
-  // La route GET /recommandations est admin only.
-  // On retourne [] — les recs émises sont trackées localement (optimistic).
-  return []
-}
-
 export async function envoyerRecommandation(id_etudiant, message) {
   const { data } = await api.post('/recommandations', { id_etudiant, message })
   return data.data
