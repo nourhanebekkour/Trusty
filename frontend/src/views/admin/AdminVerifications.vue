@@ -69,7 +69,9 @@
             <textarea
               v-model="portfolio.internalNote"
               placeholder="Rédiger une remarque pour l'étudiant ou l'équipe admin..."
+              maxlength="1000"
             />
+            <span class="char-counter">{{ (portfolio.internalNote || '').length }} / 1000</span>
           </div>
 
           <div class="portfolio-card__actions">
@@ -107,8 +109,13 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import StatCard from '../../components/ui/StatCard.vue'
+import { useAuthStore } from '../../stores/authstore'
+
+const authStore = useAuthStore()
+const router    = useRouter()
 
 const activeTab  = ref('Tout')
 const lastUpdate = ref('14:32')
@@ -157,13 +164,32 @@ const displayedItems = computed(() => {
   return portfolios.value.filter(p => p.priority === activeTab.value)
 })
 
+//sanitisation de la note interne ───────────
+function sanitizeNote(note) {
+  return (note || '').trim().replace(/[<>"'`]/g, '').slice(0, 1000)
+}
+
+//confirmation avant certification ───────────
 function certify(id) {
+  if (!confirm('Confirmer la certification de ce portfolio ? Cette action est visible publiquement.')) return
+  const portfolio = portfolios.value.find(p => p.id === id)
+  if (!portfolio) return
+  // Note sanitisée prête pour l'envoi API
+  const noteClean = sanitizeNote(portfolio.internalNote)
+  // Prêt pour : await admin.certifyPortfolio(id, { internalNote: noteClean })
   portfolios.value = portfolios.value.filter(p => p.id !== id)
 }
 
 function initials(name) {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 }
+
+// ── Guard de rôle ─────────────────────────────────────────
+onMounted(() => {
+  if (!authStore.user || authStore.user.role !== 'ADMIN') {
+    router.replace('/login')
+  }
+})
 </script>
 
 <style scoped>
@@ -238,9 +264,19 @@ textarea {
   min-height: 60px;
   outline: none;
   font-family: inherit;
+  box-sizing: border-box;
 }
 textarea:focus { border-color: #5C8C6A; }
 textarea::placeholder { color: #4a6e6a; }
+
+/* compteur de caractères */
+.char-counter {
+  font-size: 11px;
+  color: #4a6e6a;
+  display: block;
+  text-align: right;
+  margin-top: 4px;
+}
 
 .portfolio-card__actions { display: flex; gap: 8px; flex-wrap: wrap; }
 

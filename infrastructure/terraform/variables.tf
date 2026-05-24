@@ -41,3 +41,9 @@ variable "network_prefix" {
   type        = string
   default     = "192.168.20"
 }
+
+
+variable "source_vm_id" {
+  description = "ID de la VM source à cloner"
+  type        = string
+}

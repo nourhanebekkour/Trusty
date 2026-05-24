@@ -20,7 +20,7 @@
       <h2>Bon retour parmi nous</h2>
       <p class="welcome-sub">Veuillez entrer vos identifiants pour accéder à votre espace.</p>
 
-      <form @submit.prevent="handleLogin" autocomplete="on">
+      <form @submit.prevent="handleLogin" autocomplete="on" novalidate>
 
         <div class="field">
           <label>Email</label>
@@ -30,21 +30,30 @@
             placeholder="nom@ecole.fr"
             required
             autocomplete="username"
+            :aria-invalid="!!fieldErrors.email"
+            aria-describedby="email-error"
+            maxlength="254"
           />
-          <p v-if="fieldErrors.email" class="error">{{ fieldErrors.email }}</p>
+          <p v-if="fieldErrors.email" id="email-error" class="error" role="alert">
+            {{ fieldErrors.email }}
+          </p>
         </div>
 
         <div class="field">
           <label>Mot de passe</label>
           <input
-            v-model.trim="password"
+            v-model="password"
             type="password"
             placeholder="••••••••"
             required
-            minlength="6"
             autocomplete="current-password"
+            :aria-invalid="!!fieldErrors.password"
+            aria-describedby="password-error"
+            maxlength="128"
           />
-          <p v-if="fieldErrors.password" class="error">{{ fieldErrors.password }}</p>
+          <p v-if="fieldErrors.password" id="password-error" class="error" role="alert">
+            {{ fieldErrors.password }}
+          </p>
         </div>
 
         <div class="remember">
@@ -52,7 +61,11 @@
           <label for="remember">Se souvenir de moi</label>
         </div>
 
-        <p v-if="authStore.error || error" class="error">
+        <p v-if="isLocked" class="error" role="alert">
+          Trop de tentatives. Réessayez dans {{ lockCountdown }}s.
+        </p>
+
+        <p v-else-if="authStore.error || error" class="error" role="alert">
           {{ safeError }}
         </p>
 
@@ -81,87 +94,74 @@
 </template>
 
 <script setup>
- 
-
-import { ref, computed } from 'vue'
-import { useAuthStore } from '../stores/authstore' 
+import { ref, computed, onUnmounted } from 'vue'
+import { useAuthStore } from '../stores/authstore'
 import { useRouter } from 'vue-router'
 
 /* STATE */
-const email = ref('')
+const email    = ref('')
 const password = ref('')
 const remember = ref(false)
-const showCaptcha = ref(false)
 
 const isSubmitting = ref(false)
 
 /* ERRORS */
-const error = ref('')
-const fieldErrors = ref({
-  email: '',
-  password: ''
-})
+const error       = ref('')
+const fieldErrors = ref({ email: '', password: '' })
 
-/* SECURITY UX STATE */
-/* SECURITY */
+/* SECURITY — rate limiting côté client */
 const loginAttempts = ref(0)
-const lockUntil = ref(null)
+const lockUntil     = ref(null)
+const lockCountdown = ref(0)
+let lockTimer = null
 
 /* store + router */
 const authStore = useAuthStore()
-const router = useRouter()
+const router    = useRouter()
 
 /* CONFIG */
-const MAX_ATTEMPTS = 3
-const BASE_LOCK_TIME = 10 * 1000
+const MAX_ATTEMPTS  = 3
+const BASE_LOCK_TIME = 10 * 1000 // 10 secondes, double à chaque dépassement
 
 /* HELPERS */
 const normalizeEmail = (v) => v.trim().toLowerCase()
 
-const isValidEmail = (v) =>
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
+const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
 
-const isStrongPassword = (v) => {
-  if (typeof v !== 'string') return false
-  const minLength = v.length >= 8
-  const hasUpper = /[A-Z]/.test(v)
-  const hasLower = /[a-z]/.test(v)
-  const hasNumber = /[0-9]/.test(v)
-  const hasSymbol = /[!@#$%^&*(),.?":{}|<>_\-\\/\[\]=+;]/.test(v)
-  return minLength && hasUpper && hasLower && hasNumber && hasSymbol
-}
-
-const getCaptchaToken = async () => {
-  if (!showCaptcha.value) return null
-  return 'mock-captcha-token'
-}
 
 /* LOCK LOGIC */
-const isLocked = computed(() =>
-  lockUntil.value && Date.now() < lockUntil.value
-)
+const isLocked = computed(() => lockUntil.value && Date.now() < lockUntil.value)
 
 const applyLock = () => {
-  const delay =
-    BASE_LOCK_TIME *
-    Math.pow(2, Math.max(0, loginAttempts.value - MAX_ATTEMPTS))
+  const delay = BASE_LOCK_TIME * Math.pow(2, Math.max(0, loginAttempts.value - MAX_ATTEMPTS))
   lockUntil.value = Date.now() + delay
+
+  lockCountdown.value = Math.ceil(delay / 1000)
+  clearInterval(lockTimer)
+  lockTimer = setInterval(() => {
+    lockCountdown.value--
+    if (lockCountdown.value <= 0) {
+      clearInterval(lockTimer)
+      lockUntil.value = null
+    }
+  }, 1000)
 }
 
 /* ERROR HANDLING */
 const clearErrors = () => {
-  error.value = ''
-  authStore.error = null 
+  error.value      = ''
+  authStore.error  = null
   fieldErrors.value = { email: '', password: '' }
 }
 
-const safeError = computed(() => authStore.error || error.value)
+// Message générique — évite l'énumération email/password
+const safeError = computed(() => {
+  const raw = authStore.error || error.value
+  return raw ? 'Email ou mot de passe invalide' : ''
+})
 
-const setGenericError = () => {
-  error.value = 'Email ou mot de passe invalide'
-}
+const setGenericError = () => { error.value = 'Email ou mot de passe invalide' }
 
-/* VALIDATION */
 const validateFields = () => {
   let ok = true
   fieldErrors.value = { email: '', password: '' }
@@ -177,10 +177,6 @@ const validateFields = () => {
   if (!password.value) {
     fieldErrors.value.password = 'Mot de passe requis'
     ok = false
-  } else if (!isStrongPassword(password.value)) {
-    fieldErrors.value.password =
-      'Min 8 caractères, majuscule, minuscule, nombre et symbole'
-    ok = false
   }
 
   return ok
@@ -189,37 +185,37 @@ const validateFields = () => {
 /* COMPUTED */
 const isDisabled = computed(() =>
   isSubmitting.value ||
-  authStore.loading ||
-  isLocked.value ||
+  authStore.loading  ||
+  isLocked.value     ||
   !email.value.trim() ||
   !password.value
 )
 
+/* SUBMIT */
 const handleLogin = async () => {
   if (isSubmitting.value || isLocked.value) return
 
   clearErrors()
-
   if (!validateFields()) return
 
   isSubmitting.value = true
 
   try {
     const cleanEmail = normalizeEmail(email.value)
-    const cleanPassword = password.value
-    const captchaToken = await getCaptchaToken()
 
-    //  authStore.login 
-    const success = await authStore.login(cleanEmail, cleanPassword)
+    const success = await authStore.login(cleanEmail, password.value)
 
     if (success) {
       loginAttempts.value = 0
-      lockUntil.value = null
-      router.push('/dashboard') 
+      lockUntil.value     = null
+
+      const redirectTo   = router.currentRoute.value.query.redirect || '/dashboard'
+      const safeRedirect = redirectTo.startsWith('/') ? redirectTo : '/dashboard'
+      router.push(safeRedirect)
       return
     }
 
-    /* FAIL */
+    /* ÉCHEC */
     loginAttempts.value++
     if (loginAttempts.value >= MAX_ATTEMPTS) applyLock()
     setGenericError()
@@ -231,8 +227,13 @@ const handleLogin = async () => {
     setGenericError()
   } finally {
     isSubmitting.value = false
+    // Efface le mot de passe du state après chaque tentative
+    password.value = ''
   }
 }
+
+// Nettoyage du timer si le composant est démonté
+onUnmounted(() => clearInterval(lockTimer))
 </script>
 
 <style scoped>
@@ -273,9 +274,7 @@ h1 {
   color: #e8f0ee;
 }
 
-.accent {
-  color: #5C8C6A;
-}
+.accent { color: #5C8C6A; }
 
 .subtitle {
   color: #a8bdb8;
@@ -303,9 +302,7 @@ h2 {
   margin-bottom: 36px;
 }
 
-.field {
-  margin-bottom: 20px;
-}
+.field { margin-bottom: 20px; }
 
 .field label {
   font-size: 13px;
