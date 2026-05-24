@@ -1,0 +1,61 @@
+---
+- name: Cloner le projet Trusty
+  git:
+    repo: https://github.com/nourhanebekkour/Trusty.git
+    dest: /home/aya/Trusty
+    version: feature/docker-infrastructure
+    force: yes
+
+- name: Créer .env.staging pour VM-Chef
+  template:
+    src: env.staging.j2
+    dest: /home/aya/Trusty/.env.staging
+  when: inventory_hostname == '192.168.20.10'
+
+- name: Créer .env.prod pour VM-Adjoint
+  template:
+    src: env.prod.j2
+    dest: /home/aya/Trusty/.env.prod
+  when: inventory_hostname == '192.168.20.11'
+
+- name: Lancer les containers sur VM-Chef
+  shell: |
+    cd /home/aya/Trusty
+    docker compose -f docker-compose.yml \
+                   -f infrastructure/docker-compose.devsecops.yml \
+                   -f docker-compose.staging.yml \
+                   --env-file .env.staging \
+                   up -d --build --scale database=0
+  when: inventory_hostname == '192.168.20.10'
+  register: compose_chef
+
+- name: Lancer les containers sur VM-Adjoint
+  shell: |
+    cd /home/aya/Trusty
+    docker compose -f docker-compose.yml \
+                   -f infrastructure/docker-compose.devsecops.yml \
+                   -f docker-compose.prod.yml \
+                   --env-file .env.prod \
+                   up -d --build --scale database=0
+  when: inventory_hostname == '192.168.20.11'
+  register: compose_adjoint
+
+- name: Vérifier les containers sur VM-Chef
+  shell: docker ps --format "table {% raw %}{{.Names}}\t{{.Status}}{% endraw %}"
+  register: containers_chef
+  when: inventory_hostname == '192.168.20.10'
+
+- name: Vérifier les containers sur VM-Adjoint
+  shell: docker ps --format "table {% raw %}{{.Names}}\t{{.Status}}{% endraw %}"
+  register: containers_adjoint
+  when: inventory_hostname == '192.168.20.11'
+
+- name: Afficher containers VM-Chef
+  debug:
+    msg: "{{ containers_chef.stdout }}"
+  when: inventory_hostname == '192.168.20.10'
+
+- name: Afficher containers VM-Adjoint
+  debug:
+    msg: "{{ containers_adjoint.stdout }}"
+  when: inventory_hostname == '192.168.20.11'

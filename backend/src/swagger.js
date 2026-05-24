@@ -2,7 +2,7 @@ import swaggerAutogen from 'swagger-autogen';
 
 const doc = {
   info: {
-    title: 'Projet',
+    title: 'Projet d intergration',
     description: 'Documentation automatique des APIs du projet',
   },
   host: 'localhost:3000',
@@ -32,6 +32,13 @@ const doc = {
       email: 'etudiant@test.com',
       password: 'password123'
     },
+    ForgotPasswordRequest: {
+      email: 'etudiant@test.com'
+    },
+    ResetPasswordRequest: {
+      token: 'abc123def456...',
+      nouveauMotDePasse: 'nouveauMotDePasse123'
+    },
     EtudiantProfileRequest: {
       numero_etudiant: '2026001',
       filiere: 'GINF',
@@ -47,7 +54,8 @@ const doc = {
       objectif_professionnel: 'Développeur Fullstack',
       score_credibilite: 0,
       niveau_credibilite: 'DEBUTANT',
-      visibilite_profil: 'PUBLIC'
+      visibilite_profil: 'PUBLIC',
+      id_validateur: null
     },
     AdminProfileRequest: {
       niveau_acces: 'ADMIN'
@@ -133,8 +141,29 @@ const doc = {
       role: "Membre",
       est_public: true,
     },
+    BadgeRequest: {
+      nom: 'Badge de Champion',
+      description: 'Attribué aux étudiants ayant complété tous les projets GINF',
+      categorie: 'ACADEMIQUE',
+      icone: 'badge-champion.png',
+      condition_attribution: 'Compléter 5 projets validés',
+      est_actif: true
+    },
+    AttributionBadgeRequest: {
+      id_etudiant: 'cl...id_etudiant'
+    },
     AssocierCompetenceRequest: {
       niveau_maitrise: 'INTERMEDIAIRE'
+    },
+    CommentaireRequest: {
+      id_etudiant_cible: 'cl...id_etudiant',
+      id_projet_cible: 'cl...id_projet',
+      type_cible: 'PROJET',
+      contenu: 'Très bon travail sur ce projet !'
+    },
+    RecommandationRequest: {
+      id_etudiant: 'cl...id_etudiant',
+      message: 'Je recommande vivement cet étudiant pour son sérieux.'
     },
     StandardResponse: {
       success: true,
