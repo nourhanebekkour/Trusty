@@ -2,12 +2,94 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import {
   fetchProjetsAValider,
-  validerProjet   as apiValiderProjet,
+  validerProjet    as apiValiderProjet,
   fetchStagesAValider,
-  validerStage    as apiValiderStage,
-  fetchEtudiants,
+  validerStage     as apiValiderStage,
   fetchNotifications,
+  marquerNotificationLue,
 } from '@/services/professorservices.js'
+
+// ── Helpers visuels exportés ───────────────────────────────────────────────────
+
+const GRADIENTS = [
+  'linear-gradient(135deg,#378ADD,#85B7EB)',
+  'linear-gradient(135deg,#D4537E,#ED93B1)',
+  'linear-gradient(135deg,#1D9E75,#5DCAA5)',
+  'linear-gradient(135deg,#BA7517,#EF9F27)',
+]
+
+function hashId(id) {
+  const str = String(id)
+  let h = 0
+  for (let i = 0; i < str.length; i++) h += str.charCodeAt(i)
+  return h
+}
+
+export function normaliserProjet(p) {
+  const createur  = p.participations?.[0]
+  const u         = createur?.etudiant?.utilisateur ?? {}
+  const estValide = p.status_validation === 'VALIDE'
+  return {
+    id:          p.id_projet,
+    nom:         p.titre,
+    etudiant:    `${u.prenom ?? ''} ${u.nom ?? ''}`.trim() || 'Étudiant',
+    context:     p.type_projet ?? 'Projet académique',
+    date:        p.date_soumission
+                   ? `Soumis le ${new Date(p.date_soumission).toLocaleDateString('fr-FR')}`
+                   : '',
+    description: p.description ?? '',
+    icon:        'device-laptop',
+    color:       estValide ? 'teal' : 'blue',
+    progress:    estValide ? 100 : 50,
+    statusColor: estValide ? '#66c99f' : '#f4b94b',
+    status:      estValide ? 'valide' : 'pending',
+    statusLabel: estValide ? 'Validé' : 'En attente',
+  }
+}
+
+export function normaliserStage(s) {
+  const u         = s.etudiant?.utilisateur ?? {}
+  const estValide = s.status_validation === 'VALIDE'
+  return {
+    id:          s.id_stage,
+    entreprise:  s.entreprise,
+    etudiant:    `${u.prenom ?? ''} ${u.nom ?? ''}`.trim() || 'Étudiant',
+    role:        s.poste,
+    dates:       `${new Date(s.date_debut).toLocaleDateString('fr-FR')}${s.date_fin ? ' – ' + new Date(s.date_fin).toLocaleDateString('fr-FR') : ''}`,
+    progress:    estValide ? 100 : 30,
+    color:       estValide ? '#66c99f' : '#f4b94b',
+    status:      estValide ? 'valide' : 'pending',
+    statusLabel: estValide ? 'Validé' : 'Attente rapport',
+    note:        s.commentaire_validation ?? s.missions?.slice(0, 60) ?? '',
+  }
+}
+
+export function normaliserEtudiant(e) {
+  const u      = e.utilisateur ?? {}
+  const prenom = u.prenom ?? ''
+  const nom    = u.nom    ?? ''
+  return {
+    id:        e.id_etudiant,
+    nom:       `${prenom} ${nom}`.trim(),
+    initiales: `${prenom[0] ?? '?'}${nom[0] ?? '?'}`.toUpperCase(),
+    formation: e.filiere ?? '',
+    score:     e.score_credibilite ?? 0,
+    gradient:  GRADIENTS[hashId(e.id_etudiant) % GRADIENTS.length],
+  }
+}
+
+export function normaliserNotif(n, index, total) {
+  return {
+    id:      n.id_notification,
+    nom:     n.titre ?? '',
+    message: n.message ?? '',
+    time:    new Date(n.date_creation).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }),
+    color:   n.est_lue ? '#a0b4ae' : '#66c99f',
+    last:    index === total - 1,
+  }
+}
+
+// ── Store ──────────────────────────────────────────────────────────────────────
 
 export const useProfessorStore = defineStore('professor', () => {
 
@@ -17,8 +99,10 @@ export const useProfessorStore = defineStore('professor', () => {
   const etudiants     = ref([])
   const notifications = ref([])
   const lettres       = ref([])
-  const loading       = ref({ projets: false, stages: false, etudiants: false, notifs: false })
+  const loading       = ref({ projets: false, stages: false, notifs: false })
   const erreur        = ref(null)
+
+  const _etudiantsRaw = new Map() // plain Map — dedup by id_etudiant across projets + stages
 
   // ── Getters
   const enAttente       = computed(() => projets.value.filter(p => p.status === 'pending').length)
@@ -26,80 +110,11 @@ export const useProfessorStore = defineStore('professor', () => {
   const etudiantsSuivis = computed(() => etudiants.value.length)
   const stagesEnCours   = computed(() => stages.value.length)
 
-  // ── Normalisation
+  // ── Actions API
 
-  function normaliserProjet(p) {
-    const createur = p.participations?.[0]
-    const u = createur?.etudiant?.utilisateur ?? {}
-    const estValide = p.status_validation === 'VALIDE'
-    return {
-      id:          p.id_projet,
-      nom:         p.titre,
-      etudiant:    `${u.prenom ?? ''} ${u.nom ?? ''}`.trim() || 'Étudiant',
-      context:     p.type_projet ?? 'Projet académique',
-      date:        p.date_soumission
-                     ? `Soumis le ${new Date(p.date_soumission).toLocaleDateString('fr-FR')}`
-                     : '',
-      description: p.description ?? '',
-      icon:        'device-laptop',
-      color:       estValide ? 'teal' : 'blue',
-      progress:    estValide ? 100 : 50,
-      statusColor: estValide ? '#66c99f' : '#f4b94b',
-      status:      estValide ? 'valide' : 'pending',
-      statusLabel: estValide ? 'Validé' : 'En attente',
-    }
+  function _syncEtudiants() {
+    etudiants.value = [..._etudiantsRaw.values()].map(normaliserEtudiant)
   }
-
-  function normaliserStage(s) {
-    const u = s.etudiant?.utilisateur ?? {}
-    const estValide = s.status_validation === 'VALIDE'
-    return {
-      id:          s.id_stage,
-      entreprise:  s.entreprise,
-      etudiant:    `${u.prenom ?? ''} ${u.nom ?? ''}`.trim() || 'Étudiant',
-      role:        s.poste,
-      dates:       `${new Date(s.date_debut).toLocaleDateString('fr-FR')}${s.date_fin ? ' – ' + new Date(s.date_fin).toLocaleDateString('fr-FR') : ''}`,
-      progress:    estValide ? 100 : 30,
-      color:       estValide ? '#66c99f' : '#f4b94b',
-      status:      estValide ? 'valide' : 'pending',
-      statusLabel: estValide ? 'Validé' : 'Attente rapport',
-      note:        s.commentaire_validation ?? s.missions?.slice(0, 60) ?? '',
-    }
-  }
-
-  function normaliserEtudiant(e) {
-    const u = e.utilisateur ?? {}
-    const prenom = u.prenom ?? ''
-    const nom    = u.nom    ?? ''
-    const initiales = `${prenom[0] ?? '?'}${nom[0] ?? '?'}`.toUpperCase()
-    const couleurs = [
-      'linear-gradient(135deg,#378ADD,#85B7EB)',
-      'linear-gradient(135deg,#D4537E,#ED93B1)',
-      'linear-gradient(135deg,#1D9E75,#5DCAA5)',
-      'linear-gradient(135deg,#BA7517,#EF9F27)',
-    ]
-    return {
-      id:        e.id_etudiant,
-      nom:       `${prenom} ${nom}`.trim(),
-      initiales,
-      formation: e.filiere ?? '',
-      score:     e.score_credibilite ?? 0,
-      gradient:  couleurs[e.id_etudiant.charCodeAt(0) % couleurs.length],
-    }
-  }
-
-  function normaliserNotif(n, index, total) {
-    return {
-      id:      n.id_notification,
-      nom:     n.titre ?? '',
-      message: n.message ?? '',
-      time:    new Date(n.date_creation).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }),
-      color:   n.est_lue ? '#a0b4ae' : '#66c99f',
-      last:    index === total - 1,
-    }
-  }
-
-  // ── Actions
 
   async function chargerProjets() {
     loading.value.projets = true
@@ -107,6 +122,12 @@ export const useProfessorStore = defineStore('professor', () => {
     try {
       const data = await fetchProjetsAValider()
       projets.value = data.map(normaliserProjet)
+      data.forEach(p =>
+        (p.participations ?? []).forEach(({ etudiant: e }) => {
+          if (e?.id_etudiant) _etudiantsRaw.set(e.id_etudiant, e)
+        })
+      )
+      _syncEtudiants()
     } catch (e) {
       erreur.value = e.message
     } finally {
@@ -119,22 +140,15 @@ export const useProfessorStore = defineStore('professor', () => {
     try {
       const data = await fetchStagesAValider()
       stages.value = data.map(normaliserStage)
+      data.forEach(s => {
+        const e = s.etudiant
+        if (e?.id_etudiant) _etudiantsRaw.set(e.id_etudiant, e)
+      })
+      _syncEtudiants()
     } catch (e) {
       erreur.value = e.message
     } finally {
       loading.value.stages = false
-    }
-  }
-
-  async function chargerEtudiants() {
-    loading.value.etudiants = true
-    try {
-      const data = await fetchEtudiants()
-      etudiants.value = data.map(normaliserEtudiant)
-    } catch (e) {
-      erreur.value = e.message
-    } finally {
-      loading.value.etudiants = false
     }
   }
 
@@ -182,11 +196,20 @@ export const useProfessorStore = defineStore('professor', () => {
     }
   }
 
+  async function marquerLue(id) {
+    try {
+      await marquerNotificationLue(id)
+      const notif = notifications.value.find(n => n.id === id)
+      if (notif) notif.color = '#a0b4ae'
+    } catch (e) {
+      erreur.value = e.message
+    }
+  }
+
   async function init() {
     await Promise.all([
       chargerProjets(),
       chargerStages(),
-      chargerEtudiants(),
       chargerNotifications(),
     ])
   }
@@ -194,8 +217,7 @@ export const useProfessorStore = defineStore('professor', () => {
   return {
     projets, stages, etudiants, lettres, notifications, loading, erreur,
     enAttente, valides, etudiantsSuivis, stagesEnCours,
-    init,
-    chargerProjets, chargerStages, chargerEtudiants, chargerNotifications,
-    validerProjet, validerStage,
+    init, chargerProjets, chargerStages, chargerNotifications,
+    validerProjet, validerStage, marquerLue,
   }
 })
