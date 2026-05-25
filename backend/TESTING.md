@@ -68,7 +68,8 @@ backend/test-reports/test-report.html
 ```
 Ouvrir dans le navigateur : `open test-reports/test-report.html`
 
-## Pipeline CI/CD (GitHub Actions)
+## Pipeline CI/CD (GitHub Actions) 
+## À faire
 
 Le workflow `.github/workflows/ci.yml` exécute automatiquement les tests sur chaque push et pull request vers `main`, `dev`.
 
