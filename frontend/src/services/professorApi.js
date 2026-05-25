@@ -4,18 +4,35 @@ function getData(response) {
   return response.data?.data || response.data
 }
 
+/*
+|--------------------------------------------------------------------------
+| Dashboard professeur
+|--------------------------------------------------------------------------
+*/
+
 export async function getProfessorDashboard() {
   const response = await api.get('/professor/dashboard')
   return getData(response)
 }
 
-export async function getProfessorStudents() {
-  const response = await api.get('/professor/students')
+export async function getProfessorStudents(params = {}) {
+  const response = await api.get('/professor/students', { params })
   return getData(response)
 }
 
-export async function getProfessorPendingValidations() {
-  const response = await api.get('/professor/validations/pending')
+/*
+|--------------------------------------------------------------------------
+| Validations professeur
+|--------------------------------------------------------------------------
+*/
+
+export async function getProfessorPendingValidations(params = {}) {
+  const response = await api.get('/professor/validations/pending', { params })
+  return getData(response)
+}
+
+export async function getProfessorValidations(params = {}) {
+  const response = await api.get('/professor/validations', { params })
   return getData(response)
 }
 
@@ -33,20 +50,11 @@ export async function requestProfessorChanges(validationId, payload) {
   return getData(response)
 }
 
-export async function certifyProfessorPortfolio(studentId) {
-  const response = await api.patch(`/professor/students/${studentId}/certify-portfolio`)
-  return getData(response)
-}
-
-export async function sendProfessorMessage(studentId, payload) {
-  const response = await api.post(`/professor/students/${studentId}/messages`, payload)
-  return getData(response)
-}
-
-export async function createProfessorRecommendation(studentId, payload) {
-  const response = await api.post(`/professor/students/${studentId}/recommendations`, payload)
-  return getData(response)
-}
+/*
+|--------------------------------------------------------------------------
+| Portfolios professeur
+|--------------------------------------------------------------------------
+*/
 
 export async function getProfessorPortfolios(params = {}) {
   const response = await api.get('/professor/portfolios', { params })
@@ -64,7 +72,11 @@ export async function validateProfessorPortfolio(portfolioId) {
 }
 
 export async function requestPortfolioChanges(portfolioId, payload) {
-  const response = await api.patch(`/professor/portfolios/${portfolioId}/request-changes`, payload)
+  const response = await api.patch(
+    `/professor/portfolios/${portfolioId}/request-changes`,
+    payload
+  )
+
   return getData(response)
 }
 
@@ -76,10 +88,16 @@ export async function exportProfessorPortfolioPdf(portfolioId) {
   return response.data
 }
 
-export async function getProfessorValidations(params = {}) {
-  const response = await api.get('/professor/validations', { params })
+export async function certifyProfessorPortfolio(studentId) {
+  const response = await api.patch(`/professor/students/${studentId}/certify-portfolio`)
   return getData(response)
 }
+
+/*
+|--------------------------------------------------------------------------
+| Messages professeur
+|--------------------------------------------------------------------------
+*/
 
 export async function getProfessorConversations() {
   const response = await api.get('/professor/messages/conversations')
@@ -92,9 +110,24 @@ export async function getProfessorConversationMessages(conversationId) {
 }
 
 export async function sendProfessorConversationMessage(conversationId, payload) {
-  const response = await api.post(`/professor/messages/conversations/${conversationId}`, payload)
+  const response = await api.post(
+    `/professor/messages/conversations/${conversationId}`,
+    payload
+  )
+
   return getData(response)
 }
+
+export async function sendProfessorMessage(studentId, payload) {
+  const response = await api.post(`/professor/students/${studentId}/messages`, payload)
+  return getData(response)
+}
+
+/*
+|--------------------------------------------------------------------------
+| Notifications professeur
+|--------------------------------------------------------------------------
+*/
 
 export async function getProfessorNotifications(params = {}) {
   const response = await api.get('/professor/notifications', { params })
@@ -116,6 +149,12 @@ export async function deleteProfessorNotification(notificationId) {
   return getData(response)
 }
 
+/*
+|--------------------------------------------------------------------------
+| Recommandations professeur
+|--------------------------------------------------------------------------
+*/
+
 export async function getProfessorRecommendations(params = {}) {
   const response = await api.get('/professor/recommendations', { params })
   return getData(response)
@@ -126,7 +165,20 @@ export async function createProfessorRecommendationRequest(payload) {
   return getData(response)
 }
 
+export async function createProfessorRecommendation(studentId, payload) {
+  const response = await api.post(
+    `/professor/students/${studentId}/recommendations`,
+    payload
+  )
+
+  return getData(response)
+}
+
 export async function updateProfessorRecommendation(recommendationId, payload) {
-  const response = await api.patch(`/professor/recommendations/${recommendationId}`, payload)
+  const response = await api.patch(
+    `/professor/recommendations/${recommendationId}`,
+    payload
+  )
+
   return getData(response)
 }
