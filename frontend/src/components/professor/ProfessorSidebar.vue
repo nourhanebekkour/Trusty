@@ -2,7 +2,7 @@
   <aside class="professor-sidebar">
     <div class="professor-sidebar__content">
       <div class="professor-sidebar__section">
-        <p class="professor-sidebar__section-title">Espace professeur</p>
+        <p class="professor-sidebar__section-title">Professor area</p>
 
         <nav class="professor-sidebar__nav">
           <RouterLink
@@ -15,10 +15,7 @@
             <span class="professor-sidebar__icon"></span>
             <span class="professor-sidebar__label">{{ item.label }}</span>
 
-            <span
-              v-if="item.badge"
-              class="professor-sidebar__badge"
-            >
+            <span v-if="item.badge" class="professor-sidebar__badge">
               {{ item.badge }}
             </span>
           </RouterLink>
@@ -33,7 +30,7 @@
         :class="{ 'professor-sidebar__link--active': isActive('/settings') }"
       >
         <span class="professor-sidebar__icon"></span>
-        <span class="professor-sidebar__label">Paramètres</span>
+        <span class="professor-sidebar__label">Settings</span>
       </RouterLink>
 
       <button
@@ -41,7 +38,7 @@
         type="button"
         @click="handleLogout"
       >
-        Déconnexion
+        Logout
       </button>
     </div>
   </aside>
@@ -77,7 +74,7 @@ const navItems = [
     path: '/professor/notifications',
   },
   {
-    label: 'Recommandations',
+    label: 'Recommendations',
     path: '/professor/recommendations',
   },
 ]
