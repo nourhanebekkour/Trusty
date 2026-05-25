@@ -80,9 +80,9 @@ const userInitials = computed(() => {
 }
 
 .navbar {
-  height: 56px;
-  background: #3D3D3D;
-  border-bottom: 1px solid #3D3D3D;
+  height: 60px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -103,7 +103,7 @@ const userInitials = computed(() => {
 .logo-text {
   font-size: 16px;
   font-weight: 700;
-  color: #5C8C6A;
+  color: var(--color-text);
   letter-spacing: 1.5px;
 }
 
@@ -129,15 +129,15 @@ const userInitials = computed(() => {
   right: 0px;
   width: 8px;
   height: 8px;
-  background: #5C8C6A;
+  background: var(--color-accent);
   border-radius: 50%;
-  border: 1.5px solid white;
+  border: 1.5px solid var(--color-surface);
 }
 
 .divider {
   width: 1px;
   height: 32px;
-  background: #E8E6DF;
+  background: var(--color-border);
 }
 
 .user-info {
@@ -160,7 +160,7 @@ const userInitials = computed(() => {
 
 .user-role {
   font-size: 12px;
-  color: #D6EDE8;
+  color: var(--color-text-muted);
 }
 
 /* Avatar initiales */
@@ -168,8 +168,8 @@ const userInitials = computed(() => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 2px solid #D6EDE8;
-  background: #5C8C6A;
+  border: 2px solid var(--color-border-hover);
+  background: var(--color-accent);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
