@@ -137,7 +137,7 @@ async function attachToJira(issueKey) {
 
 async function main() {
     if (!fs.existsSync(reportPath)) {
-        console.error('Rapport introuvable, lance npm test:report dabord');
+        console.error('Rapport introuvable, il faut lancer npm test:report dabord');
         process.exit(1);
     }
 
