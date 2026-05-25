@@ -5,5 +5,18 @@ export default {
     testEnvironment: "node",
     transformIgnorePatterns: [
         "node_modules/(?!(.prisma|@prisma)/)"
+    ],
+    reporters: [
+        "default",
+        ["jest-html-reporter", {
+            pageTitle: "Rapport de Tests",
+            outputPath: "test-reports/test-report.html",
+            includeFailureMsg: true,
+            includeSuiteFailure: true,
+            includeConsoleLog: false,
+            dateFormat: "dd/mm/yyyy HH:MM:ss",
+            sort: "status",
+            theme: "defaultTheme"
+        }]
     ]
 };
