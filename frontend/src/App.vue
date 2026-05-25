@@ -126,13 +126,13 @@ html, body {
   width: 100%;
   align-items: stretch;
   min-height: 0;
-  background-color: #F4F2EC;
+  background-color: var(--color-background);
 }
 
 .content {
   flex: 1;
   padding: 0px;
-  background-color: #0D2B2B;
+  background-color: var(--color-background);
   overflow-y: auto;
   min-height: 0;
 }
