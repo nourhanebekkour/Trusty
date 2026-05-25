@@ -47,6 +47,7 @@
     "nodemailer": "^8.0.7",
     "nodemon": "^3.1.14",
     "swagger-ui-express": "^5.0.1",
+    "swot-node": "^2.0.1489",
     "zod": "^4.4.3"
   },
   "devDependencies": {

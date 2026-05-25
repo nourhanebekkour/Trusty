@@ -3,14 +3,17 @@ import * as authentificationController from './authentification.controller.js';
 import { authMiddleware } from '#Middlewares/auth.middleware.js';
 import { requireRole } from '#Middlewares/roles.middleware.js';
 import validate from '#Middlewares/validate.middleware.js';
-import { registerSchema,loginSchema,forgotPasswordSchema,resetPasswordSchema} from './authentification.validator.js';
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, createUserAdminSchema, requestAccountSchema, verifyEmailSchema } from './authentification.validator.js';
 import { loginLimiter, forgotPasswordLimiter } from '#Middlewares/rateLimiter.middleware.js';
 
 
 const router = Router();
 
-// POST /api/auth/register → inscription
+// POST /api/auth/register → inscription unifiée (ETUDIANT, PROFESSEUR, PROFESSIONNEL)
 router.post('/register', validate(registerSchema), authentificationController.register);
+
+// POST /api/auth/verify-email → vérification de l'adresse email
+router.post('/verify-email', validate(verifyEmailSchema), authentificationController.verifierEmail);
 
 // POST /api/auth/login → connexion, stocke les tokens dans cookies HttpOnly
 router.post('/login', loginLimiter, validate(loginSchema), authentificationController.login);
@@ -24,20 +27,22 @@ router.post('/logout', authMiddleware, authentificationController.logout);
 router.post('/forgot-password', forgotPasswordLimiter, validate(forgotPasswordSchema), authentificationController.oublierMDP);
 router.post('/reset-password', validate(resetPasswordSchema), authentificationController.changerMDP);
 
-// ---- ROUTES PROTÉGÉES ----
-// authMiddleware vérifie le token avant le controller
+// POST /api/auth/request-account → demande de création de compte (étudiant/prof sans compte)
+router.post('/request-account', validate(requestAccountSchema), authentificationController.demanderCreationCompte);
 
-// GET /api/auth/me → infos du compte connecté
+// ---- ROUTES PROTÉGÉES ----
 router.get('/me', authMiddleware, authentificationController.getMe);
 
 // ---- ROUTES ADMIN ----
-// authMiddleware + requireRole vérifient token ET rôle
-// GET /api/auth/admin-only → accessible uniquement aux admins
-router.get(
-  '/admin-only',
+router.get('/admin-only', authMiddleware, requireRole('ADMINISTRATEUR'), (_, res) => res.json({ message: 'Accès admin' }));
+
+// POST /api/auth/admin/create-user → création d'un compte par l'admin
+router.post(
+  '/admin/create-user',
   authMiddleware,
   requireRole('ADMINISTRATEUR'),
-  (req, res) => res.json({ message: 'Accès admin' })
+  validate(createUserAdminSchema),
+  authentificationController.creerUtilisateurAdmin
 );
 
 export default router;
