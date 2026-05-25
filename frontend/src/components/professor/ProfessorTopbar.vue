@@ -7,7 +7,7 @@
       </div>
 
       <span class="professor-topbar__mode">
-        Consultation publique
+        Professor workspace
       </span>
     </div>
 
@@ -21,7 +21,7 @@
       <div class="professor-topbar__user">
         <div class="professor-topbar__info">
           <span class="professor-topbar__name">{{ fullName }}</span>
-          <span class="professor-topbar__role">Professeur</span>
+          <span class="professor-topbar__role">Professor</span>
         </div>
 
         <div class="professor-topbar__avatar">
@@ -40,18 +40,18 @@ import { useAuthStore } from '@/stores/authstore'
 const router = useRouter()
 const auth = useAuthStore()
 
-const notificationCount = ref(3)
+const notificationCount = ref(0)
 
 const fullName = computed(() => {
   if (!auth.user) {
-    return 'Professeur'
+    return 'Professor'
   }
 
-  const firstName = auth.user.prenom || ''
-  const lastName = auth.user.nom || ''
+  const firstName = auth.user.prenom || auth.user.firstName || ''
+  const lastName = auth.user.nom || auth.user.lastName || ''
   const name = `${firstName} ${lastName}`.trim()
 
-  return name || 'Professeur'
+  return name || 'Professor'
 })
 
 const initials = computed(() => {
@@ -59,10 +59,10 @@ const initials = computed(() => {
     return 'P'
   }
 
-  const firstName = auth.user.prenom?.charAt(0) || ''
-  const lastName = auth.user.nom?.charAt(0) || ''
+  const firstName = auth.user.prenom || auth.user.firstName || ''
+  const lastName = auth.user.nom || auth.user.lastName || ''
 
-  return `${firstName}${lastName}`.toUpperCase() || 'P'
+  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || 'P'
 })
 
 function goToNotifications() {
