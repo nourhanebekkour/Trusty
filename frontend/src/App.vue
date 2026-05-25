@@ -20,7 +20,7 @@ onMounted(async () => {
 // Routes qui utilisent le layout complet (sidebar + navbar)
 const studentRoutes = [
   'dashboard', 'notifications', 'profile', 'projets',
-  'settings', 'recommendations', 'stage', 'modele', 'portfolio'
+  'settings', 'recommendations', 'stage', 'portfolio','activites'
 ]
 
 const isPublicPage = computed(() =>
@@ -31,8 +31,8 @@ const isAdminPage = computed(() => route.path.startsWith('/admin'))
 
 const isStudentPage = computed(() => {
   const studentPaths = [
-    '/dashboard', '/notifications', '/profile', '/projets',
-    '/settings', '/recommendations', '/stage', '/modele', '/portfolio'
+    '/dashboard', '/notifications', '/profile', '/projets','/parcours',
+    '/settings', '/recommendations', '/stage', '/activites', '/portfolio'
   ]
   return studentPaths.some(p => route.path.startsWith(p))
 })

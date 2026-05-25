@@ -9,11 +9,12 @@ import StageList from '@/views/Etudiant/StageList.vue'
 import Recommendations from '@/views/Etudiant/Recommendations.vue'
 import Notification from '@/views/Etudiant/Notification.vue'
 import Profile from '@/views/Etudiant/Profile.vue'
-import Modele from '@/views/Etudiant/Modele.vue'
+import activites from '@/views/Etudiant/activites.vue'
 import Portfolio from '@/views/Etudiant/Portfolio.vue'
 import ProfessionalView from '@/views/ProfessionalView.vue'
 import ProfessorView from '@/views/ProfessorView.vue'
 import { useAuthStore } from '@/stores/authstore'
+import Parcours from '../views/Etudiant/Parcours.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,7 +27,7 @@ const router = createRouter({
     {
       path: '/about',
       name: 'about',
-      component: () => import('../views/AboutView.vue'),
+      component: () => import('../views/Etudiant/Parcours.vue'),
     },
     {
       path: '/login',
@@ -111,14 +112,19 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/modele',
-      name: 'modele',
-      component: Modele,
+      path: '/parcours',
+      name: 'parcours',
+      component: Parcours,
     },
     {
       path: '/portfolio',
       name: 'portfolio',
       component: Portfolio,
+    },
+    {
+      path: '/activites',
+      name: 'activites',
+      component: activites,
     },
     {
       path: '/professional',
@@ -137,11 +143,18 @@ router.beforeEach(async (to, from) => {
   const authStore = useAuthStore()
 
   if (!authStore.user) {
-    await authStore.fetchUser()   // ← appel API /auth/me
+    await authStore.fetchUser()
+  }
+
+  // ── Redirige admin vers /admin/dashboard ──
+  if (authStore.isAuthenticated && authStore.isAdmin) {
+    if (!to.path.startsWith('/admin')) {
+      return '/admin/dashboard'
+    }
   }
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return '/login'   // ← redirige si pas authentifié
+    return '/login'
   }
 })
 // ── Auth guard ─────────────────────────────────────────
