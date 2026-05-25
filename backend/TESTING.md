@@ -80,7 +80,7 @@ backend-lint → backend-test → backend-run
 | Job | Ce qu'il fait |
 |---|---|
 | `backend-lint` | Vérifie la qualité du code avec ESLint |
-| `backend-test` | Lance PostgreSQL + MinIO, applique les migrations, exécute `npm test` |
+| `backend-test` | Lance PostgreSQL + MinIO, applique les migrations et exécute `npm test` |
 | `backend-run` | Vérifie que le serveur démarre sans erreur (smoke test) |
 | `backend-test-report` | Relance les tests, envoie le rapport par email et crée un ticket Jira |
 
