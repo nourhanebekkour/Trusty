@@ -110,7 +110,8 @@ async function handleLogout() {
 /* Dans SideBar.vue */
 .sidebar {
   width: 235px;
-  background-color: #3D3D3D;
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -137,10 +138,10 @@ async function handleLogout() {
 }
 
 .toggle-btn {
-  background: #0D2B2B;
+  background: var(--color-background-mute);
   border: none;
   cursor: pointer;
-  color: #D6EDE8;
+  color: var(--color-text);
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left:14px ;
@@ -152,7 +153,7 @@ async function handleLogout() {
 }
 
 .toggle-btn:hover {
-  background-color: #EDEADE;
+  background-color: var(--color-background-soft);
 }
 
 .sidebar-nav {
@@ -172,8 +173,8 @@ async function handleLogout() {
   box-sizing: border-box;
   height: 40px; 
   padding: 0 12px; 
-  color: #D6EDE8;
-  background-color: #0D2B2B;
+  color: var(--color-text-muted);
+  background-color: transparent;
   font-family: Inter, sans-serif; 
   font-size: 14px; 
   line-height: 22px; 
@@ -192,12 +193,14 @@ async function handleLogout() {
 }
 
 .nav-item:hover {
-  background: #E5E1D5; /* Couleur hover légèrement plus foncée */
+  background: var(--color-background-mute);
+  color: var(--color-text);
 }
 
 .router-link-active {
-  background-color: #5C8C6A;
-  color: white;
+  background-color: var(--color-background-mute);
+  color: var(--color-accent);
+  font-weight: 600;
 }
 
 .router-link-active .nav-icon {
@@ -213,7 +216,7 @@ async function handleLogout() {
 
 .sidebar-bottom {
   padding: 10px 8px; 
-  border-top: 1px solid rgba(0,0,0,0.1);  
+  border-top: 1px solid var(--color-border);  
   display: flex;
   flex-direction: column;
   gap: 4px;  
@@ -229,6 +232,6 @@ async function handleLogout() {
 }
 
 .logout-btn:hover {
-  color: red;
+  color: var(--color-danger);
 }
 </style>
