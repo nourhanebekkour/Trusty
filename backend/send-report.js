@@ -84,7 +84,7 @@ async function postToJira() {
                                 content: [
                                     {
                                         type: 'text',
-                                        text: "Le rapport complet est joint en pièce jointe dans l'email envoyé simultanément.",
+                                        text: "Le rapport complet est joint en pièce jointe à ce ticket et envoyé simultanément par email.",
                                     },
                                 ],
                             },
@@ -102,6 +102,37 @@ async function postToJira() {
     }
 
     console.log(`Ticket Jira créé : ${data.key}`);
+    return data.key;
+}
+
+async function attachToJira(issueKey) {
+    const credentials = Buffer.from(
+        `${process.env.JIRA_EMAIL}:${process.env.JIRA_API_TOKEN}`
+    ).toString('base64');
+
+    const formData = new FormData();
+    const fileBuffer = fs.readFileSync(reportPath);
+    const blob = new Blob([fileBuffer], { type: 'text/html' });
+    formData.append('file', blob, 'test-report.html');
+
+    const res = await fetch(
+        `${process.env.JIRA_URL}/rest/api/3/issue/${issueKey}/attachments`,
+        {
+            method: 'POST',
+            headers: {
+                Authorization: `Basic ${credentials}`,
+                'X-Atlassian-Token': 'no-check',
+            },
+            body: formData,
+        }
+    );
+
+    if (!res.ok) {
+        const data = await res.json();
+        throw new Error(`Erreur pièce jointe Jira: ${JSON.stringify(data)}`);
+    }
+
+    console.log(`Rapport HTML joint au ticket ${issueKey}`);
 }
 
 async function main() {
@@ -112,10 +143,12 @@ async function main() {
 
     const reportHtml = fs.readFileSync(reportPath, 'utf-8');
 
-    await Promise.all([
-        sendEmail(reportHtml),
+    const [issueKey] = await Promise.all([
         postToJira(),
+        sendEmail(reportHtml),
     ]);
+
+    await attachToJira(issueKey);
 }
 
 main().catch((err) => {
