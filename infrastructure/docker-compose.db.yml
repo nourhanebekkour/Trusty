@@ -1,0 +1,42 @@
+services:
+  database:
+    image: postgres:16-alpine
+    container_name: trusty-database
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - donnees_postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - trusty_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: trusty-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "5050:80"
+    networks:
+      - trusty_network
+    depends_on:
+      database:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  trusty_network:
+    driver: bridge
+
+volumes:
+  donnees_postgres:
