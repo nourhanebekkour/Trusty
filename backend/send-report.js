@@ -11,7 +11,7 @@ dotenv.config({ path: '.env.test' });
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Construit le chemin absolu vers le fichier 
-// backend/test-reports/test-report.html
+// backend/test-reports/test-report.html 
 const reportPath = path.join(__dirname, 'test-reports', 'test-report.html');
 
 
