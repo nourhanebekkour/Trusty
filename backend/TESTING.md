@@ -58,8 +58,8 @@ backend/Tests/
 
 | Commande | Description |
 |---|---|
-| `npm test` | Lance tous les tests + génère le rapport HTML |
-| `npm run test:report` | Idem + sauvegarde les logs dans `test-reports/test-output.log` |
+| `npm test` | Lance tous les tests + génère le rapport HTML en local |
+| `npm run test:report` | Idem + envoie le rapport par email + crée un ticket Jira |
 
 ### Rapport HTML
 Après `npm test`, le rapport est généré dans :
@@ -74,15 +74,17 @@ Le workflow `.github/workflows/ci.yml` exécute automatiquement les tests sur ch
 
 ```
 backend-lint → backend-test → backend-run
+                           ↘ backend-test-report  (push main/dev uniquement)
 ```
 
 | Job | Ce qu'il fait |
-|---|---| 
+|---|---|
 | `backend-lint` | Vérifie la qualité du code avec ESLint |
 | `backend-test` | Lance PostgreSQL + MinIO, applique les migrations, exécute `npm test` |
 | `backend-run` | Vérifie que le serveur démarre sans erreur (smoke test) |
+| `backend-test-report` | Relance les tests, envoie le rapport par email et crée un ticket Jira |
 
-Le rapport HTML généré dans `backend-test` est uploadé comme artifact GitHub Actions (conservé 30 jours) et téléchargeable depuis l'onglet **Actions** du dépôt.
+`backend-test-report` ne tourne que sur les **push** (pas les PR) vers `main` ou `dev`. Il nécessite les secrets GitHub suivants : `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `JIRA_EMAIL`, `JIRA_API_TOKEN`, `JIRA_URL`, `JIRA_PROJECT_KEY`.
 
 ## Configuration Jest
 
