@@ -146,8 +146,10 @@ model Utilisateur {
   email_verifie           Boolean   @default(false)
   token_reinitialisation  String?   @db.VarChar(255)
   date_expiration_token   DateTime?
-  refresh_token           String?   @db.VarChar(500)
-  date_expiration_refresh DateTime?
+  refresh_token                 String?   @db.VarChar(500)
+  date_expiration_refresh       DateTime?
+  token_reinitialisation_email  String?   @db.VarChar(255)
+  date_expiration_token_email   DateTime?
 
   // Relations
   etudiant                Etudiant?
@@ -184,7 +186,7 @@ model Administrateur {
 model Etudiant {
   id_etudiant               String    @id
   numero_etudiant           String?    @unique @db.VarChar(20)
-  filiere                   Filiere
+  filiere                   Filiere?
   annee                     Int?
   date_naissance            DateTime?
   adresse                   String?   @db.VarChar(255)
