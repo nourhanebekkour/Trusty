@@ -28,7 +28,7 @@ async function sendEmail(reportHtml) {
     // envoi du mail
     await transporter.sendMail({
         from: process.env.GMAIL_USER,
-        to: 'email.chef@gmail.com, email.adjoint@gmail.com',
+        to: 'nourhan221app@gmail.com, email.adjoint@gmail.com',
         subject: 'Rapport de Tests Backend',
         html: reportHtml,
         attachments: [
@@ -64,7 +64,7 @@ async function postToJira() {
             body: JSON.stringify({
                 fields: {
                     project: { key: process.env.JIRA_PROJECT_KEY },
-                    summary: 'Rapport de tests backend',
+                    summary: `[Tests Backend] Rapport automatique du ${new Date().toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
                     issuetype: { name: 'Task' },
                     description: {
                         type: 'doc',
