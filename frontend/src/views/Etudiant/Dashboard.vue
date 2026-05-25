@@ -68,9 +68,7 @@ onMounted(async () => {
   loadingRecos.value    = false
 })
 
-function generateUrl() {
-  console.log('generateUrl — endpoint à définir')
-}
+
 </script>
 
 <style scoped>
