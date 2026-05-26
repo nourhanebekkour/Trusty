@@ -25,29 +25,34 @@
     <div v-else class="project-grid">
       <div
         v-for="project in projects"
-        :key="project.id_projet"
+        :key="projectId(project)"
         class="project-card"
-        :class="getProjectCardClass(project.status_validation)"
-        @click="$router.push(`/projets/${project.id_projet}`)"
+        :class="getProjectCardClass(projectStatus(project))"
+        @click="$router.push(`/projets/${projectId(project)}`)"
       >
         <div class="project-card__header">
-          <span class="badge badge--type">{{ formatTypeProjet(project.type_projet) }}</span>
-          <span class="badge badge--status" :class="getStatusBadgeClass(project.status_validation)">
-            <img v-if="project.status_validation === 'VALIDE'" src="@/assets/icons/trusty.svg" class="icon icon--xs" alt="" />
+          <span class="badge badge--type">{{ projectType(project) }}</span>
+          <span class="badge badge--status" :class="getStatusBadgeClass(projectStatus(project))">
+            <img
+              v-if="projectStatus(project) === 'Certifié'"
+              src="@/assets/icons/trusty.svg"
+              class="icon icon--xs"
+              alt=""
+            />
             <span v-else class="badge__dot" />
-            {{ formatStatut(project.status_validation) }}
+            {{ projectStatus(project) }}
           </span>
         </div>
         <h3 class="project-card__title">{{ project.titre }}</h3>
-        <p class="project-card__date">{{ formatDate(project.date_debut) }}</p>
+        <p class="project-card__date">{{ formatDate(projectDate(project)) }}</p>
         <p class="project-card__description">{{ project.description }}</p>
         <div class="project-card__footer">
           <div class="project-card__icons">
-            <span v-for="t in project.technologies" :key="t.technologie.nom" class="tag">
-              {{ t.technologie.nom }}
+            <span v-for="tag in projectTags(project)" :key="tag" class="tag">
+              {{ tag }}
             </span>
           </div>
-          <button class="btn btn--link" @click.stop="$router.push(`/projets/${project.id_projet}`)">
+          <button class="btn btn--link" @click.stop="$router.push('/projets')">
             Détails ↗
           </button>
         </div>
@@ -59,35 +64,59 @@
 <script setup>
 defineProps({ projects: Array, loading: Boolean })
 
-// status_validation : EN_ATTENTE | VALIDE | REJETE  (enum StatusValidation)
-const getStatusBadgeClass = (s) => ({
-  VALIDE:     'badge--status-ok',
+const projectId = (project) => project.id_projet ?? project.id
+
+const projectType = (project) =>
+  project.type ?? formatTypeProjet(project.type_projet)
+
+const projectDate = (project) =>
+  project.date_debut ?? project.dateDebut
+
+const projectTags = (project) => {
+  if (Array.isArray(project.tags)) return project.tags
+  if (Array.isArray(project.technologies)) {
+    return project.technologies
+      .map(item => item.technologie?.nom ?? item.nom ?? item)
+      .filter(Boolean)
+  }
+  return []
+}
+
+const projectStatus = (project) =>
+  project.statut ?? formatStatut(project.status_validation)
+
+const getStatusBadgeClass = (status) => ({
+  VALIDE: 'badge--status-ok',
+  'Certifié': 'badge--status-ok',
+  'En cours': 'badge--status-progress',
   EN_ATTENTE: 'badge--status-wait',
-  REJETE:     'badge--status-error',
-}[s] ?? '')
+  'En attente': 'badge--status-wait',
+  REJETE: 'badge--status-error',
+  Rejeté: 'badge--status-error',
+}[status] ?? '')
 
-const getProjectCardClass = (s) => s === 'EN_ATTENTE' ? 'project-card--pending' : ''
+const getProjectCardClass = (status) =>
+  ['EN_ATTENTE', 'En attente'].includes(status) ? 'project-card--pending' : ''
 
-const formatStatut = (s) => ({
-  VALIDE:     'Certifié',
+const formatStatut = (status) => ({
+  VALIDE: 'Certifié',
   EN_ATTENTE: 'En attente',
-  REJETE:     'Rejeté',
-}[s] ?? s)
+  REJETE: 'Rejeté',
+}[status] ?? status)
 
-// type_projet : enum TypeProjet
-const formatTypeProjet = (t) => ({
-  MODULE:    'Module',
-  PFA:       'PFA',
-  PFE:       'PFE',
-  STAGE:     'Stage',
+const formatTypeProjet = (type) => ({
+  MODULE: 'Module',
+  PFA: 'PFA',
+  PFE: 'PFE',
+  STAGE: 'Stage',
   PERSONNEL: 'Personnel',
   HACKATHON: 'Hackathon',
   INTEGRATION: 'Intégration',
-  AUTRE:     'Autre',
-}[t] ?? t)
+  AUTRE: 'Autre',
+}[type] ?? type)
 
-const formatDate = (d) =>
-  d ? new Date(d).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : ''
+const formatDate = (date) =>
+  date ? new Date(date).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : ''
 </script>
 
 <style scoped>

@@ -1,6 +1,6 @@
 <template>
   <div class="admin-layout">
-    <AppTopbar />
+    <AppTopbar :notif-count="3" />
     <AppSidebar />
 
     <main class="admin-layout__main">

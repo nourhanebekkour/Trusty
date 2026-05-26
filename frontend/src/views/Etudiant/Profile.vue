@@ -60,7 +60,7 @@ import ProfileRepos        from '@/components/profile/ProfileRepos.vue'
 import ProfileProjects     from '@/components/profile/ProfileProjects.vue'
 import ProfileEditModal    from '@/components/profile/ProfileEditModal.vue'
 import SkillModal          from '@/components/profile/SkillModal.vue'
-import { getProfile, saveProfile, addSkill, uploadAvatar } from '@/services/profileservices'
+import { getProfile, patchProfile, addSkill, uploadAvatar } from '@/services/profileservices'
 
 const authStore       = useAuthStore()
 const user            = ref(null)
@@ -100,7 +100,7 @@ const closeEditModal = () => { showEditModal.value = false }
 const onSaveProfile = async (formData) => {
   saving.value = true
   try {
-    const res      = await saveProfile(user.value.id_utilisateur, formData)
+    const res      = await patchProfile(user.value.id_utilisateur, formData)
     user.value     = res.data
     authStore.user = res.data
     closeEditModal()
@@ -131,9 +131,8 @@ const onAvatarChange = async (file) => {
 // ── Compétences ───────────────────────────────────────────────────────────────
 
 const onSkillAdded = async (skillName) => {
-  const idEtudiant = user.value.id_utilisateur
   try {
-    const res = await addSkill(idEtudiant, skillName)
+    const res = await addSkill(skillName)
     if (!user.value.etudiant) user.value.etudiant = {}
     if (!user.value.etudiant.competences) user.value.etudiant.competences = []
     user.value.etudiant.competences.push(res.data)
@@ -152,6 +151,8 @@ const onSkillAdded = async (skillName) => {
 const generatePortfolio = () => alert('Fonctionnalité bientôt disponible !')
 
 onMounted(loadProfile)
+
+defineExpose({ user })
 </script>
 
 <style scoped>

@@ -1,4 +1,4 @@
-import api from '@/api'
+import api from '@/services/api'
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 export function getAuteurLabel(auteur) {
@@ -64,9 +64,42 @@ const MOCK_RECOS = [
     id_recommandation: 'rec2',
     message:           'Excellent travail en équipe, très bon niveau technique.',
     status:            'VALIDE',
-    auteur: { nom: 'Martin', prenom: 'Jean', role: 'PROFESSEUR', specialite: 'Génie logiciel', departement: 'SIC' },
+    auteur: { nom: 'Martin', prenom: 'Jean', role: 'PROFESSEUR', poste: 'Professeur', specialite: 'Génie logiciel', departement: 'SIC' },
   },
 ]
+
+function normalizeProject(project) {
+  const tags = Array.isArray(project.tags)
+    ? project.tags
+    : (project.technologies ?? []).map(item => item.technologie?.nom ?? item.nom ?? item).filter(Boolean)
+
+  const statut = project.statut ?? ({
+    VALIDE: 'Certifié',
+    EN_ATTENTE: 'En attente',
+    REJETE: 'Rejeté',
+  }[project.status_validation] ?? project.status_validation)
+
+  return {
+    ...project,
+    id: project.id ?? project.id_projet,
+    type: project.type ?? project.type_projet,
+    statut,
+    dateDebut: project.dateDebut ?? project.date_debut,
+    tags,
+  }
+}
+
+function normalizeReco(reco) {
+  const auteur = reco.auteur ?? {}
+  return {
+    ...reco,
+    id: reco.id ?? reco.id_recommandation,
+    auteur: {
+      ...auteur,
+      poste: auteur.poste ?? auteur.specialite ?? auteur.role ?? '',
+    },
+  }
+}
 
 function isEmpty(value) {
   if (value === null || value === undefined) return true
@@ -122,7 +155,7 @@ export async function fetchProjects(idEtudiant) {
 
     if (isEmpty(data)) {
       console.warn('[fetchProjects] réponse vide → mock')
-      return MOCK_PROJECTS
+      return MOCK_PROJECTS.map(normalizeProject)
     }
 
     const filtered = data.reduce((acc, projet) => {
@@ -142,13 +175,13 @@ export async function fetchProjects(idEtudiant) {
 
     if (isEmpty(filtered)) {
       console.warn('[fetchProjects] aucun projet → mock')
-      return MOCK_PROJECTS
+      return MOCK_PROJECTS.map(normalizeProject)
     }
 
-    return filtered
+    return filtered.map(normalizeProject)
   } catch (err) {
     console.error('[fetchProjects] erreur API → mock', err)
-    return MOCK_PROJECTS
+    return MOCK_PROJECTS.map(normalizeProject)
   }
 }
 
@@ -162,18 +195,18 @@ export async function fetchRecos(idEtudiant) {
 
     if (isEmpty(data)) {
       console.warn('[fetchRecos] réponse vide → mock')
-      return MOCK_RECOS
+      return MOCK_RECOS.map(normalizeReco)
     }
 
     const valides = data.filter(r => r.status === 'VALIDE')
     if (isEmpty(valides)) {
       console.warn('[fetchRecos] aucune reco VALIDE → mock')
-      return MOCK_RECOS
+      return MOCK_RECOS.map(normalizeReco)
     }
 
-    return valides
+    return valides.map(normalizeReco)
   } catch (err) {
     console.error('[fetchRecos] erreur API → mock', err)
-    return MOCK_RECOS
+    return MOCK_RECOS.map(normalizeReco)
   }
 }

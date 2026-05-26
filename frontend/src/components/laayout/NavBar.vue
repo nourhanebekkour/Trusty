@@ -20,8 +20,7 @@
             <div class="user-role">{{ userRole }}</div>
           </div>
 
-          <!-- Avatar image si disponible, sinon initiales -->
-          <div class="user-avatar" v-if="!userAvatar">
+          <div v-if="!userAvatar" class="user-avatar">
             {{ userInitials }}
           </div>
           <img
@@ -37,36 +36,53 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'  
+import { computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/authstore'
-import iconTrusty        from '@/assets/icons/trusty.svg'
+import iconTrusty from '@/assets/icons/trusty.svg'
 import iconNotifications from '@/assets/icons/notifications.svg'
 
 const authStore = useAuthStore()
 
+onMounted(async () => {
+  if (typeof authStore.fetchProfile === 'function') {
+    await authStore.fetchProfile()
+  } else if (!authStore.user && typeof authStore.fetchUser === 'function') {
+    await authStore.fetchUser()
+  }
+})
 
 const userName = computed(() => {
-  const u = authStore.user
-  if (!u) return ''
-  return `${u.prenom ?? ''} ${u.nom ?? ''}`.trim() || 'Utilisateur'
+  const user = authStore.user
+  if (!user) return 'YEL'
+  return user.name || `${user.prenom ?? ''} ${user.nom ?? ''}`.trim() || 'YEL'
 })
 
 const userRole = computed(() => {
+  const user = authStore.user
   const roles = {
-    ETUDIANT:       'Étudiant',
-    PROFESSEUR:     'Professeur',
+    ETUDIANT: 'Étudiant',
+    PROFESSEUR: 'Professeur',
     ADMINISTRATEUR: 'Administrateur',
-    PROFESSIONNEL:  'Professionnel',
+    PROFESSIONNEL: 'Professionnel',
   }
-  return roles[authStore.user?.role] ?? 'Étudiant'
+
+  return user?.role ?? user?.specialite ?? roles.ETUDIANT
 })
 
-const userAvatar = computed(() => authStore.user?.photo ?? null)
+const userAvatar = computed(() => authStore.user?.avatar ?? authStore.user?.photo ?? null)
 
 const userInitials = computed(() => {
-  const p = authStore.user?.prenom?.[0] ?? ''
-  const n = authStore.user?.nom?.[0]    ?? ''
-  return (p + n).toUpperCase() || '?'
+  const user = authStore.user
+  if (!user) return ''
+
+  const source = user.name || `${user.prenom ?? ''} ${user.nom ?? ''}`.trim()
+  return source
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0])
+    .join('')
+    .toUpperCase()
 })
 </script>
 
@@ -125,8 +141,8 @@ const userInitials = computed(() => {
 
 .notif-badge {
   position: absolute;
-  top: 0px;
-  right: 0px;
+  top: 0;
+  right: 0;
   width: 8px;
   height: 8px;
   background: var(--color-accent);
@@ -163,7 +179,6 @@ const userInitials = computed(() => {
   color: var(--color-text-muted);
 }
 
-/* Avatar initiales */
 .user-avatar {
   width: 40px;
   height: 40px;
@@ -179,7 +194,6 @@ const userInitials = computed(() => {
   flex-shrink: 0;
 }
 
-/* Avatar image */
 .user-avatar--img {
   object-fit: cover;
   background: transparent;

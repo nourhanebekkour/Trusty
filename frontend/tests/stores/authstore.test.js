@@ -1,10 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-<<<<<<< HEAD:frontend/tests/authstore.test.js
-import { useAuthStore } from '../src/stores/auth'
-=======
 import { useAuthStore } from '../../src/stores/authstore'
->>>>>>> d8683d494edc716797f461648f2c60f062f8a2ef:frontend/tests/stores/authstore.test.js
 
 // ─── Mock du service auth ─────────────────────────────────────────────────────
 // ✅
@@ -13,11 +9,7 @@ vi.mock('../../src/services/authservices', () => ({
   getProfile: vi.fn(),
 }))
 
-<<<<<<< HEAD:frontend/tests/authstore.test.js
-import { login, getProfile } from '../src/services/auth.service.jgrs'
-=======
 import { login, getProfile } from '../../src/services/authservices'
->>>>>>> d8683d494edc716797f461648f2c60f062f8a2ef:frontend/tests/stores/authstore.test.js
 
 // ─── Mock localStorage ────────────────────────────────────────────────────────
 const localStorageMock = (() => {
