@@ -1,5 +1,68 @@
 import api from './api'
 
+const ENDPOINTS = {
+  me: [
+    '/auth/me',
+    '/me',
+    '/profile',
+    '/users/me',
+    '/utilisateurs/me'
+  ],
+
+  internships: [
+    '/professional/internships',
+    '/professionnel/stages',
+    '/stages',
+    '/internships'
+  ],
+
+  projects: [
+    '/professional/projects',
+    '/professionnel/projets',
+    '/projets',
+    '/projects'
+  ],
+
+  students: [
+    '/professional/students',
+    '/professionnel/etudiants',
+    '/etudiants',
+    '/students'
+  ],
+
+  documents: [
+    '/professional/documents',
+    '/professionnel/documents',
+    '/fichiers',
+    '/files',
+    '/documents'
+  ],
+
+  portfolios: [
+    '/professional/portfolios',
+    '/professionnel/portfolios',
+    '/portfolios'
+  ],
+
+  recommendations: [
+    '/professional/recommendations',
+    '/professional/recommandations',
+    '/professionnel/recommendations',
+    '/professionnel/recommandations',
+    '/recommendations',
+    '/recommandations'
+  ],
+
+  createRecommendation: [
+    '/professional/recommendations',
+    '/professional/recommandations',
+    '/professionnel/recommendations',
+    '/professionnel/recommandations',
+    '/recommendations',
+    '/recommandations'
+  ]
+}
+
 const unwrap = (response) => {
   const payload = response?.data ?? response
 
@@ -18,15 +81,21 @@ const toArray = (response) => {
   if (Array.isArray(data?.data)) return data.data
   if (Array.isArray(data?.items)) return data.items
   if (Array.isArray(data?.results)) return data.results
+
   if (Array.isArray(data?.stages)) return data.stages
   if (Array.isArray(data?.internships)) return data.internships
+
   if (Array.isArray(data?.projets)) return data.projets
   if (Array.isArray(data?.projects)) return data.projects
+
   if (Array.isArray(data?.etudiants)) return data.etudiants
   if (Array.isArray(data?.students)) return data.students
+
   if (Array.isArray(data?.fichiers)) return data.fichiers
   if (Array.isArray(data?.documents)) return data.documents
+
   if (Array.isArray(data?.portfolios)) return data.portfolios
+
   if (Array.isArray(data?.recommandations)) return data.recommandations
   if (Array.isArray(data?.recommendations)) return data.recommendations
 
@@ -38,9 +107,27 @@ const requestFirstAvailable = async (urls) => {
 
   for (const url of urls) {
     try {
-      return await api.get(url)
+      const response = await api.get(url)
+      return response
     } catch (error) {
       lastError = error
+    }
+  }
+
+  throw lastError
+}
+
+const postFirstAvailable = async (urls, payloads) => {
+  let lastError = null
+
+  for (const url of urls) {
+    for (const payload of payloads) {
+      try {
+        const response = await api.post(url, payload)
+        return response
+      } catch (error) {
+        lastError = error
+      }
     }
   }
 
@@ -82,7 +169,7 @@ const normalizeStudent = (raw) => {
     id: student.id_etudiant || student.id || user.id_utilisateur || user.id || '-',
     fullName: fullName || student.fullName || student.name || 'Student',
     email: user.email || student.email || '-',
-    phone: user.telephone || student.phone || '-',
+    phone: user.telephone || user.phone || student.telephone || student.phone || '-',
     photo: user.photo || student.photo || null,
     studentNumber: student.numero_etudiant || student.studentNumber || '-',
     field: student.filiere || student.field || '-',
@@ -126,14 +213,17 @@ const normalizeProfile = (response) => {
     phone: user.telephone || raw.phone || '-',
     photo: user.photo || raw.photo || null,
     role: user.role || raw.role || 'PROFESSIONNEL',
+
     company: professional.entreprise || professional.company || '-',
     position: professional.poste || professional.position || 'Professional Supervisor',
     sector: professional.secteur_activite || professional.sector || '-',
+
     professionalEmail:
       professional.email_professionnel ||
       professional.professionalEmail ||
       user.email ||
       '-',
+
     validationStatus: normalizeStatus(professional.status_validation)
   }
 }
@@ -150,6 +240,7 @@ const normalizeInternship = (raw) => {
 
     startDate: stage.date_debut || stage.startDate || null,
     endDate: stage.date_fin || stage.endDate || null,
+
     period: `${formatDate(stage.date_debut || stage.startDate)} - ${formatDate(stage.date_fin || stage.endDate)}`,
 
     durationWeeks: stage.duree_semaines || stage.durationWeeks || '-',
@@ -180,7 +271,6 @@ const normalizeInternship = (raw) => {
 
 const normalizeProject = (raw) => {
   const project = raw?.projet || raw?.project || raw || {}
-
   const participations = toArray(project.participations || project.participations_projets)
 
   const students = participations.length
@@ -262,8 +352,18 @@ const normalizePortfolio = (raw) => {
 
 const normalizeRecommendation = (raw) => {
   const recommendation = raw?.recommandation || raw?.recommendation || raw || {}
-  const student = normalizeStudent(recommendation.cible || recommendation.etudiant || recommendation.student)
-  const author = recommendation.auteur || recommendation.author || recommendation.recommandeur || {}
+
+  const student = normalizeStudent(
+    recommendation.cible ||
+    recommendation.etudiant ||
+    recommendation.student
+  )
+
+  const author =
+    recommendation.auteur ||
+    recommendation.author ||
+    recommendation.recommandeur ||
+    {}
 
   const firstName = author.prenom || author.firstName || ''
   const lastName = author.nom || author.lastName || ''
@@ -274,11 +374,15 @@ const normalizeRecommendation = (raw) => {
     studentId: recommendation.id_etudiant || recommendation.studentId || student.id,
     recommenderId: recommendation.id_recommandeur || recommendation.recommenderId || '-',
     message: recommendation.message || '-',
+
     status: normalizeStatus(recommendation.status),
     rawStatus: recommendation.status,
+
     createdAt: formatDate(recommendation.date_creation || recommendation.createdAt),
     validationDate: formatDate(recommendation.date_validation || recommendation.validationDate),
+
     student,
+
     author: {
       id: author.id_utilisateur || author.id || '-',
       fullName: fullName || author.fullName || author.name || 'Recommender',
@@ -288,68 +392,15 @@ const normalizeRecommendation = (raw) => {
   }
 }
 
-const saveLocalItem = (key, value) => {
-  const oldItems = JSON.parse(localStorage.getItem(key) || '[]')
-
-  const newItem = {
-    id: Date.now(),
-    ...value,
-    createdAt: new Date().toISOString()
-  }
-
-  localStorage.setItem(key, JSON.stringify([newItem, ...oldItems]))
-
-  return newItem
-}
-
-const getLocalItems = (key) => {
-  return JSON.parse(localStorage.getItem(key) || '[]')
-}
-
 export const professionalApi = {
   async getProfile() {
-    const response = await requestFirstAvailable([
-      '/auth/me',
-      '/me',
-      '/profile',
-      '/users/me',
-      '/utilisateurs/me'
-    ])
-
+    const response = await requestFirstAvailable(ENDPOINTS.me)
     return normalizeProfile(response)
   },
 
   async getInternships() {
-    const response = await requestFirstAvailable([
-      '/professional/internships',
-      '/professionnel/stages',
-      '/stages',
-      '/internships'
-    ])
-
+    const response = await requestFirstAvailable(ENDPOINTS.internships)
     return toArray(response).map(normalizeInternship)
-  },
-
-  async getProjects() {
-    const response = await requestFirstAvailable([
-      '/professional/projects',
-      '/professionnel/projets',
-      '/projets',
-      '/projects'
-    ])
-
-    const projects = toArray(response).map(normalizeProject)
-
-    const students = await this.getStudents().catch(() => [])
-    const studentIds = students.map((student) => student.id)
-
-    if (studentIds.length === 0) {
-      return projects
-    }
-
-    return projects.filter((project) =>
-      project.students.some((student) => studentIds.includes(student.id))
-    )
   },
 
   async getStudents() {
@@ -375,139 +426,89 @@ export const professionalApi = {
       return Array.from(studentsMap.values())
     }
 
-    try {
-      const response = await requestFirstAvailable([
-        '/professional/students',
-        '/professionnel/etudiants',
-        '/etudiants',
-        '/students'
-      ])
+    const response = await requestFirstAvailable(ENDPOINTS.students)
+    return toArray(response).map(normalizeStudent)
+  },
 
-      return toArray(response).map(normalizeStudent)
-    } catch {
-      return []
+  async getProjects() {
+    const response = await requestFirstAvailable(ENDPOINTS.projects)
+    const projects = toArray(response).map(normalizeProject)
+
+    const students = await this.getStudents().catch(() => [])
+    const studentIds = students.map((student) => student.id)
+
+    if (studentIds.length === 0) {
+      return projects
     }
+
+    return projects.filter((project) =>
+      project.students.some((student) => studentIds.includes(student.id))
+    )
   },
 
   async getDocuments() {
-    try {
-      const response = await requestFirstAvailable([
-        '/professional/documents',
-        '/professionnel/documents',
-        '/fichiers',
-        '/files',
-        '/documents'
-      ])
-
-      return toArray(response).map(normalizeDocument)
-    } catch {
-      const projects = await this.getProjects().catch(() => [])
-      const internships = await this.getInternships().catch(() => [])
-
-      const projectFiles = projects.flatMap((project) =>
-        project.files.map((file) =>
-          normalizeDocument({
-            ...file,
-            project: {
-              id: project.id,
-              title: project.title
-            }
-          })
-        )
-      )
-
-      const internshipReports = internships
-        .filter((internship) => internship.report)
-        .map((internship) =>
-          normalizeDocument({
-            ...internship.report,
-            name: internship.report.nom_original || 'Internship report'
-          })
-        )
-
-      return [...projectFiles, ...internshipReports]
-    }
+    const response = await requestFirstAvailable(ENDPOINTS.documents)
+    return toArray(response).map(normalizeDocument)
   },
 
   async getPortfolios() {
     const students = await this.getStudents().catch(() => [])
     const studentIds = students.map((student) => student.id)
 
-    try {
-      const response = await requestFirstAvailable([
-        '/professional/portfolios',
-        '/professionnel/portfolios',
-        '/portfolios'
-      ])
+    const response = await requestFirstAvailable(ENDPOINTS.portfolios)
+    const portfolios = toArray(response).map(normalizePortfolio)
 
-      const portfolios = toArray(response).map(normalizePortfolio)
-
-      if (studentIds.length === 0) {
-        return portfolios
-      }
-
-      return portfolios.filter((portfolio) =>
-        studentIds.includes(portfolio.studentId)
-      )
-    } catch {
-      return students
-        .filter((student) => student.portfolio)
-        .map((student) =>
-          normalizePortfolio({
-            ...student.portfolio,
-            etudiant: student
-          })
-        )
+    if (studentIds.length === 0) {
+      return portfolios
     }
+
+    return portfolios.filter((portfolio) =>
+      studentIds.includes(portfolio.studentId)
+    )
   },
 
   async getRecommendations() {
     const students = await this.getStudents().catch(() => [])
     const studentIds = students.map((student) => student.id)
 
-    const localRecommendations = getLocalItems('professional_recommendations').map((item) => ({
-      id: item.id,
-      studentId: item.studentId,
-      recommenderId: 'local-professional',
-      message: item.message,
-      status: 'Local draft',
-      rawStatus: 'LOCAL',
-      createdAt: formatDate(item.createdAt),
-      validationDate: '-',
-      student: students.find((student) => student.id === item.studentId) || {
-        id: item.studentId,
-        fullName: item.studentName || 'Student'
-      },
-      author: {
-        id: 'local-professional',
-        fullName: 'Professional User',
-        email: '-',
-        role: 'PROFESSIONNEL'
-      }
-    }))
+    const response = await requestFirstAvailable(ENDPOINTS.recommendations)
+    const recommendations = toArray(response).map(normalizeRecommendation)
 
-    try {
-      const response = await requestFirstAvailable([
-        '/professional/recommendations',
-        '/professional/recommandations',
-        '/professionnel/recommendations',
-        '/professionnel/recommandations',
-        '/recommandations',
-        '/recommendations'
-      ])
-
-      const recommendations = toArray(response).map(normalizeRecommendation)
-
-      const filtered = studentIds.length
-        ? recommendations.filter((recommendation) =>
-            studentIds.includes(recommendation.studentId)
-          )
-        : recommendations
-
-      return [...localRecommendations, ...filtered]
-    } catch {
-      return localRecommendations
+    if (studentIds.length === 0) {
+      return recommendations
     }
+
+    return recommendations.filter((recommendation) =>
+      studentIds.includes(recommendation.studentId)
+    )
+  },
+
+  async createRecommendation(studentId, message) {
+    const payloads = [
+      {
+        id_etudiant: studentId,
+        message
+      },
+      {
+        studentId,
+        message
+      },
+      {
+        idEtudiant: studentId,
+        message
+      }
+    ]
+
+    const response = await postFirstAvailable(
+      ENDPOINTS.createRecommendation,
+      payloads
+    )
+
+    return normalizeRecommendation(unwrap(response))
+  },
+
+  async addRecommendation(student, message) {
+    return this.createRecommendation(student.id, message)
   },
 
   async getDashboard() {
@@ -548,24 +549,14 @@ export const professionalApi = {
   },
 
   async addInternshipRemark(internshipId, content) {
-    return saveLocalItem('professional_internship_remarks', {
-      internshipId,
+    return api.post(`/stages/${internshipId}/remarks`, {
       content
     })
   },
 
   async addProjectFeedback(projectId, content) {
-    return saveLocalItem('professional_project_feedbacks', {
-      projectId,
+    return api.post(`/projets/${projectId}/feedback`, {
       content
-    })
-  },
-
-  async addRecommendation(student, message) {
-    return saveLocalItem('professional_recommendations', {
-      studentId: student.id,
-      studentName: student.fullName,
-      message
     })
   }
 }
