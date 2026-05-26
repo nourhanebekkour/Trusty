@@ -4,6 +4,7 @@ import AdminLayout from '../components/admin/AdminLayout.vue'
 import LoginView from '../views/loginview.vue'
 import Dashboard from '@/views/Etudiant/Dashboard.vue'
 import ProjectList from '@/views/Etudiant/ProjectList.vue'
+import ProjectDetail from '@/views/Etudiant/ProjectDetail.vue'
 import Settings from '@/views/Settings.vue'
 import StageList from '@/views/Etudiant/StageList.vue'
 import Recommendations from '@/views/Etudiant/Recommendations.vue'
@@ -64,6 +65,11 @@ const router = createRouter({
           name: 'admin-portfolios',
           component: () => import('../views/admin/AdminPortfolios.vue'),
         },
+        {
+          path: 'notifications',
+          name: 'admin-notifications',
+          component: () => import('../views/admin/AdminNotifications.vue'),
+        },
       ],
     },
 
@@ -72,7 +78,7 @@ const router = createRouter({
       path: '/dashboard',
       name: 'dashboard',
       component: Dashboard,
-      //meta: { requiresAuth: true }
+      meta: { requiresAuth: true }
     },
     {
       path: '/notifications',
@@ -84,13 +90,20 @@ const router = createRouter({
       path: '/profile',
       name: 'profile',
       component: Profile,
-      //meta: { requiresAuth: true } 
+      meta: { requiresAuth: true } 
     },
     {
       path: '/projets',
       name: 'projets',
       component: ProjectList,
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/projets/:id',
+      name: 'project-detail',
+      component: ProjectDetail,
+      meta: { requiresAuth: true },
+      props: true,
     },
     {
       path: '/settings',
@@ -114,11 +127,13 @@ const router = createRouter({
       path: '/modele',
       name: 'modele',
       component: Modele,
+      meta: { requiresAuth: true },
     },
     {
       path: '/portfolio',
       name: 'portfolio',
       component: Portfolio,
+      meta: { requiresAuth: true },
     },
     {
       path: '/professional',
