@@ -10,20 +10,14 @@ import {
   envoyerEmailVerification,
 } from '#Modules/systeme/emails/emails.service.js';
 
-async function register(email, password, nom, prenom, role) {
+async function register(email, password, nom, prenom, role, ecole) {
   const existingUser = await prisma.utilisateur.findUnique({ where: { email } });
   if (existingUser) throw new Error('Cet email est déjà utilisé');
 
   const isInstitutional = await isAcademic(email);
 
-  if (role === 'ETUDIANT' && !email.endsWith('@etu.uae.ac.ma')) {
-    throw new Error('Un email étudiant  est requis pour ce rôle');
-  }
-  if (role === 'PROFESSEUR' && !email.endsWith('@uae.ac.ma')) {
-    throw new Error('Un email professeur est requis pour ce rôle');
-  }
-  if (role === 'PROFESSIONNEL' && isInstitutional) {
-    throw new Error('Un email non-institutionnel est requis pour le rôle PROFESSIONNEL');
+  if ((role === 'ETUDIANT' || role === 'PROFESSEUR') && !isInstitutional) {
+    throw new Error('Un email académique institutionnel est requis pour ce rôle');
   }
 
   const salt = await bcrypt.genSalt(12);
@@ -40,6 +34,7 @@ async function register(email, password, nom, prenom, role) {
         nom,
         prenom,
         role,
+        ecole: ecole ?? null,
         status_compte: 'INACTIF',
         email_verifie: false,
         token_reinitialisation_email: tokenEmail,
@@ -87,7 +82,7 @@ async function verifierEmail(token) {
     throw new Error('Ce lien de vérification a expiré');
   }
 
-  const nouveauStatut = user.role === 'ETUDIANT' ? 'ACTIF' : 'INACTIF';
+  const nouveauStatut = user.role === 'PROFESSIONNEL' ? 'INACTIF' : 'ACTIF';
 
   await prisma.utilisateur.update({
     where: { id_utilisateur: user.id_utilisateur },
@@ -102,7 +97,7 @@ async function verifierEmail(token) {
   return { role: user.role, status_compte: nouveauStatut };
 }
 
-async function creerUtilisateurAdmin({ nom, prenom, email }) {
+async function creerUtilisateurAdmin({ nom, prenom, email, niveau_acces, ecole }) {
   const existingUser = await prisma.utilisateur.findUnique({ where: { email } });
   if (existingUser) throw new Error('Cet email est déjà utilisé');
 
@@ -118,6 +113,7 @@ async function creerUtilisateurAdmin({ nom, prenom, email }) {
         nom,
         prenom,
         role: 'ADMINISTRATEUR',
+        ecole: niveau_acces === 'SUPER_ADMIN' ? null : (ecole ?? null),
         status_compte: 'ACTIF',
         email_verifie: true,
       },
@@ -132,7 +128,7 @@ async function creerUtilisateurAdmin({ nom, prenom, email }) {
     });
 
     await tx.administrateur.create({
-      data: { id_administrateur: created.id_utilisateur },
+      data: { id_administrateur: created.id_utilisateur, niveau_acces },
     });
 
     return created;
