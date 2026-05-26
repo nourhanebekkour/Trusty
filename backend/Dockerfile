@@ -1,5 +1,5 @@
 
-ARG NODE_VERSION=20-alpine     
+ARG NODE_VERSION=24-alpine     
 
 # ──────────────────────── STAGE 1 — BASE ───────────────────────────
 
@@ -21,15 +21,18 @@ FROM base AS development
 
 ENV NODE_ENV=development
 
-RUN npm ci  
+RUN npm ci
 
-RUN npx prisma generate 
+RUN npx prisma generate
 
 COPY . .
 
+RUN chmod +x entrypoint.sh
+
 EXPOSE 3000
 
-CMD ["npm", "run", "dev"]
+ENTRYPOINT ["sh", "./entrypoint.sh"]
+CMD ["dev"]
 
 
 
@@ -41,13 +44,16 @@ ENV NODE_ENV=production
 
 RUN npm ci --omit=dev
 
-RUN npx prisma generate 
+RUN npx prisma generate
 
 COPY . .
 
+RUN chmod +x entrypoint.sh
+
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+ENTRYPOINT ["sh", "./entrypoint.sh"]
+CMD ["start"]
 
 
 
