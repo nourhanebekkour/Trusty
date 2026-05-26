@@ -32,6 +32,13 @@ const doc = {
       email: 'etudiant@test.com',
       password: 'password123'
     },
+    ForgotPasswordRequest: {
+      email: 'etudiant@test.com'
+    },
+    ResetPasswordRequest: {
+      token: 'abc123def456...',
+      nouveauMotDePasse: 'nouveauMotDePasse123'
+    },
     EtudiantProfileRequest: {
       numero_etudiant: '2026001',
       filiere: 'GINF',

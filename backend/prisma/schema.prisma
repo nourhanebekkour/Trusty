@@ -50,6 +50,21 @@ enum Filiere {
   CSI
 }
 
+enum Ecole {
+  ENSATanger
+  ENCGTanger
+  FSTTanger
+  FSJESTanger
+  ENSATetouan
+  ENSTetouan
+  FSTetouan
+  FLSHMartil
+  FSJESTetouan
+  ENSAAlHoceima
+  FSTAlHoceima
+  FPDAlHoceima
+}
+
 enum Departement {
   SIC
   GEI
@@ -125,7 +140,6 @@ enum TypeActivite {
   COMPETITION
   ENGAGEMENT
 }
-
 // ============================================================================
 // 1. ENTITES UTILISATEURS
 // ============================================================================
@@ -146,8 +160,11 @@ model Utilisateur {
   email_verifie           Boolean   @default(false)
   token_reinitialisation  String?   @db.VarChar(255)
   date_expiration_token   DateTime?
-  refresh_token           String?   @db.VarChar(500)
-  date_expiration_refresh DateTime?
+  ecole                         Ecole?
+  refresh_token                 String?   @db.VarChar(500)
+  date_expiration_refresh       DateTime?
+  token_reinitialisation_email  String?   @db.VarChar(255)
+  date_expiration_token_email   DateTime?
 
   // Relations
   etudiant                Etudiant?
@@ -168,6 +185,7 @@ model Utilisateur {
   @@map("utilisateurs")
 }
 
+
 model Administrateur {
   id_administrateur String       @id
   niveau_acces      NiveauAcces  @default(ADMIN)
@@ -184,7 +202,7 @@ model Administrateur {
 model Etudiant {
   id_etudiant               String    @id
   numero_etudiant           String?    @unique @db.VarChar(20)
-  filiere                   Filiere
+  filiere                   Filiere?
   annee                     Int?
   date_naissance            DateTime?
   adresse                   String?   @db.VarChar(255)

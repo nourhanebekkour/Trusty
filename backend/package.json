@@ -37,7 +37,6 @@
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
-    "cross-env": "^10.1.0",
     "crypto": "^1.0.1",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
@@ -48,11 +47,13 @@
     "nodemailer": "^8.0.7",
     "nodemon": "^3.1.14",
     "swagger-ui-express": "^5.0.1",
+    "swot-node": "^2.0.1489",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
+    "cross-env": "^10.1.0",
     "dotenv-cli": "^11.0.0",
     "eslint": "^8.0.0",
     "jest": "^30.3.0",

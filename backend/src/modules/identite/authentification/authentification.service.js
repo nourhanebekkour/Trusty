@@ -2,44 +2,145 @@ import prisma from "#Config/prismaClient.js";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { envoyerEmailReinitialisation } from '#Modules/systeme/emails/emails.service.js';
+import { isAcademic } from 'swot-node';
+import {
+  envoyerEmailReinitialisation,
+  envoyerEmailCredentiels,
+  envoyerEmailDemandeCompte,
+  envoyerEmailVerification,
+} from '#Modules/systeme/emails/emails.service.js';
 
-const ROLES_AUTORISES = ['ETUDIANT', 'PROFESSEUR', 'PROFESSIONNEL'];
-
-async function register(email, password, nom, prenom, role) {
-  // 1. Vérifier si l'email est déjà utilisé
+async function register(email, password, nom, prenom, role, ecole) {
   const existingUser = await prisma.utilisateur.findUnique({ where: { email } });
-  if (existingUser) {
-    throw new Error('Cet email est déjà utilisé');
+  if (existingUser) throw new Error('Cet email est déjà utilisé');
+
+  const isInstitutional = await isAcademic(email);
+
+  if ((role === 'ETUDIANT' || role === 'PROFESSEUR') && !isInstitutional) {
+    throw new Error('Un email académique institutionnel est requis pour ce rôle');
   }
 
-  // 2. Valider le rôle — ADMINISTRATEUR interdit à l'inscription
-  const roleValide = ROLES_AUTORISES.includes(role) ? role : 'ETUDIANT';
-
-  // 3. Hasher le mot de passe
   const salt = await bcrypt.genSalt(12);
   const hashedPassword = await bcrypt.hash(password, salt);
 
-  // 4. Créer l'utilisateur en BDD
-  const user = await prisma.utilisateur.create({
+  const tokenEmail = crypto.randomBytes(32).toString('hex');
+  const expiresEmail = new Date(Date.now() + 24 * 3600000);
+
+  const user = await prisma.$transaction(async (tx) => {
+    const created = await tx.utilisateur.create({
+      data: {
+        email,
+        mot_de_passe: hashedPassword,
+        nom,
+        prenom,
+        role,
+        ecole: ecole ?? null,
+        status_compte: 'INACTIF',
+        email_verifie: false,
+        token_reinitialisation_email: tokenEmail,
+        date_expiration_token_email: expiresEmail,
+      },
+      select: {
+        id_utilisateur: true,
+        email: true,
+        nom: true,
+        prenom: true,
+        role: true,
+        date_creation: true,
+      },
+    });
+
+    if (role === 'ETUDIANT') {
+      await tx.etudiant.create({
+        data: { id_etudiant: created.id_utilisateur },
+      });
+    } else if (role === 'PROFESSEUR') {
+      await tx.professeur.create({
+        data: { id_professeur: created.id_utilisateur, filieres_interv: [] },
+      });
+    } else if (role === 'PROFESSIONNEL') {
+      await tx.professionnel.create({
+        data: { id_professionnel: created.id_utilisateur, status_validation: 'EN_ATTENTE' },
+      });
+    }
+
+    return created;
+  });
+
+  await envoyerEmailVerification(email, tokenEmail);
+
+  return { user };
+}
+
+async function verifierEmail(token) {
+  const user = await prisma.utilisateur.findFirst({
+    where: { token_reinitialisation_email: token },
+  });
+  if (!user) throw new Error('Token de vérification invalide');
+
+  if (user.date_expiration_token_email < new Date()) {
+    throw new Error('Ce lien de vérification a expiré');
+  }
+
+  const nouveauStatut = user.role === 'PROFESSIONNEL' ? 'INACTIF' : 'ACTIF';
+
+  await prisma.utilisateur.update({
+    where: { id_utilisateur: user.id_utilisateur },
     data: {
-      email,
-      mot_de_passe: hashedPassword,
-      nom,
-      prenom,
-      role: roleValide,
-      status_compte: 'INACTIF',
-    },
-    select: {
-      id_utilisateur: true,
-      email: true,
-      nom: true,
-      prenom: true,
-      date_creation: true,
+      email_verifie: true,
+      status_compte: nouveauStatut,
+      token_reinitialisation_email: null,
+      date_expiration_token_email: null,
     },
   });
 
+  return { role: user.role, status_compte: nouveauStatut };
+}
+
+async function creerUtilisateurAdmin({ nom, prenom, email, niveau_acces, ecole }) {
+  const existingUser = await prisma.utilisateur.findUnique({ where: { email } });
+  if (existingUser) throw new Error('Cet email est déjà utilisé');
+
+  const motDePasseGenere = crypto.randomBytes(8).toString('hex');
+  const salt = await bcrypt.genSalt(12);
+  const hashedPassword = await bcrypt.hash(motDePasseGenere, salt);
+
+  const user = await prisma.$transaction(async (tx) => {
+    const created = await tx.utilisateur.create({
+      data: {
+        email,
+        mot_de_passe: hashedPassword,
+        nom,
+        prenom,
+        role: 'ADMINISTRATEUR',
+        ecole: niveau_acces === 'SUPER_ADMIN' ? null : (ecole ?? null),
+        status_compte: 'ACTIF',
+        email_verifie: true,
+      },
+      select: {
+        id_utilisateur: true,
+        email: true,
+        nom: true,
+        prenom: true,
+        role: true,
+        date_creation: true,
+      },
+    });
+
+    await tx.administrateur.create({
+      data: { id_administrateur: created.id_utilisateur, niveau_acces },
+    });
+
+    return created;
+  });
+
+  await envoyerEmailCredentiels(email, nom, prenom, motDePasseGenere, 'ADMINISTRATEUR');
+
   return { user };
+}
+
+async function demanderCreationCompte({ nom, prenom, email, role, message }) {
+  await envoyerEmailDemandeCompte(nom, prenom, email, role, message);
 }
 
 async function login(email, password) {
@@ -197,4 +298,4 @@ async function changerMDP(token, newPassword) {
   });
 }
 
-export { register, login, refreshToken, logout, oublierMDP, changerMDP, getMe };
+export { register, verifierEmail, creerUtilisateurAdmin, demanderCreationCompte, login, refreshToken, logout, oublierMDP, changerMDP, getMe };
