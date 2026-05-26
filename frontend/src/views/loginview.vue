@@ -209,13 +209,18 @@ const handleLogin = async () => {
     const cleanPassword = password.value
     const captchaToken = await getCaptchaToken()
 
-    //  authStore.login 
-    const success = await authStore.login(cleanEmail, cleanPassword)
+    const result = await authStore.loginUser({
+      email: cleanEmail,
+      password: cleanPassword,
+      remember: remember.value,
+      captchaToken,
+    })
+    const success = result?.success === true
 
     if (success) {
       loginAttempts.value = 0
       lockUntil.value = null
-      router.push('/dashboard') 
+      router.push('/')
       return
     }
 

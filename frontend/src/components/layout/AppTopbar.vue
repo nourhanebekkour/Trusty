@@ -70,7 +70,7 @@
         </div>
 
         <div v-else-if="notifications.length === 0" class="notif-panel__state">
-          Aucune notification disponible.
+          Aucune notification
         </div>
 
         <div v-else class="notif-panel__list">
@@ -160,7 +160,7 @@ const displayUnreadCount = computed(() => {
 
 const fullName = computed(() => {
   if (!auth.user) {
-    return 'Chargement...'
+    return 'Chargement…'
   }
 
   const firstName = auth.user.prenom || ''
@@ -278,7 +278,7 @@ function formatRelativeDate(dateStr) {
   const days = Math.floor(diff / 86400000)
 
   if (minutes < 1) {
-    return 'À l’instant'
+    return "À l'instant"
   }
 
   if (minutes < 60) {
@@ -286,7 +286,7 @@ function formatRelativeDate(dateStr) {
   }
 
   if (hours < 24) {
-    return `Il y a ${hours} h`
+    return `Il y a ${hours}h`
   }
 
   if (days === 1) {

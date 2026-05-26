@@ -1,71 +1,88 @@
 import { defineStore } from 'pinia'
-import { authService } from '../services/auth.service.js'
-import api from '../api'
+import { getProfile, login as loginRequest } from '@/services/authservices'
+import api from '@/services/api'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    user: null,       
+    user: null,
+    token: localStorage.getItem('token'),
     loading: false,
-    error: null
+    error: null,
   }),
 
   getters: {
     isAuthenticated: (state) => !!state.user,
     isAdmin: (state) => state.user?.role === 'ADMINISTRATEUR',
-    isEtudiant: (state) => state.user?.role === 'ETUDIANT'
+    isEtudiant: (state) => state.user?.role === 'ETUDIANT',
   },
 
   actions: {
-
-    // Login 
-    async login(email, password) {
+    async loginUser(credentials) {
       this.loading = true
       this.error = null
+
       try {
-        await authService.login({ email, password })
-        await this.fetchUser()
-        return true
+        const response = await loginRequest(credentials)
+        const payload = response?.data ?? response
+        const token = payload?.token
+
+        this.token = token ?? null
+        this.user = payload?.user ?? null
+
+        if (token) {
+          localStorage.setItem('token', token)
+        }
+
+        return { success: true }
       } catch (err) {
-        this.error = err.response?.data?.message || 'Erreur connexion'
-        return false
+        this.error = err?.response?.data?.message || 'Erreur de connexion'
+        return { success: false }
       } finally {
         this.loading = false
       }
     },
 
-    // Register
+    async login(email, password) {
+      const result = await this.loginUser({ email, password })
+      if (result.success) {
+        await this.fetchUser()
+      }
+      return result.success
+    },
+
     async register(data) {
       this.loading = true
       this.error = null
       try {
-        await authService.register(data)
+        await api.post('/auth/register', data)
         return true
       } catch (err) {
-        this.error = err.response?.data?.message || 'Erreur inscription'
+        this.error = err?.response?.data?.message || 'Erreur inscription'
         return false
       } finally {
         this.loading = false
       }
     },
 
-    // Fetch user 
-   async fetchUser() {
-  try {
-    const res = await authService.getMe()
-    // res = { status, success, message, data: { id_utilisateur, email, nom, ... } }
-    this.user = res?.data ?? res?.user ?? res ?? null
-  } catch {
-    this.user = null
-  }
-},
-
-
-    // Logout
-    async logout() {
+    async fetchProfile() {
       try {
-        await api.post('/auth/logout') 
-      } catch {}
+        const response = await getProfile()
+        this.user = response?.data?.data ?? response?.data ?? response ?? null
+      } catch {
+        this.user = null
+      }
+    },
+
+    async fetchUser() {
+      await this.fetchProfile()
+    },
+
+    logout() {
       this.user = null
-    }
-  }
+      this.token = null
+      localStorage.removeItem('token')
+
+      api.post('/auth/logout').catch(() => {})
+    },
+  },
 })

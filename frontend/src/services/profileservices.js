@@ -1,9 +1,9 @@
-import api from '@/api'
+import api from '@/services/api'
 
-const API_READY = true
+const API_READY = import.meta.env.VITE_API_READY === 'true'
 
 const MOCK_ME = {
-  id_utilisateur: 'clx123456789abcdefghijk',
+  id_utilisateur: 'clx123abc',
   email:          'ahmed.benali@etu.uae.ac.ma',
   nom:            'Benali',
   prenom:         'Ahmed',
@@ -18,7 +18,7 @@ const MOCK_ETUDIANT = {
   numero_etudiant:        'E2021001',
   filiere:                'GINF',
   annee:                  3,
-  ville:                  'Fes',
+  ville:                  'Fès',
   pays:                   'Maroc',
   biographie:             null,
   linkedin_url:           null,
@@ -40,8 +40,18 @@ const MOCK_BADGES = [
 ]
 
 const MOCK_PROJETS = [
-  { est_createur: true,  role_joue: 'Developpeur fullstack', projet: { id_projet: 'proj1', titre: 'Systeme de gestion',   description: 'Laravel + Vue.js', status_validation: 'VALIDE',     type_projet: 'PFA'    } },
+  { est_createur: true,  role_joue: 'Developpeur fullstack', projet: { id_projet: 'proj1', titre: 'Système de gestion des étudiants', description: 'Application web fullstack avec Laravel et Vue.js', status_validation: 'VALIDE',     type_projet: 'PFA'    } },
   { est_createur: false, role_joue: 'Developpeur mobile',    projet: { id_projet: 'proj2', titre: 'App mobile de suivi', description: 'Flutter',          status_validation: 'EN_ATTENTE', type_projet: 'MODULE' } },
+]
+
+const MOCK_DEPOTS = [
+  {
+    id_depot: 'depot1',
+    nom_depot: 'my-portfolio',
+    url_github: 'https://github.com/ahmed/my-portfolio',
+    description_github: 'Portfolio personnel en Vue.js',
+    langage_principal: 'JavaScript',
+  },
 ]
 
 function extractData(res) {
@@ -71,7 +81,7 @@ function assembleUser(me, etudiant, competences = [], badges = [], projets = [],
 
 export async function getProfile() {
   if (!API_READY) {
-    return { data: assembleUser(MOCK_ME, MOCK_ETUDIANT, MOCK_COMPETENCES, MOCK_BADGES, MOCK_PROJETS) }
+    return { data: assembleUser(MOCK_ME, MOCK_ETUDIANT, MOCK_COMPETENCES, MOCK_BADGES, MOCK_PROJETS, MOCK_DEPOTS) }
   }
 
   try {
@@ -93,7 +103,7 @@ export async function getProfile() {
     return { data: assembleUser(me, etudiant, competences, badges) }
   } catch (err) {
     console.error('[getProfile] erreur API → mock', err)
-    return { data: assembleUser(MOCK_ME, MOCK_ETUDIANT, MOCK_COMPETENCES, MOCK_BADGES, MOCK_PROJETS) }
+    return { data: assembleUser(MOCK_ME, MOCK_ETUDIANT, MOCK_COMPETENCES, MOCK_BADGES, MOCK_PROJETS, MOCK_DEPOTS) }
   }
 }
 
@@ -112,9 +122,14 @@ export async function saveProfile(id, formData) {
   if (!etudiantFields.site_web)        delete etudiantFields.site_web
 
   if (!API_READY) {
-    const updatedMe = { ...MOCK_ME, prenom, nom, telephone }
+    const updatedMe = {
+      ...MOCK_ME,
+      prenom: prenom ?? MOCK_ME.prenom,
+      nom: nom ?? MOCK_ME.nom,
+      telephone: telephone ?? MOCK_ME.telephone,
+    }
     const updatedEt = { ...MOCK_ETUDIANT, ...etudiantFields }
-    return { data: assembleUser(updatedMe, updatedEt, MOCK_COMPETENCES, MOCK_BADGES, MOCK_PROJETS) }
+    return { data: assembleUser(updatedMe, updatedEt, MOCK_COMPETENCES, MOCK_BADGES, MOCK_PROJETS, MOCK_DEPOTS) }
   }
 
   try {
@@ -135,14 +150,19 @@ export async function saveProfile(id, formData) {
     return { data: assembleUser(me, etudiant, competences, badges) }
   } catch (err) {
     console.error('[saveProfile] erreur API → mock', err)
-    return { data: assembleUser(MOCK_ME, MOCK_ETUDIANT) }
+    return { data: assembleUser(MOCK_ME, MOCK_ETUDIANT, MOCK_COMPETENCES, MOCK_BADGES, MOCK_PROJETS, MOCK_DEPOTS) }
   }
 }
 
-export async function addSkill(idEtudiant, nom, niveau_maitrise = 'DEBUTANT') {
+export const patchProfile = saveProfile
+
+export async function addSkill(idEtudiantOrNom, nomMaybe, niveau_maitrise = 'DEBUTANT') {
+  const nom = nomMaybe ?? idEtudiantOrNom
+  const idEtudiant = nomMaybe ? idEtudiantOrNom : MOCK_ETUDIANT.id_etudiant
+
   if (!API_READY) {
     return {
-      data: { competence: { id_competence: Date.now().toString(), nom, type: 'TECHNIQUE' }, niveau_maitrise }
+      data: { competence: { id_competence: `${Date.now()}-${Math.random().toString(36).slice(2)}`, nom, type: 'TECHNIQUE' }, niveau_maitrise }
     }
   }
 

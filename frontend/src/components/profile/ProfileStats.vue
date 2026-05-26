@@ -4,13 +4,12 @@
     <div class="stats-grid">
       <div class="stat-box">
         <span class="stat-number">{{ totalProjets }}</span>
-        <span class="stat-desc">Projets Total</span>
-      </div>
-      <div class="stat-box">
-        <span class="stat-number">{{ projetsValides }}</span>
         <span class="stat-desc">Projets Validés</span>
       </div>
-     
+      <div class="stat-box">
+        <span class="stat-number">{{ totalBadges }}</span>
+        <span class="stat-desc">Badges</span>
+      </div>
     </div>
   </div>
 </template>
@@ -21,21 +20,11 @@ import { computed } from 'vue'
 const props = defineProps({ user: Object })
 
 const totalProjets = computed(() =>
-  props.user.etudiant?.participations_projets?.length ?? 0
-)
-
-const projetsValides = computed(() =>
-  props.user.etudiant?.participations_projets?.filter(
-    pp => pp.projet.status_validation === 'VALIDE'
-  ).length ?? 0
-)
-
-const totalCompetences = computed(() =>
-  props.user.etudiant?.competences?.length ?? 0
+  props.user?.etudiant?.participations_projets?.length ?? 0
 )
 
 const totalBadges = computed(() =>
-  props.user.etudiant?.badges?.length ?? 0
+  props.user?.etudiant?.badges?.length ?? 0
 )
 </script>
 

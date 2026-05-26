@@ -23,11 +23,11 @@
         <label>Biographie</label>
         <textarea v-model="form.biographie" rows="3" placeholder="Quelques mots sur vous..."></textarea>
         <label>LinkedIn</label>
-        <input v-model="form.linkedin_url" type="url" placeholder="https://linkedin.com/in/..." />
+        <textarea v-model="form.linkedin_url" rows="1" placeholder="https://linkedin.com/in/..."></textarea>
         <label>GitHub</label>
-        <input v-model="form.github_username" type="text" placeholder="votre-username" />
+        <textarea v-model="form.github_username" rows="1" placeholder="votre-username"></textarea>
         <label>Objectif professionnel</label>
-        <input v-model="form.objectif_professionnel" type="text" placeholder="Développeur fullstack, Data scientist..." />
+        <textarea v-model="form.objectif_professionnel" rows="1" placeholder="Développeur fullstack, Data scientist..."></textarea>
       </div>
 
       <div class="modal-footer">
@@ -53,7 +53,7 @@ const form = reactive({
   nom:       props.user.nom       ?? '',
   telephone: props.user.telephone ?? '',
   // Champs Etudiant
-  ville:                  props.user.etudiant?.ville                  ?? '',
+  ville:                  props.user.ville ?? props.user.etudiant?.ville ?? '',
   biographie:             props.user.etudiant?.biographie             ?? '',
   linkedin_url:           props.user.etudiant?.linkedin_url           ?? '',
   github_username:        props.user.etudiant?.github_username        ?? '',
@@ -65,7 +65,7 @@ watch(() => props.user, (u) => {
   form.prenom                 = u.prenom                         ?? ''
   form.nom                    = u.nom                            ?? ''
   form.telephone              = u.telephone                      ?? ''
-  form.ville                  = u.etudiant?.ville                ?? ''
+  form.ville                  = u.ville ?? u.etudiant?.ville ?? ''
   form.biographie             = u.etudiant?.biographie           ?? ''
   form.linkedin_url           = u.etudiant?.linkedin_url         ?? ''
   form.github_username        = u.etudiant?.github_username      ?? ''
