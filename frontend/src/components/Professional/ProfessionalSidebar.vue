@@ -26,6 +26,14 @@
         Students
       </RouterLink>
 
+      <RouterLink to="/professional/portfolios" active-class="active">
+        Portfolios
+      </RouterLink>
+
+      <RouterLink to="/professional/recommendations" active-class="active">
+        Recommendations
+      </RouterLink>
+
       <RouterLink to="/professional/documents" active-class="active">
         Documents
       </RouterLink>
@@ -38,7 +46,8 @@
     <div class="professional-sidebar__note">
       <strong>Access level</strong>
       <p>
-        Professional users can supervise and comment, but they cannot officially validate internships or projects.
+        Professional users can supervise, consult portfolios and add recommendations,
+        but they cannot officially validate internships or projects.
       </p>
     </div>
   </aside>
@@ -60,6 +69,7 @@
   padding: 24px 18px;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
 }
 
 .professional-sidebar__brand {
@@ -72,6 +82,7 @@
 .professional-sidebar__logo {
   width: 44px;
   height: 44px;
+  min-width: 44px;
   border-radius: 14px;
   background: #d8b76a;
   color: #1f3f38;
