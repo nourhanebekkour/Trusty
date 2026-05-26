@@ -10,7 +10,7 @@
     </div>
 
     <nav class="professional-sidebar__nav">
-      <RouterLink to="/professional" exact-active-class="active">
+      <RouterLink to="/professional/dashboard" active-class="active">
         Dashboard
       </RouterLink>
 
@@ -33,21 +33,14 @@
       <RouterLink to="/professional/recommendations" active-class="active">
         Recommendations
       </RouterLink>
-
-      <RouterLink to="/professional/documents" active-class="active">
-        Documents
-      </RouterLink>
-
-      <RouterLink to="/professional/profile" active-class="active">
-        Profile
-      </RouterLink>
     </nav>
 
     <div class="professional-sidebar__note">
       <strong>Access level</strong>
       <p>
-        Professional users can supervise, consult portfolios and add recommendations,
-        but they cannot officially validate internships or projects.
+        Professional users can supervise internships, consult projects,
+        view portfolios and add recommendations, but they cannot officially
+        validate internships or projects.
       </p>
     </div>
   </aside>
