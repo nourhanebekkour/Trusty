@@ -10,8 +10,8 @@ const register = async (req, res) => {
         schema: { $ref: '#/definitions/RegisterRequest' }
   } */
   try {
-    const { email, password, nom, prenom, role } = req.body;
-    const result = await authentificationService.register(email, password, nom, prenom, role);
+    const { email, password, nom, prenom, role, ecole } = req.body;
+    const result = await authentificationService.register(email, password, nom, prenom, role, ecole);
     return sendResponse(res, 201, true, 'Inscription réussie. Un email de vérification a été envoyé.', result);
   } catch (err) {
     console.error('[register]', err);
@@ -44,8 +44,8 @@ const creerUtilisateurAdmin = async (req, res) => {
         schema: { $ref: '#/definitions/CreateUserAdminRequest' }
   } */
   try {
-    const { nom, prenom, email } = req.body;
-    const result = await authentificationService.creerUtilisateurAdmin({ nom, prenom, email });
+    const { nom, prenom, email, niveau_acces, ecole } = req.body;
+    const result = await authentificationService.creerUtilisateurAdmin({ nom, prenom, email, niveau_acces, ecole });
     return sendResponse(res, 201, true, 'Compte administrateur créé. Les identifiants ont été envoyés par email.', result);
   } catch (err) {
     console.error('[creerUtilisateurAdmin]', err);

@@ -1,3 +1,4 @@
+import prisma from '#Config/prismaClient.js';
 import sendResponse from '#Utils/response.handler.js';
 
 // Vérifie le niveau d'accès de l'utilisateur
@@ -44,4 +45,20 @@ const requireOwnerOrAdmin = (idParamName = 'id') => {
   };
 };
 
-export { requireRole, requireOwnerOrAdmin };
+const requireNiveauAcces = (niveauRequis) => {
+  return async (req, res, next) => {
+    if (!req.user || req.user.role !== 'ADMINISTRATEUR') {
+      return sendResponse(res, 403, false, 'Accès refusé : administrateur requis');
+    }
+    const admin = await prisma.administrateur.findUnique({
+      where: { id_administrateur: req.user.id },
+      select: { niveau_acces: true },
+    });
+    if (!admin || admin.niveau_acces !== niveauRequis) {
+      return sendResponse(res, 403, false, `Accès refusé : niveau ${niveauRequis} requis`);
+    }
+    next();
+  };
+};
+
+export { requireRole, requireOwnerOrAdmin, requireNiveauAcces };

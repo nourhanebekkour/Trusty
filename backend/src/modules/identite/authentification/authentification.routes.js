@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as authentificationController from './authentification.controller.js';
 import { authMiddleware } from '#Middlewares/auth.middleware.js';
-import { requireRole } from '#Middlewares/roles.middleware.js';
+import { requireRole, requireNiveauAcces } from '#Middlewares/roles.middleware.js';
 import validate from '#Middlewares/validate.middleware.js';
 import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, createUserAdminSchema, requestAccountSchema, verifyEmailSchema } from './authentification.validator.js';
 import { loginLimiter, forgotPasswordLimiter } from '#Middlewares/rateLimiter.middleware.js';
@@ -40,7 +40,7 @@ router.get('/admin-only', authMiddleware, requireRole('ADMINISTRATEUR'), (_, res
 router.post(
   '/admin/create-user',
   authMiddleware,
-  requireRole('ADMINISTRATEUR'),
+  requireNiveauAcces('SUPER_ADMIN'),
   validate(createUserAdminSchema),
   authentificationController.creerUtilisateurAdmin
 );
