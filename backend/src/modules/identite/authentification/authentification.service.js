@@ -16,8 +16,11 @@ async function register(email, password, nom, prenom, role) {
 
   const isInstitutional = await isAcademic(email);
 
-  if ((role === 'ETUDIANT' || role === 'PROFESSEUR') && !isInstitutional) {
-    throw new Error('Un email institutionnel (académique) est requis pour ce rôle');
+  if (role === 'ETUDIANT' && !email.endsWith('@etu.uae.ac.ma')) {
+    throw new Error('Un email étudiant  est requis pour ce rôle');
+  }
+  if (role === 'PROFESSEUR' && !email.endsWith('@uae.ac.ma')) {
+    throw new Error('Un email professeur est requis pour ce rôle');
   }
   if (role === 'PROFESSIONNEL' && isInstitutional) {
     throw new Error('Un email non-institutionnel est requis pour le rôle PROFESSIONNEL');
