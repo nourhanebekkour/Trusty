@@ -210,7 +210,7 @@ const handleLogin = async () => {
     const captchaToken = await getCaptchaToken()
 
     //  authStore.login 
-    const success = await authStore.login(cleanEmail, cleanPassword)
+    const success = await authStore.login(cleanEmail, cleanPassword, remember.value)
 
     if (success) {
       loginAttempts.value = 0
