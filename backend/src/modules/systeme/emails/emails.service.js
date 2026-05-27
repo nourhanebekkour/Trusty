@@ -9,14 +9,14 @@ const transporter = nodemailer.createTransport({
         pass: process.env.SMTP_PASS
     }
 });
+
 export const envoyerEmailReinitialisation = async (email, token) => {
-    const lien=`${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    const lien = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
     const mailOptions = {
-        from: `"Trusty" <${process.env.SMTP_USER}>`,
+        from: `"Trusty" <${process.env.EMAIL_FROM}>`,
         to: email,
         subject: 'Réinitialisation de votre mot de passe',
         html: `
-
             <h2>Réinitialisation de votre mot de passe</h2>
             <p>Cliquez sur le lien ci-dessous. Il expire dans 1 heure.</p>
             <a href="${lien}">${lien}</a>
@@ -28,7 +28,7 @@ export const envoyerEmailReinitialisation = async (email, token) => {
 
 export const envoyerEmailCredentiels = async (email, nom, prenom, motDePasse, role) => {
   const mailOptions = {
-    from: `"Trusty" <${process.env.SMTP_USER}>`,
+    from: `"Trusty" <${process.env.EMAIL_FROM}>`,
     to: email,
     subject: 'Votre compte Trusty a été créé',
     html: `
@@ -48,7 +48,7 @@ export const envoyerEmailCredentiels = async (email, nom, prenom, motDePasse, ro
 
 export const envoyerEmailDemandeCompte = async (nom, prenom, email, role, message) => {
   const mailOptions = {
-    from: `"Trusty" <${process.env.SMTP_USER}>`,
+    from: `"Trusty" <${process.env.EMAIL_FROM}>`,
     to: process.env.ADMIN_EMAIL,
     subject: `Demande de création de compte — ${role}`,
     html: `
@@ -68,7 +68,7 @@ export const envoyerEmailDemandeCompte = async (nom, prenom, email, role, messag
 export const envoyerEmailVerification = async (email, token) => {
   const lien = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
   const mailOptions = {
-    from: `"Trusty" <${process.env.SMTP_USER}>`,
+    from: `"Trusty" <${process.env.EMAIL_FROM}>`,
     to: email,
     subject: 'Vérification de votre adresse email',
     html: `
