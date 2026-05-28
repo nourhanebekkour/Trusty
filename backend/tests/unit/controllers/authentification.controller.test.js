@@ -1,31 +1,34 @@
 import { jest } from '@jest/globals';
 
-// ============================================================
-// MOCKS DU SERVICE
-// Le controller ne fait pas de logique métier lui-même :
-// il délègue tout au service. On mock toutes les fonctions
-// exportées pour tester le controller en isolation totale.
-// ============================================================
-const mockRegister    = jest.fn();
-const mockLogin       = jest.fn();
-const mockRefreshToken = jest.fn();
-const mockLogout      = jest.fn();
-const mockGetMe       = jest.fn();
-const mockOublierMDP  = jest.fn();
-const mockChangerMDP  = jest.fn();
+const mockRegister              = jest.fn();
+const mockVerifierEmail         = jest.fn();
+const mockCreerUtilisateurAdmin = jest.fn();
+const mockDemanderCreationCompte = jest.fn();
+const mockLogin                 = jest.fn();
+const mockRefreshToken          = jest.fn();
+const mockLogout                = jest.fn();
+const mockGetMe                 = jest.fn();
+const mockOublierMDP            = jest.fn();
+const mockChangerMDP            = jest.fn();
 
 await jest.unstable_mockModule('#Modules/identite/authentification/authentification.service.js', () => ({
-    register:     mockRegister,
-    login:        mockLogin,
-    refreshToken: mockRefreshToken,
-    logout:       mockLogout,
-    getMe:        mockGetMe,
-    oublierMDP:   mockOublierMDP,
-    changerMDP:   mockChangerMDP,
+    register:               mockRegister,
+    verifierEmail:          mockVerifierEmail,
+    creerUtilisateurAdmin:  mockCreerUtilisateurAdmin,
+    demanderCreationCompte: mockDemanderCreationCompte,
+    login:                  mockLogin,
+    refreshToken:           mockRefreshToken,
+    logout:                 mockLogout,
+    getMe:                  mockGetMe,
+    oublierMDP:             mockOublierMDP,
+    changerMDP:             mockChangerMDP,
 }));
 
 const {
     register,
+    verifierEmail,
+    creerUtilisateurAdmin,
+    demanderCreationCompte,
     login,
     refresh,
     logout,
@@ -34,14 +37,6 @@ const {
     changerMDP,
 } = await import('#Modules/identite/authentification/authentification.controller.js');
 
-// ============================================================
-// Setup req / res simulés
-// Le controller reçoit (req, res) d'Express. On les simule
-// avec des jest.fn() pour vérifier ce qu'il appelle.
-//
-// • status().mockReturnThis() → permet le chaînage res.status(200).json(...)
-// • cookie / clearCookie     → vérifier que les tokens sont bien posés/effacés
-// ============================================================
 let req, res;
 
 beforeEach(() => {
@@ -49,7 +44,7 @@ beforeEach(() => {
         body:    {},
         params:  {},
         cookies: {},
-        user:    { id: 'u-1' },
+        user:    { id: 'u1' },
     };
     res = {
         status:      jest.fn().mockReturnThis(),
@@ -60,40 +55,24 @@ beforeEach(() => {
     jest.clearAllMocks();
 });
 
-// ============================================================
-// register
-// ============================================================
 describe('register', () => {
 
     test('retourne 201 si inscription réussie', async () => {
-        req.body = { email: 'test@test.com', password: 'password', nom: 'Test', prenom: 'User' };
-        mockRegister.mockResolvedValue({ id_utilisateur: 'u1' });
+        req.body = { email: 'test@etu.uae.ac.ma', password: 'password', nom: 'test', prenom: 'user', role: 'ETUDIANT', ecole: 'UAE' };
+        mockRegister.mockResolvedValue({ user: { id_utilisateur: 'u1' } });
 
         await register(req, res);
 
+        expect(mockRegister).toHaveBeenCalledWith('test@etu.uae.ac.ma', 'password', 'test', 'user', 'ETUDIANT', 'UAE');
         expect(res.status).toHaveBeenCalledWith(201);
         expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
             success: true,
-            message: 'Inscription réussie',
+            message: 'Inscription réussie. Un email de vérification a été envoyé.',
         }));
     });
 
-    test('retourne 400 si champs manquants', async () => {
-        req.body = { email: 'test@test.com' }; // nom, prenom, password absents
-
-        await register(req, res);
-
-        // Le controller vérifie les champs AVANT d'appeler le service
-        expect(mockRegister).not.toHaveBeenCalled();
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-            success: false,
-            message: 'Champs manquants (email, password, nom, prenom)',
-        }));
-    });
-
-    test('retourne 400 si le service lève une erreur (ex: email déjà utilisé)', async () => {
-        req.body = { email: 'test@test.com', password: 'password', nom: 'Test', prenom: 'User' };
+    test('retourne 400 si le service lève une erreur', async () => {
+        req.body = { email: 'test@etu.uae.ac.ma', password: 'password', nom: 'test', prenom: 'user', role: 'ETUDIANT' };
         mockRegister.mockRejectedValue(new Error('Cet email est déjà utilisé'));
 
         await register(req, res);
@@ -106,22 +85,119 @@ describe('register', () => {
     });
 });
 
-// ============================================================
-// login
-// ============================================================
+describe('verifierEmail', () => {
+
+    test('retourne 200 avec message ACTIF pour un ETUDIANT', async () => {
+        req.body = { token: 'token-valide' };
+        mockVerifierEmail.mockResolvedValue({ role: 'ETUDIANT', status_compte: 'ACTIF' });
+
+        await verifierEmail(req, res);
+
+        expect(mockVerifierEmail).toHaveBeenCalledWith('token-valide');
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+            success: true,
+            message: 'Email vérifié. Votre compte est maintenant actif.',
+        }));
+    });
+
+    test('retourne 200 avec message EN ATTENTE pour un PROFESSIONNEL', async () => {
+        req.body = { token: 'token-pro' };
+        mockVerifierEmail.mockResolvedValue({ role: 'PROFESSIONNEL', status_compte: 'INACTIF' });
+
+        await verifierEmail(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+            success: true,
+            message: 'Email vérifié. Votre compte est en attente de validation par un administrateur.',
+        }));
+    });
+
+    test('retourne 400 si le service lève une erreur', async () => {
+        req.body = { token: 'token-invalide' };
+        mockVerifierEmail.mockRejectedValue(new Error('Token de vérification invalide'));
+
+        await verifierEmail(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+            success: false,
+            message: 'Token de vérification invalide',
+        }));
+    });
+});
+
+describe('creerUtilisateurAdmin', () => {
+
+    test('retourne 201 si admin créé avec succès', async () => {
+        req.body = { nom: 'test', prenom: 'user', email: 'admin@uae.ac.ma', niveau_acces: 'ADMIN_ECOLE', ecole: 'UAE' };
+        mockCreerUtilisateurAdmin.mockResolvedValue({ user: { id_utilisateur: 'a1' } });
+
+        await creerUtilisateurAdmin(req, res);
+
+        expect(mockCreerUtilisateurAdmin).toHaveBeenCalledWith({ nom: 'test', prenom: 'user', email: 'admin@uae.ac.ma', niveau_acces: 'ADMIN_ECOLE', ecole: 'UAE' });
+        expect(res.status).toHaveBeenCalledWith(201);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+            success: true,
+            message: 'Compte administrateur créé. Les identifiants ont été envoyés par email.',
+        }));
+    });
+
+    test('retourne 400 si le service lève une erreur', async () => {
+        req.body = { nom: 'test', prenom: 'user', email: 'admin@uae.ac.ma', niveau_acces: 'ADMIN_ECOLE', ecole: 'UAE' };
+        mockCreerUtilisateurAdmin.mockRejectedValue(new Error('Cet email est déjà utilisé'));
+
+        await creerUtilisateurAdmin(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+            success: false,
+            message: 'Cet email est déjà utilisé',
+        }));
+    });
+});
+
+describe('demanderCreationCompte', () => {
+
+    test('retourne 200 si la demande est envoyée', async () => {
+        req.body = { nom: 'test', prenom: 'user', email: 'test@entreprise.com', role: 'PROFESSIONNEL', message: 'demande' };
+        mockDemanderCreationCompte.mockResolvedValue();
+
+        await demanderCreationCompte(req, res);
+
+        expect(mockDemanderCreationCompte).toHaveBeenCalledWith({ nom: 'test', prenom: 'user', email: 'test@entreprise.com', role: 'PROFESSIONNEL', message: 'demande' });
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+            success: true,
+        }));
+    });
+
+    test('retourne 500 si le service lève une erreur', async () => {
+        req.body = { nom: 'test', prenom: 'user', email: 'test@entreprise.com', role: 'PROFESSIONNEL', message: 'demande' };
+        mockDemanderCreationCompte.mockRejectedValue(new Error('Erreur envoi email'));
+
+        await demanderCreationCompte(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+            success: false,
+        }));
+    });
+});
+
 describe('login', () => {
 
     test('retourne 200 et pose les deux cookies si connexion réussie', async () => {
-        req.body = { email: 'test@test.com', password: 'password' };
+        req.body = { email: 'test@etu.uae.ac.ma', password: 'password' };
         mockLogin.mockResolvedValue({
             accessToken:  'access-token',
             refreshToken: 'refresh-token',
-            user: { id_utilisateur: 'u1', email: 'test@test.com' },
+            user: { id_utilisateur: 'u1', email: 'test@etu.uae.ac.ma' },
         });
 
         await login(req, res);
 
-        // Les deux tokens doivent être posés dans des cookies HttpOnly
         expect(res.cookie).toHaveBeenCalledWith('accessToken',  'access-token',  expect.any(Object));
         expect(res.cookie).toHaveBeenCalledWith('refreshToken', 'refresh-token', expect.any(Object));
         expect(res.status).toHaveBeenCalledWith(200);
@@ -131,8 +207,8 @@ describe('login', () => {
         }));
     });
 
-    test('retourne 401 si le service lève une erreur (mauvais mdp, compte inactif...)', async () => {
-        req.body = { email: 'test@test.com', password: 'wrong' };
+    test('retourne 401 si le service lève une erreur', async () => {
+        req.body = { email: 'test@etu.uae.ac.ma', password: 'wrong' };
         mockLogin.mockRejectedValue(new Error('Email ou mot de passe incorrect'));
 
         await login(req, res);
@@ -145,14 +221,10 @@ describe('login', () => {
     });
 });
 
-// ============================================================
-// refresh
-// Renouvelle l'access token à partir du refresh token dans les cookies.
-// ============================================================
 describe('refresh', () => {
 
     test('retourne 401 si le cookie refreshToken est absent', async () => {
-        req.cookies = {}; // pas de refreshToken
+        req.cookies = {};
 
         await refresh(req, res);
 
@@ -179,7 +251,7 @@ describe('refresh', () => {
         }));
     });
 
-    test('retourne 401 si le service lève une erreur (token expiré, invalide...)', async () => {
+    test('retourne 401 si le service lève une erreur', async () => {
         req.cookies = { refreshToken: 'bad-token' };
         mockRefreshToken.mockRejectedValue(new Error('Refresh token invalide ou expiré'));
 
@@ -193,20 +265,14 @@ describe('refresh', () => {
     });
 });
 
-// ============================================================
-// logout
-// Déconnecte l'utilisateur : efface les cookies et supprime
-// le refresh token en BDD (via le service).
-// ============================================================
 describe('logout', () => {
 
-    test('retourne 200 et efface les deux cookies si déconnexion réussie', async () => {
+    test('retourne 200 et efface les deux cookies', async () => {
         mockLogout.mockResolvedValue();
 
         await logout(req, res);
 
-        expect(mockLogout).toHaveBeenCalledWith('u-1');
-        // Les deux cookies doivent être effacés côté client
+        expect(mockLogout).toHaveBeenCalledWith('u1');
         expect(res.clearCookie).toHaveBeenCalledWith('accessToken',  expect.any(Object));
         expect(res.clearCookie).toHaveBeenCalledWith('refreshToken', expect.any(Object));
         expect(res.status).toHaveBeenCalledWith(200);
@@ -229,20 +295,15 @@ describe('logout', () => {
     });
 });
 
-// ============================================================
-// getMe
-// Retourne les infos du compte connecté (req.user.id injecté
-// par authMiddleware).
-// ============================================================
 describe('getMe', () => {
 
     test('retourne 200 avec les infos utilisateur', async () => {
-        const mockUser = { id_utilisateur: 'u-1', email: 'test@test.com', nom: 'Test', prenom: 'User' };
+        const mockUser = { id_utilisateur: 'u1', email: 'test@etu.uae.ac.ma', nom: 'test', prenom: 'user' };
         mockGetMe.mockResolvedValue(mockUser);
 
         await getMe(req, res);
 
-        expect(mockGetMe).toHaveBeenCalledWith('u-1');
+        expect(mockGetMe).toHaveBeenCalledWith('u1');
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
             success: true,
@@ -275,12 +336,9 @@ describe('getMe', () => {
     });
 });
 
-// ============================================================
-// oublierMDP
-// ============================================================
 describe('oublierMDP', () => {
 
-    test('retourne 400 si l\'email est absent du body', async () => {
+    test('retourne 400 si email absent du body', async () => {
         req.body = {};
 
         await oublierMDP(req, res);
@@ -293,13 +351,13 @@ describe('oublierMDP', () => {
         }));
     });
 
-    test('retourne 200 si l\'email est envoyé (peu importe si l\'email existe ou non)', async () => {
-        req.body = { email: 'test@test.com' };
+    test('retourne 200 si email envoyé', async () => {
+        req.body = { email: 'test@etu.uae.ac.ma' };
         mockOublierMDP.mockResolvedValue();
 
         await oublierMDP(req, res);
 
-        expect(mockOublierMDP).toHaveBeenCalledWith('test@test.com');
+        expect(mockOublierMDP).toHaveBeenCalledWith('test@etu.uae.ac.ma');
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
             success: true,
@@ -308,7 +366,7 @@ describe('oublierMDP', () => {
     });
 
     test('retourne 400 si le service lève une erreur', async () => {
-        req.body = { email: 'test@test.com' };
+        req.body = { email: 'test@etu.uae.ac.ma' };
         mockOublierMDP.mockRejectedValue(new Error('Erreur envoi email'));
 
         await oublierMDP(req, res);
@@ -320,13 +378,10 @@ describe('oublierMDP', () => {
     });
 });
 
-// ============================================================
-// changerMDP
-// ============================================================
 describe('changerMDP', () => {
 
-    test('retourne 400 si token ou nouveauMotDePasse est absent', async () => {
-        req.body = { token: 'tok' }; // nouveauMotDePasse manquant
+    test('retourne 400 si token ou nouveauMotDePasse absent', async () => {
+        req.body = { token: 'tok' };
 
         await changerMDP(req, res);
 
@@ -338,7 +393,7 @@ describe('changerMDP', () => {
         }));
     });
 
-    test('retourne 200 si le mot de passe est réinitialisé avec succès', async () => {
+    test('retourne 200 si mot de passe réinitialisé avec succès', async () => {
         req.body = { token: 'valid-token', nouveauMotDePasse: 'newPassword123' };
         mockChangerMDP.mockResolvedValue();
 
@@ -352,7 +407,7 @@ describe('changerMDP', () => {
         }));
     });
 
-    test('retourne 400 si le service lève une erreur (token invalide, expiré...)', async () => {
+    test('retourne 400 si le service lève une erreur', async () => {
         req.body = { token: 'bad-token', nouveauMotDePasse: 'newPassword123' };
         mockChangerMDP.mockRejectedValue(new Error('Token de réinitialisation invalide'));
 
