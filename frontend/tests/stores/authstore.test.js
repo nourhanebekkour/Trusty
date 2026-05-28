@@ -1,35 +1,23 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-<<<<<<< HEAD:frontend/tests/authstore.test.js
-import { useAuthStore } from '../src/stores/auth'
-=======
-import { useAuthStore } from '../../src/stores/authstore'
->>>>>>> d8683d494edc716797f461648f2c60f062f8a2ef:frontend/tests/stores/authstore.test.js
 
 // ─── Mock du service auth ─────────────────────────────────────────────────────
-// ✅
-vi.mock('../../src/services/authservices', () => ({
-  login: vi.fn(),
-  getProfile: vi.fn(),
+vi.mock('@/services/auth.service', () => ({
+  authService: {
+    login:    vi.fn(),
+    register: vi.fn(),
+    getMe:    vi.fn(),
+  },
 }))
 
-<<<<<<< HEAD:frontend/tests/authstore.test.js
-import { login, getProfile } from '../src/services/auth.service.jgrs'
-=======
-import { login, getProfile } from '../../src/services/authservices'
->>>>>>> d8683d494edc716797f461648f2c60f062f8a2ef:frontend/tests/stores/authstore.test.js
+// ─── Mock de l'api (pour logout) ─────────────────────────────────────────────
+vi.mock('@/api', () => ({
+  default: { post: vi.fn() },
+}))
 
-// ─── Mock localStorage ────────────────────────────────────────────────────────
-const localStorageMock = (() => {
-  let store = {}
-  return {
-    getItem:    (key)        => store[key] ?? null,
-    setItem:    (key, value) => { store[key] = String(value) },
-    removeItem: (key)        => { delete store[key] },
-    clear:      ()           => { store = {} },
-  }
-})()
-Object.defineProperty(global, 'localStorage', { value: localStorageMock })
+import { authService } from '@/services/auth.service'
+import api from '@/api'
+import { useAuthStore } from '@/stores/authstore'
 
 // ════════════════════════════════════════════════════════════════════════════
 // TESTS UNITAIRES
@@ -38,150 +26,177 @@ describe('authStore — Tests Unitaires', () => {
 
   beforeEach(() => {
     setActivePinia(createPinia())
-    localStorage.clear()
     vi.clearAllMocks()
-  })
-
-  afterEach(() => {
-    localStorage.clear()
   })
 
   // ── État initial ────────────────────────────────────────────────────────────
 
-  it('1 — état initial : user null, token null, loading false, error null', () => {
+  it('1 — état initial : user null, loading false, error null', () => {
     const store = useAuthStore()
     expect(store.user).toBeNull()
-    expect(store.token).toBeNull()
     expect(store.loading).toBe(false)
     expect(store.error).toBeNull()
   })
 
-  it('2 — état initial : token récupéré depuis localStorage si présent', () => {
-    localStorage.setItem('token', 'token-existant')
+  // ── login (succès) ──────────────────────────────────────────────────────────
+
+  it('2 — login : appelle authService.login avec email et password en objet', async () => {
+    authService.login.mockResolvedValue({})
+    authService.getMe.mockResolvedValue({ data: { nom: 'Alice' } })
     const store = useAuthStore()
-    expect(store.token).toBe('token-existant')
+
+    await store.login('alice@test.com', '1234')
+
+    expect(authService.login).toHaveBeenCalledWith({ email: 'alice@test.com', password: '1234' })
   })
 
-  // ── loginUser (succès) ──────────────────────────────────────────────────────
-
-  it('3 — loginUser : token sauvegardé dans le state et localStorage', async () => {
-    login.mockResolvedValue({
-      data: { token: 'abc123', user: { id: 1, name: 'Alice' } },
-    })
+  it('3 — login : user mis à jour via fetchUser après succès', async () => {
+    authService.login.mockResolvedValue({})
+    authService.getMe.mockResolvedValue({ data: { nom: 'Alice', email: 'alice@test.com' } })
     const store = useAuthStore()
-    await store.loginUser({ email: 'alice@test.com', password: '1234' })
 
-    expect(store.token).toBe('abc123')
-    expect(localStorage.getItem('token')).toBe('abc123')
+    await store.login('alice@test.com', '1234')
+
+    expect(store.user).toEqual({ nom: 'Alice', email: 'alice@test.com' })
   })
 
-  it('4 — loginUser : user sauvegardé dans le state', async () => {
-    login.mockResolvedValue({
-      data: { token: 'abc123', user: { id: 1, name: 'Alice' } },
-    })
+  it('4 — login : retourne true après succès', async () => {
+    authService.login.mockResolvedValue({})
+    authService.getMe.mockResolvedValue({ data: { nom: 'Alice' } })
     const store = useAuthStore()
-    await store.loginUser({ email: 'alice@test.com', password: '1234' })
 
-    expect(store.user).toEqual({ id: 1, name: 'Alice' })
+    const result = await store.login('alice@test.com', '1234')
+
+    expect(result).toBe(true)
   })
 
-  it('5 — loginUser : loading passe à false après succès', async () => {
-    login.mockResolvedValue({
-      data: { token: 'abc123', user: { id: 1, name: 'Alice' } },
-    })
+  it('5 — login : loading passe à false après succès', async () => {
+    authService.login.mockResolvedValue({})
+    authService.getMe.mockResolvedValue({ data: { nom: 'Alice' } })
     const store = useAuthStore()
-    await store.loginUser({ email: 'alice@test.com', password: '1234' })
+
+    await store.login('alice@test.com', '1234')
 
     expect(store.loading).toBe(false)
   })
 
-  it('6 — loginUser : error reste null après succès', async () => {
-    login.mockResolvedValue({
-      data: { token: 'abc123', user: { id: 1, name: 'Alice' } },
-    })
+  it('6 — login : error reste null après succès', async () => {
+    authService.login.mockResolvedValue({})
+    authService.getMe.mockResolvedValue({ data: { nom: 'Alice' } })
     const store = useAuthStore()
-    await store.loginUser({ email: 'alice@test.com', password: '1234' })
+
+    await store.login('alice@test.com', '1234')
 
     expect(store.error).toBeNull()
   })
 
-  // ── loginUser (échec) ───────────────────────────────────────────────────────
+  // ── login (échec) ───────────────────────────────────────────────────────────
 
-  it('7 — loginUser : error set avec message du serveur si échec', async () => {
-    login.mockRejectedValue({
+  it('7 — login : error set avec message du serveur si échec', async () => {
+    authService.login.mockRejectedValue({
       response: { data: { message: 'Identifiants invalides' } },
     })
     const store = useAuthStore()
-    await store.loginUser({ email: 'wrong@test.com', password: 'wrong' })
+
+    await store.login('wrong@test.com', 'wrong')
 
     expect(store.error).toBe('Identifiants invalides')
   })
 
-  it('8 — loginUser : error fallback générique si pas de message serveur', async () => {
-    login.mockRejectedValue({})
+  it('8 — login : error fallback générique si pas de message serveur', async () => {
+    authService.login.mockRejectedValue({})
     const store = useAuthStore()
-    await store.loginUser({ email: 'wrong@test.com', password: 'wrong' })
 
-    expect(store.error).toBe('Erreur de connexion')
+    await store.login('wrong@test.com', 'wrong')
+
+    expect(store.error).toBe('Erreur connexion')
   })
 
-  it('9 — loginUser : loading passe à false même après une erreur', async () => {
-    login.mockRejectedValue({ response: { data: { message: 'Erreur' } } })
+  it('9 — login : retourne false après échec', async () => {
+    authService.login.mockRejectedValue({ response: { data: { message: 'Erreur' } } })
     const store = useAuthStore()
-    await store.loginUser({ email: 'wrong@test.com', password: 'wrong' })
+
+    const result = await store.login('wrong@test.com', 'wrong')
+
+    expect(result).toBe(false)
+  })
+
+  it('10 — login : loading passe à false même après une erreur', async () => {
+    authService.login.mockRejectedValue({ response: { data: { message: 'Erreur' } } })
+    const store = useAuthStore()
+
+    await store.login('wrong@test.com', 'wrong')
 
     expect(store.loading).toBe(false)
   })
 
-  it('10 — loginUser : token et user restent null après échec', async () => {
-    login.mockRejectedValue({ response: { data: { message: 'Erreur' } } })
+  it('11 — login : user reste null après échec', async () => {
+    authService.login.mockRejectedValue({ response: { data: { message: 'Erreur' } } })
     const store = useAuthStore()
-    await store.loginUser({ email: 'wrong@test.com', password: 'wrong' })
 
-    expect(store.token).toBeNull()
+    await store.login('wrong@test.com', 'wrong')
+
     expect(store.user).toBeNull()
   })
 
   // ── logout ──────────────────────────────────────────────────────────────────
 
-  it('11 — logout : remet user et token à null', async () => {
-    login.mockResolvedValue({
-      data: { token: 'abc123', user: { id: 1, name: 'Alice' } },
-    })
+  it('12 — logout : appelle api.post /auth/logout', async () => {
+    api.post.mockResolvedValue({})
     const store = useAuthStore()
-    await store.loginUser({ email: 'alice@test.com', password: '1234' })
-    store.logout()
+
+    await store.logout()
+
+    expect(api.post).toHaveBeenCalledWith('/auth/logout')
+  })
+
+  it('13 — logout : remet user à null', async () => {
+    authService.login.mockResolvedValue({})
+    authService.getMe.mockResolvedValue({ data: { nom: 'Alice' } })
+    api.post.mockResolvedValue({})
+    const store = useAuthStore()
+
+    await store.login('alice@test.com', '1234')
+    expect(store.user).not.toBeNull()
+
+    await store.logout()
 
     expect(store.user).toBeNull()
-    expect(store.token).toBeNull()
   })
 
-  it('12 — logout : supprime le token du localStorage', async () => {
-    login.mockResolvedValue({
-      data: { token: 'abc123', user: { id: 1, name: 'Alice' } },
-    })
+  it('14 — logout : ne plante pas si api.post échoue', async () => {
+    api.post.mockRejectedValue(new Error('Network error'))
     const store = useAuthStore()
-    await store.loginUser({ email: 'alice@test.com', password: '1234' })
-    store.logout()
 
-    expect(localStorage.getItem('token')).toBeNull()
+    await expect(store.logout()).resolves.not.toThrow()
+    expect(store.user).toBeNull()
   })
 
-  // ── fetchProfile ────────────────────────────────────────────────────────────
+  // ── fetchUser ───────────────────────────────────────────────────────────────
 
-  it('13 — fetchProfile : met à jour user avec les données reçues', async () => {
-    getProfile.mockResolvedValue({ data: { id: 1, name: 'Alice', email: 'alice@test.com' } })
+  it('15 — fetchUser : met à jour user avec les données reçues', async () => {
+    authService.getMe.mockResolvedValue({ data: { nom: 'Alice', email: 'alice@test.com' } })
     const store = useAuthStore()
-    await store.fetchProfile()
 
-    expect(store.user).toEqual({ id: 1, name: 'Alice', email: 'alice@test.com' })
+    await store.fetchUser()
+
+    expect(store.user).toEqual({ nom: 'Alice', email: 'alice@test.com' })
   })
 
-  it('14 — fetchProfile : ne plante pas si le service échoue', async () => {
-    getProfile.mockRejectedValue(new Error('Network error'))
+  it('16 — fetchUser : user mis à null si getMe échoue', async () => {
+    authService.getMe.mockRejectedValue(new Error('Network error'))
     const store = useAuthStore()
 
-    await expect(store.fetchProfile()).resolves.not.toThrow()
+    await store.fetchUser()
+
+    expect(store.user).toBeNull()
+  })
+
+  it('17 — fetchUser : ne rejette pas si getMe échoue', async () => {
+    authService.getMe.mockRejectedValue(new Error('Network error'))
+    const store = useAuthStore()
+
+    await expect(store.fetchUser()).resolves.not.toThrow()
   })
 })
 
@@ -192,73 +207,60 @@ describe("authStore — Tests d'Intégration", () => {
 
   beforeEach(() => {
     setActivePinia(createPinia())
-    localStorage.clear()
     vi.clearAllMocks()
   })
 
-  afterEach(() => {
-    localStorage.clear()
-  })
-
-  it('15 — login puis logout : état complètement réinitialisé', async () => {
-    login.mockResolvedValue({
-      data: { token: 'abc123', user: { id: 1, name: 'Alice' } },
-    })
+  it('18 — login puis logout : user réinitialisé à null', async () => {
+    authService.login.mockResolvedValue({})
+    authService.getMe.mockResolvedValue({ data: { nom: 'Alice' } })
+    api.post.mockResolvedValue({})
     const store = useAuthStore()
 
-    await store.loginUser({ email: 'alice@test.com', password: '1234' })
-    expect(store.token).toBe('abc123')
+    await store.login('alice@test.com', '1234')
     expect(store.user).not.toBeNull()
 
-    store.logout()
-    expect(store.token).toBeNull()
+    await store.logout()
     expect(store.user).toBeNull()
-    expect(localStorage.getItem('token')).toBeNull()
   })
 
-  it('16 — login puis fetchProfile : user mis à jour avec données complètes', async () => {
-    login.mockResolvedValue({
-      data: { token: 'abc123', user: { id: 1, name: 'Alice' } },
-    })
-    getProfile.mockResolvedValue({
-      data: { id: 1, name: 'Alice', email: 'alice@test.com', role: 'admin' },
-    })
+  it('19 — login puis fetchUser : user mis à jour avec données complètes', async () => {
+    authService.login.mockResolvedValue({})
+    authService.getMe
+      .mockResolvedValueOnce({ data: { nom: 'Alice' } })
+      .mockResolvedValueOnce({ data: { nom: 'Alice', email: 'alice@test.com', role: 'ETUDIANT' } })
     const store = useAuthStore()
 
-    await store.loginUser({ email: 'alice@test.com', password: '1234' })
-    await store.fetchProfile()
+    await store.login('alice@test.com', '1234')
+    await store.fetchUser()
 
-    expect(store.user).toEqual({ id: 1, name: 'Alice', email: 'alice@test.com', role: 'admin' })
-    expect(store.token).toBe('abc123')
+    expect(store.user).toEqual({ nom: 'Alice', email: 'alice@test.com', role: 'ETUDIANT' })
   })
 
-  it('17 — deux tentatives login : la deuxième écrase la première', async () => {
-    login
-      .mockResolvedValueOnce({ data: { token: 'token-1', user: { id: 1, name: 'Alice' } } })
-      .mockResolvedValueOnce({ data: { token: 'token-2', user: { id: 2, name: 'Bob' } } })
-
+  it('20 — deux tentatives login : la deuxième écrase la première', async () => {
+    authService.login.mockResolvedValue({})
+    authService.getMe
+      .mockResolvedValueOnce({ data: { nom: 'Alice' } })
+      .mockResolvedValueOnce({ data: { nom: 'Bob' } })
     const store = useAuthStore()
 
-    await store.loginUser({ email: 'alice@test.com', password: '1234' })
-    await store.loginUser({ email: 'bob@test.com', password: '5678' })
+    await store.login('alice@test.com', '1234')
+    await store.login('bob@test.com', '5678')
 
-    expect(store.token).toBe('token-2')
-    expect(store.user.name).toBe('Bob')
-    expect(localStorage.getItem('token')).toBe('token-2')
+    expect(store.user.nom).toBe('Bob')
   })
 
-  it('18 — échec login : error effacée au prochain essai réussi', async () => {
-    login
+  it('21 — échec login : error effacée au prochain essai réussi', async () => {
+    authService.login
       .mockRejectedValueOnce({ response: { data: { message: 'Identifiants invalides' } } })
-      .mockResolvedValueOnce({ data: { token: 'abc123', user: { id: 1, name: 'Alice' } } })
-
+      .mockResolvedValueOnce({})
+    authService.getMe.mockResolvedValue({ data: { nom: 'Alice' } })
     const store = useAuthStore()
 
-    await store.loginUser({ email: 'wrong@test.com', password: 'wrong' })
+    await store.login('wrong@test.com', 'wrong')
     expect(store.error).toBe('Identifiants invalides')
 
-    await store.loginUser({ email: 'alice@test.com', password: '1234' })
+    await store.login('alice@test.com', '1234')
     expect(store.error).toBeNull()
-    expect(store.token).toBe('abc123')
+    expect(store.user).not.toBeNull()
   })
 })
