@@ -1,4 +1,4 @@
-import { PrismaClient, Role, StatusUtilisateur, Niveau, VisibiliteProfil, TypeProjet, TypeActivite, NiveauAcces, Departement } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -6,176 +6,208 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Début du seeding...');
 
-  const passwordHash = await bcrypt.hash('password123', 10);
+  // Nettoyage de la base de données (Optionnel, à commenter si vous voulez garder les données)
+  // await prisma.utilisateur.deleteMany();
 
-  // 1. Création de l'Administrateur
-  const adminUser = await prisma.utilisateur.upsert({
-    where: { email: 'admin@test.com' },
-    update: {},
-    create: {
-      email: 'admin@test.com',
-      mot_de_passe: passwordHash,
-      nom: 'Admin',
-      prenom: 'System',
-      role: Role.ADMINISTRATEUR,
-      status_compte: StatusUtilisateur.ACTIF,
-      email_verifie: true,
-      administrateur: {
-        create: {
-          niveau_acces: NiveauAcces.SUPER_ADMIN,
-        },
-      },
-    },
-  });
-  console.log('Admin créé');
+  const salt = await bcrypt.genSalt(10);
+  const passwordHash = await bcrypt.hash('password123', salt);
 
-  // 2. Création du Professeur
-  const profUser = await prisma.utilisateur.upsert({
-    where: { email: 'prof@test.com' },
-    update: {},
-    create: {
-      email: 'prof@test.com',
-      mot_de_passe: passwordHash,
-      nom: 'Zahidi',
-      prenom: 'Mohammed',
-      role: Role.PROFESSEUR,
-      status_compte: StatusUtilisateur.ACTIF,
-      email_verifie: true,
-      professeur: {
-        create: {
-          departement: Departement.SIC,
-          specialite: 'Génie Logiciel',
-        },
-      },
-    },
-  });
-  console.log('Professeur créé');
+  // 1. Écoles utilisées pour le seed
+  const ecole1 = 'ENSATanger';
+  const ecole2 = 'ENCGTanger';
 
-  // 3. Création de l'Étudiant
-  const etudiantUser = await prisma.utilisateur.upsert({
-    where: { email: 'etudiant@test.com' },
-    update: {},
-    create: {
-      email: 'etudiant@test.com',
+  // ==========================================
+  // 2. Création des ÉTUDIANTS (2)
+  // ==========================================
+  console.log('Création des étudiants...');
+  const etudiant1 = await prisma.utilisateur.create({
+    data: {
+      email: 'etudiant1@etu.uae.ac.ma',
       mot_de_passe: passwordHash,
-      nom: 'Ghailani',
-      prenom: 'Amine',
-      role: Role.ETUDIANT,
-      status_compte: StatusUtilisateur.ACTIF,
+      nom: 'Dupont',
+      prenom: 'Jean',
+      role: 'ETUDIANT',
+      ecole: ecole1,
+      status_compte: 'ACTIF',
       email_verifie: true,
       etudiant: {
         create: {
-          numero_etudiant: '2026001',
+          numero_etudiant: 'E10001',
           filiere: 'GINF',
-          annee: 4,
-          ville: 'Casablanca',
-          biographie: 'Étudiant passionné par le développement fullstack.',
-          linkedin_url: 'https://linkedin.com/in/amine-ghailani',
-          github_username: 'aminegh',
-          visibilite_profil: VisibiliteProfil.PUBLIC,
-        },
-      },
-    },
-  });
-  console.log('Étudiant créé');
-
-  const idEtudiant = etudiantUser.id_utilisateur;
-  const idProf = profUser.id_utilisateur;
-
-  // 4. Technologies
-  const techReact = await prisma.technologie.upsert({
-    where: { nom: 'React' },
-    update: {},
-    create: { nom: 'React', categorie: 'Frontend', description: 'Bibliothèque UI' },
+          annee: 3
+        }
+      }
+    }
   });
 
-  const techNode = await prisma.technologie.upsert({
-    where: { nom: 'Node.js' },
-    update: {},
-    create: { nom: 'Node.js', categorie: 'Backend', description: 'Runtime JavaScript' },
-  });
-
-  const techPrisma = await prisma.technologie.upsert({
-    where: { nom: 'Prisma' },
-    update: {},
-    create: { nom: 'Prisma', categorie: 'ORM', description: 'Database Toolkit' },
-  });
-  console.log('Technologies créées');
-
-  // 5. Projet
-  const projet = await prisma.projet.create({
+  const etudiant2 = await prisma.utilisateur.create({
     data: {
-      titre: 'E-Portfolio EMSI',
-      description: 'Développement d\'une plateforme de e-portfolio pour les étudiants.',
-      type_projet: TypeProjet.PFE,
-      date_debut: new Date('2026-01-01'),
-      status_validation: 'VALIDE',
-      date_validation: new Date(),
-      id_validateur: idProf,
-      participations: {
+      email: 'etudiant2@etu.uae.ac.ma',
+      mot_de_passe: passwordHash,
+      nom: 'Martin',
+      prenom: 'Sophie',
+      role: 'ETUDIANT',
+      ecole: ecole2,
+      status_compte: 'ACTIF',
+      email_verifie: true,
+      etudiant: {
         create: {
-          id_etudiant: idEtudiant,
-          role_joue: 'Lead Developer',
-          est_createur: true,
-          date_debut: new Date('2026-01-01'),
-        },
-      },
-      technologies: {
-        create: [
-          { id_technologie: techReact.id_technologie, niveau_utilisation: Niveau.AVANCE },
-          { id_technologie: techNode.id_technologie, niveau_utilisation: Niveau.INTERMEDIAIRE },
-          { id_technologie: techPrisma.id_technologie, niveau_utilisation: Niveau.AVANCE },
-        ],
-      },
-    },
+          numero_etudiant: 'E20002',
+          filiere: 'CSI', // Imaginons une filière pour ENCG ou changeons selon schema.prisma
+          annee: 2
+        }
+      }
+    }
   });
-  console.log('Projet créé');
 
-  // 6. Stage
-  const stage = await prisma.stage.create({
+  // ==========================================
+  // 3. Création des PROFESSEURS (2) - Même école que les étudiants
+  // ==========================================
+  console.log('Création des professeurs...');
+  await prisma.utilisateur.create({
     data: {
-      entreprise: 'Capgemini',
-      poste: 'Stagiaire Développeur Java/Angular',
-      date_debut: new Date('2025-06-01'),
-      date_fin: new Date('2025-08-31'),
-      missions: 'Conception et développement d\'un module de gestion RH.',
-      status_validation: 'VALIDE',
-      id_etudiant: idEtudiant,
-      id_validateur: idProf,
-      technologies: {
-        create: [
-          { id_technologie: techNode.id_technologie, niveau_utilisation: Niveau.DEBUTANT },
-        ],
-      },
-    },
+      email: 'prof1@uae.ac.ma',
+      mot_de_passe: passwordHash,
+      nom: 'Alami',
+      prenom: 'Ahmed',
+      role: 'PROFESSEUR',
+      ecole: ecole1, // Même école que etudiant1
+      status_compte: 'ACTIF',
+      email_verifie: true,
+      professeur: {
+        create: {
+          departement: 'SIC',
+          specialite: 'Génie Informatique',
+          filieres_interv: ['GINF', 'GSR']
+        }
+      }
+    }
   });
-  console.log('Stage créé');
 
-  // 7. Formation
-  await prisma.formation.create({
+  await prisma.utilisateur.create({
     data: {
-      diplome: 'Ingénierie Informatique et Réseaux',
-      etablissement: 'EMSI Casablanca',
-      date_debut: new Date('2022-09-01'),
-      id_etudiant: idEtudiant,
-      mention: 'Bien',
-    },
+      email: 'prof2@uae.ac.ma',
+      mot_de_passe: passwordHash,
+      nom: 'Bennani',
+      prenom: 'Karim',
+      role: 'PROFESSEUR',
+      ecole: ecole2, // Même école que etudiant2
+      status_compte: 'ACTIF',
+      email_verifie: true,
+      professeur: {
+        create: {
+          departement: 'MI',
+          specialite: 'Management',
+          filieres_interv: ['CSI']
+        }
+      }
+    }
   });
-  console.log('Formation créée');
 
-  // 8. Activité Parascolaire
-  await prisma.activiteParascolaire.create({
+  // ==========================================
+  // 4. Création du SUPER_ADMIN (1)
+  // ==========================================
+  console.log('Création du super admin...');
+  await prisma.utilisateur.create({
     data: {
-      nom_activite: 'EMSI IT Club',
-      type_activite: TypeActivite.CLUB,
-      organisation: 'EMSI',
-      date_debut: new Date('2023-10-01'),
-      description: 'Membre actif du club informatique, organisation de workshops.',
-      id_etudiant: idEtudiant,
-      role: 'Responsable Technique',
-    },
+      email: 'superadmin@system.com',
+      mot_de_passe: passwordHash,
+      nom: 'Admin',
+      prenom: 'Super',
+      role: 'ADMINISTRATEUR', // On lui assigne une école par défaut ou null si permis (enum Ecole non nullable dans le schema pour Utilisateur?)
+      status_compte: 'ACTIF',
+      email_verifie: true,
+      administrateur: {
+        create: {
+          niveau_acces: 'SUPER_ADMIN'
+        }
+      }
+    }
   });
-  console.log('Activité parascolaire créée');
+
+  // ==========================================
+  // 5. Création des ADMINS (2) - Un pour chaque école
+  // ==========================================
+  console.log('Création des admins...');
+  await prisma.utilisateur.create({
+    data: {
+      email: 'admin1@ensat.ac.ma',
+      mot_de_passe: passwordHash,
+      nom: 'Ibrahimi',
+      prenom: 'Sara',
+      role: 'ADMINISTRATEUR',
+      ecole: ecole1, // Même école que etudiant1 et prof1
+      status_compte: 'ACTIF',
+      email_verifie: true,
+      administrateur: {
+        create: {
+          niveau_acces: 'ADMIN'
+        }
+      }
+    }
+  });
+
+  await prisma.utilisateur.create({
+    data: {
+      email: 'admin2@encgt.ac.ma',
+      mot_de_passe: passwordHash,
+      nom: 'Tazi',
+      prenom: 'Yassine',
+      role: 'ADMINISTRATEUR',
+      ecole: ecole2, // Même école que etudiant2 et prof2
+      status_compte: 'ACTIF',
+      email_verifie: true,
+      administrateur: {
+        create: {
+          niveau_acces: 'ADMIN'
+        }
+      }
+    }
+  });
+
+  // ==========================================
+  // 6. Création des PROFESSIONNELS (2)
+  // ==========================================
+  console.log('Création des professionnels...');
+  await prisma.utilisateur.create({
+    data: {
+      email: 'pro1@google.com',
+      mot_de_passe: passwordHash,
+      nom: 'Brin',
+      prenom: 'Sergey',
+      role: 'PROFESSIONNEL',
+      status_compte: 'ACTIF',
+      email_verifie: true,
+      professionnel: {
+        create: {
+          entreprise: 'Google',
+          poste: 'Software Engineer',
+          secteur_activite: 'Technologie',
+          status_validation: 'VALIDE'
+        }
+      }
+    }
+  });
+
+  await prisma.utilisateur.create({
+    data: {
+      email: 'pro2@microsoft.com',
+      mot_de_passe: passwordHash,
+      nom: 'Nadella',
+      prenom: 'Satya',
+      role: 'PROFESSIONNEL',
+      status_compte: 'ACTIF',
+      email_verifie: true,
+      professionnel: {
+        create: {
+          entreprise: 'Microsoft',
+          poste: 'CEO',
+          secteur_activite: 'Technologie',
+          status_validation: 'VALIDE'
+        }
+      }
+    }
+  });
 
   console.log('Seeding terminé avec succès !');
 }
