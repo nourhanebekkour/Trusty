@@ -7,7 +7,7 @@ const makeUser = (overrides = {}) => ({
   prenom: 'Yassine',
   nom: 'Benali',
   telephone: '+212 6 12 34 56 78',
-  ville: 'Fès',
+  etudiant: { ville: 'Fès' },
   ...overrides,
 })
 
@@ -32,10 +32,10 @@ describe('ProfileEditModal.vue', () => {
       expect(wrapper.find('.modal-header h3').text()).toBe('Modifier le profil')
     })
 
-    it('affiche les 4 champs du formulaire', () => {
+    it('affiche les 7 champs du formulaire', () => {
       wrapper = mountComponent()
       const inputs = wrapper.findAll('input')
-      expect(inputs).toHaveLength(4)
+      expect(inputs).toHaveLength(7)
     })
 
     it('affiche le bouton Annuler', () => {
@@ -91,7 +91,7 @@ describe('ProfileEditModal.vue', () => {
     })
 
     it('utilise une chaîne vide si le champ est null/undefined', () => {
-      wrapper = mountComponent(makeUser({ telephone: null, ville: undefined }))
+      wrapper = mountComponent(makeUser({ telephone: null, etudiant: { ville: undefined } }))
       const tel = wrapper.find('input[placeholder="+212 6 ..."]')
       const ville = wrapper.find('input[placeholder="Fès, Maroc"]')
       expect(tel.element.value).toBe('')
@@ -117,12 +117,9 @@ describe('ProfileEditModal.vue', () => {
   })
 
   // ── Watch sur props.user ──────────────────────────────────────────────────────
-  // Le watch réagit au remplacement de l'objet user. setProps dans JSDOM
-  // ne garantit pas le déclenchement synchrone du watch Vue dans tous les cas.
-  // On teste le comportement observable : le formulaire reflète toujours le user reçu.
   describe('Watch sur props.user', () => {
     it('initialise le formulaire avec un user différent au montage', () => {
-      const newUser = makeUser({ prenom: 'Karim', nom: 'Alami', telephone: '+212 7 00 00 00 00', ville: 'Agadir' })
+      const newUser = makeUser({ prenom: 'Karim', nom: 'Alami', telephone: '+212 7 00 00 00 00', etudiant: { ville: 'Agadir' } })
       wrapper = mountComponent(newUser)
       expect(wrapper.find('input[placeholder="Prénom"]').element.value).toBe('Karim')
       expect(wrapper.find('input[placeholder="Nom"]').element.value).toBe('Alami')
@@ -137,7 +134,7 @@ describe('ProfileEditModal.vue', () => {
         { prenom: 'Mehdi', nom: 'Idrissi', telephone: '+212 5 11 22 33 44', ville: 'Fès'    },
       ]
       cases.forEach(({ prenom, nom, telephone, ville }) => {
-        wrapper = mountComponent(makeUser({ prenom, nom, telephone, ville }))
+        wrapper = mountComponent(makeUser({ prenom, nom, telephone, etudiant: { ville } }))
         expect(wrapper.find('input[placeholder="Prénom"]').element.value).toBe(prenom)
         expect(wrapper.find('input[placeholder="Nom"]').element.value).toBe(nom)
         expect(wrapper.find('input[placeholder="Fès, Maroc"]').element.value).toBe(ville)
@@ -196,7 +193,7 @@ describe('ProfileEditModal.vue', () => {
 
   // ── Labels ────────────────────────────────────────────────────────────────────
   describe('Labels du formulaire', () => {
-    it('affiche les 4 labels', () => {
+    it('affiche les labels principaux', () => {
       wrapper = mountComponent()
       const labels = wrapper.findAll('label')
       const texts = labels.map(l => l.text())
