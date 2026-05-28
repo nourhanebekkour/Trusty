@@ -1,31 +1,81 @@
 import api from '@/api'
 
-// ─── Helper ───────────────────────────
+// ─── Helper extraction ────────────────────────────────────────────────────────
+function extractData(res) {
+  const body = res?.data ?? res
+  // L'API retourne { success, message, data: [...] } ou directement [...]
+  if (body?.data !== undefined) return body.data
+  return body
+}
 
-const VALID_ROLES = ['PROFESSIONNEL', 'PROFESSEUR', 'ETUDIANT', 'ADMIN']
+function isEmpty(value) {
+  if (value === null || value === undefined) return true
+  if (Array.isArray(value)) return value.length === 0
+  if (typeof value === 'object') return Object.keys(value).length === 0
+  return false
+}
 
+// ─── Helper affichage auteur ──────────────────────────────────────────────────
 export function getAuteurLabel(auteur) {
-  if (!auteur || typeof auteur !== 'object') return ''
-
-  // Validation du rôle avant de lire des champs dépendants du rôle
-  const role = typeof auteur.role === 'string' ? auteur.role.toUpperCase() : ''
-  if (!VALID_ROLES.includes(role)) return ''
-
-  const sanitize = (val) =>
-    typeof val === 'string'
-      ? val.trim().replace(/[\u0000-\u001F\u007F]/g, '').slice(0, 200)
-      : ''
+  if (!auteur) return ''
+  const role = auteur.role ?? auteur.utilisateur?.role
 
   if (role === 'PROFESSIONNEL') {
-    return [sanitize(auteur.poste), sanitize(auteur.entreprise)].filter(Boolean).join(' · ')
+    const poste     = auteur.poste     ?? auteur.professionnel?.poste
+    const entreprise = auteur.entreprise ?? auteur.professionnel?.entreprise
+    return [poste, entreprise].filter(Boolean).join(' · ')
   }
   if (role === 'PROFESSEUR') {
-    return [sanitize(auteur.specialite), sanitize(auteur.departement)].filter(Boolean).join(' · ')
+    const specialite  = auteur.specialite  ?? auteur.professeur?.specialite
+    const departement = auteur.departement ?? auteur.professeur?.departement
+    return [specialite, departement].filter(Boolean).join(' · ')
+  }
+  if (role === 'ETUDIANT') {
+    const filiere = auteur.filiere ?? auteur.etudiant?.filiere
+    const annee   = auteur.annee   ?? auteur.etudiant?.annee
+    return [filiere, annee ? `Année ${annee}` : null].filter(Boolean).join(' · ')
   }
   return sanitize(auteur.poste)
 }
 
-// ─── Mock data ────────────────────
+// ─── Normalise un objet recommandation quelle que soit la forme API ──────────
+// L'API peut retourner :
+//   { id_recommandation, message, status, auteur: { nom, prenom, role, ... } }
+// ou :
+//   { id_recommandation, message, status,
+//     recommandeur: { nom, prenom, role, professeur: {...}, professionnel: {...} } }
+function normalizeReco(r) {
+  // Extraire l'auteur depuis toutes les formes possibles
+  const raw = r.auteur ?? r.recommandeur ?? r.utilisateur ?? null
+
+  let auteur = null
+  if (raw) {
+    // Construire un objet auteur plat avec les infos disponibles
+    const u = raw.utilisateur ?? raw  // si l'API imbrique utilisateur dans recommandeur
+    auteur = {
+      nom:    u.nom    ?? raw.nom    ?? '',
+      prenom: u.prenom ?? raw.prenom ?? '',
+      photo:  u.photo  ?? raw.photo  ?? null,
+      role:   u.role   ?? raw.role   ?? '',
+      // Détails selon le rôle — aplatir depuis les sous-objets si présents
+      poste:        raw.professionnel?.poste        ?? raw.poste        ?? u.professionnel?.poste        ?? null,
+      entreprise:   raw.professionnel?.entreprise   ?? raw.entreprise   ?? u.professionnel?.entreprise   ?? null,
+      specialite:   raw.professeur?.specialite      ?? raw.specialite   ?? u.professeur?.specialite      ?? null,
+      departement:  raw.professeur?.departement     ?? raw.departement  ?? u.professeur?.departement     ?? null,
+      filiere:      raw.etudiant?.filiere            ?? raw.filiere      ?? u.etudiant?.filiere            ?? null,
+    }
+  }
+
+  return {
+    id_recommandation: r.id_recommandation,
+    message:           r.message ?? '',
+    status:            r.status  ?? 'EN_ATTENTE',
+    date_creation:     r.date_creation ?? null,
+    auteur,
+  }
+}
+
+// ─── Mock data (fallback seulement si API inaccessible) ──────────────────────
 const MOCK_STATS = {
   projetsCertifies: 4,
   credibilite:      78,
@@ -71,94 +121,37 @@ const MOCK_RECOS = [
     id_recommandation: 'rec1',
     message:           'Étudiant sérieux et très impliqué dans ses projets. Je recommande vivement.',
     status:            'VALIDE',
-    auteur: { nom: 'Dupont', prenom: 'Marie', role: 'PROFESSIONNEL', poste: 'Responsable RH', entreprise: 'TechCorp' },
+    date_creation:     new Date().toISOString(),
+    auteur: { nom: 'Dupont', prenom: 'Marie', role: 'PROFESSIONNEL', poste: 'Responsable RH', entreprise: 'TechCorp', photo: null },
   },
   {
     id_recommandation: 'rec2',
     message:           'Excellent travail en équipe, très bon niveau technique.',
     status:            'VALIDE',
-    auteur: { nom: 'Martin', prenom: 'Jean', role: 'PROFESSEUR', specialite: 'Génie logiciel', departement: 'SIC' },
+    date_creation:     new Date().toISOString(),
+    auteur: { nom: 'Martin', prenom: 'Jean', role: 'PROFESSEUR', specialite: 'Génie logiciel', departement: 'SIC', photo: null },
   },
 ]
 
-// ─── Helper interne ──────────────────────
-
-function isEmpty(value) {
-  if (value === null || value === undefined) return true
-  if (Array.isArray(value)) return value.length === 0
-  if (typeof value === 'object') return Object.keys(value).length === 0
-  return false
-}
-
-/**
- * Vérifie qu'une valeur est un identifiant entier positif.
- */
-const assertPositiveInt = (val, label) => {
-  if (!Number.isInteger(val) || val <= 0) {
-    throw new TypeError(`[dashboardService] ${label} doit être un entier positif, reçu : ${val}`)
-  }
-}
-
-/** Filtre les stats pour n'exposer que les champs numériques attendus. */
-const sanitizeStats = (raw) => ({
-  projetsCertifies: Number.isFinite(raw.projetsCertifies) ? raw.projetsCertifies : MOCK_STATS.projetsCertifies,
-  credibilite:      Number.isFinite(raw.credibilite)      ? raw.credibilite      : MOCK_STATS.credibilite,
-  vuesProfil:       Number.isFinite(raw.vuesProfil)       ? raw.vuesProfil       : MOCK_STATS.vuesProfil,
-  recommandations:  Number.isFinite(raw.recommandations)  ? raw.recommandations  : MOCK_STATS.recommandations,
-})
-
-/** Filtre les champs autorisés d'un projet retourné par l'API. */
-const PROJET_ALLOWED_FIELDS = [
-  'id_projet', 'titre', 'type_projet', 'status_validation',
-  'date_debut', 'description', 'est_visible_portfolio',
-  'est_createur', 'role_joue', 'technologies', 'participations', 'participants',
-]
-
-const sanitizeProjet = (raw) => {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
-  return PROJET_ALLOWED_FIELDS.reduce((acc, key) => {
-    if (Object.prototype.hasOwnProperty.call(raw, key)) acc[key] = raw[key]
-    return acc
-  }, Object.create(null))
-}
-
-/** Filtre les champs autorisés d'une recommandation retournée par l'API. */
-const RECO_ALLOWED_FIELDS = ['id_recommandation', 'message', 'status', 'auteur', 'createdAt']
-const sanitizeReco = (raw) => {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
-  return RECO_ALLOWED_FIELDS.reduce((acc, key) => {
-    if (Object.prototype.hasOwnProperty.call(raw, key)) acc[key] = raw[key]
-    return acc
-  }, Object.create(null))
-}
-
-// ─── fetchStats ──────────────
+// ─── fetchStats ───────────────────────────────────────────────────────────────
 export async function fetchStats(idEtudiant) {
   assertPositiveInt(idEtudiant, 'idEtudiant')
 
   try {
     const res      = await api.get(`/etudiants/${idEtudiant}`)
-    const etudiant = res.data?.data ?? res.data
+    const etudiant = extractData(res)
 
     if (isEmpty(etudiant)) {
       console.warn('[fetchStats] réponse vide → mock')
       return MOCK_STATS
     }
 
-    const result = {
-      projetsCertifies: etudiant._count?.participations_projets,
-      credibilite:      etudiant.score_credibilite,
-      vuesProfil:       etudiant.portfolio?.nombre_vues,
-      recommandations:  etudiant._count?.recommendation,
+    return {
+      projetsCertifies: etudiant._count?.participations_projets ?? MOCK_STATS.projetsCertifies,
+      credibilite:      etudiant.score_credibilite               ?? MOCK_STATS.credibilite,
+      vuesProfil:       etudiant.portfolio?.nombre_vues          ?? MOCK_STATS.vuesProfil,
+      recommandations:  etudiant._count?.recommendation          ?? MOCK_STATS.recommandations,
     }
-
-    const allEmpty = Object.values(result).every(v => v === undefined || v === null)
-    if (allEmpty) {
-      console.warn('[fetchStats] champs manquants → mock')
-      return MOCK_STATS
-    }
-
-    return sanitizeStats(result)
   } catch (err) {
     console.error('[fetchStats] erreur API → mock', err)
     return MOCK_STATS
@@ -171,39 +164,27 @@ export async function fetchProjects(idEtudiant) {
 
   try {
     const res  = await api.get('/projets/')
-    const data = Array.isArray(res.data?.data) ? res.data.data
-               : Array.isArray(res.data)        ? res.data
-               : null
+    const data = extractData(res)
 
-    if (isEmpty(data)) {
+    if (!Array.isArray(data) || isEmpty(data)) {
       console.warn('[fetchProjects] réponse vide → mock')
       return MOCK_PROJECTS
     }
 
     const filtered = data.reduce((acc, projet) => {
-      if (!projet || typeof projet !== 'object') return acc
-
-      const parts = Array.isArray(projet.participations) ? projet.participations
-                  : Array.isArray(projet.participants)   ? projet.participants
-                  : []
-
+      const parts       = projet.participations ?? projet.participants ?? []
       const participation = parts.find(
-        p => p?.id_etudiant === idEtudiant || p?.id_utilisateur === idEtudiant
+        (p) => p.id_etudiant === idEtudiant || p.id_utilisateur === idEtudiant
       )
-
       if (!participation)                                return acc
       if (participation.est_visible_portfolio === false) return acc
 
-      const safe = sanitizeProjet(projet)
-      if (!safe) return acc
-
-      safe.est_visible_portfolio = participation.est_visible_portfolio ?? true
-      safe.est_createur          = participation.est_createur          ?? false
-      safe.role_joue             = typeof participation.role_joue === 'string'
-        ? participation.role_joue.slice(0, 150)
-        : ''
-
-      acc.push(safe)
+      acc.push({
+        ...projet,
+        est_visible_portfolio: participation.est_visible_portfolio ?? true,
+        est_createur:          participation.est_createur          ?? false,
+        role_joue:             participation.role_joue             ?? '',
+      })
       return acc
     }, [])
 
@@ -220,43 +201,59 @@ export async function fetchProjects(idEtudiant) {
 }
 
 // ─── fetchRecos ───────────────────────────────────────────────────────────────
-
-// Liste blanche des statuts de recommandation acceptés
-const VALID_RECO_STATUSES = ['VALIDE', 'EN_ATTENTE', 'REJETE']
-
+/**
+ * Récupère les recommandations reçues par un étudiant.
+ *
+ * Stratégie à deux niveaux :
+ *   1. GET /recommandations/mes-recommandations-recus  (utilisateur connecté)
+ *      → endpoint le plus précis, retourne uniquement les recommandations de l'étudiant connecté
+ *      → inclut toutes les recommandations (EN_ATTENTE, VALIDE, REJETE)
+ *
+ *   2. GET /recommandations/public/etudiant/{id}  (fallback)
+ *      → endpoint public, retourne uniquement les recommandations VALIDE
+ *      → utile si le premier endpoint échoue ou si on consulte un autre profil
+ *
+ * Les deux réponses sont normalisées via normalizeReco() pour gérer
+ * les différentes structures possibles retournées par le backend.
+ */
 export async function fetchRecos(idEtudiant) {
-  assertPositiveInt(idEtudiant, 'idEtudiant')
+  // ── Tentative 1 : endpoint "mes recommandations reçues" (connecté) ──────────
+  try {
+    const res  = await api.get('/recommandations/mes-recommandations-recus')
+    const data = extractData(res)
 
+    if (Array.isArray(data) && !isEmpty(data)) {
+      const normalized = data.map(normalizeReco)
+      // Séparer : VALIDE en premier, puis EN_ATTENTE, puis le reste
+      const sorted = [
+        ...normalized.filter(r => r.status === 'VALIDE'),
+        ...normalized.filter(r => r.status === 'EN_ATTENTE'),
+        ...normalized.filter(r => r.status !== 'VALIDE' && r.status !== 'EN_ATTENTE'),
+      ]
+      console.info(`[fetchRecos] ${sorted.length} reco(s) chargée(s) via /mes-recommandations-recus`)
+      return sorted
+    }
+
+    console.warn('[fetchRecos] /mes-recommandations-recus vide → fallback public')
+  } catch (err) {
+    console.warn('[fetchRecos] /mes-recommandations-recus échoué → fallback public', err?.response?.status)
+  }
+
+  // ── Tentative 2 : endpoint public (VALIDE uniquement) ──────────────────────
   try {
     const res  = await api.get(`/recommandations/public/etudiant/${idEtudiant}`)
-    const data = Array.isArray(res.data?.data) ? res.data.data
-               : Array.isArray(res.data)        ? res.data
-               : null
+    const data = extractData(res)
 
-    if (isEmpty(data)) {
-      console.warn('[fetchRecos] réponse vide → mock')
-      return MOCK_RECOS
+    if (Array.isArray(data) && !isEmpty(data)) {
+      const normalized = data.map(normalizeReco).filter(r => r.status === 'VALIDE')
+      console.info(`[fetchRecos] ${normalized.length} reco(s) publique(s) chargée(s)`)
+      return normalized
     }
 
-    const valides = data
-      .filter(r =>
-        r &&
-        typeof r === 'object' &&
-        // Validation du statut par liste blanche avant comparaison
-        VALID_RECO_STATUSES.includes(r.status) &&
-        r.status === 'VALIDE'
-      )
-      .map(sanitizeReco)
-      .filter(Boolean)
-
-    if (isEmpty(valides)) {
-      console.warn('[fetchRecos] aucune reco VALIDE → mock')
-      return MOCK_RECOS
-    }
-
-    return valides
+    console.warn('[fetchRecos] endpoint public vide → mock')
+    return MOCK_RECOS
   } catch (err) {
-    console.error('[fetchRecos] erreur API → mock', err)
+    console.error('[fetchRecos] les deux endpoints ont échoué → mock', err)
     return MOCK_RECOS
   }
 }

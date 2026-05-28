@@ -5,7 +5,7 @@ import SideBar from './components/laayout/SideBar.vue'
 import NavBar from './components/laayout/NavBar.vue'
 import AppFooter from './components/laayout/Footer.vue'
 import ProfessionalSideBar from './components/professional/ProfessionalSideBar.vue'
-import ProfessorSideBar    from './components/professor/ProfessorSideBar.vue'
+import ProfessorSideBar    from './components/professor/ProfessorSidebar.vue'
 import { useAuthStore } from './stores/authstore'
 
 const authStore = useAuthStore()
@@ -57,12 +57,12 @@ onMounted(async () => {
   enforceRoleGuard()
 })
 
-// Re-vérifie à chaque changement de route
-watch(() => route.fullPath, () => {
-  enforceRoleGuard()
-})
+// Routes qui utilisent le layout complet (sidebar + navbar)
+const studentRoutes = [
+  'dashboard', 'notifications', 'profile', 'projets',
+  'settings', 'recommendations', 'stage', 'portfolio','activites'
+]
 
-// ── Computed de layout ───────────────
 const isPublicPage = computed(() =>
   PUBLIC_ROUTES.includes(route.name)
 )
@@ -74,8 +74,8 @@ const isAdminPage = computed(() => route.path.startsWith('/admin'))
 
 const isStudentPage = computed(() => {
   const studentPaths = [
-    '/dashboard', '/notifications', '/profile', '/projets',
-    '/settings', '/recommendations', '/stage', '/modele', '/portfolio'
+    '/dashboard', '/notifications', '/profile', '/projets','/parcours',
+    '/settings', '/recommendations', '/stage', '/activites', '/portfolio'
   ]
   return studentPaths.some(p => route.path.startsWith(p))
 })
@@ -165,13 +165,13 @@ html, body {
   width: 100%;
   align-items: stretch;
   min-height: 0;
-  background-color: #F4F2EC;
+  background-color: var(--color-background);
 }
 
 .content {
   flex: 1;
   padding: 0px;
-  background-color: #0D2B2B;
+  background-color: var(--color-background);
   overflow-y: auto;
   min-height: 0;
 }
