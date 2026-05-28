@@ -41,15 +41,6 @@ enum NiveauAcces {
   ADMIN
 }
 
-enum Filiere {
-  GINF
-  GSEA
-  GSR
-  GIND
-  G2EI
-  CSI
-}
-
 enum Ecole {
   ENSATanger
   ENCGTanger
@@ -63,13 +54,6 @@ enum Ecole {
   ENSAAlHoceima
   FSTAlHoceima
   FPDAlHoceima
-}
-
-enum Departement {
-  SIC
-  GEI
-  MI
-  LCM
 }
 
 enum TypeProjet {
@@ -193,6 +177,7 @@ model Administrateur {
 
   // Relations
   utilisateur       Utilisateur  @relation(fields: [id_administrateur], references: [id_utilisateur], onDelete: Cascade)
+  activites_valides ActiviteParascolaire[]
   comptes_valides   Professionnel[]
   modeles_crees     ModelePortfolio[]
 
@@ -202,7 +187,7 @@ model Administrateur {
 model Etudiant {
   id_etudiant               String    @id
   numero_etudiant           String?    @unique @db.VarChar(20)
-  filiere                   Filiere?
+  filiere                   String?   @db.VarChar(100)
   annee                     Int?
   date_naissance            DateTime?
   adresse                   String?   @db.VarChar(255)
@@ -238,9 +223,9 @@ model Etudiant {
 
 model Professeur {
   id_professeur     String      @id
-  departement       Departement?
+  departement       String?     @db.VarChar(100)
   specialite        String?      @db.VarChar(100)
-  filieres_interv   Filiere[]
+  filieres_interv   String[]
   date_naissance    DateTime?
   adresse           String?     @db.VarChar(255)
   ville             String?     @db.VarChar(100)
@@ -253,7 +238,6 @@ model Professeur {
   // Validations
   projets_valides   Projet[]
   stages_valides    Stage[]
-  activites_valides ActiviteParascolaire[]
   lettres_redigees  LettreRecommandation[]
 
   @@map("professeurs")
@@ -382,7 +366,7 @@ model ActiviteParascolaire {
 
   // Relations
   etudiant                Etudiant          @relation(fields: [id_etudiant], references: [id_etudiant], onDelete: Cascade)
-  validateur              Professeur?       @relation(fields: [id_validateur], references: [id_professeur], onDelete: SetNull)
+  validateur              Administrateur?       @relation(fields: [id_validateur], references: [id_administrateur], onDelete: SetNull)
   attestation             Fichier?          @relation(fields: [id_attestation], references: [id_fichier], onDelete: SetNull)
 
   @@map("activites_parascolaires")
