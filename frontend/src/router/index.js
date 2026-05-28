@@ -15,6 +15,8 @@ import ProfessionalView from '@/views/ProfessionalView.vue'
 import ProfessorView from '@/views/ProfessorView.vue'
 import { useAuthStore } from '@/stores/authstore'
 import Parcours from '../views/Etudiant/Parcours.vue'
+import ProfessorLayout from '../components/professor/ProfessorLayout.vue'
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -64,6 +66,11 @@ const router = createRouter({
           path: 'portfolios',
           name: 'admin-portfolios',
           component: () => import('../views/admin/AdminPortfolios.vue'),
+        },
+        {
+          path: 'notifications',
+          name: 'admin-notifications',
+          component: () => import('../views/admin/AdminNotifications.vue'),
         },
       ],
     },
@@ -132,25 +139,39 @@ const router = createRouter({
       component: ProfessionalView,
     },
     {
-      path: '/professor',
-      name: 'professor',
-      component: ProfessorView,
-    },
+  path: '/professor',
+  name: 'professor',
+  component: ProfessorView,
+  meta: { requiresAuth: true }
+},
   ],  
 })
 
 router.beforeEach(async (to, from) => {
   const authStore = useAuthStore()
 
+  if (['home', 'login', 'about'].includes(to.name)) {
+    return true
+  }
+
   if (!authStore.user) {
     await authStore.fetchUser()
   }
 
-  // ── Redirige admin vers /admin/dashboard ──
-  if (authStore.isAuthenticated && authStore.isAdmin) {
-    if (!to.path.startsWith('/admin')) {
-      return '/admin/dashboard'
+  if (authStore.isAuthenticated) {
+
+    if (authStore.isAdmin) {
+      if (!to.path.startsWith('/admin')) return '/admin/dashboard'
     }
+
+    else if (authStore.isProfesseur) {
+  if (to.name !== 'professor') return '/professor'
+}
+
+    else if (authStore.isProfessionnel) {
+      if (!to.path.startsWith('/professional')) return '/professional'
+    }
+
   }
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {

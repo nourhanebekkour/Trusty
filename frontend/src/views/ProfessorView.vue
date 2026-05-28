@@ -59,3 +59,4 @@ function handleLettreAction(lettre) {
   console.log('Action lettre :', lettre.action, lettre.etudiant)
 }
 </script>
+
