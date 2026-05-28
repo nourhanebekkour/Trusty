@@ -9,11 +9,12 @@ import StageList from '@/views/Etudiant/StageList.vue'
 import Recommendations from '@/views/Etudiant/Recommendations.vue'
 import Notification from '@/views/Etudiant/Notification.vue'
 import Profile from '@/views/Etudiant/Profile.vue'
-import Modele from '@/views/Etudiant/Modele.vue'
+import activites from '@/views/Etudiant/activites.vue'
 import Portfolio from '@/views/Etudiant/Portfolio.vue'
 import ProfessionalView from '@/views/ProfessionalView.vue'
 import ProfessorView from '@/views/ProfessorView.vue'
 import { useAuthStore } from '@/stores/authstore'
+import Parcours from '../views/Etudiant/Parcours.vue'
 
 // ──  Roles autorisés par section ──────────────────────────────
 const ROLES = {
@@ -34,7 +35,7 @@ const router = createRouter({
     {
       path: '/about',
       name: 'about',
-      component: () => import('../views/AboutView.vue'),
+      component: () => import('../views/Etudiant/Parcours.vue'),
     },
     {
       path: '/login',
@@ -121,6 +122,11 @@ const router = createRouter({
       name: 'modele',
       component: Modele,
       meta: { requiresAuth: true },
+      },
+      {
+      path: '/parcours',
+      name: 'parcours',
+      component: Parcours,
     },
     {
       path: '/portfolio',
@@ -132,6 +138,11 @@ const router = createRouter({
       name: 'professional',
       component: ProfessionalView,
       meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
+      },
+      {
+      path: '/activites',
+      name: 'activites',
+      component: activites,
     },
     {
       path: '/professor',
@@ -158,32 +169,48 @@ const router = createRouter({
 router.beforeEach(async (to, from) => {
   const authStore = useAuthStore()
 
-
+  // Initialisation session utilisateur
   if (!authStore.isInitialized) {
     try {
       await authStore.fetchUser()
     } catch (e) {
-      console.error('[Router] Impossible de récupérer la session utilisateur :', e)
-      
+      console.error(
+        '[Router] Impossible de récupérer la session utilisateur :',
+        e
+      )
     }
   }
 
-  
+  // ── Redirection admin vers dashboard ──
+  if (authStore.isAuthenticated && authStore.isAdmin) {
+    if (!to.path.startsWith('/admin')) {
+      return '/admin/dashboard'
+    }
+  }
+
+  // ── Pages invité uniquement (login/register) ──
   if (to.meta.guestOnly && authStore.isAuthenticated) {
     return redirectByRole(authStore.user?.role)
   }
 
-  
+  // ── Routes protégées ──
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return { name: 'login', query: { redirect: to.fullPath } }
+    return {
+      name: 'login',
+      query: { redirect: to.fullPath }
+    }
   }
 
-    if (to.meta.roles && to.meta.roles.length > 0) {
+  // ── Vérification des rôles ──
+  if (to.meta.roles && to.meta.roles.length > 0) {
     const userRole = authStore.user?.role?.toUpperCase()
+
     if (!userRole || !to.meta.roles.includes(userRole)) {
       return { name: 'forbidden' }
     }
   }
+
+  return true
 })
 
 // Redirige selon le rôle après login
