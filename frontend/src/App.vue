@@ -1,89 +1,125 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
+import { computed, onMounted } from 'vue'
+import { RouterView, useRoute } from 'vue-router'
+import SideBar from './components/laayout/SideBar.vue'
+import NavBar from './components/laayout/NavBar.vue'
+import Footer from './components/laayout/Footer.vue'
+import ProfessionalSideBar from './components/professional/ProfessionalSideBar.vue'
+import { useAuthStore } from './stores/authstore'
+
+const authStore = useAuthStore()
+const route = useRoute()
+
+onMounted(async () => {
+  const publicRoutes = ['login', 'home', 'about']
+  if (route.name && !publicRoutes.includes(route.name)) {
+    await authStore.fetchUser()
+  }
+})
+
+const isPublicPage = computed(() =>
+  ['home', 'login', 'about'].includes(route.name)
+)
+
+const isProfessionalPage = computed(() => route.name === 'professional')
+const isProfessorPage = computed(() => route.path.startsWith('/professor'))
+const isAdminPage = computed(() => route.path.startsWith('/admin'))
+
+const isStudentPage = computed(() => {
+  const studentPaths = [
+    '/dashboard', '/notifications', '/profile', '/projets', '/parcours',
+    '/settings', '/recommendations', '/stage', '/activites', '/portfolio'
+  ]
+  return studentPaths.some(p => route.path.startsWith(p))
+})
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
+  <!-- ── Pages publiques : home, login, about ── -->
+  <div v-if="isPublicPage">
+    <RouterView />
+  </div>
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
+  <!-- ── Pages Admin : layout géré par AdminLayout ── -->
+  <div v-else-if="isAdminPage">
+    <RouterView />
+  </div>
 
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
+  <!-- ── Pages Professeur : layout géré par ProfessorLayout ── -->
+  <div v-else-if="isProfessorPage">
+    <RouterView />
+  </div>
+
+  <!-- ── Pages Étudiant : navbar + sidebar + footer ── -->
+  <div v-else-if="isStudentPage" class="app">
+    <NavBar />
+    <div class="layout">
+      <SideBar />
+      <main class="content">
+        <RouterView />
+      </main>
     </div>
-  </header>
+    <Footer />
+  </div>
 
-  <RouterView />
+  <!-- ── Pages Professionnel ── -->
+  <div v-else-if="isProfessionalPage" class="app">
+    <NavBar />
+    <div class="layout">
+      <ProfessionalSideBar />
+      <main class="content">
+        <RouterView />
+      </main>
+    </div>
+  </div>
+
+  <!-- ── Fallback ── -->
+  <div v-else>
+    <RouterView />
+  </div>
 </template>
 
-<style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
+html, body {
   width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
+  height: 100%;
+  overflow-x: hidden;
 }
 
-nav a.router-link-exact-active {
-  color: var(--color-text);
+#app {
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
 }
 
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
+.layout {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  align-items: stretch;
+  min-height: 0;
+  background-color: var(--color-background);
 }
 
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
+.content {
+  flex: 1;
+  padding: 0px;
+  background-color: var(--color-background);
+  overflow-y: auto;
+  min-height: 0;
 }
 </style>
-<<<<<<< HEAD
-cd/
-=======
->>>>>>> 745aa36617b90be4e6a26a682e4f55dab4671e5d
