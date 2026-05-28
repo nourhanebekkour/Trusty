@@ -1,0 +1,195 @@
+import swaggerAutogen from 'swagger-autogen';
+
+const doc = {
+  info: {
+    title: 'Projet d intergration',
+    description: 'Documentation automatique des APIs du projet',
+  },
+  host: 'localhost:3000',
+  schemes: ['http'],
+  securityDefinitions: {
+    bearerAuth: {
+      type: 'apiKey',
+      name: 'Authorization',
+      in: 'header',
+      description: 'Entrez votre token JWT sous la forme : Bearer <token>'
+    }
+  },
+  security: [
+    {
+      bearerAuth: []
+    }
+  ],
+  definitions: {
+    RegisterRequest: {
+      email: 'nom.prenom@etu.uae.ac.ma',
+      password: 'password123',
+      nom: 'Nom',
+      prenom: 'Prenom',
+      role: 'ETUDIANT',
+      ecole: 'ENSATanger'
+    },
+    CreateUserAdminRequest: {
+      nom: 'NomAdmin',
+      prenom: 'PrenomAdmin',
+      email: 'admin@uae.ac.ma',
+      niveau_acces: 'ADMIN',
+      ecole: 'ENSATanger'
+    },
+    RequestAccountRequest: {
+      nom: 'Nom',
+      prenom: 'Prenom',
+      email: 'etudiant@etu.uae.ac.ma',
+      role: 'ETUDIANT',
+      message: 'Je souhaite créer un compte pour mon portfolio.'
+    },
+    LoginRequest: {
+      email: 'etudiant@test.com',
+      password: 'password123'
+    },
+    ForgotPasswordRequest: {
+      email: 'etudiant@test.com'
+    },
+    ResetPasswordRequest: {
+      token: 'abc123def456...',
+      nouveauMotDePasse: 'nouveauMotDePasse123'
+    },
+    EtudiantProfileRequest: {
+      numero_etudiant: '2026001',
+      filiere: 'GINF',
+      annee: 3,
+      date_naissance: '2000-01-01',
+      adresse: '123 Rue de la fac',
+      ville: 'Tanger',
+      pays: 'Maroc',
+      biographie: 'Etudiant passionné par le développement',
+      linkedin_url: 'https://linkedin.com/in/username',
+      github_username: 'username',
+      site_web: 'https://mywebsite.com',
+      objectif_professionnel: 'Développeur Fullstack',
+      score_credibilite: 0,
+      niveau_credibilite: 'DEBUTANT',
+      visibilite_profil: 'PUBLIC',
+      id_validateur: null
+    },
+    AdminProfileRequest: {
+      niveau_acces: 'ADMIN'
+    },
+    ProfesseurProfileRequest: {
+      departement: 'SIC',
+      specialite: 'Informatique',
+      filieres: ['GINF', 'GSR'],
+      date_naissance: '1980-01-01',
+      adresse: '456 Rue des profs',
+      ville: 'Tanger',
+      pays: 'Maroc',
+      biographie: 'Professeur expérimenté'
+    },
+    CompetenceRequest: {
+      nom: 'Node.js',
+      type: 'TECHNIQUE',
+      categorie: 'Backend',
+      description: 'Développement serveur avec Node.js',
+    },
+    FormationRequest: {
+      diplome: 'Cycle d\'ingénieur',
+      etablissement: 'ENSA Tanger',
+      date_debut: '2023-09-01',
+      date_fin: '2026-06-30',
+      description: 'Génie Informatique',
+      mention: 'Bien',
+      est_actuelle: true
+    },
+    TechnologieRequest: {
+      nom: "React",
+      categorie: "Frontend",
+      sous_categorie: "Library",
+      description: "Bibliothèque JavaScript pour interfaces utilisateur",
+    },
+    ProjetRequest: {
+      titre: "Mon Projet",
+      description: "Une description détaillée du projet...",
+      type_projet: "PFA",
+      date_debut: "2023-01-01",
+      date_fin: "2023-06-01",
+      lien_github: "https://github.com/user/repo",
+      lien_youtube: "https://youtube.com/watch?v=...",
+      lien_demo: "https://demo.com",
+      resultats_obtenus: "Le projet a permis de...",
+      nombre_collaborateurs: 3,
+      est_public: true
+    },
+    ParticipationProjetRequest: {
+      role_joue: "Développeur Backend",
+      date_debut: "2023-01-01",
+      date_fin: "2023-06-01",
+      est_createur: true,
+      est_visible_portfolio: true
+    },
+    ProjetTechnologieRequest: {
+      version: "18.2.0",
+      niveau_utilisation: "AVANCE"
+    },
+    StageRequest: {
+      entreprise: "Google",
+      adresse_entreprise: "123 Rue Tech",
+      poste: "Développeur Backend",
+      date_debut: "2024-06-01",
+      date_fin: "2024-08-31",
+      duree_semaines: 10,
+      missions: "Développement d'une API REST",
+      encadrant_professionnel: "M. Ghailani",
+      encadrant_academique: "Pr. Ghailani",
+      est_public: true,
+    },
+    StageTechnologieRequest: {
+      version: "18.2.0",
+      niveau_utilisation: "AVANCE"
+    },
+    ActiviteRequest: {
+      type_activite: "CLUB",
+      nom_activite: "CSC",
+      organisation: "ENSA Tanger",
+      date_debut: "2024-01-01",
+      date_fin: "2024-06-01",
+      description: "Description de l activité",
+      role: "Membre",
+      est_public: true,
+    },
+    BadgeRequest: {
+      nom: 'Badge de Champion',
+      description: 'Attribué aux étudiants ayant complété tous les projets GINF',
+      categorie: 'ACADEMIQUE',
+      icone: 'badge-champion.png',
+      condition_attribution: 'Compléter 5 projets validés',
+      est_actif: true
+    },
+    AttributionBadgeRequest: {
+      id_etudiant: 'cl...id_etudiant'
+    },
+    AssocierCompetenceRequest: {
+      niveau_maitrise: 'INTERMEDIAIRE'
+    },
+    CommentaireRequest: {
+      id_etudiant_cible: 'cl...id_etudiant',
+      id_projet_cible: 'cl...id_projet',
+      type_cible: 'PROJET',
+      contenu: 'Très bon travail sur ce projet !'
+    },
+    RecommandationRequest: {
+      id_etudiant: 'cl...id_etudiant',
+      message: 'Je recommande vivement cet étudiant pour son sérieux.'
+    },
+    StandardResponse: {
+      success: true,
+      message: 'Message de succès ou erreur',
+      data: {},
+      error: null
+    }
+  }
+};
+
+const outputFile = './src/swagger-output.json';
+const endpointsFiles = ['./src/app.js'];
+
+swaggerAutogen()(outputFile, endpointsFiles, doc);
