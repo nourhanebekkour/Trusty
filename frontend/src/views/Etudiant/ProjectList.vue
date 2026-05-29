@@ -313,6 +313,7 @@
       :submitting="submitting"
       :modal-error="modalError"
       @submit="handleFormSubmit"
+      @created="handleCreated"
     />
 
     <ProjetDetailModal
@@ -476,6 +477,10 @@ export default {
       } finally {
         this.submitting = false
       }
+    },
+
+    handleCreated(projetId) {
+      this.store.fetchProjets()
     },
 
     async handleDelete() {
