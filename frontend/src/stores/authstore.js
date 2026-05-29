@@ -68,6 +68,21 @@ export const useAuthStore = defineStore('auth', {
         await api.post('/auth/logout') 
       } catch {}
       this.user = null
+    },
+
+    // Verify Email
+    async verifyEmail(token) {
+      this.loading = true
+      this.error = null
+      try {
+        await authService.verifyEmail(token)
+        return true
+      } catch (err) {
+        this.error = err.response?.data?.message || 'Erreur lors de la vérification'
+        throw err
+      } finally {
+        this.loading = false
+      }
     }
   }
 })

@@ -15,7 +15,9 @@ import ProfessionalView from '@/views/ProfessionalView.vue'
 import ProfessorView from '@/views/ProfessorView.vue'
 import { useAuthStore } from '@/stores/authstore'
 import Parcours from '../views/Etudiant/Parcours.vue'
+import registerview from '@/views/registerview.vue'
 import ProfessorLayout from '../components/professor/ProfessorLayout.vue'
+import VerifyEmailView from '@/views/VerifyEmailView.vue'
 
 
 const router = createRouter({
@@ -32,9 +34,19 @@ const router = createRouter({
       component: () => import('../views/Etudiant/Parcours.vue'),
     },
     {
+      path: '/register',
+      name: 'register',
+      component: registerview,
+    },
+    {
       path: '/login',
       name: 'login',
       component: LoginView,
+    },
+    {
+      path: '/verify-email',
+      name: 'verify-email',
+      component: VerifyEmailView,
     },
 
     // ── Admin ──────────────────────────────────────────
@@ -150,7 +162,7 @@ const router = createRouter({
 router.beforeEach(async (to, from) => {
   const authStore = useAuthStore()
 
-  if (['home', 'login', 'about'].includes(to.name)) {
+  if (['home', 'login', 'register', 'about', 'verify-email'].includes(to.name)) {
     return true
   }
 
