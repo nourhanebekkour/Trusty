@@ -2,20 +2,31 @@
   <div class="stages-page">
 
     <!-- Header -->
-    <div class="header">
+    <div class="page-header">
       <div class="header-left">
-        <h1>Gestion des Stages</h1>
-        <p>Suivez vos expériences professionnelles et gérez vos demandes de validation.</p>
+        <div class="header-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="page-title">Gestion des stages</h1>
+          <p class="page-subtitle">Suivez vos expériences professionnelles et gérez vos demandes de validation</p>
+        </div>
       </div>
-      <button class="btn-new" @click="openNewModal">
-        <span>＋</span> Nouveau stage
+      <button class="add-btn" @click="openNewModal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Nouveau stage
       </button>
     </div>
 
     <!-- Stats -->
     <StageStats :stats="store.stats" />
 
-    <!-- Tableau -->
+    <!-- Liste des expériences -->
     <StageTable @voir="voirStage" @edit="openEditModal" @delete="confirmDeleteStage" />
 
     <!-- Grille inférieure -->
@@ -174,5 +185,92 @@ onMounted(() => store.init())
 </script>
 
 <style scoped>
-@import '@/assets/StageList.css';
+.stages-page {
+  max-width: 100%;
+  margin: 0;
+  padding: 2rem 1.5rem;
+  min-height: 100vh;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+  gap: 1rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.header-icon {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(214, 237, 232, 0.12);
+  border: 1px solid rgba(214, 237, 232, 0.15);
+  border-radius: 10px;
+  color: #D6EDE8;
+  flex-shrink: 0;
+}
+
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #D6EDE8;
+  margin: 0 0 0.15rem;
+  letter-spacing: -0.01em;
+}
+
+.page-subtitle {
+  font-size: 0.875rem;
+  color: #7a9e8e;
+  margin: 0;
+}
+
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.1rem;
+  background: #1D9E75;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.add-btn:hover {
+  background: #24b88a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(29, 158, 117, 0.3);
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  animation: fadeUp 0.25s ease;
+  z-index: 2000;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+}
+.toast--success { background: #1D9E75; color: #fff; }
+.toast--error   { background: #b94040; color: #fff; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 </style>
