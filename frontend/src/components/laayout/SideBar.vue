@@ -56,6 +56,11 @@
         <img :src="iconPortfolioComplet" class="nav-icon" />
         <span class="nav-label" v-show="!isCollapsed">Portfolio Complet</span>
       </router-link>
+
+      <router-link to="/dashboard/portfolio" class="nav-item">
+        <img :src="iconPortfolioMgmt" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Gestion Portfolio</span>
+      </router-link>
     </nav>
     
     <div class="sidebar-bottom">
@@ -89,6 +94,7 @@ import iconRecommandations  from '@/assets/icons/recommandations.svg'
 import iconNotifications    from '@/assets/icons/notifications.svg'
 import iconModeles          from '@/assets/icons/modeles.svg'
 import iconPortfolioComplet from '@/assets/icons/portfoliocomplet.svg'
+import iconPortfolioMgmt    from '@/assets/icons/briefcase.svg'
 
 const isCollapsed = ref(false)
 const authStore   = useAuthStore()

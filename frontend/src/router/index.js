@@ -83,16 +83,21 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/dashboard/portfolio',
+      name: 'portfolio-management',
+      component: () => import('@/views/portfolio/PortfolioManagement.vue'),
+    },
+    {
       path: '/notifications',
       name: 'notifications',
       component: Notification,
-      meta: { requiresAuth: true } 
+      meta: { requiresAuth: true }
     },
     {
       path: '/profile',
       name: 'profile',
       component: Profile,
-      meta: { requiresAuth: true } 
+      meta: { requiresAuth: true }
     },
     {
       path: '/projets',
@@ -125,8 +130,18 @@ const router = createRouter({
     },
     {
       path: '/portfolio',
-      name: 'portfolio',
+      name: 'my-portfolio',
       component: Portfolio,
+    },
+    {
+      path: '/portfolio/:username',
+      name: 'portfolio',
+      component: () => import('@/views/portfolio/PortfolioView.vue'),
+    },
+    {
+      path: '/portfolio-template2/:username',
+      name: 'portfolio-template2',
+      component: () => import('@/views/portfolio/PortfolioTemplate2.vue'),
     },
     {
       path: '/activites',
@@ -139,12 +154,12 @@ const router = createRouter({
       component: ProfessionalView,
     },
     {
-  path: '/professor',
-  name: 'professor',
-  component: ProfessorView,
-  meta: { requiresAuth: true }
-},
-  ],  
+      path: '/professor',
+      name: 'professor',
+      component: ProfessorView,
+      meta: { requiresAuth: true }
+    },
+  ],
 })
 
 router.beforeEach(async (to, from) => {
@@ -165,8 +180,8 @@ router.beforeEach(async (to, from) => {
     }
 
     else if (authStore.isProfesseur) {
-  if (to.name !== 'professor') return '/professor'
-}
+      if (to.name !== 'professor') return '/professor'
+    }
 
     else if (authStore.isProfessionnel) {
       if (!to.path.startsWith('/professional')) return '/professional'
@@ -180,14 +195,14 @@ router.beforeEach(async (to, from) => {
 })
 // ── Auth guard ─────────────────────────────────────────
 //router.beforeEach((to, from, next) => {
-  // const token = localStorage.getItem('token')
-  // if (to.meta.requiresAuth && !token) {
-  //   next({ name: 'login' })
-  // } else if (to.name === 'login' && token) {
-  //   next({ path: '/admin/dashboard' })
-  // } else {
-  //next()
-  // }
+// const token = localStorage.getItem('token')
+// if (to.meta.requiresAuth && !token) {
+//   next({ name: 'login' })
+// } else if (to.name === 'login' && token) {
+//   next({ path: '/admin/dashboard' })
+// } else {
+//next()
+// }
 
 
 export default router

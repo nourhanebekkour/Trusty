@@ -18,7 +18,7 @@ onMounted(async () => {
 })
 
 const isPublicPage = computed(() =>
-  ['home', 'login', 'about'].includes(route.name)
+  ['home', 'login', 'about', 'portfolio'].includes(route.name)
 )
 
 const isProfessionalPage = computed(() => route.name === 'professional')
