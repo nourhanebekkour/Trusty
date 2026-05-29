@@ -16,7 +16,7 @@ import ProfessorView from '@/views/ProfessorView.vue'
 import { useAuthStore } from '@/stores/authstore'
 import Parcours from '../views/Etudiant/Parcours.vue'
 import ProfessorLayout from '../components/professor/ProfessorLayout.vue'
-
+import LettresRecommandation from '@/views/Etudiant/LettresRecommandation.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -112,6 +112,11 @@ const router = createRouter({
       component: Recommendations,
       meta: { requiresAuth: true }
     },
+    {
+      path: '/lettres',
+      name: 'lettres',
+      component: LettresRecommandation,
+    }, 
     {
       path: '/stage',
       name: 'stage',
