@@ -32,6 +32,9 @@ Thumbs.db
 # Coverage
 coverage/
 
+# Test reports (generated automatically)
+test-reports/
+
 # Temporary files
 tmp/
 temp/

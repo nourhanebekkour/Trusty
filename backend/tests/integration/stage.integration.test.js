@@ -303,14 +303,14 @@ describe('Integration API : Stage', () => {
             expect(res.status).toBe(403);
         });
 
-        test('doit retourner 400 si le professeur n\'est pas le validateur désigné', async () => {
+        test('doit retourner 403 si le professeur n\'est pas le validateur désigné', async () => {
             // Le stage n'a pas de id_validateur → le prof ne peut pas le valider
             const res = await request(app)
                 .post(`/api/stages/${stageId}/valider`)
                 .set('Authorization', `Bearer ${tokenProfesseur}`)
                 .send({ decision: 'VALIDE', commentaire: 'ok' });
 
-            expect(res.status).toBe(400);
+            expect(res.status).toBe(403);
         });
 
         test('doit retourner 200 si le validateur désigné valide le stage', async () => {

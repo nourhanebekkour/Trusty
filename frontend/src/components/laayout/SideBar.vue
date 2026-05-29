@@ -42,6 +42,11 @@
         <span class="nav-label" v-show="!isCollapsed">Recommandations</span>
       </router-link>
 
+      <router-link to="/lettres" class="nav-item">
+        <img :src="iconRecommandations" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Lettres de reco.</span>
+      </router-link>
+      
       <router-link to="/notifications" class="nav-item">
         <img :src="iconNotifications" class="nav-icon" />
         <span class="nav-label" v-show="!isCollapsed">Notifications</span>
