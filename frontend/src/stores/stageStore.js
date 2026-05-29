@@ -69,6 +69,7 @@ export const useStageStore = defineStore('stages', () => {
     total:     stages.value.length,
     valides:   stages.value.filter(s => s.status_validation === 'VALIDE').length,
     enAttente: stages.value.filter(s => s.status_validation === 'EN_ATTENTE').length,
+    avecRapport: stages.value.filter(s => s.rapport_url || s.rapport?.url).length,
   }))
 
   // ── Filtres & pagination ───────────────────────────────────────────────────
