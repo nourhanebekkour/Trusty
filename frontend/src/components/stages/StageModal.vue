@@ -20,6 +20,7 @@
             class="step-btn"
             :class="{ active: currentStep === i, done: currentStep > i }"
             @click="goToStep(i)"
+            :disabled="viewMode"
           >
             <span class="step-num">
               <span v-if="currentStep > i" class="step-check">✓</span>
@@ -41,14 +42,14 @@
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label">Entreprise <span class="required">*</span></label>
-                  <input v-model="localForm.entreprise" type="text" class="form-input"
+                  <input v-model="localForm.entreprise" type="text" class="form-input" :readonly="viewMode"
                          :class="fieldClass('entreprise')"
                          placeholder="Ex: TechFlow Solutions"
                          @blur="touchField('entreprise')" />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Poste <span class="required">*</span></label>
-                  <input v-model="localForm.poste" type="text" class="form-input"
+                  <input v-model="localForm.poste" type="text" class="form-input" :readonly="viewMode"
                          :class="fieldClass('poste')"
                          placeholder="Ex: Développeur Full Stack"
                          @blur="touchField('poste')" />
@@ -57,32 +58,32 @@
 
               <div class="form-group">
                 <label class="form-label">Adresse entreprise</label>
-                <input v-model="localForm.adresse_entreprise" type="text" class="form-input"
+                <input v-model="localForm.adresse_entreprise" type="text" class="form-input" :readonly="viewMode"
                        placeholder="Ex: Casablanca, Maroc" />
               </div>
 
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label">Date de début <span class="required">*</span></label>
-                  <input v-model="localForm.date_debut" type="date" class="form-input"
+                  <input v-model="localForm.date_debut" type="date" class="form-input" :readonly="viewMode"
                          :class="fieldClass('date_debut')"
                          @blur="touchField('date_debut')" />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Date de fin</label>
-                  <input v-model="localForm.date_fin" type="date" class="form-input" />
+                  <input v-model="localForm.date_fin" type="date" class="form-input" :readonly="viewMode" />
                 </div>
               </div>
 
               <div class="form-row">
                 <div class="form-group">
                   <label class="form-label">Durée (semaines)</label>
-                  <input v-model.number="localForm.duree_semaines" type="number" min="1" class="form-input"
+                  <input v-model.number="localForm.duree_semaines" type="number" min="1" class="form-input" :readonly="viewMode"
                          placeholder="Ex: 8" />
                 </div>
                 <div class="form-group">
                   <label class="form-label">Visibilité</label>
-                  <select v-model="localForm.est_public" class="form-input">
+                  <select v-model="localForm.est_public" class="form-input" :disabled="viewMode">
                     <option :value="true">Public</option>
                     <option :value="false">Privé</option>
                   </select>
@@ -91,19 +92,19 @@
 
               <div class="form-group">
                 <label class="form-label">Encadrant professionnel</label>
-                <input v-model="localForm.encadrant_professionnel" type="text" class="form-input"
+                <input v-model="localForm.encadrant_professionnel" type="text" class="form-input" :readonly="viewMode"
                        placeholder="Nom de l'encadrant en entreprise" />
               </div>
 
               <div class="form-group">
                 <label class="form-label">Encadrant académique <span class="optional">(optionnel)</span></label>
-                <input v-model="localForm.encadrant_academique" type="text" class="form-input"
+                <input v-model="localForm.encadrant_academique" type="text" class="form-input" :readonly="viewMode"
                        placeholder="Nom du professeur tuteur (ou sélectionnez à l'étape suivante)" />
               </div>
 
               <div class="form-group">
                 <label class="form-label">Missions <span class="required">*</span></label>
-                <textarea v-model="localForm.missions" class="form-input form-textarea"
+                <textarea v-model="localForm.missions" class="form-input form-textarea" :readonly="viewMode"
                           :class="fieldClass('missions')"
                           rows="4" placeholder="Décrivez vos missions…"
                           @blur="touchField('missions')"></textarea>
@@ -145,7 +146,7 @@
                     :key="prof.id_professeur"
                     class="dropdown-item"
                     :class="{ selected: localForm.id_validateur === prof.id_professeur }"
-                    @click="selectValidateur(prof)"
+                    @click="viewMode ? null : selectValidateur(prof)"
                   >
                     <div class="person-avatar">{{ initials(prof.utilisateur) }}</div>
                     <div class="person-info">
@@ -164,7 +165,7 @@
                     <span class="person-name">{{ selectedValidateur.utilisateur.prenom }} {{ selectedValidateur.utilisateur.nom }}</span>
                     <span class="person-sub">{{ selectedValidateur.utilisateur.email }} · Validateur</span>
                   </div>
-                  <button class="remove-btn" @click="clearValidateur">×</button>
+                  <button class="remove-btn" :disabled="viewMode" @click="clearValidateur">×</button>
                 </div>
               </transition>
 
@@ -201,7 +202,7 @@
                     :key="tech.id_technologie"
                     class="dropdown-item"
                     :class="{ disabled: isTechAdded(tech.id_technologie) }"
-                    @click="openAddTech(tech)"
+                    @click="viewMode ? null : openAddTech(tech)"
                   >
                     <div class="tech-icon-cell">{{ techEmoji(tech.categorie) }}</div>
                     <div class="person-info">
@@ -225,12 +226,12 @@
                   <div class="form-row">
                     <div class="form-group">
                       <label class="form-label">Version <span class="optional">(optionnel)</span></label>
-                      <input v-model="pendingTechVersion" type="text" class="form-input"
+                      <input v-model="pendingTechVersion" type="text" class="form-input" :readonly="viewMode"
                              placeholder="Ex: 18.2.0" />
                     </div>
                     <div class="form-group">
                       <label class="form-label">Niveau d'utilisation</label>
-                      <select v-model="pendingTechNiveau" class="form-input">
+                      <select v-model="pendingTechNiveau" class="form-input" :disabled="viewMode">
                         <option value="DEBUTANT">🟢 Débutant</option>
                         <option value="INTERMEDIAIRE">🟡 Intermédiaire</option>
                         <option value="AVANCE">🟠 Avancé</option>
@@ -239,8 +240,8 @@
                     </div>
                   </div>
                   <div class="inline-role-actions">
-                    <button class="btn-cancel small" @click="pendingTech = null">Annuler</button>
-                    <button class="btn-submit small" @click="confirmAddTech">Ajouter</button>
+                    <button class="btn-cancel small" @click="pendingTech = null" :disabled="viewMode">Annuler</button>
+                    <button class="btn-submit small" @click="confirmAddTech" :disabled="viewMode">Ajouter</button>
                   </div>
                 </div>
               </transition>
@@ -271,7 +272,7 @@
                 @dragover.prevent="isDragOver = true"
                 @dragleave.prevent="isDragOver = false"
                 @drop.prevent="onRapportDrop"
-                @click="$refs.rapportInput.click()"
+                @click="viewMode ? null : $refs.rapportInput.click()"
               >
                 <input
                   ref="rapportInput"
@@ -307,7 +308,7 @@
                   <span class="person-sub">PDF · Déposé</span>
                 </div>
                 <a v-if="rapportUrl" :href="rapportUrl" target="_blank" class="file-link-btn" title="Voir">👁</a>
-                <button class="remove-btn" @click="deleteExistingRapport" title="Supprimer">×</button>
+                <button class="remove-btn" :disabled="viewMode" @click="deleteExistingRapport" title="Supprimer">×</button>
               </div>
 
               <div v-if="!rapportUrl && !rapportUploading" class="empty-hint">
@@ -320,50 +321,55 @@
 
         <!-- Footer -->
         <div class="modal-footer">
-          <template v-if="currentStep === 0">
-            <button class="btn-cancel" @click="closeModal">Annuler</button>
+          <template v-if="viewMode">
+            <button class="btn-cancel" @click="closeModal">Fermer</button>
           </template>
           <template v-else>
-            <button class="btn-cancel" @click="prevStep">← Précédent</button>
+            <template v-if="currentStep === 0">
+              <button class="btn-cancel" @click="closeModal">Annuler</button>
+            </template>
+            <template v-else>
+              <button class="btn-cancel" @click="prevStep">← Précédent</button>
+            </template>
+
+            <div class="footer-right">
+              <span class="step-counter">{{ currentStep + 1 }} / {{ steps.length }}</span>
+
+              <button
+                v-if="currentStep === 0"
+                class="btn-submit"
+                :disabled="!isStep0Valid"
+                @click="currentStep++"
+              >
+                Suivant →
+              </button>
+
+              <button
+                v-else-if="currentStep === 1"
+                class="btn-submit"
+                :disabled="stageCreating"
+                @click="goToTechStep"
+              >
+                {{ stageCreating ? 'Création…' : 'Suivant →' }}
+              </button>
+
+              <button
+                v-else-if="currentStep === 2"
+                class="btn-submit"
+                @click="currentStep++"
+              >
+                Suivant →
+              </button>
+
+              <button
+                v-else-if="currentStep === 3"
+                class="btn-submit btn-finish"
+                @click="finish"
+              >
+                ✓ Terminer
+              </button>
+            </div>
           </template>
-
-          <div class="footer-right">
-            <span class="step-counter">{{ currentStep + 1 }} / {{ steps.length }}</span>
-
-            <button
-              v-if="currentStep === 0"
-              class="btn-submit"
-              :disabled="!isStep0Valid"
-              @click="currentStep++"
-            >
-              Suivant →
-            </button>
-
-            <button
-              v-else-if="currentStep === 1"
-              class="btn-submit"
-              :disabled="stageCreating"
-              @click="goToTechStep"
-            >
-              {{ stageCreating ? 'Création…' : 'Suivant →' }}
-            </button>
-
-            <button
-              v-else-if="currentStep === 2"
-              class="btn-submit"
-              @click="currentStep++"
-            >
-              Suivant →
-            </button>
-
-            <button
-              v-else-if="currentStep === 3"
-              class="btn-submit btn-finish"
-              @click="finish"
-            >
-              ✓ Terminer
-            </button>
-          </div>
         </div>
 
       </div>
@@ -384,6 +390,7 @@ export default {
   props: {
     modelValue:  { type: Boolean, default: false },
     editMode:    { type: Boolean, default: false },
+    viewMode:    { type: Boolean, default: false },
     initialForm: { type: Object,  default: () => emptyForm() },
     submitting:  { type: Boolean, default: false },
     modalError:  { type: String,  default: null },
@@ -391,7 +398,7 @@ export default {
     stageId:     { type: String,  default: null },
   },
 
-  emits: ['update:modelValue', 'created'],
+  emits: ['update:modelValue', 'created', 'updated'],
 
   data() {
     return {
@@ -801,12 +808,14 @@ export default {
 
     // ─── Rapport ──────────────────────────────────────────────
     onRapportDrop(e) {
+      if (this.viewMode) return
       this.isDragOver = false
       const files = Array.from(e.dataTransfer.files)
       if (files.length) this.uploadRapportFile(files[0])
     },
 
     onRapportInputChange(e) {
+      if (this.viewMode) return
       const files = Array.from(e.target.files)
       if (files.length) this.uploadRapportFile(files[0])
       e.target.value = ''
@@ -874,8 +883,11 @@ export default {
         })
         try {
           await api.put(`/stages/${this.activeStageId}`, payload)
+          this.$emit('updated', this.activeStageId)
         } catch (e) {
           console.error('Erreur mise à jour stage', e)
+          this.modalError = e?.response?.data?.message || 'Erreur lors de la modification.'
+          return
         }
       }
       if (this.pendingRapportFile && this.activeStageId) {

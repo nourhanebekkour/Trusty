@@ -1,9 +1,7 @@
 <template>
   <div class="stats-grid">
     <div class="stat-card" v-for="stat in stats" :key="stat.label">
-      <div class="stat-icon" :style="{ color: stat.color }">
-        <component :is="stat.icon" />
-      </div>
+      <div class="stat-icon" :style="{ color: stat.color }" v-html="stat.icon"></div>
       <div class="stat-info">
         <span class="stat-label">{{ stat.label }}</span>
         <span class="stat-value">{{ stat.value }}</span>
@@ -18,16 +16,34 @@ import { useActivitesStore } from '../../stores/activitesStore.js';
 
 const store = useActivitesStore();
 
-const IconList = { template: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>` };
-const IconCheck = { template: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>` };
-const IconClock = { template: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>` };
-const IconStar = { template: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>` };
+const iconList = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="100%" height="100%">
+  <line x1="8" y1="6" x2="21" y2="6"/>
+  <line x1="8" y1="12" x2="21" y2="12"/>
+  <line x1="8" y1="18" x2="21" y2="18"/>
+  <line x1="3" y1="6" x2="3.01" y2="6"/>
+  <line x1="3" y1="12" x2="3.01" y2="12"/>
+  <line x1="3" y1="18" x2="3.01" y2="18"/>
+</svg>`;
+
+const iconCheck = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="100%" height="100%">
+  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+  <polyline points="22 4 12 14.01 9 11.01"/>
+</svg>`;
+
+const iconClock = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="100%" height="100%">
+  <circle cx="12" cy="12" r="10"/>
+  <polyline points="12 6 12 12 16 14"/>
+</svg>`;
+
+const iconStar = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="100%" height="100%">
+  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+</svg>`;
 
 const stats = computed(() => [
-  { label: 'TOTAL', value: store.totalActivites, color: '#D6EDE8', icon: IconList },
-  { label: 'VALIDÉES', value: store.validees, color: '#5C8C6A', icon: IconCheck },
-  { label: 'EN ATTENTE', value: store.enAttente, color: '#e8a04a', icon: IconClock },
-  { label: 'AVEC ATTESTATION', value: store.avecAttestation, color: '#9b8ec4', icon: IconStar },
+  { label: 'TOTAL',            value: store.totalActivites,  color: '#D6EDE8', icon: iconList  },
+  { label: 'VALIDÉES',         value: store.validees,        color: '#5C8C6A', icon: iconCheck },
+  { label: 'EN ATTENTE',       value: store.enAttente,       color: '#e8a04a', icon: iconClock },
+  { label: 'AVEC ATTESTATION', value: store.avecAttestation, color: '#9b8ec4', icon: iconStar  },
 ]);
 </script>
 
@@ -59,11 +75,6 @@ const stats = computed(() => [
   width: 36px;
   height: 36px;
   flex-shrink: 0;
-}
-
-.stat-icon svg {
-  width: 100%;
-  height: 100%;
 }
 
 .stat-info {
