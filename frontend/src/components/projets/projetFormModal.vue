@@ -1132,7 +1132,11 @@ export default {
       if (this.pendingFiles.length && this.activeProjetId) {
         await this.uploadPendingFiles()
       }
-      this.$emit('update:modelValue', false)
+      if (this.editMode) {
+        this.$emit('submit', { ...this.localForm })
+      } else {
+        this.$emit('update:modelValue', false)
+      }
     },
 
     // ─── Fichiers : fetch liste ───────────────────────────────────
