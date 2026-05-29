@@ -90,7 +90,7 @@
           <td>
             <div class="action-cell">
               <button class="action-btn" title="Voir"      @click="$emit('voir', stage)">👁</button>
-              <button class="action-btn" title="Modifier"  @click="store.openModal('edit', stage)">✎</button>
+              <button class="action-btn" title="Modifier"  @click="$emit('edit', stage)">✎</button>
               <button class="action-btn action-btn--danger" title="Supprimer" @click="store.confirmerSuppression(stage)">🗑</button>
             </div>
           </td>
@@ -125,7 +125,7 @@ import { useStageStore, initiales, logoColor, avatarColor, formatDate, badgeClas
 
 const store = useStageStore()
 
-defineEmits(['voir'])
+defineEmits(['voir', 'edit'])
 </script>
 
 <style scoped>

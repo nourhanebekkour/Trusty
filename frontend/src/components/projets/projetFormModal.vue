@@ -901,7 +901,7 @@ export default {
 
     // ─── Auth/Me ──────────────────────────────────────────────────
     async fetchCurrentUser() {
-      if (this.ecoleUtilisateur || this.loadingMe) return
+      if (this.ecoleUtilisateur || this.loadingMe) return Promise.resolve()
       this.loadingMe = true
       try {
         const { data } = await api.get('/auth/me')
