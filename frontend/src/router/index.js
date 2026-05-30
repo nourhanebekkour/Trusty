@@ -15,12 +15,15 @@ import ProfessionalView from '@/views/ProfessionalView.vue'
 import ProfessorView from '@/views/ProfessorView.vue'
 import { useAuthStore } from '@/stores/authstore'
 import Parcours from '../views/Etudiant/Parcours.vue'
+import registerview from '@/views/registerview.vue'
+import VerifyEmailView from '@/views/VerifyEmailView.vue'
+import AdminLayout from '../components/admin/AdminLayout.vue'
 
-// ──  Roles autorisés par section ──────────────────────────────
+// ── Roles autorisés ──────────────────────────────
 const ROLES = {
-  ADMIN:        'ADMIN',
-  STUDENT:      'ETUDIANT',
-  PROFESSOR:    'PROFESSEUR',
+  ADMIN: 'ADMIN',
+  STUDENT: 'ETUDIANT',
+  PROFESSOR: 'PROFESSEUR',
   PROFESSIONAL: 'PROFESSIONNEL',
 }
 
@@ -38,10 +41,20 @@ const router = createRouter({
       component: () => import('../views/Etudiant/Parcours.vue'),
     },
     {
+      path: '/register',
+      name: 'register',
+      component: registerview,
+    },
+    {
       path: '/login',
       name: 'login',
       component: LoginView,
       meta: { guestOnly: true },
+    },
+    {
+      path: '/verify-email',
+      name: 'verify-email',
+      component: VerifyEmailView,
     },
 
     // ── Admin ──────────────────────────────────────────
@@ -71,10 +84,15 @@ const router = createRouter({
           name: 'admin-portfolios',
           component: () => import('../views/admin/AdminPortfolios.vue'),
         },
+        {
+          path: 'notifications',
+          name: 'admin-notifications',
+          component: () => import('../views/admin/AdminNotifications.vue'),
+        },
       ],
     },
 
-    // ── Student / User routes ──────────────────────────
+    // ── Student ──────────────────────────────────────────
     {
       path: '/dashboard',
       name: 'dashboard',
@@ -118,12 +136,6 @@ const router = createRouter({
       meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
-      path: '/modele',
-      name: 'modele',
-      component: Modele,
-      meta: { requiresAuth: true },
-      },
-      {
       path: '/parcours',
       name: 'parcours',
       component: Parcours,
@@ -134,21 +146,31 @@ const router = createRouter({
       component: Portfolio,
     },
     {
-      path: '/professional',
-      name: 'professional',
-      component: ProfessionalView,
-      meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
-      },
-      {
       path: '/activites',
       name: 'activites',
       component: activites,
     },
+
+    // ── Professional ─────────────────────────────────────
+    {
+      path: '/professional',
+      name: 'professional',
+      component: ProfessionalView,
+      meta: {
+        requiresAuth: true,
+        roles: [ROLES.PROFESSIONAL],
+      },
+    },
+
+    // ── Professor ────────────────────────────────────────
     {
       path: '/professor',
       name: 'professor',
       component: ProfessorView,
-      meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
+      meta: {
+        requiresAuth: true,
+        roles: [ROLES.PROFESSOR],
+      },
     },
 
     // Pages d'erreur
@@ -166,8 +188,16 @@ const router = createRouter({
 })
 
 // ── Guard principal ────────────────────────────────────────────
-router.beforeEach(async (to, from) => {
+router.beforeEach(async (to) => {
   const authStore = useAuthStore()
+
+  // Pages publiques
+  if (
+    ['home', 'login', 'register', 'about', 'verify-email']
+      .includes(to.name)
+  ) {
+    return true
+  }
 
   // Initialisation session utilisateur
   if (!authStore.isInitialized) {
@@ -181,27 +211,37 @@ router.beforeEach(async (to, from) => {
     }
   }
 
-  // ── Redirection admin vers dashboard ──
-  if (authStore.isAuthenticated && authStore.isAdmin) {
-    if (!to.path.startsWith('/admin')) {
-      return '/admin/dashboard'
+  // Redirection automatique selon rôle
+  if (authStore.isAuthenticated) {
+    if (authStore.isAdmin) {
+      if (!to.path.startsWith('/admin')) {
+        return '/admin/dashboard'
+      }
+    } else if (authStore.isProfesseur) {
+      if (to.name !== 'professor') {
+        return '/professor'
+      }
+    } else if (authStore.isProfessionnel) {
+      if (!to.path.startsWith('/professional')) {
+        return '/professional'
+      }
     }
   }
 
-  // ── Pages invité uniquement (login/register) ──
+  // Pages invité uniquement
   if (to.meta.guestOnly && authStore.isAuthenticated) {
     return redirectByRole(authStore.user?.role)
   }
 
-  // ── Routes protégées ──
+  // Routes protégées
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return {
       name: 'login',
-      query: { redirect: to.fullPath }
+      query: { redirect: to.fullPath },
     }
   }
 
-  // ── Vérification des rôles ──
+  // Vérification des rôles
   if (to.meta.roles && to.meta.roles.length > 0) {
     const userRole = authStore.user?.role?.toUpperCase()
 
@@ -213,14 +253,19 @@ router.beforeEach(async (to, from) => {
   return true
 })
 
-// Redirige selon le rôle après login
+// Redirection selon rôle après login
 function redirectByRole(role) {
   switch (role?.toUpperCase()) {
-    case ROLES.ADMIN:        return '/admin/dashboard'
-    case ROLES.STUDENT:      return '/dashboard'
-    case ROLES.PROFESSOR:    return '/professor'
-    case ROLES.PROFESSIONAL: return '/professional'
-    default:                 return '/'
+    case ROLES.ADMIN:
+      return '/admin/dashboard'
+    case ROLES.STUDENT:
+      return '/dashboard'
+    case ROLES.PROFESSOR:
+      return '/professor'
+    case ROLES.PROFESSIONAL:
+      return '/professional'
+    default:
+      return '/'
   }
 }
 

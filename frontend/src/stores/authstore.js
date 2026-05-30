@@ -18,10 +18,10 @@ const sanitizeUser = (raw) => {
       }
     }
     return acc
-  }, Object.create(null)) 
+  }, Object.create(null))
 }
 
-const VALID_ROLES = ['ADMIN', 'ETUDIANT', 'PROFESSEUR', 'PROFESSIONNEL']
+const VALID_ROLES = ['ADMIN', 'ADMINISTRATEUR', 'ETUDIANT', 'PROFESSEUR', 'PROFESSIONNEL']
 const isValidRole = (role) =>
   typeof role === 'string' && VALID_ROLES.includes(role.toUpperCase())
 
@@ -39,12 +39,12 @@ export const useAuthStore = defineStore('auth', {
     user: null,
     loading: false,
     error: null,
-    isInitialized: false, // évite les appels API répétés à chaque navigation
+    isInitialized: false,
   }),
 
   getters: {
     isAuthenticated: (state) => !!state.user,
-    isAdmin:         (state) => state.user?.role?.toUpperCase() === 'ADMIN',
+    isAdmin:         (state) => state.user?.role?.toUpperCase() === 'ADMINISTRATEUR',
     isEtudiant:      (state) => state.user?.role?.toUpperCase() === 'ETUDIANT',
     isProfesseur:    (state) => state.user?.role?.toUpperCase() === 'PROFESSEUR',
     isProfessionnel: (state) => state.user?.role?.toUpperCase() === 'PROFESSIONNEL',
@@ -139,6 +139,21 @@ export const useAuthStore = defineStore('auth', {
         this.user = null
         this.error = null
         this.isInitialized = false
+      }
+    },
+
+    // Verify Email
+    async verifyEmail(token) {
+      this.loading = true
+      this.error = null
+      try {
+        await authService.verifyEmail(token)
+        return true
+      } catch (err) {
+        this.error = err.response?.data?.message || 'Erreur lors de la vérification'
+        throw err
+      } finally {
+        this.loading = false
       }
     },
   },
