@@ -138,10 +138,10 @@ async function handleLogout() {
 }
 
 .toggle-btn {
-  background: var(--color-background-mute);
+  background: var(--color-surface-hover);
   border: none;
   cursor: pointer;
-  color: var(--color-text);
+  color: var(--color-text-primary);
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left:14px ;
@@ -153,7 +153,7 @@ async function handleLogout() {
 }
 
 .toggle-btn:hover {
-  background-color: var(--color-background-soft);
+  background-color: var(--color-surface-alt);
 }
 
 .sidebar-nav {
@@ -173,7 +173,7 @@ async function handleLogout() {
   box-sizing: border-box;
   height: 40px; 
   padding: 0 12px; 
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   background-color: transparent;
   font-family: Inter, sans-serif; 
   font-size: 14px; 
@@ -193,18 +193,14 @@ async function handleLogout() {
 }
 
 .nav-item:hover {
-  background: var(--color-background-mute);
-  color: var(--color-text);
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
 }
 
 .router-link-active {
-  background-color: var(--color-background-mute);
+  background-color: var(--color-accent-light);
   color: var(--color-accent);
   font-weight: 600;
-}
-
-.router-link-active .nav-icon {
-  filter: brightness(0) invert(1);
 }
 
 .nav-icon {

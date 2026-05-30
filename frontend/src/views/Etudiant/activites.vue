@@ -137,24 +137,24 @@ onMounted(() => store.fetchActivites());
 .header-icon {
   width: 40px; height: 40px;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(92, 140, 106, 0.2);
-  border: 1px solid rgba(92, 140, 106, 0.3);
+  background: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border);
   border-radius: 10px;
-  color: #5C8C6A;
+  color: var(--color-accent);
   flex-shrink: 0;
 }
 
 .page-title {
   font-size: 1.3rem;
   font-weight: 800;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   margin: 0 0 0.15rem;
   letter-spacing: -0.01em;
 }
 
 .page-subtitle {
   font-size: 0.78rem;
-  color: rgba(214, 237, 232, 0.4);
+  color: var(--color-text-tertiary);
   margin: 0;
 }
 
@@ -163,10 +163,10 @@ onMounted(() => store.fetchActivites());
   align-items: center;
   gap: 0.45rem;
   padding: 0.55rem 1.1rem;
-  background: linear-gradient(135deg, #5C8C6A, #3d6b50);
+  background: var(--color-accent);
   border: none;
   border-radius: 10px;
-  color: #D6EDE8;
+  color: var(--color-surface);
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: 600;
@@ -177,9 +177,9 @@ onMounted(() => store.fetchActivites());
 }
 
 .add-btn:hover {
-  background: linear-gradient(135deg, #6a9d78, #4a7a5d);
+  background: var(--color-accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(92, 140, 106, 0.3);
+  box-shadow: 0 4px 16px rgba(61, 107, 94, 0.3);
 }
 
 .activites-list {
@@ -195,14 +195,14 @@ onMounted(() => store.fetchActivites());
   justify-content: center;
   padding: 4rem 0;
   gap: 1rem;
-  color: rgba(214, 237, 232, 0.4);
+  color: var(--color-text-tertiary);
   font-size: 0.85rem;
 }
 
 .spinner {
   width: 36px; height: 36px;
-  border: 2px solid rgba(214, 237, 232, 0.1);
-  border-top-color: #5C8C6A;
+  border: 2px solid var(--color-border-light);
+  border-top-color: var(--color-accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -216,7 +216,7 @@ onMounted(() => store.fetchActivites());
   justify-content: center;
   padding: 4rem 1rem;
   gap: 1rem;
-  color: rgba(214, 237, 232, 0.25);
+  color: var(--color-text-tertiary);
   text-align: center;
 }
 
@@ -225,9 +225,9 @@ onMounted(() => store.fetchActivites());
 .add-btn-sm {
   padding: 0.5rem 1.2rem;
   border-radius: 9px;
-  background: rgba(92, 140, 106, 0.2);
-  border: 1px solid rgba(92, 140, 106, 0.3);
-  color: #5C8C6A;
+  background: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border);
+  color: var(--color-accent);
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: 600;
@@ -235,5 +235,5 @@ onMounted(() => store.fetchActivites());
   transition: all 0.2s;
 }
 
-.add-btn-sm:hover { background: rgba(92, 140, 106, 0.3); }
+.add-btn-sm:hover { background: var(--color-accent-border); }
 </style>

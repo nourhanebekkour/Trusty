@@ -41,7 +41,7 @@ export default {
 .confirm-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(13, 43, 43, 0.75);
+  background: rgba(15, 27, 45, 0.55);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -49,14 +49,14 @@ export default {
   z-index: 1100;
 }
 .confirm-modal {
-  background: #1e3f3f;
-  border: 1px solid rgba(214, 237, 232, 0.13);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 32px 28px 24px;
   width: 380px;
   max-width: 90vw;
   text-align: center;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-panel);
   animation: fadeUp 0.2s ease;
 }
 .confirm-icon {
@@ -66,12 +66,12 @@ export default {
 .confirm-title {
   font-size: 17px;
   font-weight: 700;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   margin: 0 0 8px;
 }
 .confirm-message {
   font-size: 14px;
-  color: rgba(214, 237, 232, 0.55);
+  color: var(--color-text-secondary);
   margin: 0 0 24px;
   line-height: 1.5;
 }
@@ -82,8 +82,8 @@ export default {
 }
 .btn-cancel {
   background: transparent;
-  color: rgba(214, 237, 232, 0.65);
-  border: 1px solid rgba(214, 237, 232, 0.13);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 10px 22px;
   font-size: 14px;
@@ -93,11 +93,11 @@ export default {
   transition: all 0.15s;
 }
 .btn-cancel:hover {
-  border-color: rgba(214, 237, 232, 0.25);
-  color: #D6EDE8;
+  border-color: var(--color-accent-border);
+  color: var(--color-text-primary);
 }
 .btn-danger {
-  background: #b94040;
+  background: var(--color-danger);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -109,7 +109,7 @@ export default {
   transition: background 0.15s;
 }
 .btn-danger:hover {
-  background: #d15555;
+  background: #dc2626;
 }
 
 @keyframes fadeUp {

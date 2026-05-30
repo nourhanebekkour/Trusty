@@ -255,7 +255,7 @@ export default {
 
 /* ── Override modal vars ── */
 .detail-modal {
-  --modal-bg: #1e3f3f;
+  --modal-bg: var(--color-surface);
 
   background: var(--modal-bg);
   border: 1px solid var(--border-md);
@@ -305,7 +305,7 @@ export default {
   line-height: 1;
 }
 .modal-close:hover {
-  background: rgba(214, 237, 232, 0.1);
+  background: var(--color-surface-hover);
   color: var(--text);
 }
 
@@ -337,7 +337,7 @@ export default {
   align-items: center;
   gap: 16px;
   padding: 28px 28px 20px;
-  background: rgba(214, 237, 232, 0.03);
+  background: var(--color-surface-alt);
   border-bottom: 1px solid var(--border);
 }
 .detail-hero-logo {
@@ -379,12 +379,12 @@ export default {
 }
 
 .badge--public {
-  background: rgba(29, 158, 117, 0.1);
-  color: #4cd9a7;
-  border-color: rgba(29, 158, 117, 0.2);
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  border-color: var(--color-accent-border);
 }
 .badge--private {
-  background: rgba(214, 237, 232, 0.06);
+  background: var(--color-surface-alt);
   color: var(--text-dim);
   border-color: var(--border);
 }
@@ -468,7 +468,7 @@ export default {
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
-  background: rgba(214, 237, 232, 0.03);
+  background: var(--color-surface-alt);
   border-radius: 10px;
   border: 1px solid var(--border);
 }
@@ -490,7 +490,7 @@ export default {
 .detail-tech-version {
   font-size: 11px;
   color: var(--text-dim);
-  background: rgba(214, 237, 232, 0.06);
+  background: var(--color-surface-hover);
   padding: 1px 7px;
   border-radius: 6px;
 }
@@ -510,7 +510,7 @@ export default {
   align-items: center;
   gap: 12px;
   padding: 14px 18px;
-  background: rgba(214, 237, 232, 0.03);
+  background: var(--color-surface-alt);
   border-radius: 10px;
   border: 1px solid var(--border);
 }
@@ -529,7 +529,7 @@ export default {
   gap: 5px;
   padding: 6px 14px;
   border-radius: 8px;
-  background: var(--sage);
+  background: var(--color-accent);
   color: #fff;
   text-decoration: none;
   font-size: 13px;
@@ -537,7 +537,7 @@ export default {
   transition: background 0.15s;
 }
 .detail-rapport-link:hover {
-  background: #6fa87a;
+  background: var(--color-accent-hover);
 }
 .detail-empty {
   font-size: 13px;

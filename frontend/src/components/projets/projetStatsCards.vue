@@ -39,10 +39,10 @@ export default {
     items() {
       const s = this.stats
       return [
-        { label: 'TOTAL PROJETS', value: s.total,             color: '#D6EDE8', icon: icons.list  },
-        { label: 'VALIDÉS',       value: s.valides,           color: '#5C8C6A', icon: icons.check },
-        { label: 'EN ATTENTE',    value: s.enAttente,         color: '#e8a04a', icon: icons.clock },
-        { label: 'AVEC LIENS',    value: s.avecRapport || 0,  color: '#9b8ec4', icon: icons.link  },
+        { label: 'TOTAL PROJETS', value: s.total,             color: 'var(--color-accent)',     icon: icons.list  },
+        { label: 'VALIDÉS',       value: s.valides,           color: 'var(--color-valid-text)', icon: icons.check },
+        { label: 'EN ATTENTE',    value: s.enAttente,         color: 'var(--color-waiting-text)', icon: icons.clock },
+        { label: 'AVEC LIENS',    value: s.avecRapport || 0,  color: 'var(--color-purple-text)', icon: icons.link  },
       ]
     },
   },
@@ -58,8 +58,8 @@ export default {
 }
 
 .stat-card {
-  background: #1A3838;
-  border: 1px solid rgba(214, 237, 232, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 1.1rem 1.2rem;
   display: flex;
@@ -69,7 +69,7 @@ export default {
 }
 
 .stat-card:hover {
-  border-color: rgba(214, 237, 232, 0.2);
+  border-color: var(--color-accent-border);
   transform: translateY(-1px);
 }
 
@@ -89,14 +89,14 @@ export default {
   font-size: 0.62rem;
   font-weight: 600;
   letter-spacing: 0.08em;
-  color: #5C8C6A;
+  color: var(--color-text-secondary);
   text-transform: uppercase;
 }
 
 .stat-value {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   line-height: 1;
   font-family: 'DM Mono', monospace;
 }

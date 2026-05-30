@@ -209,24 +209,24 @@ onMounted(() => store.init())
 .header-icon {
   width: 40px; height: 40px;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(214, 237, 232, 0.12);
-  border: 1px solid rgba(214, 237, 232, 0.15);
+  background: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border);
   border-radius: 10px;
-  color: #D6EDE8;
+  color: var(--color-accent);
   flex-shrink: 0;
 }
 
 .page-title {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   margin: 0 0 0.15rem;
   letter-spacing: -0.01em;
 }
 
 .page-subtitle {
   font-size: 0.875rem;
-  color: #7a9e8e;
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
@@ -235,7 +235,7 @@ onMounted(() => store.init())
   align-items: center;
   gap: 0.45rem;
   padding: 0.55rem 1.1rem;
-  background: #1D9E75;
+  background: var(--color-accent);
   border: none;
   border-radius: 8px;
   color: #fff;
@@ -249,9 +249,9 @@ onMounted(() => store.init())
 }
 
 .add-btn:hover {
-  background: #24b88a;
+  background: var(--color-accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(29, 158, 117, 0.3);
+  box-shadow: 0 4px 16px rgba(61, 107, 94, 0.3);
 }
 
 .toast {
@@ -264,10 +264,10 @@ onMounted(() => store.init())
   font-weight: 500;
   animation: fadeUp 0.25s ease;
   z-index: 2000;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 24px rgba(15, 27, 45, 0.15);
 }
-.toast--success { background: #1D9E75; color: #fff; }
-.toast--error   { background: #b94040; color: #fff; }
+.toast--success { background: var(--color-accent); color: #fff; }
+.toast--error   { background: var(--color-danger); color: #fff; }
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(10px); }

@@ -40,8 +40,8 @@ const iconStar = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 </svg>`;
 
 const stats = computed(() => [
-  { label: 'TOTAL',            value: store.totalActivites,  color: '#D6EDE8', icon: iconList  },
-  { label: 'VALIDÉES',         value: store.validees,        color: '#5C8C6A', icon: iconCheck },
+  { label: 'TOTAL',            value: store.totalActivites,  color: '#0F1B2D', icon: iconList  },
+  { label: 'VALIDÉES',         value: store.validees,        color: '#3D6B5E', icon: iconCheck },
   { label: 'EN ATTENTE',       value: store.enAttente,       color: '#e8a04a', icon: iconClock },
   { label: 'AVEC ATTESTATION', value: store.avecAttestation, color: '#9b8ec4', icon: iconStar  },
 ]);
@@ -56,8 +56,8 @@ const stats = computed(() => [
 }
 
 .stat-card {
-  background: #1A3838;
-  border: 1px solid rgba(214, 237, 232, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
   border-radius: 12px;
   padding: 1.1rem 1.2rem;
   display: flex;
@@ -67,7 +67,7 @@ const stats = computed(() => [
 }
 
 .stat-card:hover {
-  border-color: rgba(214, 237, 232, 0.2);
+  border-color: var(--color-border);
   transform: translateY(-1px);
 }
 
@@ -87,14 +87,14 @@ const stats = computed(() => [
   font-size: 0.62rem;
   font-weight: 600;
   letter-spacing: 0.08em;
-  color: #5C8C6A;
+  color: var(--color-accent);
   text-transform: uppercase;
 }
 
 .stat-value {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   line-height: 1;
   font-family: 'DM Mono', monospace;
 }
