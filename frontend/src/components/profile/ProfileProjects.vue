@@ -11,7 +11,7 @@
     </div>
 
     <!-- Liste des projets -->
-    <div class="project-list" v-else-if="projets.length">
+    <div class="project-list" v-else-if="allProjets.length">
       <div
         class="project-row"
         v-for="pp in projets"
@@ -27,7 +27,7 @@
               <span class="project-role" v-if="pp.role_joue">{{ pp.role_joue }} · </span>
               {{ pp.projet?.type_projet ?? pp.type_projet }}
             </p>
-            <p class="project-desc">{{ pp.projet?.description ?? pp.description }}</p>
+            <p class="project-description">{{ pp.projet?.description ?? pp.description }}</p>
           </div>
         </div>
         <div class="project-right">
@@ -37,6 +37,11 @@
           <span class="creator-badge" v-if="pp.est_createur">👑 Créateur</span>
         </div>
       </div>
+
+      <!-- Voir plus / moins -->
+      <button v-if="hasMore" class="link-btn" @click="showAll = !showAll">
+        {{ showAll ? 'Voir moins ↑' : `Voir plus (${allProjets.length - 5} de plus) →` }}
+      </button>
     </div>
 
     <p class="empty-msg" v-else>Aucun projet académique.</p>
@@ -46,20 +51,21 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 const props = defineProps({ user: Object })
 const router  = useRouter()
 const loading = ref(false)
+const showAll = ref(false)
 
-// Les projets viennent du store user (participations_projets) ou directement de l'étudiant
-const projets = computed(() => {
-  const participations = props.user?.etudiant?.participations_projets ?? []
-  // Normaliser : certains backends retournent directement la liste des projets
-  // d'autres retournent des objets { projet, role_joue, est_createur, ... }
-  return participations
-})
+const allProjets = computed(() => props.user?.etudiant?.participations_projets ?? [])
+
+const projets = computed(() =>
+  showAll.value ? allProjets.value : allProjets.value.slice(0, 5)
+)
+
+const hasMore = computed(() => allProjets.value.length > 5)
 
 const formatStatut = (s) => ({
   VALIDE:     'Validé',
@@ -118,6 +124,7 @@ const goToProjet = (pp) => {
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .project-role {

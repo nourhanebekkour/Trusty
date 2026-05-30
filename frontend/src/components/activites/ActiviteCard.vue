@@ -140,8 +140,8 @@ function onFileChange(e) {
 
 <style scoped>
 .activite-card {
-  background: #1A3838;
-  border: 1px solid rgba(214, 237, 232, 0.07);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
   border-radius: 14px;
   padding: 1.2rem 1.3rem;
   display: flex;
@@ -162,13 +162,13 @@ function onFileChange(e) {
 
 .type-evenement::before { background: #e8a04a; }
 .type-hackathon::before { background: #9b8ec4; }
-.type-competition::before { background: #5C8C6A; }
+.type-competition::before { background: var(--color-accent); }
 .type-club::before { background: #4a9ec4; }
 .type-engagement::before { background: #c45a5a; }
 
 .activite-card:hover {
-  border-color: rgba(214, 237, 232, 0.18);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-panel);
 }
 
 .card-header {
@@ -199,15 +199,15 @@ function onFileChange(e) {
 .type-evenement .badge-dot { background: #e8a04a; }
 .type-hackathon { background: rgba(155,142,196,0.15); color: #9b8ec4; }
 .type-hackathon .badge-dot { background: #9b8ec4; }
-.type-competition { background: rgba(92,140,106,0.2); color: #7dc494; }
-.type-competition .badge-dot { background: #7dc494; }
+.type-competition { background: var(--color-accent-light); color: var(--color-accent); }
+.type-competition .badge-dot { background: var(--color-accent); }
 .type-club { background: rgba(74,158,196,0.15); color: #4a9ec4; }
 .type-club .badge-dot { background: #4a9ec4; }
 .type-engagement { background: rgba(196,90,90,0.15); color: #c45a5a; }
 .type-engagement .badge-dot { background: #c45a5a; }
 
-.statut-validee { background: rgba(92,140,106,0.18); color: #5C8C6A; }
-.statut-validee .badge-dot { background: #5C8C6A; }
+.statut-validee { background: var(--color-accent-light); color: var(--color-accent); }
+.statut-validee .badge-dot { background: var(--color-accent); }
 .statut-attente { background: rgba(232,160,74,0.15); color: #e8a04a; }
 .statut-attente .badge-dot { background: #e8a04a; }
 
@@ -217,16 +217,16 @@ function onFileChange(e) {
   width: 30px; height: 30px;
   display: flex; align-items: center; justify-content: center;
   border-radius: 8px;
-  background: rgba(214, 237, 232, 0.05);
-  border: 1px solid rgba(214, 237, 232, 0.1);
-  color: rgba(214, 237, 232, 0.5);
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border-light);
+  color: var(--color-text-tertiary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .action-btn:hover {
-  background: rgba(214, 237, 232, 0.1);
-  color: #D6EDE8;
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
 }
 
 .action-btn.danger:hover {
@@ -240,7 +240,7 @@ function onFileChange(e) {
 .activite-title {
   font-size: 1.05rem;
   font-weight: 700;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   margin: 0;
   line-height: 1.3;
 }
@@ -250,19 +250,19 @@ function onFileChange(e) {
   align-items: center;
   gap: 0.35rem;
   font-size: 0.78rem;
-  color: rgba(214, 237, 232, 0.5);
+  color: var(--color-text-tertiary);
   margin: 0;
 }
 
-.activite-org strong { color: rgba(214, 237, 232, 0.75); }
+.activite-org strong { color: var(--color-text-secondary); }
 
 .activite-desc {
   font-size: 0.82rem;
-  color: rgba(214, 237, 232, 0.55);
+  color: var(--color-text-secondary);
   line-height: 1.55;
   margin: 0;
   padding: 0.6rem 0.8rem;
-  border-left: 2px solid rgba(214, 237, 232, 0.1);
+  border-left: 2px solid var(--color-border-light);
 }
 
 .card-meta {
@@ -276,7 +276,7 @@ function onFileChange(e) {
   align-items: center;
   gap: 0.3rem;
   font-size: 0.73rem;
-  color: rgba(214, 237, 232, 0.4);
+  color: var(--color-text-tertiary);
 }
 
 .card-footer {
@@ -284,7 +284,7 @@ function onFileChange(e) {
   align-items: center;
   gap: 0.6rem;
   padding-top: 0.5rem;
-  border-top: 1px solid rgba(214, 237, 232, 0.06);
+  border-top: 1px solid var(--color-border-light);
 }
 
 .attestation-tag {
@@ -292,7 +292,7 @@ function onFileChange(e) {
   align-items: center;
   gap: 0.35rem;
   font-size: 0.75rem;
-  color: #5C8C6A;
+  color: var(--color-accent);
 }
 
 .footer-btn {
@@ -306,14 +306,14 @@ function onFileChange(e) {
   cursor: pointer;
   font-family: inherit;
   transition: all 0.2s;
-  border: 1px solid rgba(214, 237, 232, 0.12);
-  background: rgba(214, 237, 232, 0.05);
-  color: rgba(214, 237, 232, 0.6);
+  border: 1px solid var(--color-border-light);
+  background: transparent;
+  color: var(--color-text-secondary);
 }
 
 .footer-btn:hover {
-  background: rgba(214, 237, 232, 0.1);
-  color: #D6EDE8;
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
 }
 
 .upload-btn { cursor: pointer; }

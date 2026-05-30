@@ -143,11 +143,47 @@ const router = createRouter({
       name: 'professional',
       component: ProfessionalView,
     },
+
     {
   path: '/professor',
-  name: 'professor',
-  component: ProfessorView,
-  meta: { requiresAuth: true }
+  component: ProfessorLayout,
+  meta: { requiresAuth: true },
+  children: [
+    {
+      path: '',
+      redirect: '/professor/dashboard',
+    },
+    {
+      path: 'dashboard',
+      name: 'professor-dashboard',
+      component: () => import('../views/professor/ProfessorDashboard.vue'),
+    },
+    {
+      path: 'portfolios',
+      name: 'professor-portfolios',
+      component: () => import('../views/professor/ProfessorPortfolios.vue'),
+    },
+    {
+      path: 'validations',
+      name: 'professor-validations',
+      component: () => import('../views/professor/ProfessorValidations.vue'),
+    },
+    {
+      path: 'messages',
+      name: 'professor-messages',
+      component: () => import('../views/professor/ProfessorMessages.vue'),
+    },
+    {
+      path: 'notifications',
+      name: 'professor-notifications',
+      component: () => import('../views/professor/ProfessorNotifications.vue'),
+    },
+    {
+      path: 'recommendations',
+      name: 'professor-recommendations',
+      component: () => import('../views/professor/ProfessorRecommendations.vue'),
+    },
+  ],
 },
   ],  
 })
@@ -170,7 +206,7 @@ router.beforeEach(async (to, from) => {
     }
 
     else if (authStore.isProfesseur) {
-  if (to.name !== 'professor') return '/professor'
+  if (!to.path.startsWith('/professor')) return '/professor/dashboard'
 }
 
     else if (authStore.isProfessionnel) {

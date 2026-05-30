@@ -136,8 +136,8 @@ function submit() {
 @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
 
 .modal {
-  background: #1A3838;
-  border: 1px solid rgba(214, 237, 232, 0.12);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
   border-radius: 18px;
   width: 100%;
   max-width: 560px;
@@ -153,28 +153,28 @@ function submit() {
   align-items: center;
   justify-content: space-between;
   padding: 1.3rem 1.5rem 1rem;
-  border-bottom: 1px solid rgba(214, 237, 232, 0.08);
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .modal-header h2 {
   font-size: 1.05rem;
   font-weight: 700;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   margin: 0;
 }
 
 .close-btn {
   width: 32px; height: 32px;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(214, 237, 232, 0.06);
-  border: 1px solid rgba(214, 237, 232, 0.1);
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border-light);
   border-radius: 8px;
-  color: rgba(214, 237, 232, 0.5);
+  color: var(--color-text-tertiary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.close-btn:hover { background: rgba(214, 237, 232, 0.12); color: #D6EDE8; }
+.close-btn:hover { background: var(--color-surface-hover); color: var(--color-text-primary); }
 
 .modal-body {
   padding: 1.3rem 1.5rem;
@@ -201,16 +201,16 @@ label {
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.06em;
-  color: rgba(214, 237, 232, 0.45);
+  color: var(--color-text-tertiary);
   text-transform: uppercase;
 }
 
 input, select, textarea {
-  background: rgba(13, 43, 43, 0.6);
-  border: 1px solid rgba(214, 237, 232, 0.1);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border-light);
   border-radius: 8px;
   padding: 0.6rem 0.8rem;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   font-family: inherit;
   font-size: 0.85rem;
   transition: border-color 0.2s;
@@ -218,10 +218,10 @@ input, select, textarea {
 }
 
 input:focus, select:focus, textarea:focus {
-  border-color: rgba(92, 140, 106, 0.5);
+  border-color: var(--color-accent-border);
 }
 
-select option { background: #1A3838; }
+select option { background: var(--color-surface); }
 textarea { resize: vertical; }
 
 .checkbox-label {
@@ -230,7 +230,7 @@ textarea { resize: vertical; }
   gap: 0.5rem;
   font-size: 0.83rem;
   font-weight: 500;
-  color: rgba(214, 237, 232, 0.6);
+  color: var(--color-text-secondary);
   text-transform: none;
   letter-spacing: 0;
   cursor: pointer;
@@ -239,7 +239,7 @@ textarea { resize: vertical; }
 .checkbox-label input[type="checkbox"] {
   width: 16px; height: 16px;
   padding: 0;
-  accent-color: #5C8C6A;
+  accent-color: var(--color-accent);
 }
 
 .modal-footer {
@@ -247,15 +247,15 @@ textarea { resize: vertical; }
   justify-content: flex-end;
   gap: 0.75rem;
   padding: 1rem 1.5rem 1.3rem;
-  border-top: 1px solid rgba(214, 237, 232, 0.08);
+  border-top: 1px solid var(--color-border-light);
 }
 
 .btn-cancel {
   padding: 0.55rem 1.2rem;
   border-radius: 9px;
-  border: 1px solid rgba(214, 237, 232, 0.12);
+  border: 1px solid var(--color-border-light);
   background: transparent;
-  color: rgba(214, 237, 232, 0.5);
+  color: var(--color-text-tertiary);
   font-family: inherit;
   font-size: 0.83rem;
   cursor: pointer;
@@ -263,16 +263,16 @@ textarea { resize: vertical; }
 }
 
 .btn-cancel:hover {
-  background: rgba(214, 237, 232, 0.07);
-  color: #D6EDE8;
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
 }
 
 .btn-submit {
   padding: 0.55rem 1.4rem;
   border-radius: 9px;
   border: none;
-  background: linear-gradient(135deg, #5C8C6A, #3d6b50);
-  color: #D6EDE8;
+  background: var(--color-accent);
+  color: var(--color-surface);
   font-family: inherit;
   font-size: 0.83rem;
   font-weight: 600;
@@ -281,7 +281,7 @@ textarea { resize: vertical; }
 }
 
 .btn-submit:hover:not(:disabled) {
-  background: linear-gradient(135deg, #6a9d78, #4a7a5d);
+  background: var(--color-accent-hover);
   transform: translateY(-1px);
 }
 
