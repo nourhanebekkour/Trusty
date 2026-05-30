@@ -21,7 +21,7 @@ import LettresRecommandation from '@/views/Etudiant/LettresRecommandation.vue'
 
 // ── Roles autorisés ──────────────────────────────
 const ROLES = {
-  ADMIN:        'ADMIN',
+  ADMIN:        'ADMINISTRATEUR',
   STUDENT:      'ETUDIANT',
   PROFESSOR:    'PROFESSEUR',
   PROFESSIONAL: 'PROFESSIONNEL',
@@ -173,16 +173,16 @@ const router = createRouter({
     },
 
     // ── Pages d'erreur ────────────────────────────────────
-    {
-      path: '/403',
-      name: 'forbidden',
-      component: () => import('../views/ForbiddenView.vue'),
-    },
-    {
-      path: '/:pathMatch(.*)*',
-      name: 'not-found',
-      component: () => import('../views/NotFoundView.vue'),
-    },
+    //{
+    //   path: '/403',
+    //   name: 'forbidden',
+    //   component: () => import('../views/ForbiddenView.vue'),
+    // },
+    // {
+    //   path: '/:pathMatch(.*)*',
+    //   name: 'not-found',
+    //   component: () => import('../views/NotFoundView.vue'),
+    // },
   ],
 })
 
@@ -190,21 +190,16 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   const authStore = useAuthStore()
 
-  // Pages publiques
-  if (['home', 'login', 'register', 'about', 'verify-email'].includes(to.name)) {
-    return true
-  }
-
-  // Initialisation session utilisateur
+  // Initialisation session (toujours en premier)
   if (!authStore.isInitialized) {
     try {
       await authStore.fetchUser()
     } catch (e) {
-      console.error('[Router] Impossible de récupérer la session utilisateur :', e)
+      console.error('[Router] Impossible de récupérer la session :', e)
     }
   }
 
-  // Redirection automatique selon rôle
+  // ✅ Redirection automatique selon rôle (AVANT le court-circuit)
   if (authStore.isAuthenticated) {
     if (authStore.isAdmin) {
       if (!to.path.startsWith('/admin')) return '/admin/dashboard'
@@ -215,6 +210,11 @@ router.beforeEach(async (to) => {
     }
   }
 
+  // Pages publiques (après la redirection par rôle)
+  if (['home', 'login', 'register', 'about', 'verify-email'].includes(to.name)) {
+    return true
+  }
+
   // Pages invité uniquement
   if (to.meta.guestOnly && authStore.isAuthenticated) {
     return redirectByRole(authStore.user?.role)
@@ -222,14 +222,11 @@ router.beforeEach(async (to) => {
 
   // Routes protégées
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return {
-      name: 'login',
-      query: { redirect: to.fullPath },
-    }
+    return { name: 'login', query: { redirect: to.fullPath } }
   }
 
   // Vérification des rôles
-  if (to.meta.roles && to.meta.roles.length > 0) {
+  if (to.meta.roles?.length > 0) {
     const userRole = authStore.user?.role?.toUpperCase()
     if (!userRole || !to.meta.roles.includes(userRole)) {
       return { name: 'forbidden' }

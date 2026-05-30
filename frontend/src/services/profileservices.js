@@ -1,4 +1,4 @@
-import api from './api.js'
+import api from '@/api'
 
 // ─── GitHub API ──────────────────────────────────────────────────────────────
 
@@ -44,16 +44,24 @@ function extractData(res) {
   return body?.data ?? body
 }
 
-
-const REC_ALLOWED_FIELDS = ['id', 'id_etudiant', 'message', 'createdAt', 'auteur']
-const sanitizeRecommandation = (raw) => {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
-  return REC_ALLOWED_FIELDS.reduce((acc, key) => {
-    if (Object.prototype.hasOwnProperty.call(raw, key)) {
-      acc[key] = raw[key]
-    }
-    return acc
-  }, Object.create(null))
+function assembleUser(me, etudiant, competences = [], badges = [], projets = [], depots = []) {
+  return {
+    id_utilisateur: me.id_utilisateur,
+    email:          me.email,
+    nom:            me.nom,
+    prenom:         me.prenom,
+    telephone:      me.telephone ?? null,
+    photo:          me.photo     ?? null,
+    role:           me.role,
+    date_creation:  me.date_creation ?? null,
+    etudiant: {
+      ...etudiant,
+      competences,
+      badges,
+      participations_projets: projets,
+      depots_github:          depots,
+    },
+  }
 }
 
 // ─── Profile ─────────────────────────────────────────────────────────────────

@@ -1,8 +1,9 @@
 import api from '@/api'
 
-const assertPositiveInt = (val, label) => {
-  if (!Number.isInteger(val) || val <= 0) {
-    throw new TypeError(`[stageService] ${label} doit être un entier positif, reçu : ${val}`)
+// ✅ Remplace assertPositiveInt — les IDs sont des cuid() (strings)
+const assertId = (val, label) => {
+  if (typeof val !== 'string' || val.trim() === '') {
+    throw new TypeError(`[stageService] ${label} doit être une chaîne non vide, reçu : ${val}`)
   }
 }
 
@@ -43,9 +44,9 @@ const sanitizePayload = (payload) => {
   if (payload.entreprise  !== undefined) safe.entreprise  = sanitizeStr(payload.entreprise,  150)
   if (payload.poste       !== undefined) safe.poste       = sanitizeStr(payload.poste,        150)
   if (payload.missions    !== undefined) safe.missions    = sanitizeStr(payload.missions,     2000)
-  if (payload.adresse_entreprise       !== undefined) safe.adresse_entreprise       = sanitizeStr(payload.adresse_entreprise,       200)
-  if (payload.encadrant_professionnel  !== undefined) safe.encadrant_professionnel  = sanitizeStr(payload.encadrant_professionnel,  100)
-  if (payload.encadrant_academique     !== undefined) safe.encadrant_academique     = sanitizeStr(payload.encadrant_academique,     100)
+  if (payload.adresse_entreprise      !== undefined) safe.adresse_entreprise      = sanitizeStr(payload.adresse_entreprise,      200)
+  if (payload.encadrant_professionnel !== undefined) safe.encadrant_professionnel = sanitizeStr(payload.encadrant_professionnel,  100)
+  if (payload.encadrant_academique    !== undefined) safe.encadrant_academique    = sanitizeStr(payload.encadrant_academique,     100)
 
   if (payload.date_debut !== undefined) {
     if (!isValidDate(payload.date_debut)) throw new RangeError('[stageService] date_debut invalide')
@@ -82,7 +83,7 @@ const sanitizePayload = (payload) => {
 
 /** GET /stages/etudiant/:id */
 export async function fetchStagesEtudiant(idEtudiant) {
-  assertPositiveInt(idEtudiant, 'idEtudiant')
+  assertId(idEtudiant, 'idEtudiant') // ✅
 
   const res    = await api.get(`/stages/etudiant/${idEtudiant}`)
   const stages = Array.isArray(res.data?.data) ? res.data.data
@@ -100,7 +101,7 @@ export async function fetchStageById(id) {
 
 /** POST /stages/etudiant/:id */
 export async function creerStage(idEtudiant, payload) {
-  assertPositiveInt(idEtudiant, 'idEtudiant')
+  assertId(idEtudiant, 'idEtudiant') // ✅
 
   const safePayload = sanitizePayload(payload)
 
@@ -110,7 +111,7 @@ export async function creerStage(idEtudiant, payload) {
 
 /** PUT /stages/:id */
 export async function modifierStage(id, payload) {
-  assertPositiveInt(id, 'id')
+  assertId(id, 'id') // ✅
 
   const safePayload = sanitizePayload(payload)
 
@@ -120,7 +121,7 @@ export async function modifierStage(id, payload) {
 
 /** DELETE /stages/:id */
 export async function supprimerStage(id) {
-  assertPositiveInt(id, 'id')
+  assertId(id, 'id') // ✅
   await api.delete(`/stages/${id}`)
 }
 

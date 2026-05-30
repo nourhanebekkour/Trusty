@@ -35,7 +35,7 @@ export function getAuteurLabel(auteur) {
     const annee   = auteur.annee   ?? auteur.etudiant?.annee
     return [filiere, annee ? `Année ${annee}` : null].filter(Boolean).join(' · ')
   }
-  return sanitize(auteur.poste)
+  return auteur.poste ?? ''
 }
 
 // ─── Normalise un objet recommandation quelle que soit la forme API ──────────
@@ -135,8 +135,6 @@ const MOCK_RECOS = [
 
 // ─── fetchStats ───────────────────────────────────────────────────────────────
 export async function fetchStats(idEtudiant) {
-  assertPositiveInt(idEtudiant, 'idEtudiant')
-
   try {
     const res      = await api.get(`/etudiants/${idEtudiant}`)
     const etudiant = extractData(res)
@@ -158,10 +156,8 @@ export async function fetchStats(idEtudiant) {
   }
 }
 
-// ─── fetchProjects ────────────────
+// ─── fetchProjects ────────────────────────────────────────────────────────────
 export async function fetchProjects(idEtudiant) {
-  assertPositiveInt(idEtudiant, 'idEtudiant')
-
   try {
     const res  = await api.get('/projets/')
     const data = extractData(res)

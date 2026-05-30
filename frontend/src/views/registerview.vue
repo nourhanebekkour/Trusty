@@ -106,7 +106,6 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/authstore'
 import { useRouter } from 'vue-router'
