@@ -4,8 +4,9 @@ import api from '../api'
 
 // Évite de stocker des données sensibles renvoyées par erreur par l'API
 const USER_ALLOWED_FIELDS = [
-  'id', 'nom', 'prenom', 'email', 'role',
-  'avatar', 'isVerified', 'createdAt',
+  'id_utilisateur', // au lieu de 'id'
+  'nom', 'prenom', 'email', 'role',
+  'avatar', 'photo', 'isVerified', 'createdAt',
 ]
 
 const sanitizeUser = (raw) => {

@@ -17,7 +17,7 @@ const PUBLIC_ROUTES = ['login', 'home', 'about']
 
 // ── Mapping rôle → préfixe de route autorisé ──────
 const ROLE_ALLOWED_PREFIXES = {
-  ETUDIANT:       ['/dashboard', '/notifications', '/profile', '/projets', '/settings', '/recommendations', '/stage', '/modele', '/portfolio'],
+  ETUDIANT:       ['/dashboard', '/notifications', '/profile', '/projets', '/settings', '/recommendations', '/stage', '/modele', '/portfolio','/lettres'],
   PROFESSIONNEL:  ['/professional'],
   PROFESSEUR:     ['/professor'],
   ADMINISTRATEUR: ['/admin'],
@@ -68,7 +68,7 @@ const isAdminPage = computed(() => route.path.startsWith('/admin'))
 const isStudentPage = computed(() => {
   const studentPaths = [
     '/dashboard', '/notifications', '/profile', '/projets', '/parcours',
-    '/settings', '/recommendations', '/stage', '/activites', '/portfolio'
+    '/settings', '/recommendations', '/stage', '/activites', '/portfolio','/lettres'
   ]
   return studentPaths.some(p => route.path.startsWith(p))
 })
