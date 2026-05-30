@@ -4,7 +4,7 @@ import { ref, computed, watch } from 'vue'
 import { useAuthStore } from '@/stores/authstore'
 import {
   fetchStagesEtudiant,
-  creerStage    as apiCreer,
+  creerStage as apiCreer,
   modifierStage as apiModifier,
   supprimerStage as apiSupprimer,
 } from '@/services/stageService'
@@ -25,15 +25,6 @@ function hashStr(str) {
   let h = 0
   for (let i = 0; i < (str?.length || 0); i++) h += str.charCodeAt(i)
   return h
-}
-
-// ── Helper erreur API ──────────────────────────────────────────────────────────
-function getErrorMessage(e) {
-  return (
-    e?.response?.data?.message ||
-    e?.message ||
-    'Erreur inconnue'
-  )
 }
 
 export function initiales(str) {
@@ -67,12 +58,6 @@ export function formDefault() {
 export const useStageStore = defineStore('stages', () => {
   const authStore  = useAuthStore()
   const idEtudiant = computed(() => authStore.user?.id_utilisateur ?? null)
-
-  // ── Guard rôle (sans navigation) ───────────────────────────────────────────
-  function isEtudiant() {
-    return authStore.user?.role === 'ETUDIANT'
-  }
-
   // ── Données ────────────────────────────────────────────────────────────────
   const stages  = ref([])
   const loading = ref(false)
@@ -84,6 +69,7 @@ export const useStageStore = defineStore('stages', () => {
     total:     stages.value.length,
     valides:   stages.value.filter(s => s.status_validation === 'VALIDE').length,
     enAttente: stages.value.filter(s => s.status_validation === 'EN_ATTENTE').length,
+    avecRapport: stages.value.filter(s => s.rapport_url || s.rapport?.url).length,
   }))
 
   // ── Filtres & pagination ───────────────────────────────────────────────────
@@ -123,10 +109,6 @@ export const useStageStore = defineStore('stages', () => {
   const form  = ref(formDefault())
 
   function openModal(mode, stage = null) {
-    if (!isEtudiant()) {
-      error.value = 'Accès refusé'
-      return
-    }
     modal.value.mode    = mode
     modal.value.stageId = stage?.id_stage ?? null
     form.value = mode === 'edit' && stage
@@ -148,29 +130,19 @@ export const useStageStore = defineStore('stages', () => {
 
   // ── Actions API ────────────────────────────────────────────────────────────
   async function chargerStages() {
-    if (!isEtudiant()) {
-      error.value = 'Accès refusé'
-      return
-    }
     if (!idEtudiant.value) return
     loading.value = true
     error.value   = null
     try {
       stages.value = await fetchStagesEtudiant(idEtudiant.value)
     } catch (e) {
-      error.value = getErrorMessage(e)
+      error.value = e.response?.data?.message ?? e.message
     } finally {
       loading.value = false
     }
   }
 
   async function sauvegarder() {
-    if (!isEtudiant()) {
-      showToast('Accès refusé', 'error')
-      return
-    }
-    if (saving.value) return
-
     if (!idEtudiant.value) {
       showToast('Session expirée, veuillez vous reconnecter', 'error')
       return
@@ -193,30 +165,24 @@ export const useStageStore = defineStore('stages', () => {
       }
       modal.value.open = false
     } catch (e) {
-      showToast(getErrorMessage(e), 'error')
+      showToast(e.response?.data?.message ?? e.message, 'error')
     } finally {
       saving.value = false
     }
   }
 
   async function confirmerSuppression(stage) {
-    if (!isEtudiant()) {
-      showToast('Accès refusé', 'error')
-      return
-    }
-    if (!confirm(`Supprimer le stage chez "${stage.entreprise}" ?`)) return
     try {
       await apiSupprimer(stage.id_stage)
       stages.value = stages.value.filter(s => s.id_stage !== stage.id_stage)
       showToast('Stage supprimé.')
     } catch (e) {
-      showToast(getErrorMessage(e), 'error')
+      showToast(e.response?.data?.message ?? e.message, 'error')
     }
   }
 
   async function init() {
     if (!authStore.user) await authStore.fetchUser()
-    if (!isEtudiant()) return
     await chargerStages()
   }
 

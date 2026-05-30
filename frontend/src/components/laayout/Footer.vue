@@ -83,7 +83,7 @@ import iconApps from '@/assets/icons/apps.svg'
 .footer__logo-icon {
   width: 20px;
   height: 20px;
-  filter: invert(52%) sepia(25%) saturate(600%) hue-rotate(95deg) brightness(85%) contrast(90%);
+  filter: none;
 }
 
 .footer__logo-text {

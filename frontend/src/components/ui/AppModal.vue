@@ -43,41 +43,41 @@ defineEmits(['close', 'confirm'])
   z-index: 1000;
 }
 .modal {
-  background: #fafaf8;
+  background: var(--color-surface-alt);
   border-radius: 16px;
   width: 100%;
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  box-shadow: var(--shadow-panel);
 }
 .modal__header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   padding: 24px 28px 16px;
-  border-bottom: 1px solid #2a4a48;
+  border-bottom: 1px solid var(--color-border);
 }
 .modal__title {
   font-size: 18px;
   font-weight: 700;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
 }
 .modal__subtitle {
   font-size: 13px;
-  color: #8aada9;
+  color: var(--color-text-secondary);
   margin-top: 4px;
 }
 .modal__close {
   background: none;
   border: none;
   font-size: 16px;
-  color: #4a6e6a;
+  color: var(--color-text-tertiary);
   cursor: pointer;
   padding: 4px;
   line-height: 1;
 }
-.modal__close:hover { color: #c8deda; }
+.modal__close:hover { color: var(--color-text-primary); }
 .modal__body  { padding: 24px 28px; }
 .modal__footer {
   padding: 16px 28px 24px;
@@ -95,14 +95,14 @@ defineEmits(['close', 'confirm'])
   transition: all 0.15s;
 }
 .btn--secondary {
-  background: #1A3838;
-  border: 1px solid #2a4a48;
-  color: #c8deda;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
 }
-.btn--secondary:hover { background: #162e2e; }
+.btn--secondary:hover { background: var(--color-surface-hover); }
 .btn--primary {
-  background: #5C8C6A;
+  background: var(--color-accent);
   color: #fff;
 }
-.btn--primary:hover { background: #4a7058; }
+.btn--primary:hover { background: var(--color-accent-hover); }
 </style>

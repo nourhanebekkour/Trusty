@@ -17,13 +17,13 @@ import { useAuthStore } from '@/stores/authstore'
 import Parcours from '../views/Etudiant/Parcours.vue'
 import registerview from '@/views/registerview.vue'
 import VerifyEmailView from '@/views/VerifyEmailView.vue'
-import AdminLayout from '../components/admin/AdminLayout.vue'
+import LettresRecommandation from '@/views/Etudiant/LettresRecommandation.vue'
 
 // ── Roles autorisés ──────────────────────────────
 const ROLES = {
-  ADMIN: 'ADMIN',
-  STUDENT: 'ETUDIANT',
-  PROFESSOR: 'PROFESSEUR',
+  ADMIN:        'ADMIN',
+  STUDENT:      'ETUDIANT',
+  PROFESSOR:    'PROFESSEUR',
   PROFESSIONAL: 'PROFESSIONNEL',
 }
 
@@ -130,6 +130,11 @@ const router = createRouter({
       meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
+      path: '/lettres',
+      name: 'lettres',
+      component: LettresRecommandation,
+    },
+    {
       path: '/stage',
       name: 'stage',
       component: StageList,
@@ -156,10 +161,7 @@ const router = createRouter({
       path: '/professional',
       name: 'professional',
       component: ProfessionalView,
-      meta: {
-        requiresAuth: true,
-        roles: [ROLES.PROFESSIONAL],
-      },
+      meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
     },
 
     // ── Professor ────────────────────────────────────────
@@ -167,13 +169,10 @@ const router = createRouter({
       path: '/professor',
       name: 'professor',
       component: ProfessorView,
-      meta: {
-        requiresAuth: true,
-        roles: [ROLES.PROFESSOR],
-      },
+      meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
     },
 
-    // Pages d'erreur
+    // ── Pages d'erreur ────────────────────────────────────
     {
       path: '/403',
       name: 'forbidden',
@@ -192,10 +191,7 @@ router.beforeEach(async (to) => {
   const authStore = useAuthStore()
 
   // Pages publiques
-  if (
-    ['home', 'login', 'register', 'about', 'verify-email']
-      .includes(to.name)
-  ) {
+  if (['home', 'login', 'register', 'about', 'verify-email'].includes(to.name)) {
     return true
   }
 
@@ -204,27 +200,18 @@ router.beforeEach(async (to) => {
     try {
       await authStore.fetchUser()
     } catch (e) {
-      console.error(
-        '[Router] Impossible de récupérer la session utilisateur :',
-        e
-      )
+      console.error('[Router] Impossible de récupérer la session utilisateur :', e)
     }
   }
 
   // Redirection automatique selon rôle
   if (authStore.isAuthenticated) {
     if (authStore.isAdmin) {
-      if (!to.path.startsWith('/admin')) {
-        return '/admin/dashboard'
-      }
+      if (!to.path.startsWith('/admin')) return '/admin/dashboard'
     } else if (authStore.isProfesseur) {
-      if (to.name !== 'professor') {
-        return '/professor'
-      }
+      if (to.name !== 'professor') return '/professor'
     } else if (authStore.isProfessionnel) {
-      if (!to.path.startsWith('/professional')) {
-        return '/professional'
-      }
+      if (!to.path.startsWith('/professional')) return '/professional'
     }
   }
 
@@ -244,7 +231,6 @@ router.beforeEach(async (to) => {
   // Vérification des rôles
   if (to.meta.roles && to.meta.roles.length > 0) {
     const userRole = authStore.user?.role?.toUpperCase()
-
     if (!userRole || !to.meta.roles.includes(userRole)) {
       return { name: 'forbidden' }
     }
@@ -253,19 +239,14 @@ router.beforeEach(async (to) => {
   return true
 })
 
-// Redirection selon rôle après login
+// ── Redirection selon rôle après login ────────────────────────
 function redirectByRole(role) {
   switch (role?.toUpperCase()) {
-    case ROLES.ADMIN:
-      return '/admin/dashboard'
-    case ROLES.STUDENT:
-      return '/dashboard'
-    case ROLES.PROFESSOR:
-      return '/professor'
-    case ROLES.PROFESSIONAL:
-      return '/professional'
-    default:
-      return '/'
+    case ROLES.ADMIN:        return '/admin/dashboard'
+    case ROLES.STUDENT:      return '/dashboard'
+    case ROLES.PROFESSOR:    return '/professor'
+    case ROLES.PROFESSIONAL: return '/professional'
+    default:                 return '/'
   }
 }
 
