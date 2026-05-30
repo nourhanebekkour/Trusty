@@ -20,6 +20,8 @@
     "vue-router": "^5.0.4"
   },
   "devDependencies": {
+    "tailwindcss": "^3.4.19",
+    "autoprefixer": "^10.4.21",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/test-utils": "^2.4.9",
     "bcryptjs": "^3.0.3",
