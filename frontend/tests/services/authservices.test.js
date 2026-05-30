@@ -1,33 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // ─── Mock api ───────────────────────────────────────────────
-vi.mock('@/services/api', () => ({
+vi.mock('@/api', () => ({
   default: {
     post: vi.fn(),
-    get: vi.fn(),
-    put: vi.fn(),
-    patch: vi.fn(),
-    delete: vi.fn(),
+    get:  vi.fn(),
   },
 }))
 
-import api from '@/services/api'
-
-import {
-  login,
-  register,
-  getProfile,
-  getAllUsers,
-  updateProfile,
-  patchProfile,
-  deleteUser,
-} from '@/services/authservices'
+import api from '@/api'
+import { authService } from '@/services/auth.service'
 
 // ═════════════════════════════════════════════════════════════
-// TESTS UNITAIRES — authservices
+// TESTS UNITAIRES — auth.service
 // ═════════════════════════════════════════════════════════════
 
-describe('authservices.js — Tests Unitaires', () => {
+describe('auth.service.js — Tests Unitaires', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -36,231 +24,111 @@ describe('authservices.js — Tests Unitaires', () => {
   // ── LOGIN ────────────────────────────────────────────────
 
   it('1 — login appelle POST /auth/login avec credentials', async () => {
-    const credentials = {
-      email: 'test@mail.com',
-      password: '123456',
-    }
+    const credentials = { email: 'test@mail.com', password: '123456' }
+    api.post.mockResolvedValue({ data: { token: 'abc123' } })
 
-    api.post.mockResolvedValue({
-      data: { token: 'abc123' },
-    })
+    const result = await authService.login(credentials)
 
-    const response = await login(credentials)
-
-    expect(api.post).toHaveBeenCalledWith(
-      '/auth/login',
-      credentials
-    )
-
-    expect(response.data.token).toBe('abc123')
+    expect(api.post).toHaveBeenCalledWith('/auth/login', credentials)
+    expect(result.token).toBe('abc123')
   })
 
   // ── REGISTER ─────────────────────────────────────────────
 
   it('2 — register appelle POST /auth/register avec userData', async () => {
-    const userData = {
-      name: 'Fatine',
-      email: 'fatine@mail.com',
-      password: '123456',
-    }
+    const userData = { prenom: 'Fatine', email: 'fatine@mail.com', password: '123456' }
+    api.post.mockResolvedValue({ data: { success: true } })
 
-    api.post.mockResolvedValue({
-      data: { success: true },
-    })
+    const result = await authService.register(userData)
 
-    const response = await register(userData)
-
-    expect(api.post).toHaveBeenCalledWith(
-      '/auth/register',
-      userData
-    )
-
-    expect(response.data.success).toBe(true)
+    expect(api.post).toHaveBeenCalledWith('/auth/register', userData)
+    expect(result.success).toBe(true)
   })
 
-  // ── GET PROFILE ──────────────────────────────────────────
+  // ── GET ME ──────────────────────────────────────────────
 
-  it('3 — getProfile appelle GET /auth/profile', async () => {
-    api.get.mockResolvedValue({
-      data: { nom: 'Ahmed' },
-    })
+  it('3 — getMe appelle GET /auth/me', async () => {
+    api.get.mockResolvedValue({ data: { data: { nom: 'Ahmed' } } })
 
-    const response = await getProfile()
+    const result = await authService.getMe()
 
-    expect(api.get).toHaveBeenCalledWith(
-      '/auth/profile'
-    )
-
-    expect(response.data.nom).toBe('Ahmed')
+    expect(api.get).toHaveBeenCalledWith('/auth/me')
+    expect(result.data.nom).toBe('Ahmed')
   })
 
-  // ── GET USERS ────────────────────────────────────────────
+  // ── FORGOT PASSWORD ──────────────────────────────────────
 
-  it('4 — getAllUsers appelle GET /users', async () => {
-    api.get.mockResolvedValue({
-      data: [],
-    })
+  it('4 — forgotPassword appelle POST /auth/forgot-password avec email', async () => {
+    api.post.mockResolvedValue({ data: { success: true } })
 
-    await getAllUsers()
+    const result = await authService.forgotPassword('test@mail.com')
 
-    expect(api.get).toHaveBeenCalledWith(
-      '/users'
-    )
+    expect(api.post).toHaveBeenCalledWith('/auth/forgot-password', { email: 'test@mail.com' })
+    expect(result.success).toBe(true)
   })
 
-  // ── UPDATE PROFILE ───────────────────────────────────────
+  // ── RESET PASSWORD ───────────────────────────────────────
 
-  it('5 — updateProfile appelle PUT /users/:id', async () => {
-    const id = 'u1'
+  it('5 — resetPassword appelle POST /auth/reset-password avec token et nouveau mot de passe', async () => {
+    api.post.mockResolvedValue({ data: { success: true } })
 
-    const data = {
-      nom: 'Sara',
-    }
+    const result = await authService.resetPassword('tok123', 'NouveauMdp1!')
 
-    api.put.mockResolvedValue({
-      data,
+    expect(api.post).toHaveBeenCalledWith('/auth/reset-password', {
+      token: 'tok123',
+      nouveauMotDePasse: 'NouveauMdp1!',
     })
-
-    const response = await updateProfile(id, data)
-
-    expect(api.put).toHaveBeenCalledWith(
-      '/users/u1',
-      data
-    )
-
-    expect(response.data.nom).toBe('Sara')
-  })
-
-  // ── PATCH PROFILE ────────────────────────────────────────
-
-  it('6 — patchProfile appelle PATCH /users/:id', async () => {
-    const id = 'u2'
-
-    const data = {
-      telephone: '+212600000000',
-    }
-
-    api.patch.mockResolvedValue({
-      data,
-    })
-
-    const response = await patchProfile(id, data)
-
-    expect(api.patch).toHaveBeenCalledWith(
-      '/users/u2',
-      data
-    )
-
-    expect(response.data.telephone).toBe(
-      '+212600000000'
-    )
-  })
-
-  // ── DELETE USER ──────────────────────────────────────────
-
-  it('7 — deleteUser appelle DELETE /users/:id', async () => {
-    api.delete.mockResolvedValue({
-      data: { success: true },
-    })
-
-    const response = await deleteUser('u5')
-
-    expect(api.delete).toHaveBeenCalledWith(
-      '/users/u5'
-    )
-
-    expect(response.data.success).toBe(true)
+    expect(result.success).toBe(true)
   })
 })
 
-
 // ═════════════════════════════════════════════════════════════
-// TESTS D’INTÉGRATION — authservices
+// TESTS D'INTÉGRATION — auth.service
 // ═════════════════════════════════════════════════════════════
 
-describe('authservices.js — Tests d’intégration', () => {
+describe("auth.service.js — Tests d'intégration", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('8 — workflow login retourne correctement le token', async () => {
+  it('6 — workflow login retourne correctement les données utilisateur', async () => {
     api.post.mockResolvedValue({
-      data: {
-        token: 'jwt-token',
-        user: {
-          id: 'u1',
-          nom: 'Fatine',
-        },
-      },
+      data: { token: 'jwt-token', user: { id: 'u1', nom: 'Fatine' } },
     })
 
-    const response = await login({
-      email: 'fatine@mail.com',
-      password: '123456',
-    })
+    const result = await authService.login({ email: 'fatine@mail.com', password: '123456' })
 
-    expect(response.data.token).toBe(
-      'jwt-token'
-    )
-
-    expect(response.data.user.nom).toBe(
-      'Fatine'
-    )
+    expect(result.token).toBe('jwt-token')
+    expect(result.user.nom).toBe('Fatine')
   })
 
-  it('9 — updateProfile puis récupération profil fonctionne', async () => {
-
-    api.put.mockResolvedValue({
-      data: {
-        nom: 'Updated User',
-      },
-    })
-
+  it('7 — getMe retourne les données du profil connecté', async () => {
     api.get.mockResolvedValue({
-      data: {
-        nom: 'Updated User',
-      },
+      data: { data: { nom: 'Ahmed', email: 'ahmed@test.ma' } },
     })
 
-    await updateProfile('u1', {
-      nom: 'Updated User',
-    })
+    const result = await authService.getMe()
 
-    const profile = await getProfile()
-
-    expect(profile.data.nom).toBe(
-      'Updated User'
-    )
+    expect(result.data.nom).toBe('Ahmed')
+    expect(result.data.email).toBe('ahmed@test.ma')
   })
 
-  it('10 — patchProfile gère les modifications partielles', async () => {
+  it('8 — login propage l\'erreur si api.post échoue', async () => {
+    api.post.mockRejectedValue(new Error('Network Error'))
 
-    api.patch.mockResolvedValue({
-      data: {
-        ville: 'Tanger',
-      },
-    })
-
-    const response = await patchProfile('u1', {
-      ville: 'Tanger',
-    })
-
-    expect(response.data.ville).toBe(
-      'Tanger'
-    )
+    await expect(authService.login({ email: 'x@x.com', password: 'pass' })).rejects.toThrow('Network Error')
   })
 
-  it('11 — deleteUser retourne success=true après suppression', async () => {
+  it('9 — register propage l\'erreur si api.post échoue', async () => {
+    api.post.mockRejectedValue(new Error('Network Error'))
 
-    api.delete.mockResolvedValue({
-      data: {
-        success: true,
-      },
-    })
+    await expect(authService.register({ email: 'x@x.com', password: 'pass' })).rejects.toThrow('Network Error')
+  })
 
-    const response = await deleteUser('u1')
+  it('10 — forgotPassword propage l\'erreur si api.post échoue', async () => {
+    api.post.mockRejectedValue(new Error('Network Error'))
 
-    expect(response.data.success).toBe(true)
+    await expect(authService.forgotPassword('x@x.com')).rejects.toThrow('Network Error')
   })
 })
