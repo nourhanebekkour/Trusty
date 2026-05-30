@@ -719,7 +719,7 @@ const student = computed(() => {
         prenom: u.prenom,
         nom: u.nom,
         school: u.ecole || 'ENSA Tanger',
-        year: e.annee_cursus ? `${e.annee_cursus}ème année` : '',
+        year: e.annee ? `${e.annee}ème année` : '',
         specialization: e.filiere || 'Génie Informatique',
         objective: e.objectif_professionnel || '',
         score: e.score_credibilite || 0,
@@ -757,11 +757,11 @@ const projects = computed(() => {
         validator: '',
         appreciation: p.projet.appreciation || null,
         type: p.projet.type_projet,
-        role: p.role_membre,
+        role: p.role_joue,
         team: '',
         github: p.projet.lien_github || null,
         youtube: p.projet.lien_demo || null,
-        results: p.projet.resultats || null
+        results: p.projet.resultats_obtenus || null
     }))
 })
 
@@ -778,11 +778,11 @@ const skills = computed(() => {
             .filter(c => c.competence.type === 'TECHNIQUE')
             .map(c => ({
                 name: c.competence.nom,
-                level: c.niveau,
-                pct: c.pourcentage || 70
+                level: c.niveau_maitrise,
+                pct: { DEBUTANT: 25, INTERMEDIAIRE: 55, AVANCE: 80, EXPERT: 95 }[c.niveau_maitrise] ?? 50
             })),
         soft: competences
-            .filter(c => c.competence.type === 'SOFT')
+            .filter(c => c.competence.type === 'COMPORTEMENTALE')
             .map(c => c.competence.nom)
     }
 })
@@ -791,7 +791,7 @@ const stages = computed(() => {
     if (!portfolioData.value) return []
     return (portfolioData.value.etudiant.stages || []).map(s => ({
         id: s.id_stage,
-        company: s.organisme,
+        company: s.entreprise,
         role: s.poste,
         duration: `${formatDate(s.date_debut)} - ${formatDate(s.date_fin)}`,
         months: calcDuration(s.date_debut, s.date_fin),
@@ -799,8 +799,8 @@ const stages = computed(() => {
         institution: 'UAE',
         encadrant: s.encadrant_academique || '',
         tech: s.technologies?.map(t => t.technologie.nom) || [],
-        missions: s.description ? s.description.split('\n').filter(Boolean) : [],
-        attachments: { attestation: true, rapport: !!s.rapport_url }
+        missions: s.missions ? s.missions.split('\n').filter(Boolean) : [],
+        attachments: { attestation: true, rapport: !!s.id_rapport }
     }))
 })
 
@@ -809,11 +809,11 @@ const activites = computed(() => {
     return (portfolioData.value.etudiant.activites_parascolaires || []).map(a => ({
         id: a.id_activite,
         category: a.type_activite,
-        title: a.titre,
+        title: a.nom_activite,
         description: a.description,
         date: formatDate(a.date_debut),
         verified: a.status_validation === 'VALIDE',
-        attestation: !!a.fichier_url
+        attestation: !!a.id_attestation
     }))
 })
 
@@ -835,7 +835,7 @@ const recommandations = computed(() => {
         name: `${r.auteur.prenom} ${r.auteur.nom}`,
         company: '',
         role: r.auteur.role === 'PROFESSEUR' ? 'Professeur' : r.auteur.role === 'PROFESSIONNEL' ? 'Professionnel' : 'Étudiant',
-        message: r.contenu,
+        message: r.message,
         date: formatDate(r.date_creation)
     }))
 })
@@ -844,17 +844,7 @@ const visibleRecs = computed(() => recommandations.value.slice(recsIdx.value, re
 function nextRecs() { if (recsIdx.value < recommandations.value.length - 3) recsIdx.value++ }
 function prevRecs() { if (recsIdx.value > 0) recsIdx.value-- }
 
-const lettres = computed(() => {
-    if (!portfolioData.value) return []
-    return (portfolioData.value.etudiant.lettres_recommandation || []).map((l, i) => ({
-        id: i,
-        initials: `${l.redacteur?.utilisateur?.prenom?.[0] || ''}${l.redacteur?.utilisateur?.nom?.[0] || ''}`.toUpperCase(),
-        author: `${l.redacteur?.utilisateur?.prenom || ''} ${l.redacteur?.utilisateur?.nom || ''}`,
-        title: l.redacteur?.titre || '',
-        purpose: l.objet,
-        visibility: l.est_public ? 'public' : 'private'
-    }))
-})
+const lettres = computed(() => [])
 
 const github = computed(() => {
     if (!portfolioData.value) return { repos: [] }
