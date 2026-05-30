@@ -12,24 +12,24 @@
     </div>
 
     <nav class="sidebar-nav">
-      <router-link to="/professional" class="nav-item">
+      <router-link to="/professional/dashboard" class="nav-item">
         <img :src="iconDashboard" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">Explorer</span>
+        <span class="nav-label" v-show="!isCollapsed">Dashboard</span>
       </router-link>
 
-      <router-link to="/professional" class="nav-item">
+      <router-link to="/professional/recommandations" class="nav-item">
         <img :src="iconRecommandations" class="nav-icon" />
         <span class="nav-label" v-show="!isCollapsed">Recommandations</span>
       </router-link>
 
-      <router-link to="/professional" class="nav-item">
+      <router-link to="/professional/notifications" class="nav-item">
         <img :src="iconNotifications" class="nav-icon" />
         <span class="nav-label" v-show="!isCollapsed">Notifications</span>
       </router-link>
     </nav>
 
     <div class="sidebar-bottom">
-      <router-link to="/professional" class="nav-item">
+      <router-link to="/settings" class="nav-item">
         <img :src="iconSettings" class="nav-icon" />
         <span class="nav-label" v-show="!isCollapsed">Paramètres</span>
       </router-link>

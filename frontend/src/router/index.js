@@ -9,14 +9,24 @@ import StageList from '@/views/Etudiant/StageList.vue'
 import Recommendations from '@/views/Etudiant/Recommendations.vue'
 import Notification from '@/views/Etudiant/Notification.vue'
 import Profile from '@/views/Etudiant/Profile.vue'
-import activites from '@/views/Etudiant/activites.vue'
+import Activites from '@/views/Etudiant/activites.vue'
 import Portfolio from '@/views/Etudiant/Portfolio.vue'
 import ProfessionalView from '@/views/ProfessionalView.vue'
 import ProfessorView from '@/views/ProfessorView.vue'
-import { useAuthStore } from '@/stores/authstore'
 import Parcours from '../views/Etudiant/Parcours.vue'
-import ProfessorLayout from '../components/professor/ProfessorLayout.vue'
+import { useAuthStore } from '@/stores/authstore'
 
+const roleHome = {
+  ADMINISTRATEUR: '/admin/dashboard',
+  PROFESSIONNEL: '/professional/dashboard',
+  PROFESSEUR: '/professor',
+  ETUDIANT: '/dashboard',
+}
+
+const studentMeta = { requiresAuth: true, roles: ['ETUDIANT'] }
+const adminMeta = { requiresAuth: true, roles: ['ADMINISTRATEUR'] }
+const professionalMeta = { requiresAuth: true, roles: ['PROFESSIONNEL'] }
+const professorMeta = { requiresAuth: true, roles: ['PROFESSEUR'] }
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -36,12 +46,14 @@ const router = createRouter({
       name: 'login',
       component: LoginView,
     },
-
-    // ── Admin ──────────────────────────────────────────
+    {
+      path: '/administrateur',
+      redirect: '/admin/dashboard',
+    },
     {
       path: '/admin',
       component: AdminLayout,
-      meta: { requiresAuth: true },
+      meta: adminMeta,
       children: [
         {
           path: '',
@@ -51,143 +63,154 @@ const router = createRouter({
           path: 'dashboard',
           name: 'admin-dashboard',
           component: () => import('../views/admin/AdminDashboard.vue'),
+          meta: adminMeta,
         },
         {
           path: 'utilisateurs',
           name: 'admin-users',
           component: () => import('../views/admin/AdminUsers.vue'),
+          meta: adminMeta,
         },
         {
           path: 'verifications',
           name: 'admin-verifications',
           component: () => import('../views/admin/AdminVerifications.vue'),
+          meta: adminMeta,
         },
         {
           path: 'portfolios',
           name: 'admin-portfolios',
           component: () => import('../views/admin/AdminPortfolios.vue'),
+          meta: adminMeta,
         },
         {
           path: 'notifications',
           name: 'admin-notifications',
           component: () => import('../views/admin/AdminNotifications.vue'),
+          meta: adminMeta,
         },
       ],
     },
-
-    // ── Student / User routes ──────────────────────────
     {
       path: '/dashboard',
       name: 'dashboard',
       component: Dashboard,
-      meta: { requiresAuth: true }
+      meta: studentMeta,
     },
     {
       path: '/notifications',
       name: 'notifications',
       component: Notification,
-      meta: { requiresAuth: true } 
+      meta: studentMeta,
     },
     {
       path: '/profile',
       name: 'profile',
       component: Profile,
-      meta: { requiresAuth: true } 
+      meta: studentMeta,
     },
     {
       path: '/projets',
       name: 'projets',
       component: ProjectList,
-      meta: { requiresAuth: true }
+      meta: studentMeta,
     },
     {
       path: '/settings',
       name: 'settings',
       component: Settings,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/recommendations',
       name: 'recommendations',
       component: Recommendations,
-      meta: { requiresAuth: true }
+      meta: studentMeta,
     },
     {
       path: '/stage',
       name: 'stage',
       component: StageList,
-      meta: { requiresAuth: true }
+      meta: studentMeta,
     },
     {
       path: '/parcours',
       name: 'parcours',
       component: Parcours,
+      meta: studentMeta,
     },
     {
       path: '/portfolio',
       name: 'portfolio',
       component: Portfolio,
+      meta: studentMeta,
     },
     {
       path: '/activites',
       name: 'activites',
-      component: activites,
+      component: Activites,
+      meta: studentMeta,
+    },
+    {
+      path: '/professionnel',
+      redirect: '/professional/dashboard',
     },
     {
       path: '/professional',
       name: 'professional',
       component: ProfessionalView,
+      meta: professionalMeta,
     },
     {
-  path: '/professor',
-  name: 'professor',
-  component: ProfessorView,
-  meta: { requiresAuth: true }
-},
-  ],  
+      path: '/professional/dashboard',
+      name: 'professional-dashboard',
+      component: ProfessionalView,
+      meta: professionalMeta,
+    },
+    {
+      path: '/professional/recommandations',
+      name: 'professional-recommendations',
+      component: ProfessionalView,
+      meta: professionalMeta,
+    },
+    {
+      path: '/professional/notifications',
+      name: 'professional-notifications',
+      component: ProfessionalView,
+      meta: professionalMeta,
+    },
+    {
+      path: '/professor',
+      name: 'professor',
+      component: ProfessorView,
+      meta: professorMeta,
+    },
+  ],
 })
 
-router.beforeEach(async (to, from) => {
+router.beforeEach(async to => {
   const authStore = useAuthStore()
+  const publicRoutes = ['home', 'login', 'about']
 
-  if (['home', 'login', 'about'].includes(to.name)) {
-    return true
-  }
-
-  if (!authStore.user) {
+  if (!publicRoutes.includes(to.name) && !authStore.user) {
     await authStore.fetchUser()
   }
 
-  if (authStore.isAuthenticated) {
-
-    if (authStore.isAdmin) {
-      if (!to.path.startsWith('/admin')) return '/admin/dashboard'
-    }
-
-    else if (authStore.isProfesseur) {
-  if (to.name !== 'professor') return '/professor'
-}
-
-    else if (authStore.isProfessionnel) {
-      if (!to.path.startsWith('/professional')) return '/professional'
-    }
-
-  }
-
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return '/login'
+    return { name: 'login', query: { redirect: to.fullPath } }
   }
-})
-// ── Auth guard ─────────────────────────────────────────
-//router.beforeEach((to, from, next) => {
-  // const token = localStorage.getItem('token')
-  // if (to.meta.requiresAuth && !token) {
-  //   next({ name: 'login' })
-  // } else if (to.name === 'login' && token) {
-  //   next({ path: '/admin/dashboard' })
-  // } else {
-  //next()
-  // }
 
+  const userRole = authStore.user?.role
+  if (authStore.isAuthenticated && to.name === 'login') {
+    return roleHome[userRole] || '/'
+  }
+
+  const allowedRoles = to.meta.roles
+  if (authStore.isAuthenticated && Array.isArray(allowedRoles) && !allowedRoles.includes(userRole)) {
+    return roleHome[userRole] || '/'
+  }
+
+  return true
+})
 
 export default router

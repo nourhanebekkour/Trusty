@@ -71,7 +71,7 @@ import { useProfessionalStore } from '@/stores/professionalStore'
 
 const props = defineProps({
   candidats:   { type: Array,  default: () => [] },
-  selectedId:  { type: Number, default: null },
+  selectedId:  { type: [Number, String], default: null },
   recsEmises:  { type: Array,  default: () => [] },
 })
 

@@ -18,16 +18,27 @@ export async function getAdminNotifications() {
 }
 
 export async function markNotificationAsRead(id) {
-  const response = await api.patch(`/notifications/${id}/read`)
+  const response = await api.put(`/notifications/${id}/lire`)
   return extractData(response)
 }
 
 export async function markAllNotificationsAsRead() {
-  const response = await api.patch('/notifications/read-all')
-  return extractData(response)
+  const notifications = await getAdminNotifications()
+  const unread = Array.isArray(notifications)
+    ? notifications.filter(notification => !notification.est_lue)
+    : []
+
+  await Promise.all(unread.map(notification =>
+    markNotificationAsRead(notification.id_notification)
+  ))
+
+  return { updated: unread.length }
 }
 
 export async function deleteNotification(id) {
-  const response = await api.delete(`/notifications/${id}`)
-  return extractData(response)
+  return {
+    id,
+    skipped: true,
+    message: 'API manquante: suppression de notification non exposee cote backend.',
+  }
 }

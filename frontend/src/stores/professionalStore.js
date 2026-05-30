@@ -16,6 +16,33 @@ const GRADIENTS = [
   'linear-gradient(135deg,#BA7517,#EF9F27)',
 ]
 
+const DEFAULT_CANDIDATS = [
+  {
+    id_etudiant: 'demo-thomas',
+    filiere: 'Ingenierie Logicielle',
+    ville: 'Tanger',
+    score_credibilite: 88,
+    biographie: 'Architecture cloud, Docker, Kubernetes et projets fullstack valides.',
+    utilisateur: { prenom: 'Thomas', nom: 'Bernard', ecole: 'ENSATanger' },
+  },
+  {
+    id_etudiant: 'demo-lea',
+    filiere: 'Design Numerique',
+    ville: 'Tetouan',
+    score_credibilite: 94,
+    biographie: 'UX/UI, prototypes mobiles et portfolio public complet.',
+    utilisateur: { prenom: 'Lea', nom: 'Martin', ecole: 'ENSATetouan' },
+  },
+  {
+    id_etudiant: 'demo-alex',
+    filiere: 'Data Science',
+    ville: 'Al Hoceima',
+    score_credibilite: 76,
+    biographie: 'Analyse de donnees, NLP et projets d aide a la decision.',
+    utilisateur: { prenom: 'Alexandre', nom: 'Gauthier', ecole: 'ENSAAlHoceima' },
+  },
+]
+
 function hashId(id) {
   const str = String(id)
   let h = 0
@@ -33,7 +60,7 @@ export function normaliserCandidat(e) {
     nom:         hasName ? `${prenom} ${nom}`.trim() : `Étudiant ${e.id_etudiant?.slice(-4) ?? ''}`,
     initiales:   hasName ? `${prenom[0] ?? '?'}${nom[0] ?? '?'}`.toUpperCase() : '??',
     formation:   e.filiere ?? '',
-    ecole:       'ENSA',
+    ecole:       u.ecole ?? 'UAE',
     ville:       e.ville ?? '',
     score:       e.score_credibilite ?? 0,
     gradient:    GRADIENTS[hashId(e.id_etudiant) % GRADIENTS.length],
@@ -76,7 +103,7 @@ export function normaliserRec(r) {
 export const useProfessionalStore = defineStore('professional', () => {
 
   // ── État
-  const candidats     = ref([])
+  const candidats     = ref(DEFAULT_CANDIDATS.map(normaliserCandidat))
   const recsEmises    = ref([])
   const notifications = ref([])
   const favoris       = ref([])
@@ -118,7 +145,9 @@ export const useProfessionalStore = defineStore('professional', () => {
 
   async function envoyerRecommandation(candidat, texte, type) {
     try {
-      await apiEnvoyerRecommandation(candidat.id, texte)
+      if (!String(candidat.id).startsWith('demo-')) {
+        await apiEnvoyerRecommandation(candidat.id, texte)
+      }
       const now  = new Date()
       const mois = now.toLocaleString('fr-FR', { month: 'long' })
       recsEmises.value.unshift({

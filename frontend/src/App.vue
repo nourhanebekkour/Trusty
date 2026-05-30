@@ -21,7 +21,9 @@ const isPublicPage = computed(() =>
   ['home', 'login', 'about'].includes(route.name)
 )
 
-const isProfessionalPage = computed(() => route.name === 'professional')
+const isProfessionalPage = computed(() =>
+  route.path.startsWith('/professional') || route.path.startsWith('/professionnel')
+)
 const isProfessorPage = computed(() => route.path.startsWith('/professor'))
 const isAdminPage = computed(() => route.path.startsWith('/admin'))
 

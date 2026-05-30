@@ -214,7 +214,10 @@ async function fetchNotifications() {
 
 async function markAllRead() {
   try {
-    await api.patch('/notifications/read-all')
+    const unread = notifications.value.filter(notification => !notification.est_lue)
+    await Promise.all(
+      unread.map(notification => api.put(`/notifications/${notification.id_notification}/lire`))
+    )
 
     notifications.value = notifications.value.map(notification => ({
       ...notification,
@@ -231,7 +234,7 @@ async function markAsRead(notification) {
   }
 
   try {
-    await api.patch(`/notifications/${notification.id_notification}/read`)
+    await api.put(`/notifications/${notification.id_notification}/lire`)
 
     notifications.value = notifications.value.map(item =>
       item.id_notification === notification.id_notification
@@ -262,7 +265,8 @@ function closeNotifPanel() {
 
 function goToNotifications() {
   closeNotifPanel()
-  router.push('/admin/notifications')
+  const path = auth.user?.role === 'ADMINISTRATEUR' ? '/admin/notifications' : '/notifications'
+  router.push(path)
 }
 
 function formatRelativeDate(dateStr) {
@@ -312,8 +316,8 @@ onMounted(async () => {
   left: 0;
   right: 0;
   height: 60px;
-  background: #1A3838;
-  border-bottom: 1px solid #2a4a48;
+  background: #f4f2ec;
+  border-bottom: 1px solid #d8d2c6;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -331,15 +335,15 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #D6EDE8;
+  color: #0d2b2b;
   font-size: 16px;
   font-weight: 700;
 }
 
 .topbar__public {
   font-size: 12px;
-  color: #8aada9;
-  background: #162e2e;
+  color: #46615c;
+  background: #e8f0ec;
   padding: 4px 10px;
   border-radius: 999px;
 }
@@ -358,7 +362,7 @@ onMounted(async () => {
   background: transparent;
   border: none;
   border-radius: 8px;
-  color: #8aada9;
+  color: #46615c;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -367,8 +371,8 @@ onMounted(async () => {
 }
 
 .topbar__bell:hover {
-  background: #162e2e;
-  color: #D6EDE8;
+  background: #e8f0ec;
+  color: #0d2b2b;
 }
 
 .topbar__notif-dot {
@@ -400,8 +404,8 @@ onMounted(async () => {
   top: 48px;
   right: 0;
   width: 340px;
-  background: #1A3838;
-  border: 1px solid #2a4a48;
+  background: #f4f2ec;
+  border: 1px solid #d8d2c6;
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   overflow: hidden;
@@ -414,12 +418,12 @@ onMounted(async () => {
   gap: 16px;
   align-items: flex-start;
   padding: 14px 16px;
-  border-bottom: 1px solid #2a4a48;
+  border-bottom: 1px solid #d8d2c6;
 }
 
 .notif-panel__title {
   display: block;
-  color: #D6EDE8;
+  color: #0d2b2b;
   font-size: 14px;
   font-weight: 600;
 }
@@ -427,7 +431,7 @@ onMounted(async () => {
 .notif-panel__subtitle {
   display: block;
   margin-top: 2px;
-  color: #8aada9;
+  color: #46615c;
   font-size: 11px;
 }
 
@@ -448,7 +452,7 @@ onMounted(async () => {
 .notif-panel__state {
   padding: 24px 16px;
   text-align: center;
-  color: #8aada9;
+  color: #46615c;
   font-size: 13px;
 }
 
@@ -464,7 +468,7 @@ onMounted(async () => {
   align-items: flex-start;
   padding: 12px 16px;
   border: none;
-  border-bottom: 1px solid #1e3a3a;
+  border-bottom: 1px solid #d8d2c6;
   background: transparent;
   text-align: left;
   cursor: pointer;
@@ -472,11 +476,11 @@ onMounted(async () => {
 }
 
 .notif-item:hover {
-  background: #0f2424;
+  background: #e8f0ec;
 }
 
 .notif-item--unread {
-  background: #162e2e;
+  background: #e8f0ec;
 }
 
 .notif-item__dot {
@@ -496,41 +500,41 @@ onMounted(async () => {
 }
 
 .notif-item__title {
-  color: #D6EDE8;
+  color: #0d2b2b;
   font-size: 13px;
   font-weight: 600;
 }
 
 .notif-item__msg {
-  color: #8aada9;
+  color: #46615c;
   font-size: 12px;
   line-height: 1.4;
 }
 
 .notif-item__time {
-  color: #4a6e6a;
+  color: #6d7a73;
   font-size: 11px;
 }
 
 .notif-panel__footer {
   padding: 12px 16px;
-  border-top: 1px solid #2a4a48;
+  border-top: 1px solid #d8d2c6;
 }
 
 .notif-panel__view-all {
   width: 100%;
   height: 36px;
-  border: 1px solid #2a4a48;
+  border: 1px solid #d8d2c6;
   border-radius: 8px;
-  background: #0f2424;
-  color: #c8deda;
+  background: #ffffff;
+  color: #0d2b2b;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
 
 .notif-panel__view-all:hover {
-  background: #162e2e;
+  background: #e8f0ec;
 }
 
 .topbar__user {
@@ -546,13 +550,13 @@ onMounted(async () => {
 }
 
 .topbar__user-name {
-  color: #D6EDE8;
+  color: #0d2b2b;
   font-size: 13px;
   font-weight: 600;
 }
 
 .topbar__user-role {
-  color: #8aada9;
+  color: #46615c;
   font-size: 11px;
 }
 

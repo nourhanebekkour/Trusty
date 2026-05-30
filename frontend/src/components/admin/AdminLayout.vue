@@ -1,6 +1,6 @@
 <template>
   <div class="admin-layout">
-    <AppTopbar />
+    <AppTopbar :notif-count="3" />
     <AppSidebar />
 
     <main class="admin-layout__main">
@@ -17,12 +17,18 @@ import AppSidebar from '../layout/AppSidebar.vue'
 <style scoped>
 .admin-layout {
   min-height: 100vh;
-  background: #0D2B2B;
+  background: #edeade;
 }
 
 .admin-layout__main {
-  margin-left: 160px;
+  margin-left: 220px;
   padding-top: 60px;
   min-height: 100vh;
+}
+
+@media (max-width: 900px) {
+  .admin-layout__main {
+    margin-left: 0;
+  }
 }
 </style>
