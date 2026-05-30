@@ -28,10 +28,10 @@
     </div>
 
     <!-- Liste des dépôts -->
-    <div class="repo-list" v-else-if="repos.length">
+    <div class="repo-list" v-else-if="allRepos.length">
       <a
         class="repo-item"
-        v-for="repo in repos"
+        v-for="repo in visibleRepos"
         :key="repo.id_depot"
         :href="repo.url_github"
         target="_blank"
@@ -72,6 +72,11 @@
           </div>
         </div>
       </a>
+
+      <!-- Voir plus / moins -->
+      <button v-if="hasMore" class="link-btn" @click="showAll = !showAll">
+        {{ showAll ? 'Voir moins ↑' : `Voir plus (${allRepos.length - 5} de plus) →` }}
+      </button>
     </div>
 
     <!-- Aucun dépôt -->
@@ -90,14 +95,14 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { Github } from 'lucide-vue-next'
-// ── GitHub API (autonome, pas de dépendance externe) ─────────────────────────
+
 async function fetchGithubRepos(username) {
   if (!username) return []
   try {
     const res = await fetch(
-      `https://api.github.com/users/${username}/repos?per_page=6&sort=updated&type=public`,
+      `https://api.github.com/users/${username}/repos?per_page=100&sort=updated&type=public`,
       { headers: { Accept: 'application/vnd.github+json' } }
     )
     if (!res.ok) throw new Error(`GitHub API: ${res.status}`)
@@ -122,12 +127,18 @@ async function fetchGithubRepos(username) {
 
 const props = defineProps({ user: Object })
 
-const repos          = ref([])
+const allRepos       = ref([])
 const loading        = ref(false)
 const error          = ref(null)
+const showAll        = ref(false)
 const githubUsername = ref(props.user?.etudiant?.github_username ?? null)
 
-// Recharger si le username change (ex : après édition du profil)
+const visibleRepos = computed(() =>
+  showAll.value ? allRepos.value : allRepos.value.slice(0, 5)
+)
+
+const hasMore = computed(() => allRepos.value.length > 5)
+
 watch(
   () => props.user?.etudiant?.github_username,
   (newUsername) => {
@@ -138,25 +149,20 @@ watch(
 
 async function loadRepos() {
   if (!githubUsername.value) {
-    repos.value = []
+    allRepos.value = []
     return
   }
 
-  // Priorité : dépôts déjà synchronisés en BDD
   const dbRepos = props.user?.etudiant?.depots_github ?? []
-  if (dbRepos.length) {
-    repos.value = dbRepos
-  }
+  if (dbRepos.length) allRepos.value = dbRepos
 
-  // Dans tous les cas, récupérer les dépôts frais depuis GitHub API
   loading.value = true
   error.value   = null
   try {
-    repos.value = await fetchGithubRepos(githubUsername.value)
+    allRepos.value = await fetchGithubRepos(githubUsername.value)
   } catch (e) {
     error.value = 'Impossible de charger les dépôts GitHub.'
-    // Garder les dépôts BDD en fallback
-    if (dbRepos.length) repos.value = dbRepos
+    if (dbRepos.length) allRepos.value = dbRepos
   } finally {
     loading.value = false
   }
@@ -246,7 +252,6 @@ onMounted(loadRepos)
   color: var(--color-text-secondary, #888);
 }
 
-/* Carte repo cliquable */
 .repo-item {
   display: flex;
   text-decoration: none;

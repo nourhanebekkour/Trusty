@@ -254,17 +254,7 @@ async function logout(userId) {
 async function getMe(id_utilisateur) {
   const user = await prisma.utilisateur.findUnique({
     where: { id_utilisateur },
-    select: {
-      id_utilisateur: true,
-      email: true,
-      nom: true,
-      prenom: true,
-      telephone: true,
-      role: true,
-      status_compte: true,
-      date_creation: true,
-      derniere_connexion: true,
-    },
+    
   });
   return user;
 }

@@ -152,13 +152,13 @@ html, body {
   width: 100%;
   align-items: stretch;
   min-height: 0;
-  background-color: var(--color-background);
+  background-color: var(--color-page-bg);
 }
 
 .content {
   flex: 1;
   padding: 0px;
-  background-color: var(--color-background);
+  background-color: var(--color-page-bg);
   overflow-y: auto;
   min-height: 0;
 }
