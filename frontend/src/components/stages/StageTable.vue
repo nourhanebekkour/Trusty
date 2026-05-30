@@ -259,7 +259,7 @@ function techNiveauLabel(n) {
 .section-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
 }
 
 .section-actions {
@@ -273,9 +273,9 @@ function techNiveauLabel(n) {
   gap: 0.4rem;
   padding: 0.35rem 0.85rem;
   background: transparent;
-  border: 1px solid rgba(214, 237, 232, 0.2);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  color: #D6EDE8;
+  color: var(--color-text-secondary);
   font-size: 0.78rem;
   font-weight: 500;
   cursor: pointer;
@@ -284,8 +284,8 @@ function techNiveauLabel(n) {
 }
 
 .filter-btn:hover {
-  border-color: rgba(214, 237, 232, 0.35);
-  background: rgba(214, 237, 232, 0.05);
+  border-color: var(--color-accent-border);
+  background: var(--color-surface-hover);
 }
 
 /* ── Filter bar ── */
@@ -294,18 +294,18 @@ function techNiveauLabel(n) {
   gap: 0.75rem;
   margin-bottom: 1rem;
   padding: 0.75rem 1rem;
-  background: #1A3838;
-  border: 1px solid rgba(214, 237, 232, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
 }
 
 .filter-select,
 .filter-input {
-  background: rgba(13, 43, 43, 0.6);
-  border: 1px solid rgba(214, 237, 232, 0.1);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 0.5rem 0.75rem;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   font-family: inherit;
   font-size: 0.8rem;
   outline: none;
@@ -314,10 +314,10 @@ function techNiveauLabel(n) {
 
 .filter-select:focus,
 .filter-input:focus {
-  border-color: rgba(92, 140, 106, 0.5);
+  border-color: var(--color-accent);
 }
 
-.filter-select option { background: #1A3838; }
+.filter-select option { background: var(--color-surface); }
 .filter-input { flex: 1; }
 
 /* ── Loading / Error ── */
@@ -329,17 +329,17 @@ function techNiveauLabel(n) {
   justify-content: center;
   padding: 4rem 0;
   gap: 1rem;
-  color: rgba(214, 237, 232, 0.4);
+  color: var(--color-text-secondary);
   font-size: 0.85rem;
-  background: #1A3838;
-  border: 1px solid rgba(214, 237, 232, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
 }
 
 .spinner {
   width: 36px; height: 36px;
-  border: 2px solid rgba(214, 237, 232, 0.1);
-  border-top-color: #5C8C6A;
+  border: 2px solid var(--color-accent-border);
+  border-top-color: var(--color-accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -359,8 +359,8 @@ function techNiveauLabel(n) {
 
 /* ── Stage Card ── */
 .stage-card {
-  background: #1A3838;
-  border: 1px solid rgba(214, 237, 232, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 1.25rem;
   display: flex;
@@ -376,12 +376,12 @@ function techNiveauLabel(n) {
   position: absolute;
   left: 0; top: 0; bottom: 0;
   width: 3px;
-  background: #5C8C6A;
+  background: var(--color-accent);
   border-radius: 4px 0 0 4px;
 }
 
 .stage-card:hover {
-  border-color: rgba(214, 237, 232, 0.2);
+  border-color: var(--color-accent-border);
   transform: translateY(-2px);
 }
 
@@ -416,24 +416,24 @@ function techNiveauLabel(n) {
 }
 
 .badge-type {
-  background: rgba(92, 140, 106, 0.2);
-  color: #7dc494;
+  background: var(--color-accent-light);
+  color: var(--color-accent);
 }
-.badge-type .badge-dot { background: #7dc494; }
+.badge-type .badge-dot { background: var(--color-accent); }
 
 /* statut badges (reuse classes from Activités style) */
 .badge--valide {
-  background: rgba(92, 140, 106, 0.18);
-  color: #5C8C6A;
+  background: var(--color-valid-bg);
+  color: var(--color-valid-text);
 }
-.badge--valide .badge-dot { background: #5C8C6A; }
+.badge--valide .badge-dot { background: var(--color-valid-text); }
 
 .badge--attente {
-  background: rgba(232, 160, 74, 0.15);
-  color: #e8a04a;
+  background: var(--color-waiting-bg);
+  color: var(--color-waiting-text);
 }
 .badge--attente .badge-dot {
-  background: #e8a04a;
+  background: var(--color-waiting-text);
   animation: pulseDot 1.8s ease-in-out infinite;
 }
 @keyframes pulseDot {
@@ -442,16 +442,16 @@ function techNiveauLabel(n) {
 }
 
 .badge--cours {
-  background: rgba(74, 158, 196, 0.15);
-  color: #4a9ec4;
+  background: #EFF6FF;
+  color: #1D4ED8;
 }
-.badge--cours .badge-dot { background: #4a9ec4; }
+.badge--cours .badge-dot { background: #1D4ED8; }
 
 .badge--rejete {
-  background: rgba(196, 90, 90, 0.15);
-  color: #c45a5a;
+  background: #FEF2F2;
+  color: #DC2626;
 }
-.badge--rejete .badge-dot { background: #c45a5a; }
+.badge--rejete .badge-dot { background: #DC2626; }
 
 .card-actions {
   display: flex;
@@ -462,22 +462,22 @@ function techNiveauLabel(n) {
   width: 30px; height: 30px;
   display: flex; align-items: center; justify-content: center;
   border-radius: 8px;
-  background: rgba(214, 237, 232, 0.05);
-  border: 1px solid rgba(214, 237, 232, 0.1);
-  color: rgba(214, 237, 232, 0.5);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-tertiary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .action-btn:hover {
-  background: rgba(214, 237, 232, 0.1);
-  color: #D6EDE8;
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
 }
 
 .action-btn.danger:hover {
-  background: rgba(196, 90, 90, 0.15);
-  border-color: rgba(196, 90, 90, 0.3);
-  color: #c45a5a;
+  background: #FEF2F2;
+  border-color: #FECACA;
+  color: #DC2626;
 }
 
 /* ── Card Body ── */
@@ -501,7 +501,8 @@ function techNiveauLabel(n) {
   justify-content: center;
   font-size: 14px;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-accent);
+  background: var(--color-accent-light);
   flex-shrink: 0;
 }
 
@@ -513,7 +514,7 @@ function techNiveauLabel(n) {
 .card-company {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   margin: 0;
   line-height: 1.3;
   white-space: nowrap;
@@ -523,13 +524,13 @@ function techNiveauLabel(n) {
 
 .card-poste {
   font-size: 0.82rem;
-  color: rgba(214, 237, 232, 0.5);
+  color: var(--color-text-secondary);
   margin: 0.1rem 0 0;
 }
 
 .card-separator {
   height: 1px;
-  background: rgba(214, 237, 232, 0.08);
+  background: var(--color-border-light);
   margin-bottom: 0.85rem;
 }
 
@@ -546,7 +547,7 @@ function techNiveauLabel(n) {
   gap: 0.4rem;
   flex-wrap: wrap;
   font-size: 0.82rem;
-  color: rgba(214, 237, 232, 0.75);
+  color: var(--color-text-primary);
 }
 
 .field-row--col {
@@ -559,20 +560,20 @@ function techNiveauLabel(n) {
   font-size: 0.65rem;
   font-weight: 600;
   letter-spacing: 0.05em;
-  color: rgba(214, 237, 232, 0.35);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   flex-shrink: 0;
 }
 
 .field-value {
-  color: #D6EDE8;
+  color: var(--color-text-primary);
 }
 
 .field-duree {
   font-size: 0.7rem;
   font-weight: 600;
-  color: #5C8C6A;
-  background: rgba(92, 140, 106, 0.12);
+  color: var(--color-accent);
+  background: var(--color-accent-light);
   padding: 0.1rem 0.5rem;
   border-radius: 8px;
   margin-left: 0.25rem;
@@ -588,7 +589,7 @@ function techNiveauLabel(n) {
 .expand-btn {
   background: none;
   border: none;
-  color: #5C8C6A;
+  color: var(--color-accent);
   cursor: pointer;
   font-size: 0.7rem;
   font-weight: 600;
@@ -600,12 +601,12 @@ function techNiveauLabel(n) {
 }
 
 .expand-btn:hover {
-  background: rgba(92, 140, 106, 0.1);
+  background: var(--color-accent-light);
 }
 
 .field-text {
   font-size: 0.82rem;
-  color: rgba(214, 237, 232, 0.55);
+  color: var(--color-text-secondary);
   line-height: 1.55;
   margin: 0;
   padding: 0;
@@ -623,16 +624,16 @@ function techNiveauLabel(n) {
   align-items: center;
   gap: 0.25rem;
   padding: 0.2rem 0.55rem;
-  background: rgba(214, 237, 232, 0.05);
-  border: 1px solid rgba(214, 237, 232, 0.08);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   font-size: 0.72rem;
-  color: rgba(214, 237, 232, 0.6);
+  color: var(--color-text-secondary);
 }
 
 .tech-version {
   font-size: 0.6rem;
-  color: rgba(214, 237, 232, 0.3);
+  color: var(--color-text-tertiary);
 }
 
 .tech-lvl {
@@ -644,10 +645,10 @@ function techNiveauLabel(n) {
   letter-spacing: 0.02em;
 }
 
-.lvl-green  { background: rgba(92, 140, 106, 0.15); color: #7dc494; }
-.lvl-yellow { background: rgba(232, 160, 74, 0.15); color: #e8a04a; }
-.lvl-orange { background: rgba(217, 72, 31, 0.15);  color: #f07a4a; }
-.lvl-red    { background: rgba(196, 90, 90, 0.12);  color: #c45a5a; }
+.lvl-green  { background: var(--color-accent-light);  color: var(--color-accent); }
+.lvl-yellow { background: var(--color-waiting-bg);    color: var(--color-waiting-text); }
+.lvl-orange { background: #FFF7ED;                    color: #EA580C; }
+.lvl-red    { background: #FEF2F2;                    color: #DC2626; }
 
 /* ── Card Footer ── */
 .card-footer {
@@ -656,7 +657,7 @@ function techNiveauLabel(n) {
   gap: 0.6rem;
   padding-top: 0.75rem;
   margin-top: 0.85rem;
-  border-top: 1px solid rgba(214, 237, 232, 0.06);
+  border-top: 1px solid var(--color-border-light);
 }
 
 .footer-btn {
@@ -670,14 +671,14 @@ function techNiveauLabel(n) {
   cursor: pointer;
   font-family: inherit;
   transition: all 0.2s;
-  border: 1px solid rgba(214, 237, 232, 0.12);
-  background: rgba(214, 237, 232, 0.05);
-  color: rgba(214, 237, 232, 0.6);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+  color: var(--color-text-secondary);
 }
 
 .footer-btn:hover {
-  background: rgba(214, 237, 232, 0.1);
-  color: #D6EDE8;
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
 }
 
 .upload-btn { cursor: pointer; }
@@ -689,10 +690,10 @@ function techNiveauLabel(n) {
   align-items: center;
   justify-content: center;
   padding: 4rem 1rem;
-  color: rgba(214, 237, 232, 0.25);
+  color: var(--color-text-tertiary);
   font-size: 0.9rem;
-  background: #1A3838;
-  border: 1px solid rgba(214, 237, 232, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
 }
 
@@ -703,14 +704,14 @@ function techNiveauLabel(n) {
   justify-content: space-between;
   margin-top: 1.25rem;
   padding: 0.75rem 1rem;
-  background: #1A3838;
-  border: 1px solid rgba(214, 237, 232, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
 }
 
 .pagination-info {
   font-size: 0.78rem;
-  color: rgba(214, 237, 232, 0.4);
+  color: var(--color-text-tertiary);
 }
 
 .pagination {
@@ -721,9 +722,9 @@ function techNiveauLabel(n) {
 .page-btn {
   width: 32px; height: 32px;
   border-radius: 8px;
-  border: 1px solid rgba(214, 237, 232, 0.1);
+  border: 1px solid var(--color-border);
   background: transparent;
-  color: rgba(214, 237, 232, 0.5);
+  color: var(--color-text-tertiary);
   font-size: 0.8rem;
   cursor: pointer;
   display: flex;
@@ -733,13 +734,13 @@ function techNiveauLabel(n) {
   font-family: inherit;
 }
 .page-btn:hover {
-  background: rgba(214, 237, 232, 0.08);
-  color: #D6EDE8;
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
 }
 .page-btn.active {
-  background: rgba(92, 140, 106, 0.25);
-  border-color: #5C8C6A;
-  color: #D6EDE8;
+  background: var(--color-accent-light);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 .page-btn:disabled {
   opacity: 0.3;

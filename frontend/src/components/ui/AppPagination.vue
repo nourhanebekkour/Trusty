@@ -61,7 +61,7 @@ const visiblePages = computed(() => {
   justify-content: space-between;
   padding: 12px 0;
   font-size: 13px;
-  color: #8aada9;
+  color: var(--color-text-secondary);
 }
 .pagination__controls {
   display: flex;
@@ -70,21 +70,21 @@ const visiblePages = computed(() => {
 }
 .pagination__controls button {
   padding: 6px 12px;
-  border: 1px solid #2a4a48;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
-  background: #1A3838;
+  background: var(--color-surface);
   font-size: 13px;
   cursor: pointer;
-  color: #c8deda;
+  color: var(--color-text-primary);
   transition: all 0.15s;
 }
 .pagination__controls button:hover:not(:disabled) {
-  background: #162e2e;
+  background: var(--color-surface-hover);
 }
 .pagination__controls button.active {
-  background: #5C8C6A;
+  background: var(--color-accent);
   color: #fff;
-  border-color: #5C8C6A;
+  border-color: var(--color-accent);
 }
 .pagination__controls button:disabled {
   opacity: 0.4;
@@ -92,6 +92,6 @@ const visiblePages = computed(() => {
 }
 .pagination__dots {
   padding: 0 4px;
-  color: #4a6e6a;
+  color: var(--color-text-tertiary);
 }
 </style>

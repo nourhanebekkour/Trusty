@@ -2,7 +2,7 @@
    PROJET — Shared styles (imported by projetFormModal.vue)
    ════════════════════════════════════════════════════════════ */
 
-.required { color: #e07878; }
+.required { color: var(--color-danger); }
 
 /* ── Transitions ── */
 .fade-enter-active,

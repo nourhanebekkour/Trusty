@@ -38,7 +38,7 @@ const label = statusMap[props.status]?.label || props.status
 .badge--success  { background: #dcfce7; color: #16a34a; }
 .badge--warning  { background: #fef9c3; color: #ca8a04; }
 .badge--info     { background: #eff6ff; color: #2563eb; }
-.badge--neutral  { background: #162e2e; color: #8aada9; }
+.badge--neutral  { background: var(--color-surface-alt); color: var(--color-text-tertiary); }
 .badge--danger   { background: #fee2e2; color: #dc2626; }
 .badge--blue     { background: #dbeafe; color: #1d4ed8; }
 .badge--purple   { background: #f3e8ff; color: #7c3aed; }

@@ -35,10 +35,10 @@ const props = defineProps({
 })
 
 const items = computed(() => [
-  { label: 'TOTAL DES STAGES', value: props.stats.total,            color: '#D6EDE8', icon: icons.list  },
-  { label: 'STAGES VALIDÉS',   value: props.stats.valides,          color: '#5C8C6A', icon: icons.check },
-  { label: 'EN ATTENTE',       value: props.stats.enAttente,        color: '#e8a04a', icon: icons.clock },
-  { label: 'AVEC RAPPORT',     value: props.stats.avecRapport || 0, color: '#9b8ec4', icon: icons.star  },
+  { label: 'TOTAL DES STAGES', value: props.stats.total,            color: 'var(--color-accent)',     icon: icons.list  },
+  { label: 'STAGES VALIDÉS',   value: props.stats.valides,          color: 'var(--color-valid-text)', icon: icons.check },
+  { label: 'EN ATTENTE',       value: props.stats.enAttente,        color: 'var(--color-waiting-text)', icon: icons.clock },
+  { label: 'AVEC RAPPORT',     value: props.stats.avecRapport || 0, color: 'var(--color-purple-text)', icon: icons.star  },
 ])
 </script>
 
@@ -51,8 +51,8 @@ const items = computed(() => [
 }
 
 .stat-card {
-  background: #1A3838;
-  border: 1px solid rgba(214, 237, 232, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 1.1rem 1.2rem;
   display: flex;
@@ -62,7 +62,7 @@ const items = computed(() => [
 }
 
 .stat-card:hover {
-  border-color: rgba(214, 237, 232, 0.2);
+  border-color: var(--color-accent-border);
   transform: translateY(-1px);
 }
 
@@ -82,14 +82,14 @@ const items = computed(() => [
   font-size: 0.62rem;
   font-weight: 600;
   letter-spacing: 0.08em;
-  color: #5C8C6A;
+  color: var(--color-text-secondary);
   text-transform: uppercase;
 }
 
 .stat-value {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   line-height: 1;
   font-family: 'DM Mono', monospace;
 }

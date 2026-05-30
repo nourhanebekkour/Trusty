@@ -158,7 +158,7 @@ import {
   nomComplet, formatType, formatStatut, formatDate, emptyForm,
 } from '@/components/projets/projetHelpers'
 
-import ProjetStatsCards   from '@/components/projets/ProjetStatsCards.vue'
+import ProjetStatsCards   from '@/components/projets/projetStatsCards.vue'
 import ProjetTableCards   from '@/components/projets/ProjetTableCards.vue'
 import ProjetFormModal    from '@/components/projets/projetFormModal.vue'
 import ProjetDetailModal  from '@/components/projets/projetDetailModal.vue'
@@ -350,24 +350,24 @@ onMounted(() => store.fetchProjets())
 .header-icon {
   width: 40px; height: 40px;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(214, 237, 232, 0.12);
-  border: 1px solid rgba(214, 237, 232, 0.15);
+  background: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border);
   border-radius: 10px;
-  color: #D6EDE8;
+  color: var(--color-accent);
   flex-shrink: 0;
 }
 
 .page-title {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   margin: 0 0 0.15rem;
   letter-spacing: -0.01em;
 }
 
 .page-subtitle {
   font-size: 0.875rem;
-  color: #7a9e8e;
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
@@ -376,7 +376,7 @@ onMounted(() => store.fetchProjets())
   align-items: center;
   gap: 0.45rem;
   padding: 0.55rem 1.1rem;
-  background: #1D9E75;
+  background: var(--color-accent);
   border: none;
   border-radius: 8px;
   color: #fff;
@@ -390,9 +390,9 @@ onMounted(() => store.fetchProjets())
 }
 
 .add-btn:hover {
-  background: #24b88a;
+  background: var(--color-accent-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(29, 158, 117, 0.3);
+  box-shadow: 0 4px 16px rgba(61, 107, 94, 0.3);
 }
 
 /* ── Section header ── */
@@ -412,12 +412,12 @@ onMounted(() => store.fetchProjets())
 .section-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
 }
 
 .section-count {
   font-size: 0.78rem;
-  color: rgba(214, 237, 232, 0.35);
+  color: var(--color-text-tertiary);
 }
 
 .section-actions {
@@ -436,16 +436,16 @@ onMounted(() => store.fetchProjets())
   position: absolute;
   left: 10px;
   width: 14px; height: 14px;
-  color: rgba(214, 237, 232, 0.35);
+  color: var(--color-text-tertiary);
   pointer-events: none;
 }
 
 .search-input {
-  background: rgba(13, 43, 43, 0.6);
-  border: 1px solid rgba(214, 237, 232, 0.1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 0.45rem 0.75rem 0.45rem 30px;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   font-family: inherit;
   font-size: 0.8rem;
   width: 200px;
@@ -454,11 +454,11 @@ onMounted(() => store.fetchProjets())
 }
 
 .search-input:focus {
-  border-color: rgba(92, 140, 106, 0.5);
+  border-color: var(--color-accent);
 }
 
 .search-input::placeholder {
-  color: rgba(214, 237, 232, 0.3);
+  color: var(--color-text-tertiary);
 }
 
 .filter-btn {
@@ -467,9 +467,9 @@ onMounted(() => store.fetchProjets())
   gap: 0.4rem;
   padding: 0.38rem 0.85rem;
   background: transparent;
-  border: 1px solid rgba(214, 237, 232, 0.2);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  color: #D6EDE8;
+  color: var(--color-text-secondary);
   font-size: 0.78rem;
   font-weight: 500;
   cursor: pointer;
@@ -478,8 +478,8 @@ onMounted(() => store.fetchProjets())
 }
 
 .filter-btn:hover {
-  border-color: rgba(214, 237, 232, 0.35);
-  background: rgba(214, 237, 232, 0.05);
+  border-color: var(--color-accent-border);
+  background: var(--color-surface-hover);
 }
 
 /* ── Filter bar ── */
@@ -488,17 +488,17 @@ onMounted(() => store.fetchProjets())
   gap: 0.75rem;
   margin-bottom: 1rem;
   padding: 0.75rem 1rem;
-  background: #1A3838;
-  border: 1px solid rgba(214, 237, 232, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
 }
 
 .filter-select {
-  background: rgba(13, 43, 43, 0.6);
-  border: 1px solid rgba(214, 237, 232, 0.1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 0.45rem 0.75rem;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   font-family: inherit;
   font-size: 0.8rem;
   outline: none;
@@ -506,10 +506,10 @@ onMounted(() => store.fetchProjets())
 }
 
 .filter-select:focus {
-  border-color: rgba(92, 140, 106, 0.5);
+  border-color: var(--color-accent);
 }
 
-.filter-select option { background: #1A3838; }
+.filter-select option { background: var(--color-surface); }
 
 /* ── Bottom Grid ── */
 .bottom-grid {
@@ -520,8 +520,8 @@ onMounted(() => store.fetchProjets())
 }
 
 .info-card {
-  background: #1A3838;
-  border: 1px solid rgba(214, 237, 232, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 1.25rem 1.3rem;
   display: flex;
@@ -531,14 +531,14 @@ onMounted(() => store.fetchProjets())
 }
 
 .info-card:hover {
-  border-color: rgba(214, 237, 232, 0.18);
+  border-color: var(--color-accent-border);
 }
 
 .info-card-icon {
   width: 38px; height: 38px;
   border-radius: 8px;
-  background: rgba(214, 237, 232, 0.08);
-  color: #D6EDE8;
+  background: var(--color-surface-alt);
+  color: var(--color-text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -546,8 +546,8 @@ onMounted(() => store.fetchProjets())
 }
 
 .info-card-icon.accent {
-  background: rgba(92, 140, 106, 0.15);
-  color: #5C8C6A;
+  background: var(--color-accent-light);
+  color: var(--color-accent);
 }
 
 .info-card-content {
@@ -557,13 +557,13 @@ onMounted(() => store.fetchProjets())
 .info-card-title {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   margin: 0 0 0.35rem;
 }
 
 .info-card-text {
   font-size: 0.78rem;
-  color: rgba(214, 237, 232, 0.55);
+  color: var(--color-text-secondary);
   line-height: 1.55;
   margin: 0;
 }

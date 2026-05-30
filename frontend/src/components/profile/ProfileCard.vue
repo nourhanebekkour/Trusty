@@ -140,7 +140,7 @@ const visibilityClass = computed(() => ({
 .cover-banner {
   position: relative;
   height: 90px;
-  background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9f 50%, #1a8a6e 100%);
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 50%, #1a6e5e 100%);
   border-radius: 12px 12px 0 0;
   overflow: hidden;
 }
@@ -171,7 +171,7 @@ const visibilityClass = computed(() => ({
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -207,7 +207,7 @@ const visibilityClass = computed(() => ({
   position: absolute;
   bottom: -6px;
   right: calc(50% - 52px);
-  background: #1e3a5f;
+  background: var(--color-accent);
   color: #fff;
   font-size: 9px;
   font-weight: 700;
@@ -228,7 +228,7 @@ const visibilityClass = computed(() => ({
 .profile-info h2 {
   font-size: 18px;
   font-weight: 700;
-  color: #1a1a2e;
+  color: var(--color-text-primary);
   margin: 0;
   text-align: center;
 }
@@ -237,7 +237,7 @@ const visibilityClass = computed(() => ({
   text-align: center;
   font-size: 12px;
   font-weight: 600;
-  color: #6366f1;
+  color: var(--color-accent);
   margin: 0;
   text-transform: uppercase;
   letter-spacing: .04em;
@@ -245,9 +245,9 @@ const visibilityClass = computed(() => ({
 
 .objectif {
   font-size: 12px;
-  color: #374151;
-  background: #5C8C6A;
-  border-left: 3px solid #6366f1;
+  color: var(--color-accent);
+  background: var(--color-accent-light);
+  border-left: 3px solid var(--color-accent);
   padding: 6px 10px;
   border-radius: 0 6px 6px 0;
   margin: 4px 0;
@@ -255,7 +255,7 @@ const visibilityClass = computed(() => ({
 
 .bio {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   line-height: 1.5;
   margin: 0;
   font-style: italic;
@@ -273,7 +273,7 @@ const visibilityClass = computed(() => ({
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #374151;
+  color: var(--color-text-secondary);
 }
 
 .info-icon {
@@ -301,14 +301,14 @@ const visibilityClass = computed(() => ({
 .social-btn:hover { opacity: .8; }
 .linkedin { background: #0077b5; color: #fff; }
 .github   { background: #24292e; color: #fff; }
-.site     { background: #e5e7eb; color: #374151; }
+.site     { background: #e5e7eb; color: var(--color-text-secondary); }
 
 .visibility-row {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--color-text-tertiary);
 }
 
 .visibility-dot {
@@ -327,17 +327,17 @@ const visibilityClass = computed(() => ({
   width: 100%;
   padding: 9px;
   border-radius: 8px;
-  border: 1.5px solid #5C8C6A;
-  background: #5C8C6A;
+  border: 1.5px solid var(--color-accent);
+  background: var(--color-accent);
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: #fff;
   cursor: pointer;
   transition: all .15s;
 }
 .btn-edit:hover {
-  background: #92d8a7;
-  border-color: #92d8a7;
-  color: #6366f1;
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  color: #fff;
 }
 </style>

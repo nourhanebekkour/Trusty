@@ -254,19 +254,17 @@ export default {
 @import '@/assets/StageList.css';
 
 .detail-modal {
-  --modal-bg: #1e3f3f;
-
-  background: var(--modal-bg);
-  border: 1px solid rgba(214, 237, 232, 0.13);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   width: 720px;
   max-width: 94vw;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-panel);
   animation: fadeUp 0.25s ease;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   overflow: hidden;
 }
 
@@ -275,7 +273,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid rgba(214, 237, 232, 0.08);
+  border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 
@@ -292,7 +290,7 @@ export default {
 .detail-title {
   font-size: 17px;
   font-weight: 700;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   margin: 0;
 }
 
@@ -301,7 +299,7 @@ export default {
   border: none;
   font-size: 20px;
   cursor: pointer;
-  color: rgba(214, 237, 232, 0.35);
+  color: var(--color-text-tertiary);
   padding: 6px 10px;
   border-radius: 8px;
   transition: all 0.2s;
@@ -309,8 +307,8 @@ export default {
 }
 
 .modal-close:hover {
-  background: rgba(214, 237, 232, 0.1);
-  color: #D6EDE8;
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
 }
 
 /* ── Loading / Error ── */
@@ -321,12 +319,12 @@ export default {
   justify-content: center;
   gap: 12px;
   padding: 60px 24px;
-  color: rgba(214, 237, 232, 0.5);
+  color: var(--color-text-secondary);
   font-size: 14px;
 }
 
 .detail-error {
-  color: #c45a5a;
+  color: #DC2626;
 }
 
 /* ── Scrollable body ── */
@@ -342,8 +340,8 @@ export default {
   align-items: center;
   gap: 16px;
   padding: 28px 28px 20px;
-  background: rgba(214, 237, 232, 0.03);
-  border-bottom: 1px solid rgba(214, 237, 232, 0.08);
+  background: var(--color-surface-alt);
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .detail-hero-logo {
@@ -355,9 +353,10 @@ export default {
   justify-content: center;
   font-size: 18px;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-accent);
   flex-shrink: 0;
-  background: rgba(92, 140, 106, 0.3);
+  background: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border);
 }
 
 .detail-hero-info {
@@ -368,7 +367,7 @@ export default {
 .detail-hero-title {
   font-size: 20px;
   font-weight: 600;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -377,7 +376,7 @@ export default {
 
 .detail-hero-type {
   font-size: 14px;
-  color: rgba(214, 237, 232, 0.45);
+  color: var(--color-text-secondary);
   margin: 3px 0 0;
 }
 
@@ -390,15 +389,15 @@ export default {
 }
 
 .badge--public {
-  background: rgba(29, 158, 117, 0.1);
-  color: #4cd9a7;
-  border-color: rgba(29, 158, 117, 0.2);
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  border-color: var(--color-accent-border);
 }
 
 .badge--private {
-  background: rgba(214, 237, 232, 0.06);
-  color: rgba(214, 237, 232, 0.5);
-  border-color: rgba(214, 237, 232, 0.08);
+  background: var(--color-surface-alt);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
 }
 
 /* ── Grid ── */
@@ -412,7 +411,7 @@ export default {
 /* ── Sections ── */
 .detail-section {
   padding: 16px 0;
-  border-bottom: 1px solid rgba(214, 237, 232, 0.06);
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .detail-section:nth-child(odd) {
@@ -421,7 +420,7 @@ export default {
 
 .detail-section:nth-child(even) {
   padding-left: 20px;
-  border-left: 1px solid rgba(214, 237, 232, 0.06);
+  border-left: 1px solid var(--color-border-light);
 }
 
 .detail-section--full {
@@ -439,7 +438,7 @@ export default {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: rgba(214, 237, 232, 0.35);
+  color: var(--color-text-secondary);
   margin: 0 0 12px;
 }
 
@@ -457,19 +456,19 @@ export default {
 .detail-label {
   font-size: 11px;
   font-weight: 500;
-  color: rgba(214, 237, 232, 0.35);
+  color: var(--color-text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
 
 .detail-value {
   font-size: 14px;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
 }
 
 .detail-text {
   font-size: 14px;
-  color: rgba(214, 237, 232, 0.7);
+  color: var(--color-text-primary);
   line-height: 1.7;
   margin: 0;
   white-space: pre-wrap;
@@ -487,9 +486,9 @@ export default {
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
-  background: rgba(214, 237, 232, 0.03);
+  background: var(--color-surface-alt);
   border-radius: 10px;
-  border: 1px solid rgba(214, 237, 232, 0.08);
+  border: 1px solid var(--color-border);
 }
 
 .detail-tech-emoji {
@@ -507,13 +506,13 @@ export default {
 .detail-tech-name {
   font-weight: 600;
   font-size: 14px;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
 }
 
 .detail-tech-version {
   font-size: 11px;
-  color: rgba(214, 237, 232, 0.45);
-  background: rgba(214, 237, 232, 0.06);
+  color: var(--color-text-secondary);
+  background: var(--color-surface-hover);
   padding: 1px 7px;
   border-radius: 6px;
 }
@@ -540,9 +539,9 @@ export default {
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  background: rgba(214, 237, 232, 0.03);
+  background: var(--color-surface-alt);
   border-radius: 10px;
-  border: 1px solid rgba(214, 237, 232, 0.08);
+  border: 1px solid var(--color-border);
 }
 
 .participant-avatar {
@@ -554,9 +553,10 @@ export default {
   justify-content: center;
   font-size: 13px;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-accent);
   flex-shrink: 0;
-  background: rgba(92, 140, 106, 0.25);
+  background: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border);
 }
 
 .participant-info {
@@ -568,12 +568,12 @@ export default {
 .participant-nom {
   font-size: 14px;
   font-weight: 600;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
 }
 
 .participant-role {
   font-size: 12px;
-  color: rgba(214, 237, 232, 0.45);
+  color: var(--color-text-secondary);
 }
 
 /* ── Liens ── */
@@ -597,21 +597,21 @@ export default {
 }
 
 .detail-link.github {
-  background: rgba(214, 237, 232, 0.06);
-  color: #D6EDE8;
-  border-color: rgba(214, 237, 232, 0.12);
+  background: var(--color-surface-alt);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
 }
 
 .detail-link.demo {
-  background: rgba(29, 158, 117, 0.1);
-  color: #4cd9a7;
-  border-color: rgba(29, 158, 117, 0.2);
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  border-color: var(--color-accent-border);
 }
 
 .detail-link.yt {
-  background: rgba(255, 80, 80, 0.1);
-  color: #ff6060;
-  border-color: rgba(255, 80, 80, 0.2);
+  background: #FEF2F2;
+  color: #DC2626;
+  border-color: #FECACA;
 }
 
 .detail-link:hover {
@@ -626,7 +626,7 @@ export default {
   justify-content: flex-end;
   gap: 10px;
   padding: 16px 24px;
-  border-top: 1px solid rgba(214, 237, 232, 0.08);
+  border-top: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 

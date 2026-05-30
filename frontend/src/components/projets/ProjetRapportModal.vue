@@ -140,16 +140,16 @@ export default {
 @import '@/assets/StageList.css';
 
 .rapport-modal {
-  background: #1A3838;
-  border: 1px solid rgba(214, 237, 232, 0.13);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   width: 480px;
   max-width: 94vw;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-panel);
   animation: fadeUp 0.25s ease;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   overflow: hidden;
 }
 
@@ -158,7 +158,7 @@ export default {
   align-items: center;
   gap: 10px;
   padding: 20px 24px;
-  border-bottom: 1px solid rgba(214, 237, 232, 0.08);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .rapport-icon {
@@ -169,7 +169,7 @@ export default {
   flex: 1;
   font-size: 17px;
   font-weight: 700;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   margin: 0;
 }
 
@@ -178,7 +178,7 @@ export default {
   border: none;
   font-size: 20px;
   cursor: pointer;
-  color: rgba(214, 237, 232, 0.35);
+  color: var(--color-text-tertiary);
   padding: 6px 10px;
   border-radius: 8px;
   transition: all 0.2s;
@@ -186,8 +186,8 @@ export default {
 }
 
 .rapport-close:hover {
-  background: rgba(214, 237, 232, 0.1);
-  color: #D6EDE8;
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
 }
 
 .rapport-body {
@@ -199,13 +199,13 @@ export default {
 
 .rapport-hint {
   font-size: 13px;
-  color: rgba(214, 237, 232, 0.55);
+  color: var(--color-text-secondary);
   margin: 0;
   line-height: 1.5;
 }
 
 .upload-zone {
-  border: 2px dashed rgba(214, 237, 232, 0.15);
+  border: 2px dashed var(--color-border);
   border-radius: 12px;
   padding: 28px 20px;
   display: flex;
@@ -220,8 +220,8 @@ export default {
 
 .upload-zone:hover,
 .upload-zone--active {
-  border-color: rgba(92, 140, 106, 0.5);
-  background: rgba(92, 140, 106, 0.06);
+  border-color: var(--color-accent-border);
+  background: var(--color-accent-light);
 }
 
 .file-input-hidden {
@@ -233,7 +233,7 @@ export default {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  color: rgba(214, 237, 232, 0.35);
+  color: var(--color-text-tertiary);
   font-size: 13px;
 }
 
@@ -241,13 +241,13 @@ export default {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: rgba(196, 90, 90, 0.15);
+  background: #FEF2F2;
   border: none;
   border-radius: 50%;
   width: 24px;
   height: 24px;
   font-size: 14px;
-  color: #c45a5a;
+  color: #DC2626;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -256,7 +256,7 @@ export default {
 }
 
 .upload-clear:hover {
-  background: rgba(196, 90, 90, 0.3);
+  background: #FECACA;
 }
 
 .separator-text {
@@ -265,7 +265,7 @@ export default {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: rgba(214, 237, 232, 0.2);
+  color: var(--color-text-tertiary);
   position: relative;
 }
 
@@ -280,15 +280,15 @@ export default {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: rgba(214, 237, 232, 0.5);
+  color: var(--color-text-secondary);
 }
 
 .form-input {
-  background: rgba(13, 43, 43, 0.6);
-  border: 1px solid rgba(214, 237, 232, 0.1);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 10px 12px;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   font-family: inherit;
   font-size: 13px;
   outline: none;
@@ -296,11 +296,11 @@ export default {
 }
 
 .form-input:focus {
-  border-color: rgba(92, 140, 106, 0.5);
+  border-color: var(--color-accent);
 }
 
 .form-input::placeholder {
-  color: rgba(214, 237, 232, 0.2);
+  color: var(--color-text-tertiary);
 }
 
 .rapport-footer {
@@ -309,15 +309,15 @@ export default {
   justify-content: flex-end;
   gap: 10px;
   padding: 16px 24px;
-  border-top: 1px solid rgba(214, 237, 232, 0.08);
+  border-top: 1px solid var(--color-border);
 }
 
 .btn-cancel {
   padding: 0.55rem 1.2rem;
   border-radius: 9px;
-  border: 1px solid rgba(214, 237, 232, 0.12);
+  border: 1px solid var(--color-border);
   background: transparent;
-  color: rgba(214, 237, 232, 0.5);
+  color: var(--color-text-secondary);
   font-family: inherit;
   font-size: 0.83rem;
   cursor: pointer;
@@ -325,8 +325,8 @@ export default {
 }
 
 .btn-cancel:hover {
-  background: rgba(214, 237, 232, 0.07);
-  color: #D6EDE8;
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
 }
 
 .btn-save {
@@ -334,7 +334,7 @@ export default {
   align-items: center;
   gap: 6px;
   padding: 0.55rem 1.2rem;
-  background: #1D9E75;
+  background: var(--color-accent);
   border: none;
   border-radius: 9px;
   color: #fff;
@@ -346,7 +346,7 @@ export default {
 }
 
 .btn-save:hover:not(:disabled) {
-  background: #24b88a;
+  background: var(--color-accent-hover);
   transform: translateY(-1px);
 }
 
