@@ -17,6 +17,7 @@ import { useAuthStore } from '@/stores/authstore'
 import Parcours from '../views/Etudiant/Parcours.vue'
 import ProfessorLayout from '../components/professor/ProfessorLayout.vue'
 import LettresRecommandation from '@/views/Etudiant/LettresRecommandation.vue'
+import PortfolioTemplate1 from '@/views/portfolio/PortfolioTemplate1.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -134,6 +135,11 @@ const router = createRouter({
       component: Portfolio,
     },
     {
+      path: '/portfolio/:url_publique',
+      name: 'portfolio-template1',
+      component: PortfolioTemplate1,
+    },
+    {
       path: '/activites',
       name: 'activites',
       component: activites,
@@ -155,7 +161,7 @@ const router = createRouter({
 router.beforeEach(async (to, from) => {
   const authStore = useAuthStore()
 
-  if (['home', 'login', 'about'].includes(to.name)) {
+  if (['home', 'login', 'about', 'portfolio-template1'].includes(to.name)) {
     return true
   }
 
