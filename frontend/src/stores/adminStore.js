@@ -3,53 +3,52 @@ import { ref } from 'vue'
 import { useAuthStore } from '@/stores/authstore'
 import api from '../services/api'
 
-// ── Helper erreur API ──────────────────────────────────────────────────────────
 function getErrorMessage(e) {
-  return (
-    e?.response?.data?.message ||
-    e?.message ||
-    'Erreur inconnue'
-  )
+  return e?.response?.data?.message || e?.message || 'Erreur inconnue'
+}
+
+function extractData(res) {
+  const body = res?.data ?? res
+  return body?.data ?? body
 }
 
 export const useAdminStore = defineStore('admin', () => {
 
   const auth = useAuthStore()
 
-  // ── Guard rôle (sans navigation) ───────────────────────────────────────────
   function isAdmin() {
     return auth.user?.role === 'ADMINISTRATEUR'
   }
 
-  // ── State ──────────────────────────────────────────────
   const users             = ref([])
   const verificationQueue = ref([])
-  const portfolios        = ref([])
+  const students          = ref([])
   const certHistory       = ref([])
 
   const stats = ref({
-    studentsActive:    0,
-    portfoliosCreated: 0,
-    professors:        0,
-    partners:          0,
+    studentsActive: 0,
+    professors:     0,
+    partners:       0,
   })
 
-  const loading          = ref(false)
-  const error            = ref(null)
-  const creatingUser     = ref(false)
-  const certifyingId     = ref(null)
-
-  // ── Actions ─────────────────────────────────────────────
+  const loading      = ref(false)
+  const error        = ref(null)
+  const creatingUser = ref(false)
+  const validatingId = ref(null)
 
   async function fetchDashboardStats() {
-    if (!isAdmin()) {
-      error.value = 'Accès refusé'
-      return
-    }
+    if (!isAdmin()) { error.value = 'Accès refusé'; return }
     try {
       loading.value = true
-      const res = await api.get('/admin/stats')
-      stats.value = res.data
+      const res = await api.get('/utilisateurs/')
+      const data = extractData(res)
+      if (Array.isArray(data)) {
+        stats.value = {
+          studentsActive: data.filter(u => u.role === 'ETUDIANT').length,
+          professors:     data.filter(u => u.role === 'PROFESSEUR').length,
+          partners:       data.filter(u => u.role === 'PROFESSIONNEL').length,
+        }
+      }
     } catch (e) {
       error.value = getErrorMessage(e)
     } finally {
@@ -58,14 +57,11 @@ export const useAdminStore = defineStore('admin', () => {
   }
 
   async function fetchUsers() {
-    if (!isAdmin()) {
-      error.value = 'Accès refusé'
-      return
-    }
+    if (!isAdmin()) { error.value = 'Accès refusé'; return }
     try {
       loading.value = true
-      const res = await api.get('/admin/users')
-      users.value = res.data
+      const res = await api.get('/utilisateurs/')
+      users.value = extractData(res)
     } catch (e) {
       error.value = getErrorMessage(e)
     } finally {
@@ -73,21 +69,12 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
-  // ── createUser : crée via POST /api/auth/register ──────
-  // Corps attendu : { email, password, nom, prenom, role, telephone? }
-  // Rôles valides (enum Prisma) : ETUDIANT | PROFESSEUR | ADMINISTRATEUR | PROFESSIONNEL
   async function createUser(userData) {
-    if (!isAdmin()) {
-      return { success: false, message: 'Accès refusé' }
-    }
-    if (creatingUser.value) {
-      return { success: false, message: 'Création déjà en cours' }
-    }
-
+    if (!isAdmin()) return { success: false, message: 'Accès refusé' }
+    if (creatingUser.value) return { success: false, message: 'Création déjà en cours' }
     if (!userData?.email || !userData?.password || !userData?.firstName || !userData?.lastName) {
       return { success: false, message: 'Champs obligatoires manquants' }
     }
-
     creatingUser.value = true
     try {
       const payload = {
@@ -98,13 +85,9 @@ export const useAdminStore = defineStore('admin', () => {
         role:     mapRoleToEnum(userData.role),
         ...(userData.phone && { telephone: userData.phone }),
       }
-
-      const res = await api.post('/auth/register', payload)
-
-      // Rafraîchir la liste après création
+      await api.post('/auth/register', payload)
       await fetchUsers()
-
-      return { success: true, data: res.data }
+      return { success: true }
     } catch (e) {
       return { success: false, message: getErrorMessage(e) }
     } finally {
@@ -112,7 +95,6 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
-  // Convertit le label français du select vers l'enum Prisma
   function mapRoleToEnum(label) {
     const map = {
       'Étudiant':       'ETUDIANT',
@@ -124,29 +106,70 @@ export const useAdminStore = defineStore('admin', () => {
   }
 
   async function deleteUser(id) {
-    if (!isAdmin()) {
-      error.value = 'Accès refusé'
-      return
-    }
+    if (!isAdmin()) { error.value = 'Accès refusé'; return }
     try {
-      await api.delete(`/admin/users/${id}`)
-      users.value = users.value.filter(u => u.id_administrateur !== id)
+      await api.delete(`/utilisateurs/${id}`)
+      users.value = users.value.filter(u => u.id_utilisateur !== id && u.utilisateur?.id_utilisateur !== id)
     } catch (e) {
       error.value = getErrorMessage(e)
     }
   }
 
-  // ── File de vérification ───────────────────────────────
-  // GET /admin/verifications → Projets + Stages avec status_validation = EN_ATTENTE
+  async function updateUserRole(id, role) {
+    if (!isAdmin()) return { success: false, message: 'Accès refusé' }
+    try {
+      await api.patch(`/utilisateurs/${id}/role`, { role })
+      await fetchUsers()
+      return { success: true }
+    } catch (e) {
+      return { success: false, message: getErrorMessage(e) }
+    }
+  }
+
+  async function updateUserStatus(id, status) {
+    if (!isAdmin()) return { success: false, message: 'Accès refusé' }
+    try {
+      await api.patch(`/utilisateurs/${id}/statut`, { status })
+      await fetchUsers()
+      return { success: true }
+    } catch (e) {
+      return { success: false, message: getErrorMessage(e) }
+    }
+  }
+
   async function fetchVerificationQueue() {
-    if (!isAdmin()) {
-      error.value = 'Accès refusé'
-      return
-    }
+    if (!isAdmin()) { error.value = 'Accès refusé'; return }
     try {
       loading.value = true
-      const res = await api.get('/admin/verifications')
-      verificationQueue.value = res.data
+      const [activitesRes, prosRes] = await Promise.allSettled([
+        api.get('/activites/a-valider'),
+        api.get('/professionnels/en-attente'),
+      ])
+
+      const activites = activitesRes.status === 'fulfilled' ? (extractData(activitesRes.value) ?? []) : []
+      const pros      = prosRes.status      === 'fulfilled' ? (extractData(prosRes.value)      ?? []) : []
+
+      const mappedActivites = (Array.isArray(activites) ? activites : []).map(a => ({
+        id:          a.id_activite || a.id,
+        type:        'ACTIVITE',
+        title:       a.nom_activite || a.type_activite || 'Activité',
+        author:      a.etudiant?.utilisateur?.nom ? `${a.etudiant.utilisateur.prenom || ''} ${a.etudiant.utilisateur.nom || ''}`.trim() : a.etudiant?.nom || 'Étudiant',
+        description: a.description || '',
+        date:        a.date_demande || a.date_creation || a.date_debut || '',
+        entity:      a,
+      }))
+
+      const mappedPros = (Array.isArray(pros) ? pros : []).map(p => ({
+        id:          p.id_professionnel || p.id,
+        type:        'PROFESSIONNEL',
+        title:       p.entreprise || 'Professionnel',
+        author:      p.utilisateur?.nom ? `${p.utilisateur.prenom || ''} ${p.utilisateur.nom || ''}`.trim() : p.nom || 'Professionnel',
+        description: p.poste || p.missions || '',
+        date:        p.date_demande || p.date_creation || '',
+        entity:      p,
+      }))
+
+      verificationQueue.value = [...mappedActivites, ...mappedPros]
     } catch (e) {
       error.value = getErrorMessage(e)
     } finally {
@@ -154,50 +177,30 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
-  async function certifyPortfolio(id) {
-    if (!isAdmin()) {
-      return { success: false, message: 'Accès refusé' }
-    }
-    if (certifyingId.value === id) {
-      return { success: false, message: 'Certification déjà en cours' }
-    }
-    certifyingId.value = id
+  async function validateEntity(type, id, decision, comment) {
+    if (!isAdmin()) return { success: false, message: 'Accès refusé' }
+    validatingId.value = id
     try {
-      await api.post(`/admin/portfolios/${id}/certify`)
-      verificationQueue.value = verificationQueue.value.filter(p => p.id !== id)
+      if (type === 'ACTIVITE') {
+        await api.post(`/activites/${id}/valider`, { decision, ...(comment && { commentaire: comment }) })
+      } else if (type === 'PROFESSIONNEL') {
+        await api.patch(`/professionnels/${id}/valider`, { action: decision })
+      }
+      verificationQueue.value = verificationQueue.value.filter(v => !(v.id === id && v.type === type))
       return { success: true }
     } catch (e) {
       return { success: false, message: getErrorMessage(e) }
     } finally {
-      certifyingId.value = null
+      validatingId.value = null
     }
   }
 
-  async function requestCorrections(id, note) {
-    if (!isAdmin()) {
-      return { success: false, message: 'Accès refusé' }
-    }
-    if (!note?.trim()) {
-      return { success: false, message: 'Note de correction requise' }
-    }
-    try {
-      await api.post(`/admin/portfolios/${id}/corrections`, { note })
-      return { success: true }
-    } catch (e) {
-      return { success: false, message: getErrorMessage(e) }
-    }
-  }
-
-  // ── Historique des certifications ──────────────────────
   async function fetchCertHistory() {
-    if (!isAdmin()) {
-      error.value = 'Accès refusé'
-      return
-    }
+    if (!isAdmin()) { error.value = 'Accès refusé'; return }
     try {
       loading.value = true
-      const res = await api.get('/admin/certifications/history')
-      certHistory.value = res.data
+      const res = await api.get('/historique-actions/')
+      certHistory.value = extractData(res)
     } catch (e) {
       error.value = getErrorMessage(e)
     } finally {
@@ -205,15 +208,12 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
-  async function fetchPortfolios() {
-    if (!isAdmin()) {
-      error.value = 'Accès refusé'
-      return
-    }
+  async function fetchStudents() {
+    if (!isAdmin()) { error.value = 'Accès refusé'; return }
     try {
       loading.value = true
-      const res = await api.get('/admin/portfolios')
-      portfolios.value = res.data
+      const res = await api.get('/etudiants/')
+      students.value = extractData(res)
     } catch (e) {
       error.value = getErrorMessage(e)
     } finally {
@@ -222,10 +222,11 @@ export const useAdminStore = defineStore('admin', () => {
   }
 
   return {
-    users, verificationQueue, portfolios, certHistory, stats,
-    loading, error, creatingUser, certifyingId,
+    users, verificationQueue, students, certHistory, stats,
+    loading, error, creatingUser, validatingId,
     fetchDashboardStats, fetchUsers, createUser, deleteUser,
-    fetchVerificationQueue, certifyPortfolio, requestCorrections,
-    fetchPortfolios, fetchCertHistory,
+    updateUserRole, updateUserStatus,
+    fetchVerificationQueue, validateEntity,
+    fetchCertHistory, fetchStudents,
   }
 })
