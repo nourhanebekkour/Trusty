@@ -42,8 +42,8 @@
       </div>
       <div class="info-grid">
         <div><strong>Rôle</strong><p>{{ formatRole(auth.user?.role) }}</p></div>
+        <div><strong>École</strong><p>{{ auth.user?.ecole || '—' }}</p></div>
         <div><strong>Statut</strong><p>{{ auth.user?.status_compte || 'ACTIF' }}</p></div>
-        <div><strong>Inscription</strong><p>{{ formatDate(auth.user?.date_creation) }}</p></div>
       </div>
     </div>
   </div>
