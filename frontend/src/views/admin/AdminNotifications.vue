@@ -286,53 +286,18 @@ async function handleMarkAsRead(notification) {
 }
 
 async function handleMarkAllAsRead() {
-  loading.value = true
-  error.value = null
-
-  try {
-    await markAllNotificationsAsRead()
-
-    notifications.value = notifications.value.map(notification => ({
-      ...notification,
-      est_lue: true,
-    }))
-
-    if (selectedNotification.value) {
-      selectedNotification.value = {
-        ...selectedNotification.value,
-        est_lue: true,
-      }
-    }
-  } catch (err) {
-    error.value = err.response?.data?.message || 'Impossible de marquer toutes les notifications comme lues.'
-  } finally {
-    loading.value = false
-  }
+  await markAllNotificationsAsRead(notifications.value)
+  notifications.value.forEach(n => { n.est_lue = true })
 }
 
 async function handleDelete(notification) {
-  if (!notification?.id_notification) return
-
-  const confirmed = confirm('Voulez-vous vraiment supprimer cette notification ?')
-  if (!confirmed) return
-
-  actionLoadingId.value = notification.id_notification
-
+  if (!notification) return
+  const id = notification.id_notification || notification.id
   try {
-    await deleteNotification(notification.id_notification)
-
-    notifications.value = notifications.value.filter(
-      item => item.id_notification !== notification.id_notification
-    )
-
-    if (selectedNotification.value?.id_notification === notification.id_notification) {
-      selectedNotification.value = null
-    }
-  } catch (err) {
-    error.value = err.response?.data?.message || 'Impossible de supprimer cette notification.'
-  } finally {
-    actionLoadingId.value = null
-  }
+    await deleteNotification(id)
+  } catch (_) {}
+  notifications.value = notifications.value.filter(n => (n.id_notification || n.id) !== id)
+  if (selectedNotification.value === notification) selectedNotification.value = null
 }
 
 function openDetails(notification) {
@@ -385,9 +350,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.page {
-  padding: 32px;
-}
+.page { padding: 32px; }
 
 .page__header {
   display: flex;
@@ -399,20 +362,17 @@ onMounted(() => {
 .page__title {
   font-size: 24px;
   font-weight: 700;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   margin: 0;
 }
 
 .page__subtitle {
   font-size: 14px;
-  color: #8aada9;
+  color: var(--color-text-secondary);
   margin-top: 4px;
 }
 
-.page__actions {
-  display: flex;
-  gap: 12px;
-}
+.page__actions { display: flex; gap: 12px; }
 
 .stats-row {
   display: grid;
@@ -422,8 +382,8 @@ onMounted(() => {
 }
 
 .stat-card {
-  background: #1A3838;
-  border: 1px solid #2a4a48;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
   border-radius: 12px;
   padding: 18px;
 }
@@ -431,18 +391,18 @@ onMounted(() => {
 .stat-card__label {
   display: block;
   font-size: 13px;
-  color: #8aada9;
+  color: var(--color-text-secondary);
   margin-bottom: 8px;
 }
 
 .stat-card__value {
   font-size: 26px;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
 }
 
 .card {
-  background: #1A3838;
-  border: 1px solid #2a4a48;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
   border-radius: 12px;
   padding: 20px;
 }
@@ -458,13 +418,13 @@ onMounted(() => {
 .card__title {
   font-size: 16px;
   font-weight: 600;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   margin: 0;
 }
 
 .card__subtitle {
   font-size: 13px;
-  color: #8aada9;
+  color: var(--color-text-secondary);
   margin-top: 2px;
 }
 
@@ -478,23 +438,21 @@ onMounted(() => {
 .search-input,
 .select-input {
   height: 38px;
-  border: 1px solid #2a4a48;
-  background: #0f2424;
-  color: #D6EDE8;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+  color: var(--color-text-primary);
   border-radius: 8px;
   padding: 0 12px;
   font-size: 13px;
   outline: none;
 }
 
-.search-input {
-  width: 240px;
-}
+.search-input { width: 240px; }
 
 .search-input:focus,
 .select-input:focus {
-  border-color: #5C8C6A;
-  box-shadow: 0 0 0 3px rgba(92, 140, 106, 0.15);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-light);
 }
 
 .notification-list {
@@ -507,15 +465,15 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  border: 1px solid #2a4a48;
-  background: #0f2424;
+  border: 1px solid var(--color-border-light);
+  background: var(--color-surface-alt);
   border-radius: 10px;
   padding: 14px;
 }
 
 .notification-item--unread {
-  border-color: #5C8C6A;
-  background: #162e2e;
+  border-color: var(--color-accent);
+  background: var(--color-accent-light);
 }
 
 .notification-item__content {
@@ -535,7 +493,7 @@ onMounted(() => {
 }
 
 .notification-item__title {
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   font-size: 15px;
   font-weight: 600;
   margin: 0;
@@ -546,20 +504,20 @@ onMounted(() => {
   margin-top: 6px;
   padding: 3px 8px;
   border-radius: 999px;
-  background: #1A3838;
-  color: #8aada9;
+  background: var(--color-border-light);
+  color: var(--color-text-secondary);
   font-size: 11px;
   font-weight: 600;
 }
 
 .notification-item__date {
-  color: #4a6e6a;
+  color: var(--color-text-tertiary);
   font-size: 12px;
   white-space: nowrap;
 }
 
 .notification-item__message {
-  color: #c8deda;
+  color: var(--color-text-secondary);
   margin: 10px 0 0;
   font-size: 13px;
   line-height: 1.5;
@@ -582,85 +540,39 @@ onMounted(() => {
   transition: all 0.15s;
 }
 
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.btn--primary {
-  background: #5C8C6A;
-  color: #fff;
-}
+.btn--primary { background: var(--color-accent); color: #fff; }
+.btn--primary:hover { background: var(--color-accent-hover); }
 
-.btn--primary:hover {
-  background: #4a7058;
-}
+.btn--secondary { background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-secondary); }
+.btn--secondary:hover { background: var(--color-surface-hover); }
 
-.btn--secondary {
-  background: #1A3838;
-  border: 1px solid #2a4a48;
-  color: #c8deda;
-}
+.btn--ghost { background: transparent; border: 1px solid var(--color-border); color: var(--color-accent); }
+.btn--ghost:hover { background: var(--color-surface-hover); }
 
-.btn--secondary:hover {
-  background: #162e2e;
-}
+.btn--danger { background: #fef2f2; border: 1px solid #fecaca; color: var(--color-danger); }
+.btn--danger:hover { background: #fee2e2; }
 
-.btn--ghost {
-  background: transparent;
-  border: 1px solid #2a4a48;
-  color: #5C8C6A;
-}
+.btn--sm { padding: 6px 10px; font-size: 12px; }
 
-.btn--danger {
-  background: #3a1a1a;
-  border: 1px solid #6a2a2a;
-  color: #f87171;
-}
+.state-msg { text-align: center; padding: 26px; color: var(--color-text-tertiary); font-size: 13px; }
 
-.btn--sm {
-  padding: 6px 10px;
-  font-size: 12px;
-}
+.empty-state { text-align: center; padding: 36px; color: var(--color-text-tertiary); }
 
-.state-msg {
-  text-align: center;
-  padding: 26px;
-  color: #8aada9;
-  font-size: 13px;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 36px;
-  color: #8aada9;
-}
-
-.empty-state h3 {
-  color: #D6EDE8;
-  margin: 0 0 6px;
-  font-size: 16px;
-}
-
-.empty-state p {
-  margin: 0;
-  font-size: 13px;
-}
+.empty-state h3 { color: var(--color-text-primary); margin: 0 0 6px; font-size: 16px; }
+.empty-state p  { margin: 0; font-size: 13px; }
 
 .error-banner {
-  background: #3a1a1a;
-  border: 1px solid #6a2a2a;
-  color: #f87171;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  margin-bottom: 20px;
+  background: #fef2f2; border: 1px solid #fecaca;
+  color: var(--color-danger); padding: 10px 16px;
+  border-radius: 8px; font-size: 13px; margin-bottom: 20px;
 }
 
 .details-panel {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0,0,0,0.45);
   display: flex;
   justify-content: flex-end;
   z-index: 200;
@@ -669,10 +581,10 @@ onMounted(() => {
 .details-panel__box {
   width: 420px;
   height: 100%;
-  background: #1A3838;
-  border-left: 1px solid #2a4a48;
+  background: var(--color-surface);
+  border-left: 1px solid var(--color-border-light);
   padding: 24px;
-  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-panel);
 }
 
 .details-panel__header {
@@ -683,74 +595,39 @@ onMounted(() => {
   margin-bottom: 24px;
 }
 
-.details-panel__title {
-  color: #D6EDE8;
-  font-size: 18px;
-  margin: 0;
-}
+.details-panel__title { color: var(--color-text-primary); font-size: 18px; margin: 0; }
+.details-panel__subtitle { color: var(--color-text-secondary); font-size: 13px; margin-top: 4px; }
 
-.details-panel__subtitle {
-  color: #8aada9;
-  font-size: 13px;
-  margin-top: 4px;
-}
-
-.details-panel__body {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
+.details-panel__body { display: flex; flex-direction: column; gap: 14px; }
 
 .details-row {
   display: flex;
   justify-content: space-between;
-  border-bottom: 1px solid #2a4a48;
+  border-bottom: 1px solid var(--color-border-light);
   padding-bottom: 10px;
-  color: #8aada9;
+  color: var(--color-text-secondary);
   font-size: 13px;
 }
 
-.details-row strong {
-  color: #D6EDE8;
-}
+.details-row strong { color: var(--color-text-primary); }
 
 .details-message {
-  background: #0f2424;
-  color: #c8deda;
-  border: 1px solid #2a4a48;
+  background: var(--color-surface-alt);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-light);
   border-radius: 10px;
   padding: 14px;
   line-height: 1.6;
   font-size: 14px;
 }
 
-.details-panel__footer {
-  display: flex;
-  gap: 10px;
-  margin-top: 24px;
-}
+.details-panel__footer { display: flex; gap: 10px; margin-top: 24px; }
 
 @media (max-width: 900px) {
-  .page__header,
-  .card__header,
-  .notification-item {
-    flex-direction: column;
-  }
-
-  .stats-row {
-    grid-template-columns: 1fr;
-  }
-
-  .search-input {
-    width: 100%;
-  }
-
-  .filters {
-    width: 100%;
-  }
-
-  .details-panel__box {
-    width: 100%;
-  }
+  .page__header, .card__header, .notification-item { flex-direction: column; }
+  .stats-row { grid-template-columns: 1fr; }
+  .search-input { width: 100%; }
+  .filters { width: 100%; }
+  .details-panel__box { width: 100%; }
 }
 </style>

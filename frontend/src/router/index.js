@@ -89,6 +89,21 @@ const router = createRouter({
           name: 'admin-notifications',
           component: () => import('../views/admin/AdminNotifications.vue'),
         },
+        {
+          path: 'badges',
+          name: 'admin-badges',
+          component: () => import('../views/admin/AdminBadges.vue'),
+        },
+        {
+          path: 'historique',
+          name: 'admin-historique',
+          component: () => import('../views/admin/AdminHistorique.vue'),
+        },
+        {
+          path: 'profil',
+          name: 'admin-profile',
+          component: () => import('../views/admin/AdminProfile.vue'),
+        },
       ],
     },
 
