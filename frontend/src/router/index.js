@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import AdminLayout from '../components/admin/AdminLayout.vue'
 import LoginView from '../views/loginview.vue'
+import RegisterView from '@/views/registerview.vue'
+import VerifyEmailView from '@/views/VerifyEmailView.vue'
 import Dashboard from '@/views/Etudiant/Dashboard.vue'
 import ProjectList from '@/views/Etudiant/ProjectList.vue'
 import Settings from '@/views/Settings.vue'
@@ -23,6 +25,7 @@ const roleHome = {
   ETUDIANT: '/dashboard',
 }
 
+const publicRoutes = ['home', 'login', 'register', 'about', 'verify-email']
 const studentMeta = { requiresAuth: true, roles: ['ETUDIANT'] }
 const adminMeta = { requiresAuth: true, roles: ['ADMINISTRATEUR'] }
 const professionalMeta = { requiresAuth: true, roles: ['PROFESSIONNEL'] }
@@ -42,9 +45,19 @@ const router = createRouter({
       component: () => import('../views/Etudiant/Parcours.vue'),
     },
     {
+      path: '/register',
+      name: 'register',
+      component: RegisterView,
+    },
+    {
       path: '/login',
       name: 'login',
       component: LoginView,
+    },
+    {
+      path: '/verify-email',
+      name: 'verify-email',
+      component: VerifyEmailView,
     },
     {
       path: '/administrateur',
@@ -190,19 +203,19 @@ const router = createRouter({
 
 router.beforeEach(async to => {
   const authStore = useAuthStore()
-  const publicRoutes = ['home', 'login', 'about']
 
   if (!publicRoutes.includes(to.name) && !authStore.user) {
     await authStore.fetchUser()
   }
 
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return { name: 'login', query: { redirect: to.fullPath } }
+  const userRole = authStore.user?.role
+
+  if (authStore.isAuthenticated && ['login', 'register'].includes(to.name)) {
+    return roleHome[userRole] || '/'
   }
 
-  const userRole = authStore.user?.role
-  if (authStore.isAuthenticated && to.name === 'login') {
-    return roleHome[userRole] || '/'
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    return { name: 'login', query: { redirect: to.fullPath } }
   }
 
   const allowedRoles = to.meta.roles

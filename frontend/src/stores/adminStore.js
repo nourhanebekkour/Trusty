@@ -83,6 +83,19 @@ function normalizeHistory(action) {
   }
 }
 
+function formatApiError(error, fallback) {
+  const errors = error.response?.data?.errors
+  if (Array.isArray(errors) && errors.length > 0) {
+    return errors.map(item => item.message).join(' ')
+  }
+
+  if (error.response?.status === 403) {
+    return "Action refusee par le backend. Verifiez le role et le niveau d'acces du compte connecte."
+  }
+
+  return error.response?.data?.message || fallback
+}
+
 export const useAdminStore = defineStore('admin', () => {
   const users = ref([])
   const verificationQueue = ref([])
@@ -154,7 +167,6 @@ export const useAdminStore = defineStore('admin', () => {
         email: userData.email,
         nom: userData.lastName,
         prenom: userData.firstName,
-        ...(userData.ecole && role !== 'PROFESSIONNEL' && { ecole: userData.ecole }),
       }
 
       let response
@@ -162,13 +174,14 @@ export const useAdminStore = defineStore('admin', () => {
         response = await api.post('/auth/admin/create-user', {
           ...basePayload,
           niveau_acces: userData.niveau_acces || 'ADMIN',
+          ...(userData.niveau_acces !== 'SUPER_ADMIN' && userData.ecole && { ecole: userData.ecole }),
         })
       } else {
         response = await api.post('/auth/register', {
           ...basePayload,
           password: userData.password,
           role,
-          ...(userData.phone && { telephone: userData.phone }),
+          ...(role !== 'PROFESSIONNEL' && userData.ecole && { ecole: userData.ecole }),
         })
       }
 
@@ -177,7 +190,7 @@ export const useAdminStore = defineStore('admin', () => {
     } catch (e) {
       return {
         success: false,
-        message: e.response?.data?.message || 'Erreur lors de la creation',
+        message: formatApiError(e, 'Erreur lors de la creation'),
       }
     }
   }

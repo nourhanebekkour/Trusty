@@ -12,6 +12,10 @@
       :favoris-count="store.favoris.length"
     />
 
+    <div v-if="store.erreur" class="professional-alert">
+      {{ store.erreur }}
+    </div>
+
     <!-- Colonnes -->
     <div class="columns">
       <!-- Gauche -->
@@ -20,6 +24,7 @@
           :candidats="store.candidats"
           :selected-id="selectedId"
           :recs-emises="store.recsEmises"
+          :loading="store.loading.candidats"
           @select="handleSelect"
           @ouvrir-formulaire="handleOuvrirFormulaire"
         />
@@ -79,8 +84,8 @@ function handleOuvrirFormulaire(candidat) {
   selectedCandidat.value = candidat
 }
 
-function handleEnvoyer({ texte, type }) {
-  store.envoyerRecommandation(selectedCandidat.value, texte, type)
+async function handleEnvoyer({ texte, type }) {
+  await store.envoyerRecommandation(selectedCandidat.value, texte, type)
   selectedCandidat.value = null
   selectedId.value       = null
 }

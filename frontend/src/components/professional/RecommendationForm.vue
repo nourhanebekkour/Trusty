@@ -1,38 +1,37 @@
 <template>
-  <div class="card rec-form-card" v-if="candidat" style="margin-top: 20px;">
+  <div v-if="candidat" class="card rec-form-card" style="margin-top: 20px;">
     <div class="card-header">
       <div class="card-title">
-        <i class="ti ti-quote"></i> Recommandation pour
-        <span class="rec-for-name">{{ candidat.nom }}</span>
+        Recommandation pour <span class="rec-for-name">{{ candidat.nom }}</span>
       </div>
-      <div class="card-action" @click="emit('fermer')">
-        <i class="ti ti-x"></i> Fermer
-      </div>
+      <button class="card-action" type="button" @click="emit('fermer')">
+        Fermer
+      </button>
     </div>
 
     <div class="rec-type-row">
-      <div
+      <button
         class="rec-type-card"
+        type="button"
         :class="{ active: recType === 'rapide' }"
         @click="recType = 'rapide'"
       >
-        <i class="ti ti-zap"></i>
         <div>
-          <div class="rec-type-title">Repas Rapide (Flux interne)</div>
-          <div class="rec-type-sub">Court commentaire partagé sur votre flux</div>
+          <div class="rec-type-title">Recommandation rapide</div>
+          <div class="rec-type-sub">Court commentaire professionnel</div>
         </div>
-      </div>
-      <div
+      </button>
+      <button
         class="rec-type-card"
+        type="button"
         :class="{ active: recType === 'officielle' }"
         @click="recType = 'officielle'"
       >
-        <i class="ti ti-certificate"></i>
         <div>
-          <div class="rec-type-title">Recommandation Officielle (Citation)</div>
-          <div class="rec-type-sub">Recommandation formelle épinglée sur le portfolio</div>
+          <div class="rec-type-title">Recommandation officielle</div>
+          <div class="rec-type-sub">Message formel soumis via l'API existante</div>
         </div>
-      </div>
+      </button>
     </div>
 
     <textarea
@@ -40,16 +39,15 @@
       class="rec-textarea"
       :placeholder="recType === 'rapide'
         ? 'Ajoutez un court commentaire professionnel sur ce candidat...'
-        : 'Rédigez une recommandation formelle qui sera épinglée sur le portfolio de l\'étudiant...'"
+        : 'Redigez une recommandation formelle pour ce profil etudiant...'"
       rows="4"
     ></textarea>
 
     <div class="rec-form-footer">
       <span class="rec-form-hint">
-        <i class="ti ti-info-circle"></i>
         {{ recType === 'officielle'
-          ? 'Sera visible sur le portfolio · Signé & certifié par votre organisation'
-          : 'Partagé sur votre flux professionnel interne' }}
+          ? "Cree une recommandation EN_ATTENTE pour l'etudiant."
+          : "Utilise le meme endpoint backend avec un message court." }}
       </span>
       <span class="rec-char-count" :class="{ warn: recTexte.length > 400 }">
         {{ recTexte.length }}/500
@@ -59,13 +57,13 @@
     <div class="action-bar-form">
       <button
         class="btn-primary btn-action"
+        type="button"
         :disabled="!recTexte.trim() || recTexte.length > 500"
         @click="envoyer"
       >
-        <i class="ti ti-send"></i>
-        {{ recType === 'rapide' ? 'Partager sur mon flux' : 'Signer & Certifier' }}
+        {{ recType === 'rapide' ? 'Envoyer' : 'Envoyer la recommandation' }}
       </button>
-      <button class="btn-ghost btn-action" @click="emit('fermer')">
+      <button class="btn-ghost btn-action" type="button" @click="emit('fermer')">
         Annuler
       </button>
     </div>
@@ -75,22 +73,25 @@
 <script setup>
 import { ref } from 'vue'
 
-const props = defineProps({
+defineProps({
   candidat: { type: Object, default: null },
 })
 
 const emit = defineEmits(['envoyer', 'fermer'])
 
 const recTexte = ref('')
-const recType  = ref('officielle')
+const recType = ref('officielle')
 
 function envoyer() {
-  if (!recTexte.value.trim() || recTexte.value.length > 500) return
+  const texte = recTexte.value.trim()
+  if (!texte || texte.length > 500) return
+
   emit('envoyer', {
-    texte: recTexte.value,
-    type:  recType.value,
+    texte,
+    type: recType.value,
   })
+
   recTexte.value = ''
-  recType.value  = 'officielle'
+  recType.value = 'officielle'
 }
 </script>

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import {
   fetchCandidats,
   envoyerRecommandation as apiEnvoyerRecommandation,
@@ -7,116 +7,86 @@ import {
   marquerNotificationLue,
 } from '@/services/professionalservices.js'
 
-// ── Helpers visuels exportés ───────────────────────────────────────────────────
-
 const GRADIENTS = [
-  'linear-gradient(135deg,#378ADD,#85B7EB)',
-  'linear-gradient(135deg,#D4537E,#ED93B1)',
-  'linear-gradient(135deg,#1D9E75,#5DCAA5)',
-  'linear-gradient(135deg,#BA7517,#EF9F27)',
-]
-
-const DEFAULT_CANDIDATS = [
-  {
-    id_etudiant: 'demo-thomas',
-    filiere: 'Ingenierie Logicielle',
-    ville: 'Tanger',
-    score_credibilite: 88,
-    biographie: 'Architecture cloud, Docker, Kubernetes et projets fullstack valides.',
-    utilisateur: { prenom: 'Thomas', nom: 'Bernard', ecole: 'ENSATanger' },
-  },
-  {
-    id_etudiant: 'demo-lea',
-    filiere: 'Design Numerique',
-    ville: 'Tetouan',
-    score_credibilite: 94,
-    biographie: 'UX/UI, prototypes mobiles et portfolio public complet.',
-    utilisateur: { prenom: 'Lea', nom: 'Martin', ecole: 'ENSATetouan' },
-  },
-  {
-    id_etudiant: 'demo-alex',
-    filiere: 'Data Science',
-    ville: 'Al Hoceima',
-    score_credibilite: 76,
-    biographie: 'Analyse de donnees, NLP et projets d aide a la decision.',
-    utilisateur: { prenom: 'Alexandre', nom: 'Gauthier', ecole: 'ENSAAlHoceima' },
-  },
+  'linear-gradient(135deg,#5C8C6A,#D6EDE8)',
+  'linear-gradient(135deg,#378ADD,#D8EEF9)',
+  'linear-gradient(135deg,#A87832,#FFF2C9)',
+  'linear-gradient(135deg,#8E5AD8,#EDE4FF)',
 ]
 
 function hashId(id) {
-  const str = String(id)
+  const str = String(id || '')
   let h = 0
   for (let i = 0; i < str.length; i++) h += str.charCodeAt(i)
   return h
 }
 
 export function normaliserCandidat(e) {
-  const u        = e.utilisateur ?? {}
-  const prenom   = u.prenom ?? ''
-  const nom      = u.nom    ?? ''
-  const hasName  = prenom || nom
+  const u = e.utilisateur ?? {}
+  const prenom = u.prenom ?? ''
+  const nom = u.nom ?? ''
+  const hasName = prenom || nom
+  const shortId = e.id_etudiant?.slice?.(-4)?.toUpperCase?.() || '----'
+  const sources = Array.isArray(e.sources) ? e.sources : []
+  const sourceLabel = sources.length ? sources.join(' + ') : 'API partielle'
+
   return {
-    id:          e.id_etudiant,
-    nom:         hasName ? `${prenom} ${nom}`.trim() : `Étudiant ${e.id_etudiant?.slice(-4) ?? ''}`,
-    initiales:   hasName ? `${prenom[0] ?? '?'}${nom[0] ?? '?'}`.toUpperCase() : '??',
-    formation:   e.filiere ?? '',
-    ecole:       u.ecole ?? 'UAE',
-    ville:       e.ville ?? '',
-    score:       e.score_credibilite ?? 0,
-    gradient:    GRADIENTS[hashId(e.id_etudiant) % GRADIENTS.length],
-    icon:        'user',
-    color:       'blue',
-    description: e.biographie ?? e.objectif_professionnel ?? '',
+    id: e.id_etudiant,
+    nom: hasName ? `${prenom} ${nom}`.trim() : `Etudiant ${shortId}`,
+    initiales: hasName ? `${prenom[0] ?? '?'}${nom[0] ?? '?'}`.toUpperCase() : shortId.slice(-2),
+    formation: e.filiere || e.last_activity_label || 'Profil etudiant',
+    ecole: u.ecole || 'Ecole non exposee',
+    ville: e.ville || '',
+    score: e.score_credibilite ?? 0,
+    gradient: GRADIENTS[hashId(e.id_etudiant) % GRADIENTS.length],
+    icon: 'user',
+    color: 'blue',
+    description: e.biographie || e.objectif_professionnel || `Candidat detecte via ${sourceLabel}. Les informations d'identite completes necessitent une API professionnelle dediee.`,
+    sources,
   }
 }
 
 export function normaliserNotif(n, index, total) {
   return {
-    id:      n.id_notification,
-    nom:     n.titre ?? '',
+    id: n.id_notification,
+    nom: n.titre ?? '',
     message: n.message ?? '',
-    time:    new Date(n.date_creation).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }),
-    color:   n.est_lue ? '#a0b4ae' : '#66c99f',
-    last:    index === total - 1,
+    time: new Date(n.date_creation).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }),
+    color: n.est_lue ? '#a0b4ae' : '#5C8C6A',
+    last: index === total - 1,
   }
 }
 
 export function normaliserRec(r) {
-  const u      = r.cible?.utilisateur ?? r.auteur ?? {}
+  const u = r.cible?.utilisateur ?? r.auteur ?? {}
   const prenom = u.prenom ?? ''
-  const nom    = u.nom    ?? ''
-  const date   = new Date(r.date_creation)
-  const mois   = date.toLocaleString('fr-FR', { month: 'long' })
+  const nom = u.nom ?? ''
+  const date = new Date(r.date_creation || Date.now())
+  const mois = date.toLocaleString('fr-FR', { month: 'long' })
+
   return {
     candidatId: r.id_etudiant,
-    nom:        `${prenom} ${nom}`.trim(),
-    initiales:  `${prenom[0] ?? '?'}${nom[0] ?? '?'}`.toUpperCase(),
-    gradient:   GRADIENTS[0],
-    type:       'officielle',
-    extrait:    r.message ? (r.message.length > 60 ? r.message.slice(0, 60) + '…' : r.message) : '',
-    date:       `${mois.charAt(0).toUpperCase() + mois.slice(1)} ${date.getFullYear()}`,
+    nom: `${prenom} ${nom}`.trim() || `Etudiant ${r.id_etudiant?.slice?.(-4) || ''}`,
+    initiales: `${prenom[0] ?? '?'}${nom[0] ?? '?'}`.toUpperCase(),
+    gradient: GRADIENTS[0],
+    type: 'officielle',
+    extrait: r.message ? (r.message.length > 60 ? `${r.message.slice(0, 60)}...` : r.message) : '',
+    date: `${mois.charAt(0).toUpperCase() + mois.slice(1)} ${date.getFullYear()}`,
   }
 }
 
-// ── Store ──────────────────────────────────────────────────────────────────────
-
 export const useProfessionalStore = defineStore('professional', () => {
-
-  // ── État
-  const candidats     = ref(DEFAULT_CANDIDATS.map(normaliserCandidat))
-  const recsEmises    = ref([])
+  const candidats = ref([])
+  const recsEmises = ref([])
   const notifications = ref([])
-  const favoris       = ref([])
-  const consultes     = ref(0)
-  const loading       = ref({ candidats: false, notifs: false })
-  const erreur        = ref(null)
+  const favoris = ref([])
+  const consultes = ref(0)
+  const loading = ref({ candidats: false, notifs: false })
+  const erreur = ref(null)
 
-  // ── Getters
-  const totalRecs          = computed(() => recsEmises.value.length)
-  const candidatsFavoris   = computed(() => candidats.value.filter(c => favoris.value.includes(c.id)))
+  const totalRecs = computed(() => recsEmises.value.length)
+  const candidatsFavoris = computed(() => candidats.value.filter(c => favoris.value.includes(c.id)))
   const candidatsEnAttente = computed(() => candidats.value.filter(c => !aRecommande(c.id)).length)
-
-  // ── Actions API
 
   async function chargerCandidats() {
     loading.value.candidats = true
@@ -124,8 +94,12 @@ export const useProfessionalStore = defineStore('professional', () => {
     try {
       const data = await fetchCandidats()
       candidats.value = data.map(normaliserCandidat)
+      if (candidats.value.length === 0) {
+        erreur.value = "Aucun candidat exploitable avec les APIs actuelles. L'annuaire professionnel dedie est documente comme API manquante."
+      }
     } catch (e) {
-      erreur.value = e.message
+      candidats.value = []
+      erreur.value = e.message || 'Impossible de charger les candidats avec les APIs existantes.'
     } finally {
       loading.value.candidats = false
     }
@@ -137,7 +111,7 @@ export const useProfessionalStore = defineStore('professional', () => {
       const data = await fetchNotifications()
       notifications.value = data.map((n, i) => normaliserNotif(n, i, data.length))
     } catch (e) {
-      erreur.value = e.message
+      erreur.value = e.message || 'Impossible de charger les notifications.'
     } finally {
       loading.value.notifs = false
     }
@@ -145,27 +119,30 @@ export const useProfessionalStore = defineStore('professional', () => {
 
   async function envoyerRecommandation(candidat, texte, type) {
     try {
-      if (!String(candidat.id).startsWith('demo-')) {
-        await apiEnvoyerRecommandation(candidat.id, texte)
+      if (!candidat?.id) {
+        throw new Error('Candidat invalide')
       }
-      const now  = new Date()
+
+      await apiEnvoyerRecommandation(candidat.id, texte)
+
+      const now = new Date()
       const mois = now.toLocaleString('fr-FR', { month: 'long' })
       recsEmises.value.unshift({
         candidatId: candidat.id,
-        nom:        candidat.nom,
-        initiales:  candidat.initiales,
-        gradient:   candidat.gradient,
+        nom: candidat.nom,
+        initiales: candidat.initiales,
+        gradient: candidat.gradient,
         type,
-        extrait:    texte.length > 60 ? texte.slice(0, 60) + '…' : texte,
-        date:       `${mois.charAt(0).toUpperCase() + mois.slice(1)} ${now.getFullYear()}`,
+        extrait: texte.length > 60 ? `${texte.slice(0, 60)}...` : texte,
+        date: `${mois.charAt(0).toUpperCase() + mois.slice(1)} ${now.getFullYear()}`,
       })
       notifications.value.unshift({
-        id:      Date.now(),
-        nom:     '',
-        message: `Recommandation envoyée à ${candidat.nom}`,
-        time:    "À l'instant",
-        color:   '#66c99f',
-        last:    false,
+        id: Date.now(),
+        nom: '',
+        message: `Recommandation envoyee a ${candidat.nom}`,
+        time: "A l'instant",
+        color: '#5C8C6A',
+        last: false,
       })
     } catch (e) {
       erreur.value = e.message
@@ -182,8 +159,6 @@ export const useProfessionalStore = defineStore('professional', () => {
       erreur.value = e.message
     }
   }
-
-  // ── Actions locales
 
   function aRecommande(id) {
     return recsEmises.value.some(r => r.candidatId === id)
@@ -207,10 +182,23 @@ export const useProfessionalStore = defineStore('professional', () => {
   }
 
   return {
-    candidats, recsEmises, notifications, favoris, consultes, loading, erreur,
-    totalRecs, candidatsFavoris, candidatsEnAttente,
-    init, chargerCandidats, chargerNotifications,
-    envoyerRecommandation, marquerLue,
-    aRecommande, incrementerConsultes, toggleFavori,
+    candidats,
+    recsEmises,
+    notifications,
+    favoris,
+    consultes,
+    loading,
+    erreur,
+    totalRecs,
+    candidatsFavoris,
+    candidatsEnAttente,
+    init,
+    chargerCandidats,
+    chargerNotifications,
+    envoyerRecommandation,
+    marquerLue,
+    aRecommande,
+    incrementerConsultes,
+    toggleFavori,
   }
 })

@@ -201,10 +201,6 @@
             <input id="email" v-model.trim="newUser.email" class="admin-input" type="email" required />
           </div>
           <div class="admin-field">
-            <label for="phone">Telephone</label>
-            <input id="phone" v-model.trim="newUser.phone" class="admin-input" type="tel" />
-          </div>
-          <div class="admin-field">
             <label for="role">Role plateforme</label>
             <select id="role" v-model="newUser.role" class="admin-select">
               <option>Etudiant</option>
@@ -215,7 +211,13 @@
           </div>
           <div class="admin-field">
             <label for="ecole">Ecole</label>
-            <select id="ecole" v-model="newUser.ecole" class="admin-select" :disabled="newUser.role === 'Professionnel'">
+            <select
+              id="ecole"
+              v-model="newUser.ecole"
+              class="admin-select"
+              :disabled="newUser.role === 'Professionnel' || (newUser.role === 'Administrateur' && newUser.niveau_acces === 'SUPER_ADMIN')"
+              :required="newUser.role !== 'Professionnel' && !(newUser.role === 'Administrateur' && newUser.niveau_acces === 'SUPER_ADMIN')"
+            >
               <option value="">Non renseignee</option>
               <option v-for="ecole in ecoles" :key="ecole" :value="ecole">{{ ecole }}</option>
             </select>
@@ -274,7 +276,6 @@ const emptyUser = () => ({
   firstName: '',
   lastName: '',
   email: '',
-  phone: '',
   role: 'Etudiant',
   ecole: '',
   password: '',

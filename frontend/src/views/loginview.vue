@@ -74,6 +74,10 @@
           Consulter les portfolios publics
         </button>
 
+        <div class="footer-links">
+          Vous n'avez pas encore de compte ? <router-link to="/register">Inscrivez-vous</router-link>
+        </div>
+
       </form>
     </div>
 
@@ -370,5 +374,22 @@ h2 {
   color: #e8f0ee;
   border-radius: 8px;
   cursor: pointer;
+}
+
+.footer-links {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 13px;
+  color: #a8bdb8;
+}
+
+.footer-links a {
+  color: #5C8C6A;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.footer-links a:hover {
+  text-decoration: underline;
 }
 </style>

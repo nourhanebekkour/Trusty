@@ -1,65 +1,51 @@
 <template>
-  <aside class="sidebar" :class="{ collapsed: isCollapsed }">
-
-    <div class="sidebar-header">
-      <button class="toggle-btn" @click="toggleSidebar">
-        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="3" y1="12" x2="21" y2="12"></line>
-          <line x1="3" y1="6"  x2="21" y2="6"></line>
-          <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
-      </button>
-    </div>
-
-    <nav class="sidebar-nav">
-      <router-link to="/professional/dashboard" class="nav-item">
-        <img :src="iconDashboard" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">Dashboard</span>
-      </router-link>
-
-      <router-link to="/professional/recommandations" class="nav-item">
-        <img :src="iconRecommandations" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">Recommandations</span>
-      </router-link>
-
-      <router-link to="/professional/notifications" class="nav-item">
-        <img :src="iconNotifications" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">Notifications</span>
-      </router-link>
+  <aside class="professional-sidebar">
+    <nav class="professional-sidebar__nav" aria-label="Navigation professionnel">
+      <RouterLink
+        v-for="item in navItems"
+        :key="item.route"
+        :to="item.route"
+        class="professional-sidebar__item"
+        :class="{ 'professional-sidebar__item--active': isActive(item.route) }"
+      >
+        <span class="professional-sidebar__dot"></span>
+        <span>{{ item.label }}</span>
+      </RouterLink>
     </nav>
 
-    <div class="sidebar-bottom">
-      <router-link to="/settings" class="nav-item">
-        <img :src="iconSettings" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">Paramètres</span>
-      </router-link>
+    <div class="professional-sidebar__bottom">
+      <RouterLink
+        to="/settings"
+        class="professional-sidebar__item"
+        :class="{ 'professional-sidebar__item--active': isActive('/settings') }"
+      >
+        <span class="professional-sidebar__dot"></span>
+        <span>Parametres</span>
+      </RouterLink>
 
-      <button class="nav-item logout-btn" @click="handleLogout">
-        <img :src="iconLogout" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">Déconnexion</span>
+      <button class="professional-sidebar__logout" type="button" @click="handleLogout">
+        Deconnexion
       </button>
     </div>
-
   </aside>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authstore'
-import { useRouter } from 'vue-router'
 
-import iconDashboard       from '@/assets/icons/dashboard.svg'
-import iconRecommandations from '@/assets/icons/recommandations.svg'
-import iconNotifications   from '@/assets/icons/notifications.svg'
-import iconSettings        from '@/assets/icons/settings.svg'
-import iconLogout          from '@/assets/icons/logout.svg'
+const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
 
-const isCollapsed = ref(false)
-const authStore   = useAuthStore()
-const router      = useRouter()
+const navItems = [
+  { label: 'Dashboard', route: '/professional/dashboard' },
+  { label: 'Recommandations', route: '/professional/recommandations' },
+  { label: 'Notifications', route: '/professional/notifications' },
+]
 
-function toggleSidebar() {
-  isCollapsed.value = !isCollapsed.value
+function isActive(routePath) {
+  return route.path === routePath || route.path.startsWith(`${routePath}/`)
 }
 
 async function handleLogout() {
@@ -69,118 +55,90 @@ async function handleLogout() {
 </script>
 
 <style scoped>
-.sidebar {
-  width: 235px;
-  background-color: #3D3D3D;
+.professional-sidebar {
+  width: 220px;
+  background: #f4f2ec;
+  border-right: 1px solid #d8d2c6;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   flex-shrink: 0;
-  transition: width 0.3s ease;
   min-height: 100%;
+  padding: 18px 12px;
 }
 
-.sidebar.collapsed {
-  width: 70px;
-}
-
-.sidebar-header {
-  padding: 16px 16px 0 16px;
-  display: flex;
-  justify-content: flex-start;
-}
-
-.sidebar.collapsed .sidebar-header {
-  justify-content: center;
-  padding: 16px 0 0 0;
-}
-
-.toggle-btn {
-  background: #0D2B2B;
-  border: none;
-  cursor: pointer;
-  color: #D6EDE8;
-  padding: 8px 14px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.toggle-btn:hover {
-  background-color: #EDEADE;
-}
-
-.sidebar-nav {
-  flex: 1;
-  padding: 12px 8px;
+.professional-sidebar__nav,
+.professional-sidebar__bottom {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.professional-sidebar__bottom {
+  padding-top: 14px;
+  border-top: 1px solid #d8d2c6;
+}
+
+.professional-sidebar__item,
+.professional-sidebar__logout {
   width: 100%;
-  box-sizing: border-box;
-  height: 40px;
-  padding: 0 12px;
-  color: #D6EDE8;
-  background-color: #0D2B2B;
-  font-family: Inter, sans-serif;
-  font-size: 14px;
-  font-weight: 400;
+  min-height: 42px;
   border: none;
-  border-radius: 10px;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-}
-
-.sidebar.collapsed .nav-item {
-  justify-content: center;
-  padding: 0;
-}
-
-.nav-item:hover {
-  background: #E5E1D5;
-}
-
-.router-link-active {
-  background-color: #5C8C6A;
-  color: white;
-}
-
-.router-link-active .nav-icon {
-  filter: brightness(0) invert(1);
-}
-
-.nav-icon {
-  width: 20px;
-  height: 20px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-
-.sidebar-bottom {
-  padding: 10px 8px;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 0 12px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.logout-btn {
+  align-items: center;
+  gap: 11px;
+  background: transparent;
+  color: #46615c;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: left;
+  text-decoration: none;
   cursor: pointer;
-  justify-content: flex-start;
 }
 
-.sidebar.collapsed .logout-btn {
-  justify-content: center;
+.professional-sidebar__item:hover {
+  background: #e8f0ec;
+  color: #0d2b2b;
 }
 
-.logout-btn:hover {
-  color: red;
+.professional-sidebar__item--active {
+  background: #d6ede8;
+  color: #0d2b2b;
+}
+
+.professional-sidebar__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #b7c8c1;
+}
+
+.professional-sidebar__item--active .professional-sidebar__dot {
+  background: #5c8c6a;
+}
+
+.professional-sidebar__logout {
+  color: #b54747;
+}
+
+.professional-sidebar__logout:hover {
+  background: #f8e8e5;
+  color: #9d2f2f;
+}
+
+@media (max-width: 900px) {
+  .professional-sidebar {
+    width: 100%;
+    min-height: auto;
+    border-right: none;
+    border-bottom: 1px solid #d8d2c6;
+  }
+
+  .professional-sidebar__nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 </style>

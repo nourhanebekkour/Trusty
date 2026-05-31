@@ -15,32 +15,24 @@ function uniqueById(items) {
   })
 }
 
-const fallbackCandidats = [
-  {
-    id_etudiant: 'demo-thomas',
-    filiere: 'Ingenierie Logicielle',
-    ville: 'Tanger',
-    score_credibilite: 88,
-    biographie: 'Architecture cloud, Docker, Kubernetes et projets fullstack valides.',
-    utilisateur: { prenom: 'Thomas', nom: 'Bernard' },
-  },
-  {
-    id_etudiant: 'demo-lea',
-    filiere: 'Design Numerique',
-    ville: 'Tetouan',
-    score_credibilite: 94,
-    biographie: 'UX/UI, prototypes mobiles et portfolio public complet.',
-    utilisateur: { prenom: 'Lea', nom: 'Martin' },
-  },
-  {
-    id_etudiant: 'demo-alex',
-    filiere: 'Data Science',
-    ville: 'Al Hoceima',
-    score_credibilite: 76,
-    biographie: 'Analyse de donnees, NLP et projets d aide a la decision.',
-    utilisateur: { prenom: 'Alexandre', nom: 'Gauthier' },
-  },
-]
+function mergeCandidateSources(candidates) {
+  const byId = new Map()
+
+  candidates.forEach(candidate => {
+    if (!candidate?.id_etudiant) return
+
+    const existing = byId.get(candidate.id_etudiant) || {}
+    const sources = new Set([...(existing.sources || []), ...(candidate.sources || [])])
+
+    byId.set(candidate.id_etudiant, {
+      ...existing,
+      ...candidate,
+      sources: [...sources],
+    })
+  })
+
+  return uniqueById([...byId.values()])
+}
 
 export async function fetchCandidats() {
   try {
@@ -52,15 +44,27 @@ export async function fetchCandidats() {
     const stages = stagesResult.status === 'fulfilled' ? extractData(stagesResult.value) : []
     const projets = projetsResult.status === 'fulfilled' ? extractData(projetsResult.value) : []
 
-    const stageStudents = stages.map(stage => stage.etudiant).filter(Boolean)
+    const stageStudents = stages
+      .map(stage => stage.etudiant && {
+        ...stage.etudiant,
+        sources: ['STAGE'],
+        last_activity_label: stage.poste || stage.entreprise || 'Stage',
+      })
+      .filter(Boolean)
+
     const projectStudents = projets.flatMap(project =>
-      (project.participations || []).map(participation => participation.etudiant).filter(Boolean)
+      (project.participations || [])
+        .map(participation => participation.etudiant && {
+          ...participation.etudiant,
+          sources: ['PROJET'],
+          last_activity_label: project.titre || 'Projet',
+        })
+        .filter(Boolean)
     )
 
-    const candidates = uniqueById([...stageStudents, ...projectStudents])
-    return candidates.length ? candidates : fallbackCandidats
+    return mergeCandidateSources([...stageStudents, ...projectStudents])
   } catch {
-    return fallbackCandidats
+    return []
   }
 }
 
