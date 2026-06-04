@@ -5,10 +5,11 @@ import SideBar from './components/laayout/SideBar.vue'
 import NavBar from './components/laayout/NavBar.vue'
 import Footer from './components/laayout/Footer.vue'
 import ProfessionalSideBar from './components/professional/ProfessionalSideBar.vue'
-import ProfessorSideBar    from './components/professor/ProfessorSidebar.vue'
 import { useAuthStore } from './stores/authstore'
+import { useThemeStore } from './stores/themeStore'
 
 const authStore = useAuthStore()
+const theme = useThemeStore()
 const route = useRoute()
 const router = useRouter()
 
@@ -51,6 +52,7 @@ function enforceRoleGuard() {
 }
 
 onMounted(async () => {
+  theme.init()
   if (route.name && !PUBLIC_ROUTES.includes(route.name)) {
     await authStore.fetchUser()
   }

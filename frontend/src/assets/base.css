@@ -22,9 +22,52 @@
   --color-purple-text:    #6D28D9;
   --color-purple-border:  #D8B4FE;
   --color-danger:         #ef4444;
+  --color-info-text:      #2563eb;
+  --color-info-bg:        #EFF6FF;
+  --color-btn-text:       #0D2B2B;
+  --color-accent-gradient: linear-gradient(135deg, #3D6B5E, #5C8C6A);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
   --shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.08);
   --radius-panel: 8px;
   --section-gap: 160px;
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] {
+  --color-page-bg:        #0F172A;
+  --color-surface:        #1E293B;
+  --color-surface-alt:    #334155;
+  --color-surface-hover:  #2D3A50;
+  --color-text-primary:   #F1F5F9;
+  --color-text-secondary: #94A3B8;
+  --color-text-tertiary:  #64748B;
+  --color-accent:         #5C8C6A;
+  --color-accent-hover:   #6DAF83;
+  --color-accent-light:   #1E3A3A;
+  --color-accent-border:  #2D5A5A;
+  --color-border:         #475569;
+  --color-border-light:   #334155;
+  --color-waiting-bg:     #3D2E1A;
+  --color-waiting-text:   #FCD6A0;
+  --color-waiting-border: #5C4520;
+  --color-valid-bg:       #1A3A2E;
+  --color-valid-text:     #A7F3D0;
+  --color-valid-border:   #2D5A48;
+  --color-purple-bg:      #2D1A4A;
+  --color-purple-text:    #D8B4FE;
+  --color-purple-border:  #4A2D6A;
+  --color-danger:         #f87171;
+  --color-info-text:      #60a5fa;
+  --color-info-bg:        #1e3a5f;
+  --color-btn-text:       #F1F5F9;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 *,
@@ -33,6 +76,14 @@
   box-sizing: border-box;
   margin: 0;
   font-weight: normal;
+}
+
+/* Transition douce globale pour le changement de thème */
+* {
+  transition: background-color var(--transition-base),
+              color var(--transition-base),
+              border-color var(--transition-base),
+              box-shadow var(--transition-base);
 }
 
 body {
@@ -57,4 +108,29 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(1.4); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }

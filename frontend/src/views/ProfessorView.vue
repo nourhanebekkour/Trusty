@@ -1,9 +1,6 @@
 <template>
   <div class="professor-page">
 
-    <!-- Topbar -->
-    <ProfessorTopbar />
-
     <!-- Stats -->
     <ProfessorStats
       :en-attente="store.enAttente"
@@ -41,7 +38,6 @@
 import { onMounted } from 'vue'
 import { useProfessorStore } from '@/stores/professorStore'
 
-import ProfessorTopbar        from '@/components/professor/ProfessorTopbar.vue'
 import ProfessorStats         from '@/components/professor/ProfessorStats.vue'
 import ProfessorProjects      from '@/components/professor/ProfessorProjects.vue'
 import ProfessorLetters       from '@/components/professor/ProfessorLetters.vue'

@@ -13,20 +13,20 @@
 
 <script setup>
 import ProfessorTopbar from './ProfessorTopbar.vue'
-import ProfessorSidebar from './ProfessorSideBar.vue'
+import ProfessorSidebar from './ProfessorSidebar.vue'
 import ProfessorFooter from './ProfessorFooter.vue'
 </script>
 
 <style scoped>
 .professor-layout {
   min-height: 100vh;
-  background: #F4F2EC;
+  background: var(--color-page-bg, #F4F2EC);
 }
 
 .professor-layout__main {
-  min-height: calc(100vh - 64px);
-  margin-left: 210px;
+  margin-left: 235px;
   padding-top: 64px;
-  padding-bottom: 0;
+  min-height: calc(100vh - 64px);
+  background: var(--color-page-bg, #F4F2EC);
 }
 </style>

@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import AdminLayout from '../components/admin/AdminLayout.vue'
+import ProfessorLayout from '../components/professor/ProfessorLayout.vue'
 import LoginView from '../views/loginview.vue'
 import Dashboard from '@/views/Etudiant/Dashboard.vue'
 import ProjectList from '@/views/Etudiant/ProjectList.vue'
@@ -182,9 +183,41 @@ const router = createRouter({
     // ── Professor ────────────────────────────────────────
     {
       path: '/professor',
-      name: 'professor',
-      component: ProfessorView,
+      component: ProfessorLayout,
       meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
+      children: [
+        { path: '', redirect: '/professor/dashboard' },
+        {
+          path: 'dashboard',
+          name: 'professor-dashboard',
+          component: ProfessorView,
+        },
+        {
+          path: 'validations',
+          name: 'professor-validations',
+          component: () => import('../views/professor/ProfessorValidations.vue'),
+        },
+        {
+          path: 'portfolios',
+          name: 'professor-portfolios',
+          component: () => import('../views/professor/ProfessorPortfolios.vue'),
+        },
+        {
+          path: 'notifications',
+          name: 'professor-notifications',
+          component: () => import('../views/professor/ProfessorNotifications.vue'),
+        },
+        {
+          path: 'messages',
+          name: 'professor-messages',
+          component: () => import('../views/professor/ProfessorMessages.vue'),
+        },
+        {
+          path: 'recommandations',
+          name: 'professor-recommandations',
+          component: () => import('../views/professor/ProfessorRecommendations.vue'),
+        },
+      ],
     },
 
     // ── Pages d'erreur ────────────────────────────────────
@@ -219,7 +252,7 @@ router.beforeEach(async (to) => {
     if (authStore.isAdmin) {
       if (!to.path.startsWith('/admin')) return '/admin/dashboard'
     } else if (authStore.isProfesseur) {
-      if (to.name !== 'professor') return '/professor'
+      if (!to.path.startsWith('/professor')) return '/professor/dashboard'
     } else if (authStore.isProfessionnel) {
       if (!to.path.startsWith('/professional')) return '/professional'
     }
@@ -256,7 +289,7 @@ function redirectByRole(role) {
   switch (role?.toUpperCase()) {
     case ROLES.ADMIN:        return '/admin/dashboard'
     case ROLES.STUDENT:      return '/dashboard'
-    case ROLES.PROFESSOR:    return '/professor'
+    case ROLES.PROFESSOR:    return '/professor/dashboard'
     case ROLES.PROFESSIONAL: return '/professional'
     default:                 return '/'
   }

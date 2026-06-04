@@ -158,16 +158,12 @@ async function markAllAsRead() {
 }
 
 async function deleteOne(notification) {
-  const confirmed = confirm('Supprimer cette notification ?')
-  if (!confirmed) return
-
   try {
     await deleteProfessorNotification(notification.id)
-
     notifications.value = notifications.value.filter(item => item.id !== notification.id)
-    showToast('Notification supprimée.')
+    showToast('Notification marquée comme lue.')
   } catch (err) {
-    showToast(err.response?.data?.message || 'Impossible de supprimer la notification.')
+    showToast(err.response?.data?.message || 'Impossible de modifier la notification.')
   }
 }
 
