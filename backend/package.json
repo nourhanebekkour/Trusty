@@ -18,6 +18,7 @@
     "start": "cross-env NODE_ENV=production node src/server.js",
     "swagger": "node src/swagger.js",
     "test": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/.bin/jest --verbose --silent=false",
+    "test:report": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/.bin/jest --verbose --silent=false 2>&1 | tee test-reports/test-output.log; echo 'Rapport généré dans test-reports/test-report.html' && node send-report.js",
     "lint": "eslint .",
     "prisma:generate": "prisma generate",
     "db:migrate:dev": "dotenv -e .env -- prisma migrate dev",
@@ -46,6 +47,7 @@
     "nodemailer": "^8.0.7",
     "nodemon": "^3.1.14",
     "swagger-ui-express": "^5.0.1",
+    "swot-node": "^2.0.1489",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -55,6 +57,7 @@
     "dotenv-cli": "^11.0.0",
     "eslint": "^8.0.0",
     "jest": "^30.3.0",
+    "jest-html-reporter": "^4.4.0",
     "nodemon": "^3.1.14",
     "prisma": "^6.19.3",
     "supertest": "^7.2.2",

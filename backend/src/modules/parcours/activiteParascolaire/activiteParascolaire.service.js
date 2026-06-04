@@ -22,37 +22,19 @@ const verifierAccesActivite = async (id_activite, userId, userRole) => {
 // --- GESTION DES ACTIVITES ---
 
 export const creerActivite = async (donnees) => {
-    const { id_etudiant, id_validateur, ...activiteData } = donnees;
+    const { id_etudiant, ...activiteData } = donnees;
 
     if (!id_etudiant) {
         throw new Error("L'ID de l'étudiant est requis");
     }
 
-    // Vérification de la filière si un validateur est choisi
-    if (id_validateur) {
-        const etudiant = await prisma.etudiant.findUnique({
-            where: { id_etudiant },
-            select: { filiere: true }
-        });
-
-        const professeur = await prisma.professeur.findUnique({
-            where: { id_professeur: id_validateur },
-            select: { filieres_interv: true }
-        });
-
-        if (!professeur) {
-            throw new Error("Le professeur choisi n'existe pas");
-        }
-
-        if (!professeur.filieres_interv.includes(etudiant.filiere)) {
-            throw new Error("Le professeur choisi n'intervient pas dans la filière " + etudiant.filiere);
-        }
-    }
+    // Pour les activités parascolaires, plus de choix de validateur par l'étudiant.
+    // Ce sont les admins de l'école qui s'en occupent.
 
     const data = {
         ...activiteData,
         id_etudiant,
-        id_validateur,
+        id_validateur: null, // Pas de validateur spécifique assigné à la création
         date_debut: new Date(activiteData.date_debut),
         date_fin: activiteData.date_fin ? new Date(activiteData.date_fin) : null,
     };
@@ -61,30 +43,63 @@ export const creerActivite = async (donnees) => {
         data
     });
 
-    if (id_validateur) {
-        await notificationsService.creerNotification(
-            id_validateur, 
-            "VALIDATION", 
-            "Nouvelle activité à valider", 
-            "L'activité \"" + nouvelleActivite.nom_activite + "\" attend votre validation."
-        );
+    // On pourrait notifier tous les admins de l'école de l'étudiant
+    const etudiant = await prisma.utilisateur.findUnique({
+        where: { id_utilisateur: id_etudiant },
+        select: { ecole: true }
+    });
+
+    if (etudiant.ecole) {
+        const admins = await prisma.utilisateur.findMany({
+            where: {
+                role: 'ADMINISTRATEUR',
+                ecole: etudiant.ecole
+            },
+            select: { id_utilisateur: true }
+        });
+
+        for (const admin of admins) {
+            await notificationsService.creerNotification(
+                admin.id_utilisateur, 
+                "VALIDATION", 
+                "Nouvelle activité à valider", 
+                "L'activité \"" + nouvelleActivite.nom_activite + "\" a été soumise par un étudiant de votre école."
+            );
+        }
     }
 
     return nouvelleActivite;
 };
 
 export const validerActivite = async (id_activite, id_validateur, decision, commentaire) => {
-    const activite = await prisma.activiteParascolaire.findUnique({ where: { id_activite } });
+    const activite = await prisma.activiteParascolaire.findUnique({ 
+        where: { id_activite },
+        include: { 
+            etudiant: {
+                include: { utilisateur: true }
+            }
+        }
+    });
     if (!activite) throw new Error("Activité non trouvée");
 
-    if (activite.id_validateur !== id_validateur) {
-        throw new Error("Vous n'êtes pas le validateur désigné pour cette activité");
+    // Vérifier que le validateur est un ADMIN de la même école que l'étudiant
+    const validateur = await prisma.utilisateur.findUnique({
+        where: { id_utilisateur: id_validateur }
+    });
+
+    if (!validateur || validateur.role !== 'ADMINISTRATEUR') {
+        throw new Error("Seul un administrateur peut valider une activité parascolaire");
+    }
+
+    if (validateur.ecole !== activite.etudiant.utilisateur.ecole) {
+        throw new Error("Vous ne pouvez valider que les activités des étudiants de votre école (" + activite.etudiant.utilisateur.ecole + ")");
     }
 
     const updateData = {
         status_validation: decision,
         date_validation: new Date(),
-        commentaire_validation: commentaire
+        commentaire_validation: commentaire,
+        id_validateur: id_validateur
     };
 
     const activiteMisAJour = await prisma.activiteParascolaire.update({
@@ -96,7 +111,7 @@ export const validerActivite = async (id_activite, id_validateur, decision, comm
         activiteMisAJour.id_etudiant, 
         "VALIDATION", 
         "Activité " + (decision === "VALIDE" ? "validé" : "rejeté"), 
-        "Votre activité \"" + activiteMisAJour.nom_activite + "\" a été " + decision.toLowerCase() + "."
+        "Votre activité \"" + activiteMisAJour.nom_activite + "\" a été " + decision.toLowerCase() + " par l'administration."
     );
 
     // Créer un historique
@@ -119,7 +134,9 @@ export const recupererToutesLesActivites = async (filtres = {}) => {
     const activites = await prisma.activiteParascolaire.findMany({
         where: filtres,
         include: {
-            etudiant: true,
+            etudiant: {
+                include: { utilisateur: true }
+            },
             attestation: true
         },
         orderBy: { date_debut: 'desc' }
@@ -132,7 +149,9 @@ export const recupererActiviteParId = async (id_activite) => {
     const activite = await prisma.activiteParascolaire.findUnique({
         where: { id_activite },
         include: {
-            etudiant: true,
+            etudiant: {
+                include: { utilisateur: true }
+            },
             attestation: true,
             validateur: true
         }
@@ -143,11 +162,25 @@ export const recupererActiviteParId = async (id_activite) => {
     return await minioService.enrichEntityWithFileUrls(activite, 'attestation');
 };
 
-export const recupererActivitesAValider = async (id_professeur) => {
+export const recupererActivitesAValider = async (id_admin) => {
+    // Récupérer l'école de l'admin
+    const admin = await prisma.utilisateur.findUnique({
+        where: { id_utilisateur: id_admin },
+        select: { ecole: true }
+    });
+
+    if (!admin || !admin.ecole) {
+        return [];
+    }
+
     const activites = await prisma.activiteParascolaire.findMany({
         where: {
-            id_validateur: id_professeur,
-            status_validation: "EN_ATTENTE"
+            status_validation: "EN_ATTENTE",
+            etudiant: {
+                utilisateur: {
+                    ecole: admin.ecole
+                }
+            }
         },
         include: {
             etudiant: {
@@ -156,7 +189,8 @@ export const recupererActivitesAValider = async (id_professeur) => {
                         select: {
                             nom: true,
                             prenom: true,
-                            photo: true
+                            photo: true,
+                            ecole: true
                         }
                     }
                 }

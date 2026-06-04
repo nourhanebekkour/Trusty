@@ -19,6 +19,27 @@ const verifierAccesStage = async (id_stage, userId, userRole) => {
     return stage;
 };
 
+// Fonction utilitaire pour vérifier que le professeur appartient à la même école que l'étudiant
+const validerEcoleProfesseur = async (id_etudiant, id_professeur) => {
+    const etudiant = await prisma.etudiant.findUnique({
+        where: { id_etudiant },
+        include: { utilisateur: { select: { ecole: true } } }
+    });
+
+    const professeur = await prisma.professeur.findUnique({
+        where: { id_professeur },
+        include: { utilisateur: { select: { ecole: true } } }
+    });
+
+    if (!professeur) {
+        throw new Error("Le professeur choisi n'existe pas");
+    }
+
+    if (professeur.utilisateur.ecole !== etudiant.utilisateur.ecole) {
+        throw new Error("Le professeur choisi doit appartenir à la même école (" + etudiant.utilisateur.ecole + ")");
+    }
+};
+
 // --- GESTION DES STAGES ---
 
 export const creerStage = async (donnees) => {
@@ -28,25 +49,9 @@ export const creerStage = async (donnees) => {
         throw new Error("L'ID de l'étudiant est requis");
     }
 
-    // Vérification de la filière si un validateur est choisi
+    // Vérification de l'école si un validateur est choisi
     if (id_validateur) {
-        const etudiant = await prisma.etudiant.findUnique({
-            where: { id_etudiant },
-            select: { filiere: true }
-        });
-
-        const professeur = await prisma.professeur.findUnique({
-            where: { id_professeur: id_validateur },
-            select: { filieres_interv: true }
-        });
-
-        if (!professeur) {
-            throw new Error("Le professeur choisi n'existe pas");
-        }
-
-        if (!professeur.filieres_interv.includes(etudiant.filiere)) {
-            throw new Error("Le professeur choisi n'intervient pas dans la filière " + etudiant.filiere);
-        }
+        await validerEcoleProfesseur(id_etudiant, id_validateur);
     }
 
     const data = {
@@ -204,11 +209,16 @@ export const recupererStagesParEtudiant = async (id_etudiant) => {
 };
 
 export const modifierStage = async (id_stage, donnees, userId, userRole) => {
-    await verifierAccesStage(id_stage, userId, userRole);
+    const stage = await verifierAccesStage(id_stage, userId, userRole);
 
     const data = { ...donnees };
     if (data.date_debut) data.date_debut = new Date(data.date_debut);
     if (data.date_fin) data.date_fin = new Date(data.date_fin);
+
+    // Vérification de l'école si un nouveau validateur est choisi
+    if (data.id_validateur) {
+        await validerEcoleProfesseur(stage.id_etudiant, data.id_validateur);
+    }
 
     return await prisma.stage.update({
         where: { id_stage },

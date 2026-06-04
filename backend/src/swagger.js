@@ -22,15 +22,37 @@ const doc = {
   ],
   definitions: {
     RegisterRequest: {
-      email: 'etudiant@test.com',
+      email: 'nom.prenom@etu.uae.ac.ma',
       password: 'password123',
       nom: 'Nom',
       prenom: 'Prenom',
-      role: 'ETUDIANT'
+      role: 'ETUDIANT',
+      ecole: 'ENSATanger'
+    },
+    CreateUserAdminRequest: {
+      nom: 'NomAdmin',
+      prenom: 'PrenomAdmin',
+      email: 'admin@uae.ac.ma',
+      niveau_acces: 'ADMIN',
+      ecole: 'ENSATanger'
+    },
+    RequestAccountRequest: {
+      nom: 'Nom',
+      prenom: 'Prenom',
+      email: 'etudiant@etu.uae.ac.ma',
+      role: 'ETUDIANT',
+      message: 'Je souhaite créer un compte pour mon portfolio.'
     },
     LoginRequest: {
       email: 'etudiant@test.com',
       password: 'password123'
+    },
+    ForgotPasswordRequest: {
+      email: 'etudiant@test.com'
+    },
+    ResetPasswordRequest: {
+      token: 'abc123def456...',
+      nouveauMotDePasse: 'nouveauMotDePasse123'
     },
     EtudiantProfileRequest: {
       numero_etudiant: '2026001',
