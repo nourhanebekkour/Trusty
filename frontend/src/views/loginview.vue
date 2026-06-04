@@ -81,28 +81,21 @@
 </template>
 
 <script setup>
- 
-
 import { ref, computed } from 'vue'
-import { useAuthStore } from '../stores/authstore' 
+import { useAuthStore } from '../stores/authstore'
 import { useRouter } from 'vue-router'
 
 /* STATE */
 const email = ref('')
 const password = ref('')
 const remember = ref(false)
-const showCaptcha = ref(false)
 
 const isSubmitting = ref(false)
 
 /* ERRORS */
 const error = ref('')
-const fieldErrors = ref({
-  email: '',
-  password: ''
-})
+const fieldErrors = ref({ email: '', password: '' })
 
-/* SECURITY UX STATE */
 /* SECURITY */
 const loginAttempts = ref(0)
 const lockUntil = ref(null)
@@ -117,49 +110,33 @@ const BASE_LOCK_TIME = 10 * 1000
 
 /* HELPERS */
 const normalizeEmail = (v) => v.trim().toLowerCase()
-
-const isValidEmail = (v) =>
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
-
+const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
 const isStrongPassword = (v) => {
   if (typeof v !== 'string') return false
-  const minLength = v.length >= 8
-  const hasUpper = /[A-Z]/.test(v)
-  const hasLower = /[a-z]/.test(v)
-  const hasNumber = /[0-9]/.test(v)
-  const hasSymbol = /[!@#$%^&*(),.?":{}|<>_\-\\/\[\]=+;]/.test(v)
-  return minLength && hasUpper && hasLower && hasNumber && hasSymbol
-}
-
-const getCaptchaToken = async () => {
-  if (!showCaptcha.value) return null
-  return 'mock-captcha-token'
+  return (
+    v.length >= 8 &&
+    /[A-Z]/.test(v) &&
+    /[a-z]/.test(v) &&
+    /[0-9]/.test(v) &&
+    /[!@#$%^&*(),.?":{}|<>_\-\\/\[\]=+;]/.test(v)
+  )
 }
 
 /* LOCK LOGIC */
-const isLocked = computed(() =>
-  lockUntil.value && Date.now() < lockUntil.value
-)
-
+const isLocked = computed(() => lockUntil.value && Date.now() < lockUntil.value)
 const applyLock = () => {
-  const delay =
-    BASE_LOCK_TIME *
-    Math.pow(2, Math.max(0, loginAttempts.value - MAX_ATTEMPTS))
+  const delay = BASE_LOCK_TIME * Math.pow(2, Math.max(0, loginAttempts.value - MAX_ATTEMPTS))
   lockUntil.value = Date.now() + delay
 }
 
 /* ERROR HANDLING */
 const clearErrors = () => {
   error.value = ''
-  authStore.error = null 
+  authStore.error = null
   fieldErrors.value = { email: '', password: '' }
 }
-
 const safeError = computed(() => authStore.error || error.value)
-
-const setGenericError = () => {
-  error.value = 'Email ou mot de passe invalide'
-}
+const setGenericError = () => { error.value = 'Email ou mot de passe invalide' }
 
 /* VALIDATION */
 const validateFields = () => {
@@ -178,8 +155,7 @@ const validateFields = () => {
     fieldErrors.value.password = 'Mot de passe requis'
     ok = false
   } else if (!isStrongPassword(password.value)) {
-    fieldErrors.value.password =
-      'Min 8 caractères, majuscule, minuscule, nombre et symbole'
+    fieldErrors.value.password = 'Min 8 caractères, majuscule, minuscule, nombre et symbole'
     ok = false
   }
 
@@ -195,36 +171,30 @@ const isDisabled = computed(() =>
   !password.value
 )
 
+/* LOGIN */
 const handleLogin = async () => {
   if (isSubmitting.value || isLocked.value) return
-
   clearErrors()
-
   if (!validateFields()) return
 
   isSubmitting.value = true
 
   try {
-    const cleanEmail = normalizeEmail(email.value)
-    const cleanPassword = password.value
-    const captchaToken = await getCaptchaToken()
-
     const result = await authStore.loginUser({
-      email: cleanEmail,
-      password: cleanPassword,
+      email: normalizeEmail(email.value),
+      password: password.value,
       remember: remember.value,
-      captchaToken,
     })
-    const success = result?.success === true
 
-    if (success) {
+    if (result?.success === true) {
       loginAttempts.value = 0
       lockUntil.value = null
-      router.push('/')
+
+      // Redirect based on role coming from the token/user object
+      router.push(authStore.homeRoute)
       return
     }
 
-    /* FAIL */
     loginAttempts.value++
     if (loginAttempts.value >= MAX_ATTEMPTS) applyLock()
     setGenericError()
@@ -278,9 +248,7 @@ h1 {
   color: #e8f0ee;
 }
 
-.accent {
-  color: #5C8C6A;
-}
+.accent { color: #5C8C6A; }
 
 .subtitle {
   color: #a8bdb8;
@@ -308,9 +276,7 @@ h2 {
   margin-bottom: 36px;
 }
 
-.field {
-  margin-bottom: 20px;
-}
+.field { margin-bottom: 20px; }
 
 .field label {
   font-size: 13px;

@@ -12,8 +12,19 @@ export const useAuthStore = defineStore('auth', {
 
   getters: {
     isAuthenticated: (state) => !!state.user,
-    isAdmin: (state) => state.user?.role === 'ADMINISTRATEUR',
-    isEtudiant: (state) => state.user?.role === 'ETUDIANT',
+    isAdmin:         (state) => state.user?.role === 'ADMINISTRATEUR',
+    isEtudiant:      (state) => state.user?.role === 'ETUDIANT',
+    isProfessional:  (state) => state.user?.role === 'PROFESSIONNEL',
+
+    // Returns the home route for the current user's role
+    homeRoute: (state) => {
+      switch (state.user?.role) {
+        case 'ADMINISTRATEUR': return '/admin/dashboard'
+        case 'ETUDIANT':       return '/dashboard'
+        case 'PROFESSIONNEL':  return '/professional/dashboard'
+        default:               return '/'
+      }
+    },
   },
 
   actions: {
@@ -81,7 +92,6 @@ export const useAuthStore = defineStore('auth', {
       this.user = null
       this.token = null
       localStorage.removeItem('token')
-
       api.post('/auth/logout').catch(() => {})
     },
   },

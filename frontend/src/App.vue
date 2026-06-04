@@ -11,41 +11,42 @@ const authStore = useAuthStore()
 const route = useRoute()
 
 onMounted(async () => {
-  const publicRoutes = ['login', 'home', 'about', 'professional', 'professor']
+  const publicRoutes = ['login', 'home', 'about', 'professor']
   if (route.name && !publicRoutes.includes(route.name)) {
     await authStore.fetchUser()
   }
 })
 
-// Routes qui utilisent le layout complet (sidebar + navbar)
-const studentRoutes = [
-  'dashboard', 'notifications', 'profile', 'projets',
-  'settings', 'recommendations', 'stage', 'modele', 'portfolio'
-]
-
 const isPublicPage = computed(() =>
-  ['home', 'login', 'about', 'professional', 'professor'].includes(route.name)
+  ['home', 'login', 'about', 'professor'].includes(route.name)
 )
 
 const isAdminPage = computed(() => route.path.startsWith('/admin'))
 
+const isProfessionalPage = computed(() => route.path.startsWith('/professional'))
+
 const isStudentPage = computed(() => {
   const studentPaths = [
     '/dashboard', '/notifications', '/profile', '/projets',
-    '/settings', '/recommendations', '/stage', '/modele', '/portfolio'
+    '/settings', '/recommendations', '/stage', '/modele', '/portfolio',
   ]
   return studentPaths.some(p => route.path.startsWith(p))
 })
 </script>
 
 <template>
-  <!-- ── Pages publiques : home, login, about ── -->
+  <!-- ── Pages publiques : home, login, about, professor ── -->
   <div v-if="isPublicPage">
     <RouterView />
   </div>
 
   <!-- ── Pages Admin : layout géré par AdminLayout ── -->
   <div v-else-if="isAdminPage">
+    <RouterView />
+  </div>
+
+  <!-- ── Pages Professional : layout géré par ProfessionalLayout ── -->
+  <div v-else-if="isProfessionalPage">
     <RouterView />
   </div>
 
