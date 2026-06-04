@@ -243,19 +243,7 @@ async function requestChanges(portfolio) {
 }
 
 async function downloadPdf(portfolio) {
-  try {
-    const blob = await exportProfessorPortfolioPdf(portfolio.id)
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-
-    link.href = url
-    link.download = `${portfolio.title || 'portfolio'}.pdf`
-    link.click()
-
-    URL.revokeObjectURL(url)
-  } catch (err) {
-    showToast(err.response?.data?.message || 'Impossible de télécharger le PDF.')
-  }
+  showToast('Export PDF bientôt disponible.')
 }
 
 function exportCsv() {
