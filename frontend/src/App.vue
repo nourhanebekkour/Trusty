@@ -1,38 +1,34 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import SideBar from './components/laayout/SideBar.vue'
 import NavBar from './components/laayout/NavBar.vue'
-import AppFooter from './components/laayout/Footer.vue'
+import Footer from './components/laayout/Footer.vue'
+import ProfessionalSideBar from './components/professional/ProfessionalSideBar.vue'
 import { useAuthStore } from './stores/authstore'
-import { onMounted } from 'vue'
 
 const authStore = useAuthStore()
 const route = useRoute()
 
 onMounted(async () => {
-  const publicRoutes = ['login', 'home', 'about', 'professional', 'professor']
+  const publicRoutes = ['login', 'home', 'about']
   if (route.name && !publicRoutes.includes(route.name)) {
     await authStore.fetchUser()
   }
 })
 
-// Routes qui utilisent le layout complet (sidebar + navbar)
-const studentRoutes = [
-  'dashboard', 'notifications', 'profile', 'projets',
-  'settings', 'recommendations', 'stage', 'modele', 'portfolio'
-]
-
 const isPublicPage = computed(() =>
-  ['home', 'login', 'about', 'professional', 'professor'].includes(route.name)
+  ['home', 'login', 'about'].includes(route.name)
 )
 
+const isProfessionalPage = computed(() => route.name === 'professional')
+const isProfessorPage = computed(() => route.path.startsWith('/professor'))
 const isAdminPage = computed(() => route.path.startsWith('/admin'))
 
 const isStudentPage = computed(() => {
   const studentPaths = [
-    '/dashboard', '/notifications', '/profile', '/projets',
-    '/settings', '/recommendations', '/stage', '/modele', '/portfolio'
+    '/dashboard', '/notifications', '/profile', '/projets', '/parcours',
+    '/settings', '/recommendations', '/stage', '/activites', '/portfolio'
   ]
   return studentPaths.some(p => route.path.startsWith(p))
 })
@@ -49,6 +45,11 @@ const isStudentPage = computed(() => {
     <RouterView />
   </div>
 
+  <!-- ── Pages Professeur : layout géré par ProfessorLayout ── -->
+  <div v-else-if="isProfessorPage">
+    <RouterView />
+  </div>
+
   <!-- ── Pages Étudiant : navbar + sidebar + footer ── -->
   <div v-else-if="isStudentPage" class="app">
     <NavBar />
@@ -58,7 +59,18 @@ const isStudentPage = computed(() => {
         <RouterView />
       </main>
     </div>
-    <AppFooter />
+    <Footer />
+  </div>
+
+  <!-- ── Pages Professionnel ── -->
+  <div v-else-if="isProfessionalPage" class="app">
+    <NavBar />
+    <div class="layout">
+      <ProfessionalSideBar />
+      <main class="content">
+        <RouterView />
+      </main>
+    </div>
   </div>
 
   <!-- ── Fallback ── -->
@@ -100,13 +112,13 @@ html, body {
   width: 100%;
   align-items: stretch;
   min-height: 0;
-  background-color: #F4F2EC;
+  background-color: var(--color-background);
 }
 
 .content {
   flex: 1;
   padding: 0px;
-  background-color: #0D2B2B;
+  background-color: var(--color-background);
   overflow-y: auto;
   min-height: 0;
 }

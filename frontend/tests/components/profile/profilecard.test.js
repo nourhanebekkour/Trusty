@@ -2,21 +2,27 @@ import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import ProfileCard from '@/components/profile/ProfileCard.vue'
 
-// ─── Factories ─────────────────────────────────────────────────────────────────
+// ── Factory ────────────────────────────────────────────────────────────────────
+// Reflète la structure attendue par ProfileCard.vue :
+//   user.photo          (pas avatar)
+//   user.etudiant.filiere  (pas user.specialite)
+//   user.etudiant.ville    (pas user.ville)
 const makeUser = (overrides = {}) => ({
   prenom: 'Yassine',
   nom: 'Benali',
   email: 'yassine@example.com',
   role: 'Étudiant',
-  specialite: 'Informatique',
   telephone: '+212 6 12 34 56 78',
-  ville: 'Fès',
   date_creation: '2022-09-01T00:00:00Z',
-  avatar: null,
+  photo: null,
+  etudiant: {
+    filiere: 'Informatique',
+    ville: 'Fès',
+  },
   ...overrides,
 })
 
-// ─── Suite ────────────────────────────────────────────────────────────────────
+// ── Suite ──────────────────────────────────────────────────────────────────────
 describe('ProfileCard.vue', () => {
   let wrapper
 
@@ -44,7 +50,7 @@ describe('ProfileCard.vue', () => {
 
     it('affiche le bouton "Modifier le profil"', () => {
       wrapper = mountComponent()
-      expect(wrapper.find('.btn-outline').text()).toContain('Modifier le profil')
+      expect(wrapper.find('.btn-edit').text()).toContain('Modifier le profil')
     })
 
     it('affiche le cover-banner', () => {
@@ -60,53 +66,54 @@ describe('ProfileCard.vue', () => {
 
   // ── Avatar ────────────────────────────────────────────────────────────────────
   describe('Avatar', () => {
-    it('affiche l\'image si user.avatar est défini', () => {
-      wrapper = mountComponent(makeUser({ avatar: 'https://example.com/photo.jpg' }))
+    it('affiche l\'image si user.photo est défini', () => {
+      wrapper = mountComponent(makeUser({ photo: 'https://example.com/photo.jpg' }))
       const img = wrapper.find('.avatar img')
       expect(img.exists()).toBe(true)
       expect(img.attributes('src')).toBe('https://example.com/photo.jpg')
       expect(img.attributes('alt')).toBe('Yassine Benali')
     })
 
-    it('n\'affiche pas le span des initiales si avatar est défini', () => {
-      wrapper = mountComponent(makeUser({ avatar: 'https://example.com/photo.jpg' }))
-      expect(wrapper.find('.avatar span:not(.online-dot)').exists()).toBe(false)
+    it('n\'affiche pas le span des initiales si photo est définie', () => {
+      wrapper = mountComponent(makeUser({ photo: 'https://example.com/photo.jpg' }))
+      expect(wrapper.find('.avatar .initials').exists()).toBe(false)
     })
 
-    it('affiche les initiales si user.avatar est null', () => {
-      wrapper = mountComponent(makeUser({ avatar: null }))
+    it('affiche les initiales si user.photo est null', () => {
+      wrapper = mountComponent(makeUser({ photo: null }))
       expect(wrapper.find('.avatar img').exists()).toBe(false)
-      const initials = wrapper.find('.avatar span:not(.online-dot)')
+      const initials = wrapper.find('.avatar .initials')
       expect(initials.text()).toBe('YB')
     })
 
     it('affiche max 2 initiales', () => {
-      wrapper = mountComponent(makeUser({ prenom: 'Ali', nom: 'Ben Omar', avatar: null }))
-      const initials = wrapper.find('.avatar span:not(.online-dot)')
+      wrapper = mountComponent(makeUser({ prenom: 'Ali', nom: 'Ben Omar', photo: null }))
+      const initials = wrapper.find('.avatar .initials')
       expect(initials.text()).toHaveLength(2)
-    })
-
-    it('affiche le point online-dot', () => {
-      wrapper = mountComponent()
-      expect(wrapper.find('.online-dot').exists()).toBe(true)
     })
   })
 
-  // ── Role / Spécialité ─────────────────────────────────────────────────────────
-  describe('Role et spécialité', () => {
-    it('affiche role si défini', () => {
-      wrapper = mountComponent(makeUser({ role: 'Étudiant', specialite: 'Informatique' }))
-      expect(wrapper.find('.role').text()).toBe('Étudiant')
+  // ── Role / Filière ────────────────────────────────────────────────────────────
+  // Le composant sépare le rôle (.role-badge) et la filière (.filiere-line).
+  describe('Role et filière', () => {
+    it('affiche le role dans .role-badge', () => {
+      wrapper = mountComponent(makeUser({ role: 'ETUDIANT', etudiant: { filiere: 'Informatique' } }))
+      expect(wrapper.find('.role-badge').text()).toContain('Étudiant')
     })
 
-    it('affiche specialite si role est null/undefined', () => {
-      wrapper = mountComponent(makeUser({ role: null, specialite: 'Génie Logiciel' }))
-      expect(wrapper.find('.role').text()).toBe('Génie Logiciel')
+    it('affiche la filiere dans .filiere-line', () => {
+      wrapper = mountComponent(makeUser({ role: 'ETUDIANT', etudiant: { filiere: 'Informatique' } }))
+      expect(wrapper.find('.filiere-line').text()).toContain('Informatique')
     })
 
-    it('n\'affiche pas .role si ni role ni specialite', () => {
-      wrapper = mountComponent(makeUser({ role: null, specialite: null }))
-      expect(wrapper.find('.role').exists()).toBe(false)
+    it('affiche la filière dans .filiere-line même si role est null', () => {
+      wrapper = mountComponent(makeUser({ role: null, etudiant: { filiere: 'Génie Logiciel' } }))
+      expect(wrapper.find('.filiere-line').text()).toContain('Génie Logiciel')
+    })
+
+    it('n\'affiche pas .filiere-line si filière est null', () => {
+      wrapper = mountComponent(makeUser({ role: null, etudiant: { filiere: null } }))
+      expect(wrapper.find('.filiere-line').exists()).toBe(false)
     })
   })
 
@@ -115,26 +122,23 @@ describe('ProfileCard.vue', () => {
     it('affiche le téléphone si défini', () => {
       wrapper = mountComponent(makeUser({ telephone: '+212 6 00 00 00 00' }))
       const rows = wrapper.findAll('.info-row')
-      const phoneRow = rows.find(r => r.text().includes('+212'))
-      expect(phoneRow).toBeTruthy()
+      expect(rows.find(r => r.text().includes('+212'))).toBeTruthy()
     })
 
     it('n\'affiche pas le téléphone si undefined', () => {
       wrapper = mountComponent(makeUser({ telephone: undefined }))
       const rows = wrapper.findAll('.info-row')
-      const phoneRow = rows.find(r => r.text().includes('📞'))
-      expect(phoneRow).toBeUndefined()
+      expect(rows.find(r => r.text().includes('📞'))).toBeUndefined()
     })
 
     it('affiche la ville si définie', () => {
-      wrapper = mountComponent(makeUser({ ville: 'Casablanca' }))
+      wrapper = mountComponent(makeUser({ etudiant: { ville: 'Casablanca' } }))
       const rows = wrapper.findAll('.info-row')
-      const villeRow = rows.find(r => r.text().includes('Casablanca'))
-      expect(villeRow).toBeTruthy()
+      expect(rows.find(r => r.text().includes('Casablanca'))).toBeTruthy()
     })
 
     it('n\'affiche pas la ville si undefined', () => {
-      wrapper = mountComponent(makeUser({ ville: undefined }))
+      wrapper = mountComponent(makeUser({ etudiant: { ville: undefined } }))
       const rows = wrapper.findAll('.info-row')
       expect(rows.find(r => r.text().includes('📍'))).toBeUndefined()
     })
@@ -158,7 +162,7 @@ describe('ProfileCard.vue', () => {
   describe('Événements', () => {
     it('émet "edit" au clic sur le bouton Modifier', async () => {
       wrapper = mountComponent()
-      await wrapper.find('.btn-outline').trigger('click')
+      await wrapper.find('.btn-edit').trigger('click')
       expect(wrapper.emitted('edit')).toBeTruthy()
       expect(wrapper.emitted('edit')).toHaveLength(1)
     })
@@ -166,17 +170,16 @@ describe('ProfileCard.vue', () => {
 
   // ── Helpers internes ──────────────────────────────────────────────────────────
   describe('Helpers', () => {
-    it('formatDate retourne une chaîne avec le mois et l\'année en français', () => {
+    it('formatDate retourne une chaîne avec l\'année en français', () => {
       wrapper = mountComponent(makeUser({ date_creation: '2023-03-01T00:00:00Z' }))
       const rows = wrapper.findAll('.info-row')
       const dateRow = rows.find(r => r.text().includes('📅'))
-      // mars 2023 ou March 2023 selon locale, on vérifie l'année
       expect(dateRow.text()).toContain('2023')
     })
 
     it('getInitials gère un nom à un seul mot', () => {
-      wrapper = mountComponent(makeUser({ prenom: 'Yassine', nom: '', avatar: null }))
-      const initials = wrapper.find('.avatar span:not(.online-dot)')
+      wrapper = mountComponent(makeUser({ prenom: 'Yassine', nom: '', photo: null }))
+      const initials = wrapper.find('.avatar .initials')
       expect(initials.text()).toBe('Y')
     })
   })

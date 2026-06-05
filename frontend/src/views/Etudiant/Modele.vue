@@ -1,6 +1,11 @@
 <template>
-  <div >
-    <h1>This is Dashboard</h1>
+  <div class="modele-view">
+    <p>Page modèle</p>
   </div>
 </template>
 
+<script>
+export default {
+  name: 'ModeleView',
+}
+</script>

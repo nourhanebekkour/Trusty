@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
-import { defineComponent, ref } from 'vue'
+import { createPinia, setActivePinia } from 'pinia'
+
+// ── mock svg asset ───────────────────────────────────────────────────────────
+vi.mock('@/assets/icons/trusty.svg', { default: 'trusty.svg' })
 
 // ── mocks services ────────────────────────────────────────────────────────────
 vi.mock('@/services/dashboardservices', () => ({
@@ -10,12 +13,13 @@ vi.mock('@/services/dashboardservices', () => ({
 }))
 
 // ── mocks composants enfants ──────────────────────────────────────────────────
-vi.mock('@/components/dashboard/DashboardStats.vue',    () => ({ default: defineComponent({ name: 'DashboardStats',    props: ['stats'],             template: '<div class="mock-stats" />' }) }))
-vi.mock('@/components/dashboard/DashboardProjects.vue', () => ({ default: defineComponent({ name: 'DashboardProjects', props: ['projects', 'loading'], template: '<div class="mock-projects" />' }) }))
-vi.mock('@/components/dashboard/DashboardRecos.vue',    () => ({ default: defineComponent({ name: 'DashboardRecos',    props: ['recos', 'loading'],   template: '<div class="mock-recos" />' }) }))
+vi.mock('@/components/dashboard/DashboardStats.vue',    () => ({ default: { name: 'DashboardStats',    props: ['stats'],             template: '<div class="mock-stats" />' } }))
+vi.mock('@/components/dashboard/DashboardProjects.vue', () => ({ default: { name: 'DashboardProjects', props: ['projects', 'loading'], template: '<div class="mock-projects" />' } }))
+vi.mock('@/components/dashboard/DashboardRecos.vue',    () => ({ default: { name: 'DashboardRecos',    props: ['recos', 'loading'],   template: '<div class="mock-recos" />' } }))
 
 import { fetchStats, fetchProjects, fetchRecos } from '@/services/dashboardservices'
-import Dashboard from '@/views/Dashboard.vue'
+import { useAuthStore } from '@/stores/authstore'
+import Dashboard from '@/views/Etudiant/Dashboard.vue'
 
 // ── mock vue-router ───────────────────────────────────────────────────────────
 const mockPush = vi.fn()
@@ -24,18 +28,26 @@ vi.mock('vue-router', () => ({
 }))
 
 // ── fixtures ──────────────────────────────────────────────────────────────────
+const MOCK_USER     = { id_utilisateur: 'test-user-id' }
 const MOCK_STATS    = { projetsCertifies: 4, credibilite: 78, vuesProfil: 123, recommandations: 6 }
-const MOCK_PROJECTS = [{ id: '1', titre: 'Projet A', type: 'Web', statut: 'Certifié', dateDebut: '2024-01-01', description: 'desc', tags: [] }]
+const MOCK_PROJECTS = [{ id_projet: '1', titre: 'Projet A', type_projet: 'PFA', status_validation: 'VALIDE', date_debut: '2024-01-01', description: 'desc', technologies: [] }]
 const MOCK_RECOS    = [{ id_recommandation: '1', message: 'Super!', auteur: { nom: 'Doe', prenom: 'John', poste: 'CTO' } }]
 
 // ── helper ────────────────────────────────────────────────────────────────────
-const mountView = () =>
-  mount(Dashboard, {
+const mountView = () => {
+  const pinia = createPinia()
+  setActivePinia(pinia)
+  const authStore = useAuthStore()
+  authStore.user = MOCK_USER
+
+  return mount(Dashboard, {
     global: {
-      stubs: { 'router-link': true },
-      mocks: { $router: { push: mockPush } },
+      plugins:  [pinia],
+      stubs:    { 'router-link': true },
+      mocks:    { $router: { push: mockPush } },
     },
   })
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 describe('Dashboard.vue (view)', () => {
@@ -103,12 +115,12 @@ describe('Dashboard.vue (view)', () => {
       expect(fetchRecos).toHaveBeenCalledTimes(1)
     })
 
-    it('les 3 services sont appelés sans arguments', async () => {
+    it('les 3 services sont appelés avec l\'id étudiant', async () => {
       mountView()
       await flushPromises()
-      expect(fetchStats).toHaveBeenCalledWith()
-      expect(fetchProjects).toHaveBeenCalledWith()
-      expect(fetchRecos).toHaveBeenCalledWith()
+      expect(fetchStats).toHaveBeenCalledWith('test-user-id')
+      expect(fetchProjects).toHaveBeenCalledWith('test-user-id')
+      expect(fetchRecos).toHaveBeenCalledWith('test-user-id')
     })
   })
 
