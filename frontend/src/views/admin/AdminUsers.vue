@@ -147,6 +147,7 @@
           <div class="field">
             <label>Prénom <span class="required">*</span></label>
             <input v-model="newUser.firstName" type="text" placeholder="Ex: Thomas"
+                   maxlength="50"
                    :class="{ 'input--error': v$.firstName.$error }"
                    @blur="v$.firstName.$touch()" />
             <span v-if="v$.firstName.$error" class="field-error">Prénom requis</span>
@@ -154,6 +155,7 @@
           <div class="field">
             <label>Nom <span class="required">*</span></label>
             <input v-model="newUser.lastName" type="text" placeholder="Ex: Durand"
+                   maxlength="50"
                    :class="{ 'input--error': v$.lastName.$error }"
                    @blur="v$.lastName.$touch()" />
             <span v-if="v$.lastName.$error" class="field-error">Nom requis</span>
@@ -161,13 +163,14 @@
           <div class="field">
             <label>Email professionnel <span class="required">*</span></label>
             <input v-model="newUser.email" type="email" placeholder="t.durand@exemple.com"
+                   maxlength="100"
                    :class="{ 'input--error': v$.email.$error }"
                    @blur="v$.email.$touch()" />
             <span v-if="v$.email.$error" class="field-error">Email valide requis</span>
           </div>
           <div class="field">
             <label>Téléphone</label>
-            <input v-model="newUser.phone" type="tel" placeholder="06 00 00 00 00" />
+            <input v-model="newUser.phone" type="tel" placeholder="06 00 00 00 00" maxlength="20" />
           </div>
           <div class="field">
             <label>Rôle Plateforme <span class="required">*</span></label>
@@ -193,6 +196,7 @@
             <input v-model="newUser.password"
                    :type="showPwd ? 'text' : 'password'"
                    placeholder="••••••••"
+                   minlength="8" maxlength="128"
                    :class="{ 'input--error': v$.password.$error }"
                    @blur="v$.password.$touch()" />
             <button type="button" class="input-group__btn" @click="showPwd = !showPwd">👁</button>
@@ -218,6 +222,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useVuelidate }  from '@vuelidate/core'
 import { required, email as emailRule, minLength } from '@vuelidate/validators'
 import StatCard      from '../../components/ui/StatCard.vue'
@@ -225,8 +230,11 @@ import StatusBadge   from '../../components/ui/StatusBadge.vue'
 import AppPagination from '../../components/ui/AppPagination.vue'
 import AppModal      from '../../components/ui/AppModal.vue'
 import { useAdminStore } from '../../stores/adminStore'
+import { useAuthStore }  from '../../stores/authstore'
 
-const admin = useAdminStore()
+const admin     = useAdminStore()
+const authStore = useAuthStore()
+const router    = useRouter()
 
 // ── Stats calculées depuis les vraies données ─────────────
 const activeStudentsCount = computed(() =>
@@ -285,6 +293,22 @@ const rules = {
 }
 const v$ = useVuelidate(rules, newUser)
 
+// sanitisation avant envoi ──────────────────
+function sanitize(str) {
+  return (str || '').trim().replace(/[<>"'`]/g, '')
+}
+
+function sanitizeUser(user) {
+  return {
+    ...user,
+    firstName: sanitize(user.firstName),
+    lastName:  sanitize(user.lastName),
+    email:     sanitize(user.email),
+    phone:     sanitize(user.phone),
+    password:  user.password, 
+  }
+}
+
 function closeModal() {
   showCreateModal.value = false
   createError.value     = null
@@ -304,7 +328,9 @@ async function handleCreateUser() {
   if (!valid) return
 
   createError.value = null
-  const result = await admin.createUser(newUser.value)
+
+  // Ssoumettre les données sanitisées
+  const result = await admin.createUser(sanitizeUser(newUser.value))
 
   if (result.success) {
     closeModal()
@@ -313,8 +339,9 @@ async function handleCreateUser() {
   }
 }
 
+// confirmation renforcée avant suppression ──
 async function handleDelete(id) {
-  if (!confirm('Supprimer cet utilisateur ?')) return
+  if (!confirm('Supprimer cet utilisateur ? Cette action est irréversible.')) return
   await admin.deleteUser(id)
 }
 
@@ -356,8 +383,13 @@ function shortId(id) {
   return id.slice(0, 8)
 }
 
-// ── Chargement initial ────────────────────────────────────
+// ── Chargement initial avec guard de rôle ────────────────
 onMounted(async () => {
+  if (!authStore.user || authStore.user.role !== 'ADMIN') {
+    router.replace('/login')
+    return
+  }
+
   await Promise.all([
     admin.fetchUsers(),
     admin.fetchVerificationQueue(),

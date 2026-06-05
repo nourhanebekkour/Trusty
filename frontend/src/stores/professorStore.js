@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { useAuthStore } from '@/stores/authstore'
 import {
   fetchProjetsAValider,
   validerProjet    as apiValiderProjet,
@@ -23,6 +24,15 @@ function hashId(id) {
   let h = 0
   for (let i = 0; i < str.length; i++) h += str.charCodeAt(i)
   return h
+}
+
+// ── Helper erreur API ──────────────────────────────────────────────────────────
+function getErrorMessage(e) {
+  return (
+    e?.response?.data?.message ||
+    e?.message ||
+    'Erreur inconnue'
+  )
 }
 
 export function normaliserProjet(p) {
@@ -93,16 +103,25 @@ export function normaliserNotif(n, index, total) {
 
 export const useProfessorStore = defineStore('professor', () => {
 
-  // ── État
-  const projets       = ref([])
-  const stages        = ref([])
-  const etudiants     = ref([])
-  const notifications = ref([])
-  const lettres       = ref([])
-  const loading       = ref({ projets: false, stages: false, notifs: false })
-  const erreur        = ref(null)
+  const auth = useAuthStore()
 
-  const _etudiantsRaw = new Map() // plain Map — dedup by id_etudiant across projets + stages
+  // ── Guard rôle (sans navigation) ───────────────────────────────────────────
+  function isProfessor() {
+    return auth.user?.role === 'PROFESSEUR'
+  }
+
+  // ── État
+  const projets            = ref([])
+  const stages             = ref([])
+  const etudiants          = ref([])
+  const notifications      = ref([])
+  const lettres            = ref([])
+  const loading            = ref({ projets: false, stages: false, notifs: false })
+  const erreur             = ref(null)
+  const validatingProjet   = ref(false)
+  const validatingStage    = ref(false)
+
+  const _etudiantsRaw = new Map()
 
   // ── Getters
   const enAttente       = computed(() => projets.value.filter(p => p.status === 'pending').length)
@@ -117,6 +136,10 @@ export const useProfessorStore = defineStore('professor', () => {
   }
 
   async function chargerProjets() {
+    if (!isProfessor()) {
+      erreur.value = 'Accès refusé'
+      return
+    }
     loading.value.projets = true
     erreur.value = null
     try {
@@ -129,13 +152,17 @@ export const useProfessorStore = defineStore('professor', () => {
       )
       _syncEtudiants()
     } catch (e) {
-      erreur.value = e.message
+      erreur.value = getErrorMessage(e)
     } finally {
       loading.value.projets = false
     }
   }
 
   async function chargerStages() {
+    if (!isProfessor()) {
+      erreur.value = 'Accès refusé'
+      return
+    }
     loading.value.stages = true
     try {
       const data = await fetchStagesAValider()
@@ -146,25 +173,40 @@ export const useProfessorStore = defineStore('professor', () => {
       })
       _syncEtudiants()
     } catch (e) {
-      erreur.value = e.message
+      erreur.value = getErrorMessage(e)
     } finally {
       loading.value.stages = false
     }
   }
 
   async function chargerNotifications() {
+    if (!isProfessor()) {
+      erreur.value = 'Accès refusé'
+      return
+    }
     loading.value.notifs = true
     try {
       const data = await fetchNotifications()
       notifications.value = data.map((n, i) => normaliserNotif(n, i, data.length))
     } catch (e) {
-      erreur.value = e.message
+      erreur.value = getErrorMessage(e)
     } finally {
       loading.value.notifs = false
     }
   }
 
   async function validerProjet(projet, decision = 'VALIDE', commentaire = '', appreciation = '') {
+    if (!isProfessor()) {
+      throw new Error('Accès refusé')
+    }
+
+    if (validatingProjet.value) return
+
+    if (!projet?.id) {
+      throw new Error('Projet invalide')
+    }
+
+    validatingProjet.value = true
     try {
       await apiValiderProjet(projet.id, decision, commentaire, appreciation)
       const found = projets.value.find(p => p.id === projet.id)
@@ -175,12 +217,25 @@ export const useProfessorStore = defineStore('professor', () => {
         found.statusColor = decision === 'VALIDE' ? '#66c99f' : '#e57373'
       }
     } catch (e) {
-      erreur.value = e.message
+      erreur.value = getErrorMessage(e)
       throw e
+    } finally {
+      validatingProjet.value = false
     }
   }
 
   async function validerStage(stage, decision = 'VALIDE', commentaire = '') {
+    if (!isProfessor()) {
+      throw new Error('Accès refusé')
+    }
+
+    if (validatingStage.value) return
+
+    if (!stage?.id) {
+      throw new Error('Stage invalide')
+    }
+
+    validatingStage.value = true
     try {
       await apiValiderStage(stage.id, decision, commentaire)
       const found = stages.value.find(s => s.id === stage.id)
@@ -191,22 +246,26 @@ export const useProfessorStore = defineStore('professor', () => {
         found.color       = decision === 'VALIDE' ? '#66c99f' : '#e57373'
       }
     } catch (e) {
-      erreur.value = e.message
+      erreur.value = getErrorMessage(e)
       throw e
+    } finally {
+      validatingStage.value = false
     }
   }
 
   async function marquerLue(id) {
+    if (!isProfessor()) return
     try {
       await marquerNotificationLue(id)
       const notif = notifications.value.find(n => n.id === id)
       if (notif) notif.color = '#a0b4ae'
     } catch (e) {
-      erreur.value = e.message
+      erreur.value = getErrorMessage(e)
     }
   }
 
   async function init() {
+    if (!isProfessor()) return
     await Promise.all([
       chargerProjets(),
       chargerStages(),
@@ -216,6 +275,7 @@ export const useProfessorStore = defineStore('professor', () => {
 
   return {
     projets, stages, etudiants, lettres, notifications, loading, erreur,
+    validatingProjet, validatingStage,
     enAttente, valides, etudiantsSuivis, stagesEnCours,
     init, chargerProjets, chargerStages, chargerNotifications,
     validerProjet, validerStage, marquerLue,

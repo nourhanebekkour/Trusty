@@ -91,9 +91,9 @@ function doRemove(id) {
 .skill-item {
   display: flex; align-items: center; gap: 10px;
   padding: 9px 12px;
-  border: 0.5px solid #5C8C6A;
+  border: 0.5px solid var(--color-accent);
   border-radius: 8px;
-  background: #5C8C6A;        /* ← fond blanc/clair */
+  background: var(--color-accent);
   transition: border-color .15s;
 }
 
@@ -111,7 +111,7 @@ function doRemove(id) {
 .star.off    { color: #ddd; }
 .niv-badge { 
   font-size: 11px; 
-  color: #D6EDE8;                /* ← gris neutre */
+  color: var(--color-text-primary);
   margin-left: 4px; 
 }
 
