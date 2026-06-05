@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import ProfessorView from '@/views/ProfessorView.vue'
+import ProfessorView from '@/views/professor/ProfessorView.vue'
 
 // ═════════════════════════════════════════════════════════════
 // TESTS UNITAIRES — ProfessorView

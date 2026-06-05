@@ -13,7 +13,7 @@ import Profile from '@/views/Etudiant/Profile.vue'
 import activites from '@/views/Etudiant/activites.vue'
 import Portfolio from '@/views/Etudiant/Portfolio.vue'
 import ProfessionalView from '@/views/ProfessionalView.vue'
-import ProfessorView from '@/views/ProfessorView.vue'
+import ProfessorView from '@/views/professor/ProfessorView.vue'
 import { useAuthStore } from '@/stores/authstore'
 import Parcours from '../views/Etudiant/Parcours.vue'
 import registerview from '@/views/registerview.vue'
@@ -191,31 +191,37 @@ const router = createRouter({
           path: 'dashboard',
           name: 'professor-dashboard',
           component: ProfessorView,
+           meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
         },
         {
           path: 'validations',
           name: 'professor-validations',
           component: () => import('../views/professor/ProfessorValidations.vue'),
+           meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
         },
         {
           path: 'portfolios',
           name: 'professor-portfolios',
           component: () => import('../views/professor/ProfessorPortfolios.vue'),
+           meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
         },
         {
           path: 'notifications',
           name: 'professor-notifications',
           component: () => import('../views/professor/ProfessorNotifications.vue'),
+           meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
         },
         {
           path: 'messages',
           name: 'professor-messages',
-          component: () => import('../views/professor/ProfessorMessages.vue'),
+          component: () => import('../views/professor/ProfessorMessages.vue'), 
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
         },
         {
           path: 'recommandations',
           name: 'professor-recommandations',
           component: () => import('../views/professor/ProfessorRecommendations.vue'),
+           meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
         },
       ],
     },
@@ -237,8 +243,15 @@ const router = createRouter({
 // ── Guard principal ────────────────────────────────────────────
 router.beforeEach(async (to) => {
   const authStore = useAuthStore()
+  const PUBLIC_ROUTES = ['home', 'login', 'register', 'about', 'verify-email']
 
-  // Initialisation session (toujours en premier)
+  if (PUBLIC_ROUTES.includes(to.name)) {
+    if (to.meta.guestOnly && authStore.isAuthenticated) {
+      return redirectByRole(authStore.user?.role)
+    }
+    return true
+  }
+
   if (!authStore.isInitialized) {
     try {
       await authStore.fetchUser()
@@ -247,37 +260,28 @@ router.beforeEach(async (to) => {
     }
   }
 
-  // ✅ Redirection automatique selon rôle (AVANT le court-circuit)
+  // ── Utilise to.matched pour hériter du meta des parents ──
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+  const allowedRoles = to.matched.flatMap(record => record.meta.roles ?? [])
+
   if (authStore.isAuthenticated) {
-    if (authStore.isAdmin) {
-      if (!to.path.startsWith('/admin')) return '/admin/dashboard'
-    } else if (authStore.isProfesseur) {
-      if (!to.path.startsWith('/professor')) return '/professor/dashboard'
-    } else if (authStore.isProfessionnel) {
-      if (!to.path.startsWith('/professional')) return '/professional'
+    if (authStore.isAdmin && !to.path.startsWith('/admin')) {
+      return '/admin/dashboard'
+    } else if (authStore.isProfesseur && !to.path.startsWith('/professor')) {
+      return '/professor/dashboard'
+    } else if (authStore.isProfessionnel && !to.path.startsWith('/professional')) {
+      return '/professional'
     }
   }
 
-  // Pages publiques (après la redirection par rôle)
-  if (['home', 'login', 'register', 'about', 'verify-email'].includes(to.name)) {
-    return true
-  }
-
-  // Pages invité uniquement
-  if (to.meta.guestOnly && authStore.isAuthenticated) {
-    return redirectByRole(authStore.user?.role)
-  }
-
-  // Routes protégées
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+  if (requiresAuth && !authStore.isAuthenticated) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
 
-  // Vérification des rôles
-  if (to.meta.roles?.length > 0) {
+  if (allowedRoles.length > 0) {
     const userRole = authStore.user?.role?.toUpperCase()
-    if (!userRole || !to.meta.roles.includes(userRole)) {
-      return { name: 'forbidden' }
+    if (!userRole || !allowedRoles.includes(userRole)) {
+      return { name: 'login' }
     }
   }
 

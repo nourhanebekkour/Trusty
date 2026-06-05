@@ -12,29 +12,34 @@
     </div>
 
     <nav class="sidebar-nav">
-      <router-link to="/professor" class="nav-item">
+      <router-link to="/professor/dashboard" class="nav-item">
         <img :src="iconProjets" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">Projets à valider</span>
+        <span class="nav-label" v-show="!isCollapsed">Dashboard</span>
       </router-link>
 
-      <router-link to="/professor" class="nav-item">
+      <router-link to="/professor/validations" class="nav-item">
         <img :src="iconStages" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">Stages à valider</span>
+        <span class="nav-label" v-show="!isCollapsed">Validations</span>
       </router-link>
 
-      <router-link to="/professor" class="nav-item">
+      <router-link to="/professor/portfolios" class="nav-item">
         <img :src="iconProfile" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">Mes étudiants</span>
+        <span class="nav-label" v-show="!isCollapsed">portfolios</span>
       </router-link>
 
-      <router-link to="/professor" class="nav-item">
+      <router-link to="/professor/notifications" class="nav-item">
         <img :src="iconRecommandations" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">Recommandations</span>
+        <span class="nav-label" v-show="!isCollapsed">notifications</span>
       </router-link>
 
-      <router-link to="/professor" class="nav-item">
+      <router-link to="/professor/recommandations" class="nav-item">
         <img :src="iconNotifications" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">Notifications</span>
+        <span class="nav-label" v-show="!isCollapsed">recommandation</span>
+      </router-link>
+
+      <router-link to="/professor/messages" class="nav-item">
+        <img :src="iconNotifications" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">messages</span>
       </router-link>
     </nav>
 
@@ -54,7 +59,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, inject } from 'vue'
 import { useAuthStore } from '@/stores/authstore'
 import { useRouter } from 'vue-router'
 
@@ -66,7 +71,7 @@ import iconNotifications   from '@/assets/icons/notifications.svg'
 import iconSettings        from '@/assets/icons/settings.svg'
 import iconLogout          from '@/assets/icons/logout.svg'
 
-const isCollapsed = ref(false)
+const isCollapsed = inject('sidebarCollapsed')
 const authStore   = useAuthStore()
 const router      = useRouter()
 

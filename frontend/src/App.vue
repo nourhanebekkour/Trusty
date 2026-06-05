@@ -56,7 +56,7 @@ onMounted(async () => {
   if (route.name && !PUBLIC_ROUTES.includes(route.name)) {
     await authStore.fetchUser()
   }
-  enforceRoleGuard()
+  
 })
 
 const isPublicPage = computed(() =>
@@ -88,9 +88,9 @@ const isStudentPage = computed(() => {
   </div>
 
   <!-- ── Pages Professeur : layout géré par ProfessorLayout ── -->
-  <div v-else-if="isProfessorPage">
-    <RouterView />
-  </div>
+  
+  <RouterView v-else-if="isProfessorPage"/>
+  
 
   <!-- ── Pages Étudiant : navbar + sidebar + footer ── -->
   <div v-else-if="isStudentPage" class="app">
