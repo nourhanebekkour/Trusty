@@ -186,6 +186,20 @@ jobs:
           sarif_file: trivy-deps-frontend.sarif
           category: trivy-deps-frontend
 
+      - name: Upload — config backend
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: trivy-config-backend.sarif
+          category: trivy-config-backend
+
+      - name: Upload — config frontend
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: trivy-config-frontend.sarif
+          category: trivy-config-frontend
+
       - name: Upload — image backend
         uses: github/codeql-action/upload-sarif@v4
         if: always()
