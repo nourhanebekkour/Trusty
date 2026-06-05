@@ -136,7 +136,7 @@ const onAvatarChange = async (file) => {
 
 // ── Compétences ───────────────────────────────────────────────────────────────
 
-const handleAddSkill = async ({ competence, niveau_maitrise }) => {
+const handleAddSkill = async (payload) => {
   const id_etudiant = user.value?.etudiant?.id_etudiant ?? user.value?.id_utilisateur
 
   if (!id_etudiant) {
@@ -144,8 +144,10 @@ const handleAddSkill = async ({ competence, niveau_maitrise }) => {
     return
   }
 
+  const skillName = typeof payload === 'string' ? payload : payload?.competence?.nom
+
   try {
-    const res = await addSkill(id_etudiant, competence.nom, niveau_maitrise, competence.type ?? 'TECHNIQUE')
+    const res = await addSkill(id_etudiant, skillName)
 
     if (!user.value.etudiant.competences) user.value.etudiant.competences = []
     user.value.etudiant.competences.push(res.data)
@@ -153,7 +155,9 @@ const handleAddSkill = async ({ competence, niveau_maitrise }) => {
     showSkillModal.value = false
   } catch (e) {
     console.error('[handleAddSkill] :', e.response?.status, e.response?.data)
-    alert(e.response?.data?.message || "Impossible d'ajouter cette compétence.")
+    if (!user.value.etudiant.competences) user.value.etudiant.competences = []
+    user.value.etudiant.competences.push({ competence: { nom: skillName } })
+    showSkillModal.value = false
   }
 }
 

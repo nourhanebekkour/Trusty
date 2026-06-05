@@ -21,8 +21,11 @@ const EXPECTED_MOCK_STATS = {
 const EXPECTED_MOCK_PROJECTS_LENGTH = 2
 const EXPECTED_MOCK_RECOS_LENGTH    = 2
 
-// ─────────────────────────────────────────────────────────────────────────────
-describe('dashboardservices.js', () => {
+// ═════════════════════════════════════════════════════════════════════════════
+// TESTS UNITAIRES — dashboardservices
+// api toujours mockée. Tests du contrat de chaque fonction (retour, structure).
+// ═════════════════════════════════════════════════════════════════════════════
+describe('dashboardservices.js — Tests Unitaires', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
