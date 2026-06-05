@@ -33,5 +33,11 @@ export const authService = {
       nouveauMotDePasse
     })
     return response.data
+  },
+
+  // POST /api/auth/verify-email
+  async verifyEmail(token) {
+    const response = await api.post('/auth/verify-email', { token })
+    return response.data
   }
 }

@@ -1,7 +1,8 @@
 <template>
   <div class="admin-layout">
-    <AppTopbar :notifCount="3" />
+    <AppTopbar />
     <AppSidebar />
+
     <main class="admin-layout__main">
       <RouterView />
     </main>
@@ -18,6 +19,7 @@ import AppSidebar from '../layout/AppSidebar.vue'
   min-height: 100vh;
   background: #0D2B2B;
 }
+
 .admin-layout__main {
   margin-left: 160px;
   padding-top: 60px;

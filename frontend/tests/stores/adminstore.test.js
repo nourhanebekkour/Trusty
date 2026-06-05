@@ -12,8 +12,11 @@ vi.mock('../../src/services/api', () => ({
   },
 }))
 
-// ─────────────────────────────────────────────────────────
-describe('adminStore', () => {
+// ═════════════════════════════════════════════════════════════════════════════
+// TESTS UNITAIRES — adminStore
+// api toujours mockée. Chaque action du store testée en isolation.
+// ═════════════════════════════════════════════════════════════════════════════
+describe('adminStore — Tests Unitaires', () => {
 
   beforeEach(() => {
     setActivePinia(createPinia())

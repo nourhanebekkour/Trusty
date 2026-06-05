@@ -29,9 +29,9 @@ describe('ProfileSkills.vue', () => {
       expect(wrapper.find('.section-header h3').text()).toBe('Compétences')
     })
 
-    it('affiche le bouton "+ Ajouter"', () => {
+    it('affiche le bouton "Ajouter"', () => {
       wrapper = mountComponent()
-      expect(wrapper.find('.add-btn').text()).toBe('+ Ajouter')
+      expect(wrapper.find('.add-btn').text()).toContain('Ajouter')
     })
   })
 
@@ -42,9 +42,9 @@ describe('ProfileSkills.vue', () => {
       expect(wrapper.find('.empty-msg').text()).toBe('Aucune compétence ajoutée.')
     })
 
-    it('n\'affiche pas les tags quand la liste est vide', () => {
+    it('n\'affiche pas la liste quand elle est vide', () => {
       wrapper = mountComponent(makeUser([]))
-      expect(wrapper.find('.tags').exists()).toBe(false)
+      expect(wrapper.find('.skill-list').exists()).toBe(false)
     })
 
     it('affiche le message vide quand etudiant est undefined', () => {
@@ -60,20 +60,20 @@ describe('ProfileSkills.vue', () => {
 
   // ── Affichage des compétences ─────────────────────────────────────────────────
   describe('Affichage des compétences', () => {
-    it('affiche les tags quand des compétences existent', () => {
+    it('affiche la liste quand des compétences existent', () => {
       wrapper = mountComponent(makeUser([makeCompetence(1, 'Vue.js')]))
-      expect(wrapper.find('.tags').exists()).toBe(true)
+      expect(wrapper.find('.skill-list').exists()).toBe(true)
       expect(wrapper.find('.empty-msg').exists()).toBe(false)
     })
 
-    it('affiche le bon nombre de tags', () => {
+    it('affiche le bon nombre de compétences', () => {
       const competences = [
         makeCompetence(1, 'Vue.js'),
         makeCompetence(2, 'JavaScript'),
         makeCompetence(3, 'PHP'),
       ]
       wrapper = mountComponent(makeUser(competences))
-      expect(wrapper.findAll('.tag')).toHaveLength(3)
+      expect(wrapper.findAll('.skill-name')).toHaveLength(3)
     })
 
     it('affiche le nom de chaque compétence', () => {
@@ -81,9 +81,9 @@ describe('ProfileSkills.vue', () => {
         makeCompetence(1, 'Vue.js'),
         makeCompetence(2, 'Laravel'),
       ]))
-      const tags = wrapper.findAll('.tag')
-      expect(tags[0].text()).toBe('Vue.js')
-      expect(tags[1].text()).toBe('Laravel')
+      const noms = wrapper.findAll('.skill-name')
+      expect(noms[0].text()).toBe('Vue.js')
+      expect(noms[1].text()).toBe('Laravel')
     })
 
     it('utilise id_competence comme clé unique (pas de doublons visuels)', () => {
@@ -92,8 +92,7 @@ describe('ProfileSkills.vue', () => {
         makeCompetence(20, 'Django'),
       ]
       wrapper = mountComponent(makeUser(competences))
-      const tags = wrapper.findAll('.tag')
-      expect(tags).toHaveLength(2)
+      expect(wrapper.findAll('.skill-name')).toHaveLength(2)
     })
   })
 

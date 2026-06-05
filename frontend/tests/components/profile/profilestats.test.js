@@ -3,6 +3,10 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import ProfileStats from '@/components/profile/ProfileStats.vue'
 
 // ─── Factories ─────────────────────────────────────────────────────────────────
+const makeProjet = (status_validation = 'VALIDE') => ({
+  projet: { id_projet: Math.random().toString(), status_validation },
+})
+
 const makeUser = ({ projets = [], badges = [] } = {}) => ({
   etudiant: {
     participations_projets: projets,
@@ -33,51 +37,49 @@ describe('ProfileStats.vue', () => {
       expect(wrapper.find('.stats-grid').exists()).toBe(true)
     })
 
-    it('affiche deux stat-box', () => {
+    it('affiche quatre stat-box (Projets, Validés, Compétences, Badges)', () => {
       wrapper = mountComponent()
-      expect(wrapper.findAll('.stat-box')).toHaveLength(2)
+      expect(wrapper.findAll('.stat-box')).toHaveLength(4)
     })
 
-    it('affiche le label "Projets Validés"', () => {
+    it('affiche le label "Projets"', () => {
       wrapper = mountComponent()
       const descs = wrapper.findAll('.stat-desc')
-      expect(descs.some(d => d.text() === 'Projets Validés')).toBe(true)
+      expect(descs.some(d => d.text() === 'Projets')).toBe(true)
     })
 
-    it('affiche le label "Badges"', () => {
+    it('affiche le label "Validés"', () => {
       wrapper = mountComponent()
       const descs = wrapper.findAll('.stat-desc')
-      expect(descs.some(d => d.text() === 'Badges')).toBe(true)
+      expect(descs.some(d => d.text() === 'Validés')).toBe(true)
     })
   })
 
   // ── Compteurs ─────────────────────────────────────────────────────────────────
   describe('Compteurs dynamiques', () => {
-    it('affiche 0 projets quand la liste est vide', () => {
+    it('affiche 0 projets total quand la liste est vide', () => {
       wrapper = mountComponent(makeUser({ projets: [], badges: [] }))
       const numbers = wrapper.findAll('.stat-number')
       expect(numbers[0].text()).toBe('0')
     })
 
-    it('affiche 0 badges quand la liste est vide', () => {
+    it('affiche 0 projets validés quand la liste est vide', () => {
       wrapper = mountComponent(makeUser({ projets: [], badges: [] }))
       const numbers = wrapper.findAll('.stat-number')
       expect(numbers[1].text()).toBe('0')
     })
 
-    it('affiche le bon nombre de projets', () => {
+    it('affiche le bon nombre de projets total', () => {
       wrapper = mountComponent(makeUser({
-        projets: [{ projet: { id_projet: 1 } }, { projet: { id_projet: 2 } }, { projet: { id_projet: 3 } }],
-        badges: [],
+        projets: [makeProjet('VALIDE'), makeProjet('EN_ATTENTE'), makeProjet('REJETE')],
       }))
       const numbers = wrapper.findAll('.stat-number')
       expect(numbers[0].text()).toBe('3')
     })
 
-    it('affiche le bon nombre de badges', () => {
+    it('affiche le bon nombre de projets validés', () => {
       wrapper = mountComponent(makeUser({
-        projets: [],
-        badges: [{ badge: { id_badge: 1 } }, { badge: { id_badge: 2 } }],
+        projets: [makeProjet('VALIDE'), makeProjet('VALIDE'), makeProjet('EN_ATTENTE')],
       }))
       const numbers = wrapper.findAll('.stat-number')
       expect(numbers[1].text()).toBe('2')
@@ -85,37 +87,36 @@ describe('ProfileStats.vue', () => {
 
     it('affiche les deux compteurs simultanément', () => {
       wrapper = mountComponent(makeUser({
-        projets: [{ projet: { id_projet: 1 } }, { projet: { id_projet: 2 } }],
-        badges: [{ badge: { id_badge: 1 } }],
+        projets: [makeProjet('VALIDE'), makeProjet('VALIDE'), makeProjet('EN_ATTENTE')],
       }))
       const numbers = wrapper.findAll('.stat-number')
-      expect(numbers[0].text()).toBe('2')
-      expect(numbers[1].text()).toBe('1')
+      expect(numbers[0].text()).toBe('3')
+      expect(numbers[1].text()).toBe('2')
     })
   })
 
   // ── Valeurs par défaut (nullsafety) ──────────────────────────────────────────
   describe('Nullsafety', () => {
-    it('affiche 0 projets quand etudiant est undefined', () => {
+    it('affiche 0 projets total quand etudiant est undefined', () => {
       wrapper = mountComponent({ etudiant: undefined })
       const numbers = wrapper.findAll('.stat-number')
       expect(numbers[0].text()).toBe('0')
     })
 
-    it('affiche 0 badges quand etudiant est undefined', () => {
+    it('affiche 0 projets validés quand etudiant est undefined', () => {
       wrapper = mountComponent({ etudiant: undefined })
       const numbers = wrapper.findAll('.stat-number')
       expect(numbers[1].text()).toBe('0')
     })
 
     it('affiche 0 quand participations_projets est undefined', () => {
-      wrapper = mountComponent({ etudiant: { badges: [{ badge: { id_badge: 1 } }] } })
+      wrapper = mountComponent({ etudiant: { badges: [] } })
       const numbers = wrapper.findAll('.stat-number')
       expect(numbers[0].text()).toBe('0')
     })
 
-    it('affiche 0 quand badges est undefined', () => {
-      wrapper = mountComponent({ etudiant: { participations_projets: [{ projet: { id_projet: 1 } }] } })
+    it('affiche 0 projets validés quand participations_projets est undefined', () => {
+      wrapper = mountComponent({ etudiant: { badges: [] } })
       const numbers = wrapper.findAll('.stat-number')
       expect(numbers[1].text()).toBe('0')
     })

@@ -1,8 +1,8 @@
-import { describe, it, expect, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { mount, flushPromises } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import SideBar from '@/components/laayout/SideBar.vue'
 
-// ── Mocks assets ──────────────────────────────────────────────────────────────
 vi.mock('@/assets/icons/dashboard.svg',        { default: 'dashboard.svg' })
 vi.mock('@/assets/icons/profile.svg',          { default: 'profile.svg' })
 vi.mock('@/assets/icons/parcours.svg',         { default: 'parcours.svg' })
@@ -15,6 +15,18 @@ vi.mock('@/assets/icons/notifications.svg',    { default: 'notifications.svg' })
 vi.mock('@/assets/icons/modeles.svg',          { default: 'modeles.svg' })
 vi.mock('@/assets/icons/portfoliocomplet.svg', { default: 'portfoliocomplet.svg' })
 
+const mockPush   = vi.fn()
+const mockLogout = vi.fn()
+
+vi.mock('@/stores/authstore', () => ({
+  useAuthStore: () => ({ logout: mockLogout }),
+}))
+
+vi.mock('vue-router', () => ({
+  useRouter:  () => ({ push: mockPush }),
+  RouterLink: { template: '<a><slot /></a>' },
+}))
+
 function mountSidebar() {
   return mount(SideBar, {
     global: {
@@ -24,55 +36,47 @@ function mountSidebar() {
 }
 
 describe('SideBar.vue', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+    mockLogout.mockResolvedValue(undefined)
+  })
 
-  // ── Rendu initial ─────────────────────────────────────────────────────────
+  // ── Rendu initial ─────────────────────────────────────────
 
   it('affiche la sidebar', () => {
-    const wrapper = mountSidebar()
-    expect(wrapper.find('.sidebar').exists()).toBe(true)
+    expect(mountSidebar().find('.sidebar').exists()).toBe(true)
   })
 
   it("n'est pas collapsed par défaut", () => {
-    const wrapper = mountSidebar()
-    expect(wrapper.find('.sidebar').classes()).not.toContain('collapsed')
+    expect(mountSidebar().find('.sidebar').classes()).not.toContain('collapsed')
   })
 
   it('affiche le bouton toggle', () => {
-    const wrapper = mountSidebar()
-    expect(wrapper.find('.toggle-btn').exists()).toBe(true)
+    expect(mountSidebar().find('.toggle-btn').exists()).toBe(true)
   })
 
-  // ── Liens de navigation ───────────────────────────────────────────────────
+  // ── Liens de navigation ───────────────────────────────────
 
   const navLabels = [
-    'Dashboard',
-    'Mon Profil',
-    'Parcours',
-    'Stages',
-    'Projets',
-    'Recommandations',
-    'Notifications',
-    'Modèles',
-    'Portfolio Complet',
+    'Dashboard', 'Mon Profil', 'Parcours', 'Stages', 'Projets',
+    'Recommandations', 'Notifications', 'Activités parascolaires', 'Portfolio Complet',
   ]
 
   navLabels.forEach(label => {
     it(`affiche le lien "${label}"`, () => {
-      const wrapper = mountSidebar()
-      expect(wrapper.find('.sidebar-nav').text()).toContain(label)
+      expect(mountSidebar().find('.sidebar-nav').text()).toContain(label)
     })
   })
 
   it('affiche 9 liens dans la nav principale', () => {
-    const wrapper = mountSidebar()
-    expect(wrapper.findAll('.sidebar-nav .nav-item').length).toBe(9)
+    expect(mountSidebar().findAll('.sidebar-nav .nav-item').length).toBe(9)
   })
 
-  // ── Section bas ───────────────────────────────────────────────────────────
+  // ── Section bas ───────────────────────────────────────────
 
   it('affiche le lien Paramètres en bas', () => {
-    const wrapper = mountSidebar()
-    expect(wrapper.find('.sidebar-bottom').text()).toContain('Paramètres')
+    expect(mountSidebar().find('.sidebar-bottom').text()).toContain('Paramètres')
   })
 
   it('affiche le bouton Déconnexion en bas', () => {
@@ -81,7 +85,7 @@ describe('SideBar.vue', () => {
     expect(wrapper.find('.logout-btn').text()).toContain('Déconnexion')
   })
 
-  // ── Toggle collapse ───────────────────────────────────────────────────────
+  // ── Toggle collapse ───────────────────────────────────────
 
   it('ajoute la classe collapsed après un clic sur le toggle', async () => {
     const wrapper = mountSidebar()
@@ -99,41 +103,39 @@ describe('SideBar.vue', () => {
   it('cache les labels nav quand collapsed', async () => {
     const wrapper = mountSidebar()
     await wrapper.find('.toggle-btn').trigger('click')
-    // v-show met display:none sur les nav-label
-    const labels = wrapper.findAll('.nav-label')
-    labels.forEach(label => {
+    wrapper.findAll('.nav-label').forEach(label => {
       expect(label.isVisible()).toBe(false)
     })
   })
 
   it('affiche les labels nav quand non collapsed', () => {
     const wrapper = mountSidebar()
-    const labels = wrapper.findAll('.nav-label')
-    labels.forEach(label => {
+    wrapper.findAll('.nav-label').forEach(label => {
       expect(label.isVisible()).toBe(true)
     })
   })
 
-  // ── Émission logout ───────────────────────────────────────────────────────
+  // ── Logout ────────────────────────────────────────────────
 
-  it("émet 'logout' en cliquant sur le bouton Déconnexion", async () => {
+  it('appelle authStore.logout au clic sur Déconnexion', async () => {
     const wrapper = mountSidebar()
     await wrapper.find('.logout-btn').trigger('click')
-    expect(wrapper.emitted('logout')).toBeTruthy()
+    await flushPromises()
+    expect(mockLogout).toHaveBeenCalledTimes(1)
   })
 
-  it("émet 'logout' une seule fois par clic", async () => {
+  it('redirige vers /login après déconnexion', async () => {
     const wrapper = mountSidebar()
     await wrapper.find('.logout-btn').trigger('click')
-    expect(wrapper.emitted('logout').length).toBe(1)
+    await flushPromises()
+    expect(mockPush).toHaveBeenCalledWith('/login')
   })
 
-  // ── Icônes ────────────────────────────────────────────────────────────────
+  // ── Icônes ────────────────────────────────────────────────
 
   it('chaque nav-item contient une icône', () => {
     const wrapper = mountSidebar()
-    const items = wrapper.findAll('.sidebar-nav .nav-item')
-    items.forEach(item => {
+    wrapper.findAll('.sidebar-nav .nav-item').forEach(item => {
       expect(item.find('.nav-icon').exists()).toBe(true)
     })
   })

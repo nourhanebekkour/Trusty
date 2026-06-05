@@ -4,39 +4,29 @@ import { setActivePinia, createPinia } from 'pinia'
 import { createRouter, createMemoryHistory } from 'vue-router'
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
-// ✅
-vi.mock('../../src/stores/authstore', () => ({
+vi.mock('@/stores/authstore', () => ({
   useAuthStore: vi.fn(),
 }))
 
-<<<<<<< HEAD:frontend/tests/loginview.test.js
-import { useAuthStore } from '../src/stores/auth'
-import LoginView from '../src/views/loginview.vue'
-=======
-import { useAuthStore } from '../../src/stores/authstore'
-// ✅
-import LoginView from '../../src/views/loginview.vue'
->>>>>>> d8683d494edc716797f461648f2c60f062f8a2ef:frontend/tests/views/loginview.test.js
+import { useAuthStore } from '@/stores/authstore'
+import LoginView from '@/views/loginview.vue'
 
 // ─── Router minimal ───────────────────────────────────────────────────────────
 const router = createRouter({
   history: createMemoryHistory(),
   routes: [
-    { path: '/', name: 'home',  component: { template: '<div>Home</div>' } },
+    { path: '/', name: 'home',      component: { template: '<div>Home</div>' } },
     { path: '/login', name: 'login', component: LoginView },
+    { path: '/dashboard', name: 'dashboard', component: { template: '<div>Dashboard</div>' } },
   ],
 })
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-/**
- * Monte LoginView avec un authStore mockable.
- * @param {object} storeOverrides - surcharge les valeurs du store
- */
 function mountLogin(storeOverrides = {}) {
   const mockStore = {
     error: null,
     loading: false,
-    loginUser: vi.fn().mockResolvedValue({}),
+    login: vi.fn().mockResolvedValue(false),
     ...storeOverrides,
   }
   useAuthStore.mockReturnValue(mockStore)
@@ -124,7 +114,7 @@ describe('LoginView — Tests Unitaires', () => {
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
-    expect(mockStore.loginUser).not.toHaveBeenCalled()
+    expect(mockStore.login).not.toHaveBeenCalled()
   })
 
   it('10 — mot de passe trop faible bloque le submit', async () => {
@@ -134,18 +124,18 @@ describe('LoginView — Tests Unitaires', () => {
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
-    expect(mockStore.loginUser).not.toHaveBeenCalled()
+    expect(mockStore.login).not.toHaveBeenCalled()
   })
 
   it('11 — mot de passe fort (8 car, maj, min, chiffre, symbole) passe la validation', async () => {
     const { wrapper, mockStore } = mountLogin()
-    mockStore.loginUser.mockResolvedValue({ success: true })
+    mockStore.login.mockResolvedValue(true)
     await wrapper.find('input[type="email"]').setValue('alice@test.com')
     await wrapper.find('input[type="password"]').setValue('Password1!')
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
-    expect(mockStore.loginUser).toHaveBeenCalled()
+    expect(mockStore.login).toHaveBeenCalled()
   })
 
   // ── Erreur store ────────────────────────────────────────────────────────────
@@ -163,25 +153,20 @@ describe('LoginView — Tests Unitaires', () => {
   // ── Tentatives & verrouillage ───────────────────────────────────────────────
 
   it('14 — après 3 échecs le bouton se désactive (lock)', async () => {
-  const { wrapper, mockStore } = mountLogin()
-  mockStore.loginUser.mockResolvedValue({}) // pas de success: true
+    const { wrapper, mockStore } = mountLogin()
+    mockStore.login.mockResolvedValue(false)
 
-  for (let i = 0; i < 3; i++) {
-    await wrapper.find('input[type="email"]').setValue('alice@test.com')
-    await wrapper.find('input[type="password"]').setValue('Password1!')
-    await wrapper.find('form').trigger('submit')
-    await flushPromises()
-  }
+    for (let i = 0; i < 3; i++) {
+      await wrapper.find('input[type="email"]').setValue('alice@test.com')
+      await wrapper.find('input[type="password"]').setValue('Password1!')
+      await wrapper.find('form').trigger('submit')
+      await flushPromises()
+    }
 
-  // Vérifier que loginAttempts a atteint MAX_ATTEMPTS (3)
-  // Le bouton doit être désactivé via isDisabled computed
-  await wrapper.vm.$nextTick()
-  const btn = wrapper.find('button.btn-login')
+    await wrapper.vm.$nextTick()
 
-  // Après 3 échecs, soit le lock est actif soit on vérifie que
-  // loginUser a bien été appelé 3 fois (le lock peut dépendre du timing)
-  expect(mockStore.loginUser).toHaveBeenCalledTimes(3)
-})
+    expect(mockStore.login).toHaveBeenCalledTimes(3)
+  })
 
   // ── Texte bouton ────────────────────────────────────────────────────────────
 
@@ -203,39 +188,34 @@ describe("LoginView — Tests d'Intégration", () => {
     vi.clearAllMocks()
   })
 
-  it('16 — login réussi : loginUser appelé avec email normalisé et mot de passe', async () => {
+  it('16 — login réussi : login appelé avec email normalisé et mot de passe', async () => {
     const { wrapper, mockStore } = mountLogin()
-    mockStore.loginUser.mockResolvedValue({ success: true })
+    mockStore.login.mockResolvedValue(true)
 
     await wrapper.find('input[type="email"]').setValue('  Alice@Test.COM  ')
     await wrapper.find('input[type="password"]').setValue('Password1!')
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
-    expect(mockStore.loginUser).toHaveBeenCalledWith(
-      expect.objectContaining({
-        email: 'alice@test.com', // normalisé en lowercase
-        password: 'Password1!',
-      })
-    )
+    expect(mockStore.login).toHaveBeenCalledWith('alice@test.com', 'Password1!', false)
   })
 
-  it('17 — login réussi : redirige vers "/"', async () => {
+  it('17 — login réussi : redirige vers "/dashboard"', async () => {
     const { wrapper, mockStore } = mountLogin()
-    mockStore.loginUser.mockResolvedValue({ success: true })
+    mockStore.login.mockResolvedValue(true)
 
     await wrapper.find('input[type="email"]').setValue('alice@test.com')
     await wrapper.find('input[type="password"]').setValue('Password1!')
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
-    expect(router.currentRoute.value.path).toBe('/')
+    expect(router.currentRoute.value.path).toBe('/dashboard')
   })
 
   it('18 — login échoué : reste sur /login, pas de redirection', async () => {
     await router.push('/login')
     const { wrapper, mockStore } = mountLogin()
-    mockStore.loginUser.mockResolvedValue({}) // pas de success: true
+    mockStore.login.mockResolvedValue(false)
 
     await wrapper.find('input[type="email"]').setValue('alice@test.com')
     await wrapper.find('input[type="password"]').setValue('Password1!')
@@ -247,7 +227,7 @@ describe("LoginView — Tests d'Intégration", () => {
 
   it('19 — login échoué : affiche un message d\'erreur générique', async () => {
     const { wrapper, mockStore } = mountLogin({ error: 'Email ou mot de passe invalide' })
-    mockStore.loginUser.mockResolvedValue({})
+    mockStore.login.mockResolvedValue(false)
 
     await wrapper.find('input[type="email"]').setValue('alice@test.com')
     await wrapper.find('input[type="password"]').setValue('Password1!')
@@ -257,9 +237,9 @@ describe("LoginView — Tests d'Intégration", () => {
     expect(wrapper.find('.error').exists()).toBe(true)
   })
 
-  it('20 — remember me : loginUser appelé avec remember: true si coché', async () => {
+  it('20 — remember me : login appelé avec les bons identifiants', async () => {
     const { wrapper, mockStore } = mountLogin()
-    mockStore.loginUser.mockResolvedValue({ success: true })
+    mockStore.login.mockResolvedValue(true)
 
     await wrapper.find('input[type="email"]').setValue('alice@test.com')
     await wrapper.find('input[type="password"]').setValue('Password1!')
@@ -267,8 +247,6 @@ describe("LoginView — Tests d'Intégration", () => {
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
-    expect(mockStore.loginUser).toHaveBeenCalledWith(
-      expect.objectContaining({ remember: true })
-    )
+    expect(mockStore.login).toHaveBeenCalledWith('alice@test.com', 'Password1!', true)
   })
 })
