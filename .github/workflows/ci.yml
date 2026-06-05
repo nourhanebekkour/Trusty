@@ -163,6 +163,7 @@ jobs:
 
       - name: Trivy — Scan image frontend
         uses: aquasecurity/trivy-action@0.28.0
+        if: always()
         with:
           image-ref: trusty-frontend:ci
           format: sarif
