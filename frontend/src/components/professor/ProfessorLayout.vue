@@ -1,32 +1,42 @@
 <template>
   <div class="professor-layout">
     <ProfessorTopbar />
-    <ProfessorSidebar />
-
-    <main class="professor-layout__main">
-      <RouterView />
-    </main>
-
-    <ProfessorFooter />
+    <div class="professor-layout__body">
+      <ProfessorSidebar />
+      <main class="professor-layout__main">
+        <RouterView />
+      </main>
+    </div>
   </div>
 </template>
 
 <script setup>
+import { ref, provide } from 'vue'
 import ProfessorTopbar from './ProfessorTopbar.vue'
-import ProfessorSidebar from './ProfessorSidebar.vue'
-import ProfessorFooter from './ProfessorFooter.vue'
+import ProfessorSidebar from './ProfessorSideBar.vue'
+
+const isCollapsed = ref(false)
+provide('sidebarCollapsed', isCollapsed)
 </script>
 
 <style scoped>
 .professor-layout {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   background: var(--color-page-bg, #F4F2EC);
 }
 
+.professor-layout__body {
+  display: flex;
+  flex: 1;
+  padding-top: 64px; /* hauteur de la topbar */
+}
+
 .professor-layout__main {
-  margin-left: 235px;
-  padding-top: 64px;
-  min-height: calc(100vh - 64px);
+  flex: 1;
+  min-width: 0;
   background: var(--color-page-bg, #F4F2EC);
+  overflow-y: auto;
 }
 </style>
