@@ -159,7 +159,12 @@ async function login(email, password) {
     throw new Error('Email ou mot de passe incorrect');
   }
 
-  // 2. Vérifier le statut du compte
+  // 2. Vérifier si l'email est vérifié
+  if (!user.email_verifie) {
+    throw new Error('Veuillez vérifier votre email avant de vous connecter');
+  }
+
+  // 3. Vérifier le statut du compte
   if (user.status_compte === 'INACTIF') {
     throw new Error('Compte inactif. En attente de validation par un administrateur');
   }

@@ -1,4 +1,4 @@
-import api from '../api.js'
+import api from './api.js'
 
 export const authService = {
 
@@ -32,6 +32,12 @@ export const authService = {
       token,
       nouveauMotDePasse
     })
+    return response.data
+  },
+
+  // POST /api/auth/verify-email
+  async verifyEmail(token) {
+    const response = await api.post('/auth/verify-email', { token })
     return response.data
   }
 }

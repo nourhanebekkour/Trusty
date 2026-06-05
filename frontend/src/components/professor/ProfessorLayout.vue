@@ -13,7 +13,7 @@
 
 <script setup>
 import ProfessorTopbar from './ProfessorTopbar.vue'
-import ProfessorSidebar from './ProfessorSidebar.vue'
+import ProfessorSidebar from './ProfessorSideBar.vue'
 import ProfessorFooter from './ProfessorFooter.vue'
 </script>
 

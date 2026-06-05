@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import AdminLayout from '../components/admin/AdminLayout.vue'
-import LoginView from '../views/loginview.vue'
+import HomeView from '@/views/HomeView.vue'
+import AdminLayout from '@/components/admin/AdminLayout.vue'
+import LoginView from '@/views/loginview.vue'
 import Dashboard from '@/views/Etudiant/Dashboard.vue'
 import ProjectList from '@/views/Etudiant/ProjectList.vue'
 import ProjectDetail from '@/views/Etudiant/ProjectDetail.vue'
@@ -10,11 +10,11 @@ import StageList from '@/views/Etudiant/StageList.vue'
 import Recommendations from '@/views/Etudiant/Recommendations.vue'
 import Notification from '@/views/Etudiant/Notification.vue'
 import Profile from '@/views/Etudiant/Profile.vue'
-import Modele from '@/views/Etudiant/Modele.vue'
 import Portfolio from '@/views/Etudiant/Portfolio.vue'
 import ProfessionalLayout from '@/components/Professional/ProfessionalLayout.vue'
 import ProfessorView from '@/views/ProfessorView.vue'
 import { useAuthStore } from '@/stores/authstore'
+import ProfessionalView from '@/views/Professional/ProfessionalView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -24,11 +24,7 @@ const router = createRouter({
       name: 'home',
       component: HomeView,
     },
-    {
-      path: '/about',
-      name: 'about',
-      component: () => import('../views/AboutView.vue'),
-    },
+   
     {
       path: '/login',
       name: 'login',
@@ -48,27 +44,27 @@ const router = createRouter({
         {
           path: 'dashboard',
           name: 'admin-dashboard',
-          component: () => import('../views/admin/AdminDashboard.vue'),
+          component: () => import('@/views/admin/AdminDashboard.vue'),
         },
         {
           path: 'utilisateurs',
           name: 'admin-users',
-          component: () => import('../views/admin/AdminUsers.vue'),
+          component: () => import('@/views/admin/AdminUsers.vue'),
         },
         {
           path: 'verifications',
           name: 'admin-verifications',
-          component: () => import('../views/admin/AdminVerifications.vue'),
+          component: () => import('@/views/admin/AdminVerifications.vue'),
         },
         {
           path: 'portfolios',
           name: 'admin-portfolios',
-          component: () => import('../views/admin/AdminPortfolios.vue'),
+          component: () => import('@/views/admin/AdminPortfolios.vue'),
         },
         {
           path: 'notifications',
           name: 'admin-notifications',
-          component: () => import('../views/admin/AdminNotifications.vue'),
+          component: () => import('@/views/admin/AdminNotifications.vue'),
         },
       ],
     },
@@ -124,12 +120,6 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: '/modele',
-      name: 'modele',
-      component: Modele,
-      meta: { requiresAuth: true },
-    },
-    {
       path: '/portfolio',
       name: 'portfolio',
       component: Portfolio,
@@ -174,6 +164,11 @@ const router = createRouter({
           path: 'recommendations',
           name: 'professional-recommendations',
           component: () => import('@/views/Professional/ProfessionalRecommendations.vue'),
+        },
+        {
+          path: 'dashboard2',
+          name: 'professional-dashboard2',
+          component: ProfessionalView,
         },
       ],
     },

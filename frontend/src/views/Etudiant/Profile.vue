@@ -22,8 +22,12 @@
           <ProfileStats :user="user" />
         </div>
         <div class="content">
-          <ProfileSkills   :user="user" @add="showSkillsModal = true" />
-          <ProfileBadges   :user="user" @generate="generatePortfolio" />
+          <ProfileSkills
+            :user="user"
+            @add="showSkillModal = true"
+            @remove="handleRemoveSkill"
+          />
+          <ProfileBadges :user="user" />
           <div class="two-cols">
             <ProfileRepos    :user="user" />
             <ProfileProjects :user="user" />
@@ -40,10 +44,10 @@
       />
 
       <SkillModal
-        v-if="showSkillsModal"
+        v-if="showSkillModal"
         :user="user"
-        @close="showSkillsModal = false"
-        @added="onSkillAdded"
+        @close="showSkillModal = false"
+        @added="handleAddSkill"
       />
     </template>
   </div>
@@ -52,6 +56,7 @@
 <script setup>
 import { ref, onMounted }  from 'vue'
 import { useAuthStore }    from '@/stores/authstore'
+
 import ProfileCard         from '@/components/profile/ProfileCard.vue'
 import ProfileStats        from '@/components/profile/ProfileStats.vue'
 import ProfileSkills       from '@/components/profile/ProfileSkills.vue'
@@ -60,15 +65,22 @@ import ProfileRepos        from '@/components/profile/ProfileRepos.vue'
 import ProfileProjects     from '@/components/profile/ProfileProjects.vue'
 import ProfileEditModal    from '@/components/profile/ProfileEditModal.vue'
 import SkillModal          from '@/components/profile/SkillModal.vue'
-import { getProfile, patchProfile, addSkill, uploadAvatar } from '@/services/profileservices'
 
-const authStore       = useAuthStore()
-const user            = ref(null)
-const loading         = ref(false)
-const error           = ref(null)
-const saving          = ref(false)
-const showEditModal   = ref(false)
-const showSkillsModal = ref(false)
+import {
+  getProfile,
+  saveProfile,
+  uploadAvatar,
+  addSkill,
+  removeSkill,
+} from '@/services/profileservices'
+
+const authStore      = useAuthStore()
+const user           = ref(null)
+const loading        = ref(false)
+const error          = ref(null)
+const saving         = ref(false)
+const showEditModal  = ref(false)
+const showSkillModal = ref(false)
 
 // ── Chargement ────────────────────────────────────────────────────────────────
 
@@ -86,17 +98,11 @@ const loadProfile = async () => {
   }
 }
 
-// ── Édition du profil ─────────────────────────────────────────────────────────
+// ── Édition ───────────────────────────────────────────────────────────────────
 
 const openEditModal  = () => { showEditModal.value = true }
 const closeEditModal = () => { showEditModal.value = false }
 
-/**
- Il faut ajouter
- * saveProfile() orchestre automatiquement les deux appels :
- *   PATCH /utilisateurs/{id}  
- *   PUT   /etudiants/{id}     → ville, biographie...
- */
 const onSaveProfile = async (formData) => {
   saving.value = true
   try {
@@ -113,16 +119,16 @@ const onSaveProfile = async (formData) => {
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
 
-/**
- * Appelé par ProfileCard quand l'utilisateur choisit un nouveau fichier avatar.
- * @param {File} file
- */
 const onAvatarChange = async (file) => {
   try {
     const res = await uploadAvatar(user.value.id_utilisateur, file)
-    // Mettre à jour uniquement le champ photo pour éviter de re-fetcher tout le profil
-    user.value = { ...user.value, photo: res.data.photo }
-    authStore.user = user.value
+    const data = res.data
+    // L'API retourne soit { photo } soit { utilisateur: { photo } } selon l'implémentation
+    const newPhoto = data?.photo ?? data?.utilisateur?.photo ?? data?.url ?? null
+    if (newPhoto) {
+      user.value     = { ...user.value, photo: newPhoto }
+      authStore.user = user.value
+    }
   } catch (err) {
     alert(err.response?.data?.message || "Erreur lors de l'upload de la photo.")
   }
@@ -136,19 +142,27 @@ const onSkillAdded = async (skillName) => {
     if (!user.value.etudiant) user.value.etudiant = {}
     if (!user.value.etudiant.competences) user.value.etudiant.competences = []
     user.value.etudiant.competences.push(res.data)
-  } catch {
-    // Fallback local si l'API échoue (mode dégradé)
-    if (!user.value.etudiant.competences) user.value.etudiant.competences = []
-    user.value.etudiant.competences.push({
-      competence:      { id_competence: Date.now().toString(), nom: skillName, type: 'TECHNIQUE' },
-      niveau_maitrise: 'DEBUTANT',
-    })
+
+    showSkillModal.value = false
+  } catch (e) {
+    console.error('[handleAddSkill] :', e.response?.status, e.response?.data)
+    alert(e.response?.data?.message || "Impossible d'ajouter cette compétence.")
   }
 }
 
-// ── Portfolio ─────────────────────────────────────────────────────────────────
+const handleRemoveSkill = async (id_competence) => {
+  const id_etudiant = user.value?.etudiant?.id_etudiant ?? user.value?.id_utilisateur
+  try {
+    await removeSkill(id_etudiant, id_competence)
+    user.value.etudiant.competences = user.value.etudiant.competences
+      .filter((ec) => ec.competence.id_competence !== id_competence)
+  } catch (e) {
+    console.error('[handleRemoveSkill] :', e)
+    alert('Impossible de supprimer cette compétence.')
+  }
+}
 
-const generatePortfolio = () => alert('Fonctionnalité bientôt disponible !')
+// ── Montage ───────────────────────────────────────────────────────────────────
 
 onMounted(loadProfile)
 
