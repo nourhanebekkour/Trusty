@@ -1,4 +1,4 @@
-import api from './api.js'
+import api from '../api.js'
 
 // ── Candidats ──────────────────────────────────────────────────────────────────
 // GET /etudiants requires ADMINISTRATEUR — not accessible to PROFESSIONNEL.
