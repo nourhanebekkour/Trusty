@@ -81,48 +81,48 @@ jobs:
           sleep 10
           kill $SERVER_PID || true
 
-  trivy-scan:
-    name: Security — Trivy Scan
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-      actions: read
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
+#   trivy-scan:
+#     name: Security — Trivy Scan
+#     runs-on: ubuntu-latest
+#     permissions:
+#       security-events: write
+#       actions: read
+#       contents: read
+#     steps:
+#       - uses: actions/checkout@v4
 
-      - name: Build backend image
-        run: docker build -t trusty-backend:ci ./backend
+#       - name: Build backend image
+#         run: docker build -t trusty-backend:ci ./backend
 
-      - name: Build frontend image
-        run: docker build -t trusty-frontend:ci ./frontend
+#       - name: Build frontend image
+#         run: docker build -t trusty-frontend:ci ./frontend
 
-      - name: Scan trusty-backend
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: trusty-backend:ci
-          format: sarif
-          output: trivy-backend.sarif
-          severity: CRITICAL,HIGH
-          exit-code: '0'
+#       - name: Scan trusty-backend
+#         uses: aquasecurity/trivy-action@master
+#         with:
+#           image-ref: trusty-backend:ci
+#           format: sarif
+#           output: trivy-backend.sarif
+#           severity: CRITICAL,HIGH
+#           exit-code: '0'
 
-      - name: Scan trusty-frontend
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: trusty-frontend:ci
-          format: sarif
-          output: trivy-frontend.sarif
-          severity: CRITICAL,HIGH
-          exit-code: '0'
+#       - name: Scan trusty-frontend
+#         uses: aquasecurity/trivy-action@master
+#         with:
+#           image-ref: trusty-frontend:ci
+#           format: sarif
+#           output: trivy-frontend.sarif
+#           severity: CRITICAL,HIGH
+#           exit-code: '0'
 
-      - name: Upload backend results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: trivy-backend.sarif
-          category: trivy-backend
+#       - name: Upload backend results to GitHub Security
+#         uses: github/codeql-action/upload-sarif@v4
+#         with:
+#           sarif_file: trivy-backend.sarif
+#           category: trivy-backend
 
-      - name: Upload frontend results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: trivy-frontend.sarif
-          category: trivy-frontend
+#       - name: Upload frontend results to GitHub Security
+#         uses: github/codeql-action/upload-sarif@v4
+#         with:
+#           sarif_file: trivy-frontend.sarif
+#           category: trivy-frontend

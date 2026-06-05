@@ -14,7 +14,7 @@
 <script setup>
 import '@/assets/professional.css'
 import ProfessionalTopbar from './ProfessionalTopbar.vue'
-import ProfessionalSidebar from './ProfessionalSidebar.vue'
+import ProfessionalSidebar from './ProfessionalSideBar.vue'
 import ProfessionalFooter from './ProfessionalFooter.vue'
 </script>
 
@@ -27,7 +27,7 @@ import ProfessionalFooter from './ProfessionalFooter.vue'
 .professional-layout__main {
   min-height: calc(100vh - 64px);
   margin-left: 260px;
-  padding: 88px 32px 72px;
+  padding: 64px 0px 0px;  
 }
 
 @media (max-width: 900px) {

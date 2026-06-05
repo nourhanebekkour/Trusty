@@ -22,7 +22,7 @@
         <span class="nav-label" v-show="!isCollapsed">Mon Profil</span>
       </router-link>
 
-      <router-link to="/about" class="nav-item">
+      <router-link to="/parcours" class="nav-item">
         <img :src="iconParcours" class="nav-icon" />
         <span class="nav-label" v-show="!isCollapsed">Parcours</span>
       </router-link>
@@ -47,9 +47,9 @@
         <span class="nav-label" v-show="!isCollapsed">Notifications</span>
       </router-link>
 
-      <router-link to="/modele" class="nav-item">
+      <router-link to="/activites" class="nav-item">
         <img :src="iconModeles" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">Modèles</span>
+        <span class="nav-label" v-show="!isCollapsed">Activités parascolaires</span>
       </router-link> 
 
       <router-link to="/portfolio" class="nav-item">

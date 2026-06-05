@@ -1,11 +1,10 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 import SideBar from './components/laayout/SideBar.vue'
 import NavBar from './components/laayout/NavBar.vue'
-import AppFooter from './components/laayout/Footer.vue'
+import Footer from './components/laayout/Footer.vue'
 import { useAuthStore } from './stores/authstore'
-import { onMounted } from 'vue'
 
 const authStore = useAuthStore()
 const route = useRoute()
@@ -21,14 +20,13 @@ const isPublicPage = computed(() =>
   ['home', 'login', 'about', 'professor'].includes(route.name)
 )
 
-const isAdminPage = computed(() => route.path.startsWith('/admin'))
-
+const isAdminPage        = computed(() => route.path.startsWith('/admin'))
 const isProfessionalPage = computed(() => route.path.startsWith('/professional'))
 
 const isStudentPage = computed(() => {
   const studentPaths = [
-    '/dashboard', '/notifications', '/profile', '/projets',
-    '/settings', '/recommendations', '/stage', '/modele', '/portfolio',
+    '/dashboard', '/notifications', '/profile', '/projets', '/parcours',
+    '/settings', '/recommendations', '/stage', '/activites', '/portfolio',
   ]
   return studentPaths.some(p => route.path.startsWith(p))
 })
@@ -46,9 +44,8 @@ const isStudentPage = computed(() => {
   </div>
 
   <!-- ── Pages Professional : layout géré par ProfessionalLayout ── -->
-  <div v-else-if="isProfessionalPage">
-    <RouterView />
-  </div>
+  <!-- ── Pages Professional : layout géré par ProfessionalLayout ── -->
+<RouterView v-else-if="isProfessionalPage" />
 
   <!-- ── Pages Étudiant : navbar + sidebar + footer ── -->
   <div v-else-if="isStudentPage" class="app">
@@ -59,7 +56,7 @@ const isStudentPage = computed(() => {
         <RouterView />
       </main>
     </div>
-    <AppFooter />
+    <Footer />
   </div>
 
   <!-- ── Fallback ── -->
