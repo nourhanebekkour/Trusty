@@ -50,7 +50,7 @@ describe('ProfileCard.vue', () => {
 
     it('affiche le bouton "Modifier le profil"', () => {
       wrapper = mountComponent()
-      expect(wrapper.find('.btn-outline').text()).toContain('Modifier le profil')
+      expect(wrapper.find('.btn-edit').text()).toContain('Modifier le profil')
     })
 
     it('affiche le cover-banner', () => {
@@ -76,50 +76,44 @@ describe('ProfileCard.vue', () => {
 
     it('n\'affiche pas le span des initiales si photo est définie', () => {
       wrapper = mountComponent(makeUser({ photo: 'https://example.com/photo.jpg' }))
-      expect(wrapper.find('.avatar span:not(.online-dot)').exists()).toBe(false)
+      expect(wrapper.find('.avatar .initials').exists()).toBe(false)
     })
 
     it('affiche les initiales si user.photo est null', () => {
       wrapper = mountComponent(makeUser({ photo: null }))
       expect(wrapper.find('.avatar img').exists()).toBe(false)
-      const initials = wrapper.find('.avatar span:not(.online-dot)')
+      const initials = wrapper.find('.avatar .initials')
       expect(initials.text()).toBe('YB')
     })
 
     it('affiche max 2 initiales', () => {
       wrapper = mountComponent(makeUser({ prenom: 'Ali', nom: 'Ben Omar', photo: null }))
-      const initials = wrapper.find('.avatar span:not(.online-dot)')
+      const initials = wrapper.find('.avatar .initials')
       expect(initials.text()).toHaveLength(2)
-    })
-
-    it('affiche le point online-dot', () => {
-      wrapper = mountComponent()
-      expect(wrapper.find('.online-dot').exists()).toBe(true)
     })
   })
 
   // ── Role / Filière ────────────────────────────────────────────────────────────
+  // Le composant sépare le rôle (.role-badge) et la filière (.filiere-line).
   describe('Role et filière', () => {
-    it('affiche le role dans .role', () => {
-      wrapper = mountComponent(makeUser({ role: 'Étudiant', etudiant: { filiere: 'Informatique' } }))
-      expect(wrapper.find('.role').text()).toContain('Étudiant')
+    it('affiche le role dans .role-badge', () => {
+      wrapper = mountComponent(makeUser({ role: 'ETUDIANT', etudiant: { filiere: 'Informatique' } }))
+      expect(wrapper.find('.role-badge').text()).toContain('Étudiant')
     })
 
-    it('affiche la filiere après le séparateur ·', () => {
-      wrapper = mountComponent(makeUser({ role: 'Étudiant', etudiant: { filiere: 'Informatique' } }))
-      expect(wrapper.find('.role').text()).toContain('Informatique')
+    it('affiche la filiere dans .filiere-line', () => {
+      wrapper = mountComponent(makeUser({ role: 'ETUDIANT', etudiant: { filiere: 'Informatique' } }))
+      expect(wrapper.find('.filiere-line').text()).toContain('Informatique')
     })
 
-    it('affiche la filière si role est null', () => {
+    it('affiche la filière dans .filiere-line même si role est null', () => {
       wrapper = mountComponent(makeUser({ role: null, etudiant: { filiere: 'Génie Logiciel' } }))
-      expect(wrapper.find('.role').text()).toContain('Génie Logiciel')
+      expect(wrapper.find('.filiere-line').text()).toContain('Génie Logiciel')
     })
 
-    it('affiche seulement le séparateur si ni role ni filière', () => {
+    it('n\'affiche pas .filiere-line si filière est null', () => {
       wrapper = mountComponent(makeUser({ role: null, etudiant: { filiere: null } }))
-      // Le composant rend toujours <p class="role"> ; le texte est " · " → trim → "·"
-      expect(wrapper.find('.role').exists()).toBe(true)
-      expect(wrapper.find('.role').text().trim()).toBe('·')
+      expect(wrapper.find('.filiere-line').exists()).toBe(false)
     })
   })
 
@@ -168,7 +162,7 @@ describe('ProfileCard.vue', () => {
   describe('Événements', () => {
     it('émet "edit" au clic sur le bouton Modifier', async () => {
       wrapper = mountComponent()
-      await wrapper.find('.btn-outline').trigger('click')
+      await wrapper.find('.btn-edit').trigger('click')
       expect(wrapper.emitted('edit')).toBeTruthy()
       expect(wrapper.emitted('edit')).toHaveLength(1)
     })
@@ -185,7 +179,7 @@ describe('ProfileCard.vue', () => {
 
     it('getInitials gère un nom à un seul mot', () => {
       wrapper = mountComponent(makeUser({ prenom: 'Yassine', nom: '', photo: null }))
-      const initials = wrapper.find('.avatar span:not(.online-dot)')
+      const initials = wrapper.find('.avatar .initials')
       expect(initials.text()).toBe('Y')
     })
   })
