@@ -106,7 +106,7 @@ jobs:
 
       # --- Scan des dépendances npm (filesystem — sans builder l'image) ---
       - name: Trivy — Scan dépendances backend
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: ./backend
@@ -116,7 +116,7 @@ jobs:
           exit-code: '0'
 
       - name: Trivy — Scan dépendances frontend
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: ./frontend
@@ -127,7 +127,7 @@ jobs:
 
       # --- Scan des Dockerfiles (misconfigurations) ---
       - name: Trivy — Misconfig Dockerfile backend
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
           scan-ref: ./backend
@@ -136,7 +136,7 @@ jobs:
           exit-code: '0'
 
       - name: Trivy — Misconfig Dockerfile frontend
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
           scan-ref: ./frontend
@@ -153,7 +153,7 @@ jobs:
 
       # exit-code: '1' → fait échouer le pipeline si CVE CRITICAL dans NOS images
       - name: Trivy — Scan image backend
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: trusty-backend:ci
           format: sarif
@@ -162,7 +162,7 @@ jobs:
           exit-code: '1'
 
       - name: Trivy — Scan image frontend
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         if: always()
         with:
           image-ref: trusty-frontend:ci
