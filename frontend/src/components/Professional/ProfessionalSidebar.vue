@@ -14,6 +14,10 @@
         Dashboard
       </RouterLink>
 
+      <RouterLink to="/professional/dashboard2" active-class="active">
+        Dashboard2
+      </RouterLink>
+
       <RouterLink to="/professional/internships" active-class="active">
         Internships
       </RouterLink>
