@@ -4,6 +4,26 @@ function getData(res) {
   return res.data?.data ?? res.data
 }
 
+async function _fetchStudentsFromValidations() {
+  const [projetsRes, stagesRes] = await Promise.allSettled([
+    api.get('/projets/a-valider'),
+    api.get('/stages/a-valider'),
+  ])
+  const projets = projetsRes.status === 'fulfilled' ? (getData(projetsRes.value) ?? []) : []
+  const stages = stagesRes.status === 'fulfilled' ? (getData(stagesRes.value) ?? []) : []
+  const map = new Map()
+  ;(Array.isArray(projets) ? projets : []).forEach(p =>
+    (p.participations ?? []).forEach(({ etudiant: e }) => {
+      if (e?.id_etudiant) map.set(e.id_etudiant, e)
+    })
+  )
+  ;(Array.isArray(stages) ? stages : []).forEach(s => {
+    const e = s.etudiant
+    if (e?.id_etudiant) map.set(e.id_etudiant, e)
+  })
+  return [...map.values()]
+}
+
 function mapNotif(n) {
   return {
     id: n.id_notification,
@@ -88,15 +108,14 @@ function mapMessage(m) {
 }
 
 export async function getProfessorDashboard() {
-  const [projetsRes, stagesRes, etudiantsRes] = await Promise.allSettled([
+  const [projetsRes, stagesRes] = await Promise.allSettled([
     api.get('/projets/a-valider'),
     api.get('/stages/a-valider'),
-    api.get('/etudiants/'),
   ])
   const projets = projetsRes.status === 'fulfilled' ? (getData(projetsRes.value) ?? []) : []
   const stages = stagesRes.status === 'fulfilled' ? (getData(stagesRes.value) ?? []) : []
-  const etudiants = etudiantsRes.status === 'fulfilled' ? (getData(etudiantsRes.value) ?? []) : []
-  const students = (Array.isArray(etudiants) ? etudiants : []).map(mapEtudiant)
+  const etudiants = await _fetchStudentsFromValidations()
+  const students = etudiants.map(mapEtudiant)
   const validations = [
     ...(Array.isArray(projets) ? projets : []).map(p => mapValidation(p, 'projet')),
     ...(Array.isArray(stages) ? stages : []).map(s => mapValidation(s, 'stage')),
@@ -105,7 +124,7 @@ export async function getProfessorDashboard() {
     stats: {
       studentsCount: students.length,
       pendingValidationsCount: validations.length,
-      certificationsCount: students.filter(s => s.portfolioStatus === 'Certifié').length,
+      certificationsCount: 0,
       averageDelay: null,
     },
     students,
@@ -113,10 +132,9 @@ export async function getProfessorDashboard() {
   }
 }
 
-export async function getProfessorStudents(params = {}) {
-  const res = await api.get('/etudiants/', { params })
-  const data = getData(res)
-  return (Array.isArray(data) ? data : []).map(mapEtudiant)
+export async function getProfessorStudents() {
+  const etudiants = await _fetchStudentsFromValidations()
+  return etudiants.map(mapEtudiant)
 }
 
 export async function getProfessorPendingValidations(params = {}) {
@@ -157,58 +175,60 @@ export async function requestProfessorChanges(validationId, payload, type = 'pro
   })
 }
 
-export async function getProfessorPortfolios(params = {}) {
-  const res = await api.get('/etudiants/', { params })
-  const data = getData(res)
-  const list = Array.isArray(data) ? data : []
-  const portfolios = list.map(mapPortfolio)
+export async function getProfessorPortfolios() {
+  const etudiants = await _fetchStudentsFromValidations()
+  const portfolios = etudiants.map(e => {
+    const m = mapEtudiant(e)
+    return {
+      ...m,
+      id: e.id_etudiant,
+      studentName: m.fullName,
+      title: `Portfolio de ${m.fullName}`,
+      description: m.bio,
+      lastUpdate: e.portfolio?.date_derniere_maj ?? null,
+      portfolioUrl: m.portfolioUrl,
+      status: e.portfolio?.est_publie ? 'PUBLIE' : 'BROUILLON',
+      submittedAt: e.portfolio?.date_publication ?? null,
+      templateName: null,
+    }
+  })
   return {
     portfolios,
     stats: {
       totalPortfolios: portfolios.length,
-      pendingPortfolios: portfolios.filter(p => p.portfolioStatus !== 'Certifié').length,
-      certifiedPortfolios: portfolios.filter(p => p.portfolioStatus === 'Certifié').length,
+      pendingPortfolios: portfolios.filter(p => p.status === 'BROUILLON').length,
+      certifiedPortfolios: portfolios.filter(p => p.status === 'PUBLIE').length,
       activeCriteria: 0,
     },
   }
 }
 
 export async function getProfessorPortfolioDetails(portfolioId) {
-  const res = await api.get(`/etudiants/${portfolioId}`)
-  const data = getData(res)
-  return mapPortfolio(data ?? {})
-}
-
-export async function validateProfessorPortfolio(portfolioId) {
-  await api.post('/recommandations/', {
-    id_etudiant: portfolioId,
-    message: 'Portfolio certifié par le professeur.',
-  })
-}
-
-export async function requestPortfolioChanges(portfolioId, payload) {
-  await api.post('/recommandations/', {
-    id_etudiant: portfolioId,
-    message: payload?.reason ?? 'Modifications demandées sur le portfolio.',
-  })
+  const etudiants = await _fetchStudentsFromValidations()
+  const e = etudiants.find(s => s.id_etudiant === portfolioId)
+  if (!e) return null
+  const m = mapEtudiant(e)
+  return {
+    ...m,
+    id: e.id_etudiant,
+    studentName: m.fullName,
+    title: `Portfolio de ${m.fullName}`,
+    description: m.bio,
+    lastUpdate: e.portfolio?.date_derniere_maj ?? null,
+    portfolioUrl: m.portfolioUrl,
+    status: e.portfolio?.est_publie ? 'PUBLIE' : 'BROUILLON',
+    submittedAt: e.portfolio?.date_publication ?? null,
+  }
 }
 
 export async function exportProfessorPortfolioPdf() {
   return null
 }
 
-export async function certifyProfessorPortfolio(studentId) {
-  await api.post('/recommandations/', {
-    id_etudiant: studentId,
-    message: 'Portfolio certifié par le professeur.',
-  })
-}
-
 export async function getProfessorConversations() {
-  const res = await api.get('/etudiants/')
-  const data = getData(res)
+  const etudiants = await _fetchStudentsFromValidations()
   return {
-    conversations: (Array.isArray(data) ? data : []).map(e => ({
+    conversations: (Array.isArray(etudiants) ? etudiants : []).map(e => ({
       id: e.id_etudiant,
       studentName: `${(e.utilisateur?.prenom ?? '')} ${(e.utilisateur?.nom ?? '')}`.trim() || 'Étudiant',
       lastMessage: '',
@@ -220,23 +240,13 @@ export async function getProfessorConversations() {
 
 export async function getProfessorConversationMessages(conversationId) {
   try {
-    const res = await api.get(`/commentaires/etudiant/${conversationId}`)
+    const res = await api.get(`/commentaires/public/etudiant/${conversationId}`)
     const data = getData(res)
     return {
       messages: (Array.isArray(data) ? data : []).map(mapMessage),
     }
   } catch {
-    const res2 = await api.get(`/recommandations/public/etudiant/${conversationId}`)
-    const data = getData(res2)
-    return {
-      messages: (Array.isArray(data) ? data : []).map(m => ({
-        id: m.id_recommandation || m.id,
-        content: m.message ?? '',
-        senderRole: 'PROFESSOR',
-        senderName: '',
-        createdAt: m.date_creation,
-      })),
-    }
+    return { messages: [] }
   }
 }
 
