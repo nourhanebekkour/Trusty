@@ -1,15 +1,16 @@
 const ETUDIANT = { email: 'etudiant@test.com', password: 'Password123!' }
 
-const loginRequest = () =>
-  cy.request({ method: 'POST', url: '/api/auth/login', body: { ...ETUDIANT, remember: false } })
+const loginSession = () => {
+  cy.session([ETUDIANT.email], () => {
+    cy.request({ method: 'POST', url: '/api/auth/login', body: { ...ETUDIANT, remember: false } })
+  })
+}
 
 before(() => {
   cy.task('dbSeed')
-  loginRequest()
 })
 
 after(() => {
-  cy.request({ url: '/api/auth/logout', method: 'POST', failOnStatusCode: false })
   cy.clearCookies()
   cy.clearLocalStorage()
 })
@@ -18,7 +19,10 @@ after(() => {
 // 1. RENDU UI
 // ============================================================
 describe('E2E – Recommandations – Rendu UI', () => {
-  beforeEach(() => cy.visit('/recommendations'))
+  beforeEach(() => {
+    loginSession()
+    cy.visit('/recommendations')
+  })
 
   it('affiche le titre "Recommandations"', () => {
     cy.contains('Recommandations').should('be.visible')
@@ -47,6 +51,7 @@ describe('E2E – Recommandations – Rendu UI', () => {
 // ============================================================
 describe('E2E – Recommandations – Appels API', () => {
   it('charge les recommandations au chargement', () => {
+    loginSession()
     cy.intercept('GET', '**/recommandations**').as('listeRecos')
     cy.visit('/recommendations')
     cy.wait('@listeRecos').its('response.statusCode').should('be.oneOf', [200, 304])
@@ -57,27 +62,30 @@ describe('E2E – Recommandations – Appels API', () => {
 // 3. ONGLETS
 // ============================================================
 describe('E2E – Recommandations – Onglets', () => {
-  beforeEach(() => cy.visit('/recommendations'))
+  beforeEach(() => {
+    loginSession()
+    cy.visit('/recommendations')
+  })
 
   it('bascule sur l\'onglet "En attente"', () => {
     cy.contains('button', 'En attente').click()
-    cy.contains('button', 'En attente').should('have.class', /active|selected|tab-active/)
+    cy.contains('button', 'En attente').should('have.class', 'tab-active')
   })
 
   it('bascule sur l\'onglet "Validées"', () => {
     cy.contains('button', 'Validées').click()
-    cy.contains('button', 'Validées').should('have.class', /active|selected|tab-active/)
+    cy.contains('button', 'Validées').should('have.class', 'tab-active')
   })
 
   it('bascule sur l\'onglet "Rejetées"', () => {
     cy.contains('button', 'Rejetées').click()
-    cy.contains('button', 'Rejetées').should('have.class', /active|selected|tab-active/)
+    cy.contains('button', 'Rejetées').should('have.class', 'tab-active')
   })
 
   it('revient sur l\'onglet "Toutes"', () => {
     cy.contains('button', 'Rejetées').click()
     cy.contains('button', 'Toutes').click()
-    cy.contains('button', 'Toutes').should('have.class', /active|selected|tab-active/)
+    cy.contains('button', 'Toutes').should('have.class', 'tab-active')
   })
 })
 

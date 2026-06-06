@@ -1,15 +1,16 @@
 const ETUDIANT = { email: 'etudiant@test.com', password: 'Password123!' }
 
-const loginRequest = () =>
-  cy.request({ method: 'POST', url: '/api/auth/login', body: { ...ETUDIANT, remember: false } })
+const loginSession = () => {
+  cy.session([ETUDIANT.email], () => {
+    cy.request({ method: 'POST', url: '/api/auth/login', body: { ...ETUDIANT, remember: false } })
+  })
+}
 
 before(() => {
   cy.task('dbSeed')
-  loginRequest()
 })
 
 after(() => {
-  cy.request({ url: '/api/auth/logout', method: 'POST', failOnStatusCode: false })
   cy.clearCookies()
   cy.clearLocalStorage()
 })
@@ -18,7 +19,10 @@ after(() => {
 // 1. RENDU UI
 // ============================================================
 describe('E2E – Stages – Rendu UI', () => {
-  beforeEach(() => cy.visit('/stage'))
+  beforeEach(() => {
+    loginSession()
+    cy.visit('/stage')
+  })
 
   it('affiche le titre "Gestion des Stages"', () => {
     cy.contains('Gestion des Stages').should('be.visible')
@@ -38,6 +42,7 @@ describe('E2E – Stages – Rendu UI', () => {
 // ============================================================
 describe('E2E – Stages – Appels API', () => {
   it('charge les stages au chargement de la page', () => {
+    loginSession()
     cy.intercept('GET', '**/stages/**').as('listeStages')
     cy.visit('/stage')
     cy.wait('@listeStages').its('response.statusCode').should('be.oneOf', [200, 304])
@@ -48,7 +53,10 @@ describe('E2E – Stages – Appels API', () => {
 // 3. CRÉATION
 // ============================================================
 describe('E2E – Stages – Création', () => {
-  beforeEach(() => cy.visit('/stage'))
+  beforeEach(() => {
+    loginSession()
+    cy.visit('/stage')
+  })
 
   it('ouvre la modale de création au clic sur "Nouveau stage"', () => {
     cy.contains('Nouveau stage').click()

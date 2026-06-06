@@ -1,15 +1,16 @@
 const ETUDIANT = { email: 'etudiant@test.com', password: 'Password123!' }
 
-const loginRequest = () =>
-  cy.request({ method: 'POST', url: '/api/auth/login', body: { ...ETUDIANT, remember: false } })
+const loginSession = () => {
+  cy.session([ETUDIANT.email], () => {
+    cy.request({ method: 'POST', url: '/api/auth/login', body: { ...ETUDIANT, remember: false } })
+  })
+}
 
 before(() => {
   cy.task('dbSeed')
-  loginRequest()
 })
 
 after(() => {
-  cy.request({ url: '/api/auth/logout', method: 'POST', failOnStatusCode: false })
   cy.clearCookies()
   cy.clearLocalStorage()
 })
@@ -18,7 +19,10 @@ after(() => {
 // 1. RENDU UI
 // ============================================================
 describe('E2E – Notifications – Rendu UI', () => {
-  beforeEach(() => cy.visit('/notifications'))
+  beforeEach(() => {
+    loginSession()
+    cy.visit('/notifications')
+  })
 
   it('affiche le titre "Notifications"', () => {
     cy.contains('Notifications').should('be.visible')
@@ -48,6 +52,7 @@ describe('E2E – Notifications – Rendu UI', () => {
 // ============================================================
 describe('E2E – Notifications – Appels API', () => {
   it('charge les notifications au chargement', () => {
+    loginSession()
     cy.intercept('GET', '**/notifications**').as('listeNotifs')
     cy.visit('/notifications')
     cy.wait('@listeNotifs').its('response.statusCode').should('be.oneOf', [200, 304])
@@ -58,21 +63,24 @@ describe('E2E – Notifications – Appels API', () => {
 // 3. ONGLETS
 // ============================================================
 describe('E2E – Notifications – Onglets', () => {
-  beforeEach(() => cy.visit('/notifications'))
+  beforeEach(() => {
+    loginSession()
+    cy.visit('/notifications')
+  })
 
   it('bascule sur l\'onglet "Non lues"', () => {
     cy.contains('button', 'Non lues').click()
-    cy.contains('button', 'Non lues').should('have.class', /active|selected|tab-active/)
+    cy.contains('button', 'Non lues').should('have.class', 'tab-active')
   })
 
   it('bascule sur l\'onglet "Validations"', () => {
     cy.contains('button', 'Validations').click()
-    cy.contains('button', 'Validations').should('have.class', /active|selected|tab-active/)
+    cy.contains('button', 'Validations').should('have.class', 'tab-active')
   })
 
   it('bascule sur l\'onglet "Recommandations"', () => {
     cy.contains('button', 'Recommandations').click()
-    cy.contains('button', 'Recommandations').should('have.class', /active|selected|tab-active/)
+    cy.contains('button', 'Recommandations').should('have.class', 'tab-active')
   })
 })
 
@@ -80,7 +88,10 @@ describe('E2E – Notifications – Onglets', () => {
 // 4. MARQUER COMME LU
 // ============================================================
 describe('E2E – Notifications – Marquer comme lu', () => {
-  beforeEach(() => cy.visit('/notifications'))
+  beforeEach(() => {
+    loginSession()
+    cy.visit('/notifications')
+  })
 
   it('affiche "Tout marquer comme lu" si des notifications non lues existent', () => {
     cy.get('body').then($body => {
