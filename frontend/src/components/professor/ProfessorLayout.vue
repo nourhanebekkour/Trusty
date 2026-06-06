@@ -30,7 +30,6 @@ provide('sidebarCollapsed', isCollapsed)
 .professor-layout__body {
   display: flex;
   flex: 1;
-  padding-top: 64px; /* hauteur de la topbar */
 }
 
 .professor-layout__main {

@@ -223,6 +223,12 @@ const router = createRouter({
           component: () => import('../views/professor/ProfessorRecommendations.vue'),
            meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
         },
+        {
+          path: 'profile',
+          name: 'professor-profile',
+          component: () => import('../views/professor/ProfessorProfile.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
+        },
       ],
     },
 
