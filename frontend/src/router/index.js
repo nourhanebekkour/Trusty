@@ -18,6 +18,7 @@ import Parcours from '../views/Etudiant/Parcours.vue'
 import registerview from '@/views/registerview.vue'
 import VerifyEmailView from '@/views/VerifyEmailView.vue'
 import LettresRecommandation from '@/views/Etudiant/LettresRecommandation.vue'
+import PortfolioTemplate1 from '@/views/portfolio/PortfolioTemplate1.vue'
 
 // ── Roles autorisés ──────────────────────────────
 const ROLES = {
@@ -151,6 +152,11 @@ const router = createRouter({
       component: Portfolio,
     },
     {
+      path: '/portfolio/:url_publique',
+      name: 'portfolio-template1',
+      component: PortfolioTemplate1,
+    },
+    {
       path: '/activites',
       name: 'activites',
       component: activites,
@@ -211,7 +217,7 @@ router.beforeEach(async (to) => {
   }
 
   // Pages publiques (après la redirection par rôle)
-  if (['home', 'login', 'register', 'about', 'verify-email'].includes(to.name)) {
+  if (['home', 'login', 'register', 'about', 'verify-email', 'portfolio-template1'].includes(to.name)) {
     return true
   }
 
