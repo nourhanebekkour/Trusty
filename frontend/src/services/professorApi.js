@@ -133,15 +133,25 @@ export async function getProfessorPendingValidations(params = {}) {
 }
 
 export async function getProfessorValidations(params = {}) {
-  return getProfessorPendingValidations(params)
+  const items = await getProfessorPendingValidations(params)
+  return {
+    validations: items,
+    stats: {
+      pendingCount: items.filter(v => v.status === 'EN_ATTENTE').length,
+      approvedCount: items.filter(v => v.status === 'VALIDE').length,
+      changesRequestedCount: items.filter(v => v.status === 'REJETE').length,
+    },
+  }
 }
 
-export async function approveProfessorValidation(validationId) {
-  await api.post(`/projets/${validationId}/valider`, { decision: 'VALIDE' })
+export async function approveProfessorValidation(validationId, type = 'projet') {
+  const endpoint = type === 'stage' ? `/stages/${validationId}/valider` : `/projets/${validationId}/valider`
+  await api.post(endpoint, { decision: 'VALIDE' })
 }
 
-export async function requestProfessorChanges(validationId, payload) {
-  await api.post(`/projets/${validationId}/valider`, {
+export async function requestProfessorChanges(validationId, payload, type = 'projet') {
+  const endpoint = type === 'stage' ? `/stages/${validationId}/valider` : `/projets/${validationId}/valider`
+  await api.post(endpoint, {
     decision: 'REJETE',
     commentaire: payload?.reason ?? '',
   })
@@ -274,19 +284,8 @@ export async function deleteProfessorNotification(notificationId) {
   await api.put(`/notifications/${notificationId}/lire`)
 }
 
-export async function getProfessorRecommendations(params = {}) {
-  const res = await api.get('/recommandations/mes-recommandations-recus', { params })
-  const data = getData(res)
-  const list = Array.isArray(data) ? data : []
-  const recommendations = list.map(mapRecommandation)
-  return {
-    recommendations,
-    stats: {
-      total: recommendations.length,
-      completed: recommendations.filter(r => r.status === 'VALIDE').length,
-      pending: recommendations.filter(r => r.status === 'EN_ATTENTE').length,
-    },
-  }
+export async function getProfessorRecommendations() {
+  return { recommendations: [], stats: { total: 0, completed: 0, pending: 0 } }
 }
 
 export async function createProfessorRecommendationRequest(payload) {
