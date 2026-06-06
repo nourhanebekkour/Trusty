@@ -85,9 +85,6 @@ const portfolioIncludeConfig = {
                 }
             },
             lettres_recommandation: {
-                where: {
-                    est_public: true
-                },
                 include: {
                     redacteur: {
                         include: {
