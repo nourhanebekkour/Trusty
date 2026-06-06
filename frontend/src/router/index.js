@@ -10,7 +10,7 @@ import Recommendations from '@/views/Etudiant/Recommendations.vue'
 import Notification from '@/views/Etudiant/Notification.vue'
 import Profile from '@/views/Etudiant/Profile.vue'
 import activites from '@/views/Etudiant/activites.vue'
-import Portfolio from '@/views/Etudiant/Portfolio.vue'
+import Portfolio from '@/views/portfolio/PortfolioManagement.vue'
 import ProfessionalView from '@/views/ProfessionalView.vue'
 import ProfessorView from '@/views/ProfessorView.vue'
 import { useAuthStore } from '@/stores/authstore'
@@ -196,7 +196,7 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   const authStore = useAuthStore()
 
-  // Initialisation session (toujours en premier)
+  // Initialisation session
   if (!authStore.isInitialized) {
     try {
       await authStore.fetchUser()
@@ -205,7 +205,7 @@ router.beforeEach(async (to) => {
     }
   }
 
-  // ✅ Redirection automatique selon rôle (AVANT le court-circuit)
+  // Redirection automatique selon rôle
   if (authStore.isAuthenticated) {
     if (authStore.isAdmin) {
       if (!to.path.startsWith('/admin')) return '/admin/dashboard'
