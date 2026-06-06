@@ -1,15 +1,16 @@
 const ETUDIANT = { email: 'etudiant@test.com', password: 'Password123!' }
 
-const loginRequest = () =>
-  cy.request({ method: 'POST', url: '/api/auth/login', body: { ...ETUDIANT, remember: false } })
+const loginSession = () => {
+  cy.session([ETUDIANT.email], () => {
+    cy.request({ method: 'POST', url: '/api/auth/login', body: { ...ETUDIANT, remember: false } })
+  })
+}
 
 before(() => {
   cy.task('dbSeed')
-  loginRequest()
 })
 
 after(() => {
-  cy.request({ url: '/api/auth/logout', method: 'POST', failOnStatusCode: false })
   cy.clearCookies()
   cy.clearLocalStorage()
 })
@@ -18,7 +19,10 @@ after(() => {
 // 1. RENDU UI
 // ============================================================
 describe('E2E – Parcours – Rendu UI', () => {
-  beforeEach(() => cy.visit('/parcours'))
+  beforeEach(() => {
+    loginSession()
+    cy.visit('/parcours')
+  })
 
   it('affiche le titre "Parcours Académique"', () => {
     cy.contains('Parcours Académique').should('be.visible')
@@ -44,6 +48,7 @@ describe('E2E – Parcours – Rendu UI', () => {
 // ============================================================
 describe('E2E – Parcours – Appels API', () => {
   it('charge les formations au chargement', () => {
+    loginSession()
     cy.intercept('GET', '**/formations/**').as('listeFormations')
     cy.visit('/parcours')
     cy.wait('@listeFormations').its('response.statusCode').should('be.oneOf', [200, 304])
@@ -54,7 +59,10 @@ describe('E2E – Parcours – Appels API', () => {
 // 3. CRÉATION D'UNE FORMATION
 // ============================================================
 describe('E2E – Parcours – Création', () => {
-  beforeEach(() => cy.visit('/parcours'))
+  beforeEach(() => {
+    loginSession()
+    cy.visit('/parcours')
+  })
 
   it('ouvre la modale "Nouvelle formation"', () => {
     cy.contains('Ajouter une formation').click()
@@ -63,12 +71,13 @@ describe('E2E – Parcours – Création', () => {
   })
 
   it('crée une nouvelle formation', () => {
+    const diplome = `Master E2E ${Date.now()}`
     cy.intercept('POST', '**/formations/**').as('createFormation')
     cy.contains('Ajouter une formation').click()
-    cy.get('input[name="diplome"], input[placeholder*="diplôme"], input[placeholder*="Diplôme"]').first().type('Master Informatique')
-    cy.get('input[name="etablissement"], input[placeholder*="établissement"]').first().type('Université Test')
+    cy.get('input[placeholder*="Licence Informatique"]').type(diplome)
+    cy.get('input[placeholder*="Moulay"]').type('Université Test')
     cy.get('input[type="date"]').first().type('2022-09-01')
-    cy.contains('button', /ajouter|enregistrer|créer/i).click()
+    cy.get('.modal-box').contains('button', 'Ajouter').click()
     cy.wait('@createFormation').its('response.statusCode').should('be.oneOf', [200, 201])
   })
 
@@ -83,7 +92,10 @@ describe('E2E – Parcours – Création', () => {
 // 4. TRI
 // ============================================================
 describe('E2E – Parcours – Tri', () => {
-  beforeEach(() => cy.visit('/parcours'))
+  beforeEach(() => {
+    loginSession()
+    cy.visit('/parcours')
+  })
 
   it('le bouton de tri est visible', () => {
     cy.contains(/Trier par/i).should('be.visible')

@@ -1,15 +1,16 @@
 const ETUDIANT = { email: 'etudiant@test.com', password: 'Password123!' }
 
-const loginRequest = () =>
-  cy.request({ method: 'POST', url: '/api/auth/login', body: { ...ETUDIANT, remember: false } })
+const loginSession = () => {
+  cy.session([ETUDIANT.email], () => {
+    cy.request({ method: 'POST', url: '/api/auth/login', body: { ...ETUDIANT, remember: false } })
+  })
+}
 
 before(() => {
   cy.task('dbSeed')
-  loginRequest()
 })
 
 after(() => {
-  cy.request({ url: '/api/auth/logout', method: 'POST', failOnStatusCode: false })
   cy.clearCookies()
   cy.clearLocalStorage()
 })
@@ -18,7 +19,10 @@ after(() => {
 // 1. RENDU UI
 // ============================================================
 describe('E2E – Projets – Rendu UI', () => {
-  beforeEach(() => cy.visit('/projets'))
+  beforeEach(() => {
+    loginSession()
+    cy.visit('/projets')
+  })
 
   it('affiche le titre "Projets"', () => {
     cy.contains('Projets').should('be.visible')
@@ -41,7 +45,10 @@ describe('E2E – Projets – Rendu UI', () => {
 // 2. FILTRES
 // ============================================================
 describe('E2E – Projets – Filtres', () => {
-  beforeEach(() => cy.visit('/projets'))
+  beforeEach(() => {
+    loginSession()
+    cy.visit('/projets')
+  })
 
   it('ouvre le panneau de filtres', () => {
     cy.contains('Filtres').click()
@@ -66,7 +73,10 @@ describe('E2E – Projets – Filtres', () => {
 // 3. CRÉATION
 // ============================================================
 describe('E2E – Projets – Création', () => {
-  beforeEach(() => cy.visit('/projets'))
+  beforeEach(() => {
+    loginSession()
+    cy.visit('/projets')
+  })
 
   it('ouvre la modale de création', () => {
     cy.contains('Nouveau projet').click()
@@ -76,11 +86,11 @@ describe('E2E – Projets – Création', () => {
   it('crée un nouveau projet', () => {
     cy.intercept('POST', '**/projets**').as('createProjet')
     cy.contains('Nouveau projet').click()
-    cy.get('input[placeholder*="titre"], input[name="titre"]').first().type('Projet E2E Test')
-    cy.get('select[name="type_projet"], select').first().select('PERSONNEL')
-    cy.get('textarea[name="description"], textarea').first().type('Description du projet de test E2E')
+    cy.get('input[placeholder="Ex: Système de gestion…"]').type(`Projet E2E ${Date.now()}`)
+    cy.get('select.form-input').first().select('PERSONNEL')
     cy.get('input[type="date"]').first().type('2024-01-01')
-    cy.contains('button', /ajouter|créer|enregistrer/i).click()
+    cy.get('textarea[placeholder="Décrivez votre projet…"]').type('Description du projet de test E2E')
+    cy.contains('button', /soumettre|enregistrer/i).click()
     cy.wait('@createProjet').its('response.statusCode').should('eq', 201)
   })
 })
@@ -90,6 +100,7 @@ describe('E2E – Projets – Création', () => {
 // ============================================================
 describe('E2E – Projets – Appels API', () => {
   it('charge la liste des projets au chargement', () => {
+    loginSession()
     cy.intercept('GET', '**/projets**').as('listeProjets')
     cy.visit('/projets')
     cy.wait('@listeProjets').its('response.statusCode').should('be.oneOf', [200, 304])
@@ -100,7 +111,10 @@ describe('E2E – Projets – Appels API', () => {
 // 5. RECHERCHE
 // ============================================================
 describe('E2E – Projets – Recherche', () => {
-  beforeEach(() => cy.visit('/projets'))
+  beforeEach(() => {
+    loginSession()
+    cy.visit('/projets')
+  })
 
   it('filtre les projets en tapant dans la recherche', () => {
     cy.get('input[placeholder*="projet"]').type('test')
