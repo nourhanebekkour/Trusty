@@ -14,6 +14,9 @@
       </button>
     </header>
 
+    <!-- ── ERROR ─────────────────────────────────────────────────── -->
+    <div v-if="errorMsg" class="error-banner">{{ errorMsg }}</div>
+
     <!-- ── AUTO-GENERATED BANNER ─────────────────────────────────── -->
     <div v-if="hasAutoPortfolio" class="auto-default-banner">
       <div>
@@ -22,48 +25,52 @@
       </div>
     </div>
 
+    <!-- ── LOADING ────────────────────────────────────────────────── -->
+    <div v-if="loading" class="loading-state">Chargement de vos portfolios...</div>
+
     <!-- ── PORTFOLIO GRID ────────────────────────────────────────── -->
-    <div class="portfolio-grid">
-      <div v-for="p in portfolios" :key="p.id" :class="['pf-card', p.isAuto && 'pf-card--auto']">
+    <div v-else class="portfolio-grid">
+      <div v-for="p in portfolios" :key="p.id_portfolio" :class="['pf-card', p.isAuto && 'pf-card--auto']">
 
         <div class="pf-card__top">
           <div class="pf-card__meta">
             <span v-if="p.objective" :class="['obj-badge', `obj-badge--${p.objective}`]">{{ p.objective }}</span>
-            <span class="tpl-label">{{ p.template }}</span>
+            <span class="tpl-label">{{ p.modele?.nom_modele }}</span>
           </div>
-          <span :class="['status-badge', p.published ? 'status-badge--published' : 'status-badge--draft']">
+          <span :class="['status-badge', p.est_publie ? 'status-badge--published' : 'status-badge--draft']">
             <span class="badge__dot"></span>
-            {{ p.published ? 'Publié' : 'Brouillon' }}
+            {{ p.est_publie ? 'Publié' : 'Brouillon' }}
           </span>
         </div>
 
-        <h3 class="pf-card__title">{{ p.title }}</h3>
+        <h3 class="pf-card__title">{{ p.titre_personnalise }}</h3>
 
-        <p v-if="p.isAuto && !p.published" class="auto-portfolio-msg">Votre portfolio a été généré automatiquement. Personnalisez-le et publiez-le !</p>
+        <p v-if="p.isAuto && !p.est_publie" class="auto-portfolio-msg">Votre portfolio a été généré automatiquement. Personnalisez-le et publiez-le !</p>
 
-        <a v-if="p.published && p.url" :href="p.url" target="_blank" class="pf-card__url">
-          🔗 {{ p.url }}
+        <a v-if="p.est_publie && p.url_publique" :href="`/portfolio/${p.url_publique}`" target="_blank" class="pf-card__url">
+          🔗 /portfolio/{{ p.url_publique }}
         </a>
 
         <div class="pf-card__stats">
           <span class="stat-pill">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            {{ p.views }} vues
+            {{ p.nombre_vues }} vues
           </span>
           <span class="stat-pill">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            {{ p.recommendations }} recommandations
+            {{ p.nombre_recommandations }} recommandations
           </span>
         </div>
 
         <div class="pf-card__actions">
           <button class="btn btn--ghost" @click="editPortfolio(p)">Modifier</button>
-          <button class="btn btn--ghost" @click="viewPortfolio(p)">Voir</button>
+          <button class="btn btn--ghost" :disabled="!p.est_publie" @click="viewPortfolio(p)">Voir</button>
           <button
-            :class="['btn', p.published ? 'btn--unpublish' : 'btn--publish']"
+            :class="['btn', p.est_publie ? 'btn--unpublish' : 'btn--publish']"
+            :disabled="publishingId === p.id_portfolio"
             @click="togglePublish(p)"
           >
-            {{ p.published ? 'Dépublier' : 'Publier' }}
+            {{ publishingId === p.id_portfolio ? '...' : (p.est_publie ? 'Dépublier' : 'Publier') }}
           </button>
         </div>
       </div>
@@ -187,7 +194,8 @@
 
             <div class="field">
               <label class="field__label">Template</label>
-              <div class="template-grid">
+              <p v-if="!templates.length" class="field__hint">Chargement des templates...</p>
+              <div v-else class="template-grid">
                 <div
                   v-for="tpl in templates"
                   :key="tpl.id"
@@ -208,7 +216,9 @@
 
           <div class="modal__footer">
             <button class="btn btn--ghost" @click="closeModal">Annuler</button>
-            <button class="btn btn--save" @click="savePortfolio">Enregistrer</button>
+            <button class="btn btn--save" :disabled="saving || !form.template" @click="savePortfolio">
+              {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+            </button>
           </div>
         </div>
       </div>
@@ -218,16 +228,18 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import api from '@/api'
 
 const router = useRouter()
 
-const templates = [
-  { id: 'Template 1', name: 'Template 1', color: 'linear-gradient(135deg, #1A3838 60%, #5C8C6A 100%)' },
-  { id: 'Template 2', name: 'Template 2', color: 'linear-gradient(135deg, #2a2a4a 60%, #6a5c8c 100%)' },
-  { id: 'Template 3', name: 'Template 3', color: 'linear-gradient(135deg, #3a2a1a 60%, #8c6a5c 100%)' },
-]
+// ── Static display data (ne vient pas de l'API) ──────────────────────
+const TEMPLATE_COLORS = {
+  'Template 1': 'linear-gradient(135deg, #1A3838 60%, #5C8C6A 100%)',
+  'Template 2': 'linear-gradient(135deg, #2a2a4a 60%, #6a5c8c 100%)',
+  'Template 3': 'linear-gradient(135deg, #3a2a1a 60%, #8c6a5c 100%)',
+}
 
 const templateShowcase = [
   { id: 'Template 1', name: 'One Page',       bg: '#0B1120', desc: 'Portfolio une page avec score de crédibilité et sections fluides.' },
@@ -235,37 +247,65 @@ const templateShowcase = [
   { id: 'Template 3', name: 'CV Minimaliste', bg: '#FFFFFF', desc: 'Design épuré façon CV, idéal pour impression PDF.' },
 ]
 
-const portfolios = ref([
-  {
-    id:              'auto',
-    title:           'Mon Portfolio',
-    objective:       'WEBDEV',
-    template:        'Template 1',
-    published:       false,
-    url:             '',
-    views:           0,
-    recommendations: 0,
-    isAuto:          true,
-  },
-])
+const objectives = ['WEBDEV', 'DEVOPS', 'DATA', 'CYBER']
+
+// ── State ────────────────────────────────────────────────────────────
+const portfolios   = ref([])
+const apiModeles   = ref([])
+const loading      = ref(false)
+const saving       = ref(false)
+const publishingId = ref(null)
+const errorMsg     = ref('')
+
+// ── Computed ─────────────────────────────────────────────────────────
+const templates = computed(() =>
+  apiModeles.value.map(m => ({
+    id:    m.id_modele,
+    name:  m.nom_modele,
+    color: TEMPLATE_COLORS[m.nom_modele] ?? '#374151',
+  }))
+)
 
 const hasAutoPortfolio = computed(() => portfolios.value.some(p => p.isAuto))
 
-const activeTemplate = computed(() => portfolios.value[0]?.template ?? 'Template 1')
+const activeTemplate = computed(() => portfolios.value[0]?.modele?.nom_modele ?? 'Template 1')
 
-function slugify(title) {
-  return title.toLowerCase().replace(/\s+/g, '-')
+// ── Data loading ─────────────────────────────────────────────────────
+async function loadPortfolios() {
+  loading.value = true
+  errorMsg.value = ''
+  try {
+    const res = await api.get('/portfolio/me')
+    portfolios.value = res.data.data ?? []
+  } catch (e) {
+    errorMsg.value = 'Impossible de charger vos portfolios.'
+    console.error(e)
+  } finally {
+    loading.value = false
+  }
 }
+
+async function loadModeles() {
+  try {
+    const res = await api.get('/portfolio/templates')
+    apiModeles.value = res.data.data ?? []
+  } catch (e) {
+    console.error('Impossible de charger les templates :', e)
+  }
+}
+
+onMounted(() => {
+  loadPortfolios()
+  loadModeles()
+})
 
 // ── Modal ────────────────────────────────────────────────────────────
 const showModal = ref(false)
-const form = reactive({ title: '', template: 'Template 1', objective: 'WEBDEV' })
-
-const objectives = ['WEBDEV', 'DEVOPS', 'DATA', 'CYBER']
+const form = reactive({ title: '', template: '', objective: 'WEBDEV' })
 
 function openCreateModal() {
   form.title     = ''
-  form.template  = 'Template 1'
+  form.template  = templates.value[0]?.id ?? ''
   form.objective = 'WEBDEV'
   showModal.value = true
 }
@@ -274,33 +314,47 @@ function closeModal() {
   showModal.value = false
 }
 
-function savePortfolio() {
-  portfolios.value.push({
-    id:              Date.now(),
-    title:           form.title || 'Nouveau Portfolio',
-    objective:       form.objective,
-    template:        form.template,
-    published:       false,
-    url:             '',
-    views:           0,
-    recommendations: 0,
-  })
-  closeModal()
+async function savePortfolio() {
+  if (!form.template) return
+  saving.value = true
+  errorMsg.value = ''
+  try {
+    await api.post('/portfolio/me', {
+      titre_personnalise: form.title || 'Nouveau Portfolio',
+      id_modele: form.template,
+    })
+    closeModal()
+    await loadPortfolios()
+  } catch (e) {
+    errorMsg.value = e.response?.data?.message ?? 'Erreur lors de la création.'
+    console.error(e)
+  } finally {
+    saving.value = false
+  }
 }
 
 // ── Actions ──────────────────────────────────────────────────────────
 function editPortfolio(p) {
-  router.push(`/portfolio/${slugify(p.title)}?edit=true`)
+  router.push({ name: 'portfolio-template1', params: { url_publique: p.url_publique }, query: { edit: 'true' } })
 }
 
 function viewPortfolio(p) {
-  router.push(`/portfolio/${slugify(p.title)}`)
+  router.push({ name: 'portfolio-template1', params: { url_publique: p.url_publique } })
 }
 
-function togglePublish(p) {
-  p.published = !p.published
-  if (p.published && !p.url) {
-    p.url = `https://trusty.app/portfolio/${slugify(p.title)}`
+async function togglePublish(p) {
+  publishingId.value = p.id_portfolio
+  errorMsg.value = ''
+  try {
+    await api.post(`/portfolio/me/${p.id_portfolio}/publish`, {
+      est_publie: !p.est_publie,
+    })
+    p.est_publie = !p.est_publie
+  } catch (e) {
+    errorMsg.value = e.response?.data?.message ?? 'Erreur lors de la publication.'
+    console.error(e)
+  } finally {
+    publishingId.value = null
   }
 }
 </script>
@@ -413,7 +467,11 @@ function togglePublish(p) {
   border-radius: 10px; padding: 10px 24px; font-size: 0.88rem; font-weight: 600;
   cursor: pointer; transition: background 0.15s;
 }
-.btn--save:hover { background: var(--color-accent-hover); }
+.btn--save:hover:not(:disabled) { background: var(--color-accent-hover); }
+.btn--save:disabled,
+.btn--publish:disabled,
+.btn--unpublish:disabled,
+.btn--ghost:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* Modal */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
@@ -429,6 +487,7 @@ function togglePublish(p) {
 .field__label { font-size: 0.8rem; font-weight: 600; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
 .field__input { background: var(--color-surface-alt); border: 1px solid var(--color-border); border-radius: 8px; padding: 10px 14px; color: var(--color-text-primary); font-size: 0.9rem; font-family: Inter, sans-serif; outline: none; transition: border-color 0.15s; width: 100%; }
 .field__input:focus { border-color: var(--color-accent); }
+.field__hint { font-size: 0.8rem; color: var(--color-text-secondary); margin: 0; }
 
 .obj-selector { display: flex; gap: 8px; flex-wrap: wrap; }
 .obj-option {
@@ -483,6 +542,23 @@ function togglePublish(p) {
   border-radius: 50%;
   background: currentColor;
   display: inline-block;
+}
+
+/* Error & loading */
+.error-banner {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #dc2626;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+}
+.loading-state {
+  text-align: center;
+  padding: 48px 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
 }
 
 /* ── Templates disponibles section ─────────────────────────────────── */
