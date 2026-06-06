@@ -1,242 +1,198 @@
 <template>
-  <aside class="professor-sidebar">
-    <div class="professor-sidebar__content">
-      <div class="professor-sidebar__section">
-        <p class="professor-sidebar__section-title">Professor area</p>
+  <aside class="sidebar" :class="{ collapsed: isCollapsed }">
 
-        <nav class="professor-sidebar__nav">
-          <RouterLink
-            v-for="item in navItems"
-            :key="item.path"
-            :to="item.path"
-            class="professor-sidebar__link"
-            :class="{ 'professor-sidebar__link--active': isActive(item.path) }"
-          >
-            <span class="professor-sidebar__icon"></span>
-            <span class="professor-sidebar__label">{{ item.label }}</span>
-
-            <span v-if="item.badge" class="professor-sidebar__badge">
-              {{ item.badge }}
-            </span>
-          </RouterLink>
-        </nav>
-      </div>
-    </div>
-
-    <div class="professor-sidebar__bottom">
-      <RouterLink
-        to="/settings"
-        class="professor-sidebar__link"
-        :class="{ 'professor-sidebar__link--active': isActive('/settings') }"
-      >
-        <span class="professor-sidebar__icon"></span>
-        <span class="professor-sidebar__label">Settings</span>
-      </RouterLink>
-
-      <button
-        class="professor-sidebar__logout"
-        type="button"
-        @click="handleLogout"
-      >
-        Logout
+    <div class="sidebar-header">
+      <button class="toggle-btn" @click="toggleSidebar">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6"  x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
       </button>
     </div>
+
+    <nav class="sidebar-nav">
+      <router-link to="/professor" class="nav-item">
+        <img :src="iconProjets" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Projets à valider</span>
+      </router-link>
+
+      <router-link to="/professor" class="nav-item">
+        <img :src="iconStages" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Stages à valider</span>
+      </router-link>
+
+      <router-link to="/professor" class="nav-item">
+        <img :src="iconProfile" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Mes étudiants</span>
+      </router-link>
+
+      <router-link to="/professor" class="nav-item">
+        <img :src="iconRecommandations" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Recommandations</span>
+      </router-link>
+
+      <router-link to="/professor" class="nav-item">
+        <img :src="iconNotifications" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Notifications</span>
+      </router-link>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <router-link to="/professor" class="nav-item">
+        <img :src="iconSettings" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Paramètres</span>
+      </router-link>
+
+      <button class="nav-item logout-btn" @click="handleLogout">
+        <img :src="iconLogout" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Déconnexion</span>
+      </button>
+    </div>
+
   </aside>
 </template>
 
 <script setup>
-import { useRoute, useRouter } from 'vue-router'
+import { ref } from 'vue'
 import { useAuthStore } from '@/stores/authstore'
+import { useRouter } from 'vue-router'
 
-const route = useRoute()
-const router = useRouter()
-const auth = useAuthStore()
+import iconProjets         from '@/assets/icons/projets.svg'
+import iconStages          from '@/assets/icons/stages.svg'
+import iconProfile         from '@/assets/icons/profile.svg'
+import iconRecommandations from '@/assets/icons/recommandations.svg'
+import iconNotifications   from '@/assets/icons/notifications.svg'
+import iconSettings        from '@/assets/icons/settings.svg'
+import iconLogout          from '@/assets/icons/logout.svg'
 
-const navItems = [
-  {
-    label: 'Dashboard',
-    path: '/professor/dashboard',
-  },
-  {
-    label: 'Portfolios',
-    path: '/professor/portfolios',
-  },
-  {
-    label: 'Validations',
-    path: '/professor/validations',
-  },
-  {
-    label: 'Messages',
-    path: '/professor/messages',
-  },
-  {
-    label: 'Notifications',
-    path: '/professor/notifications',
-  },
-  {
-    label: 'Recommendations',
-    path: '/professor/recommendations',
-  },
-]
+const isCollapsed = ref(false)
+const authStore   = useAuthStore()
+const router      = useRouter()
 
-function isActive(path) {
-  return route.path === path || route.path.startsWith(`${path}/`)
+function toggleSidebar() {
+  isCollapsed.value = !isCollapsed.value
 }
 
 async function handleLogout() {
-  if (typeof auth.logout === 'function') {
-    await auth.logout()
-  } else {
-    localStorage.removeItem('token')
-    sessionStorage.removeItem('token')
-  }
-
+  await authStore.logout()
   router.push('/login')
 }
 </script>
 
 <style scoped>
-.professor-sidebar {
-  position: fixed;
-  top: 64px;
-  left: 0;
-  width: 210px;
-  height: calc(100vh - 64px);
-  background: #ffffff;
-  border-right: 1px solid #E5E0D6;
+.sidebar {
+  width: 235px;
+  background-color: #3D3D3D;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: 18px 12px;
-  z-index: 90;
+  flex-shrink: 0;
+  transition: width 0.3s ease;
+  min-height: 100%;
 }
 
-.professor-sidebar__content {
+.sidebar.collapsed {
+  width: 70px;
+}
+
+.sidebar-header {
+  padding: 16px 16px 0 16px;
   display: flex;
-  flex-direction: column;
-  gap: 18px;
+  justify-content: flex-start;
 }
 
-.professor-sidebar__section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.sidebar.collapsed .sidebar-header {
+  justify-content: center;
+  padding: 16px 0 0 0;
 }
 
-.professor-sidebar__section-title {
-  margin: 0 0 4px;
-  padding: 0 12px;
-  color: #6F7F7C;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.professor-sidebar__nav {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.professor-sidebar__link {
-  min-height: 40px;
+.toggle-btn {
+  background: #0D2B2B;
+  border: none;
+  cursor: pointer;
+  color: #D6EDE8;
+  padding: 8px 14px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+}
+
+.toggle-btn:hover {
+  background-color: #EDEADE;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  height: 40px;
   padding: 0 12px;
-  border-radius: 8px;
-  color: #263534;
+  color: #D6EDE8;
+  background-color: #0D2B2B;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  border: none;
+  border-radius: 10px;
   text-decoration: none;
-  font-size: 13px;
-  font-weight: 600;
-  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+  transition: all 0.2s ease;
 }
 
-.professor-sidebar__link:hover {
-  background: #F4F2EC;
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 0;
 }
 
-.professor-sidebar__link--active {
-  background: #D6EDE8;
-  color: #5C8C6A;
+.nav-item:hover {
+  background: #E5E1D5;
 }
 
-.professor-sidebar__icon {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #E5E0D6;
+.router-link-active {
+  background-color: #5C8C6A;
+  color: white;
+}
+
+.router-link-active .nav-icon {
+  filter: brightness(0) invert(1);
+}
+
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
   flex-shrink: 0;
 }
 
-.professor-sidebar__link--active .professor-sidebar__icon {
-  background: #5C8C6A;
-}
-
-.professor-sidebar__label {
-  flex: 1;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.professor-sidebar__badge {
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: #0D2B2B;
-  color: #ffffff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 800;
-}
-
-.professor-sidebar__bottom {
+.sidebar-bottom {
+  padding: 10px 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding-top: 12px;
-  border-top: 1px solid #E5E0D6;
+  gap: 4px;
 }
 
-.professor-sidebar__logout {
-  min-height: 40px;
-  padding: 0 12px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: #D94A4A;
-  text-align: left;
-  font-size: 13px;
-  font-weight: 700;
+.logout-btn {
   cursor: pointer;
-  transition: background 0.15s ease;
+  justify-content: flex-start;
 }
 
-.professor-sidebar__logout:hover {
-  background: #FBECEC;
+.sidebar.collapsed .logout-btn {
+  justify-content: center;
 }
 
-@media (max-width: 900px) {
-  .professor-sidebar {
-    position: static;
-    width: 100%;
-    height: auto;
-    border-right: none;
-    border-bottom: 1px solid #E5E0D6;
-  }
-
-  .professor-sidebar__nav {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .professor-sidebar__bottom {
-    display: none;
-  }
+.logout-btn:hover {
+  color: red;
 }
 </style>
