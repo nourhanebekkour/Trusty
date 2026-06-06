@@ -70,9 +70,9 @@
 
                 <button
                   class="prof-btn prof-btn-danger prof-btn-small"
-                  @click="deleteOne(notification)"
+                  @click="hideOne(notification)"
                 >
-                  Supprimer
+                  Masquer
                 </button>
               </div>
             </div>
@@ -157,11 +157,11 @@ async function markAllAsRead() {
   }
 }
 
-async function deleteOne(notification) {
+async function hideOne(notification) {
   try {
     await deleteProfessorNotification(notification.id)
     notifications.value = notifications.value.filter(item => item.id !== notification.id)
-    showToast('Notification marquée comme lue.')
+    showToast('Notification masquée.')
   } catch (err) {
     showToast(err.response?.data?.message || 'Impossible de modifier la notification.')
   }

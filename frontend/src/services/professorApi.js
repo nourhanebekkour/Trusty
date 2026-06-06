@@ -48,7 +48,6 @@ function mapEtudiant(e) {
     level: e.annee ? `Année ${e.annee}` : '',
     bio: e.biographie ?? '',
     progress: e.score_credibilite ?? 0,
-    portfolioStatus: e.score_credibilite >= 80 ? 'Certifié' : 'En attente',
     portfolioUrl: e.portfolio?.url_publique ?? null,
     avatar: u.photo ?? null,
   }
@@ -70,30 +69,6 @@ function mapValidation(item, type) {
     date: item.date_soumission || item.date_demande || item.date_creation || '',
     status: item.status_validation || 'EN_ATTENTE',
     description: item.description || item.missions || '',
-  }
-}
-
-function mapRecommandation(r) {
-  const u = r.cible?.utilisateur ?? {}
-  return {
-    id: r.id_recommandation,
-    studentName: `${u.prenom ?? ''} ${u.nom ?? ''}`.trim() || 'Étudiant',
-    referentName: r.auteur ? `${r.auteur.prenom ?? ''} ${r.auteur.nom ?? ''}`.trim() : '',
-    context: r.message?.slice(0, 60) ?? '',
-    message: r.message ?? '',
-    status: r.status ?? 'EN_ATTENTE',
-    date: r.date_creation,
-  }
-}
-
-function mapPortfolio(e) {
-  const mapped = mapEtudiant(e)
-  return {
-    ...mapped,
-    id: e.id_etudiant,
-    studentName: mapped.fullName,
-    portfolioStatus: mapped.portfolioStatus,
-    lastUpdate: e.portfolio?.date_derniere_maj ?? null,
   }
 }
 
@@ -268,6 +243,10 @@ export async function sendProfessorMessage(studentId, payload) {
   })
 }
 
+export async function deleteProfessorMessage(messageId) {
+  await api.delete(`/commentaires/${messageId}`)
+}
+
 export async function getProfessorNotifications(params = {}) {
   const res = await api.get('/notifications/', { params })
   const data = getData(res)
@@ -318,4 +297,52 @@ export async function updateProfessorRecommendation(recommendationId, payload) {
   await api.patch(`/recommandations/${recommendationId}/valider`, {
     status: payload?.status ?? 'VALIDE',
   })
+}
+
+export async function deleteProfessorRecommendation(recommendationId) {
+  await api.delete(`/recommandations/${recommendationId}`)
+}
+
+// ── Profil professeur ──────────────────────────────────────────────────────
+
+export async function getProfessorProfile(professorId) {
+  const res = await api.get(`/professeurs/${professorId}`)
+  return getData(res)
+}
+
+export async function updateProfessorProfile(professorId, data) {
+  const res = await api.put(`/professeurs/${professorId}`, data)
+  return getData(res)
+}
+
+export async function uploadProfessorAvatar(professorId, file) {
+  const formData = new FormData()
+  formData.append('fichier', file)
+  const res = await api.post(`/professeurs/${professorId}/avatar`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return getData(res)
+}
+
+// ── Compétences et badges étudiant ─────────────────────────────────────────
+
+export async function getStudentCompetences(studentId) {
+  const res = await api.get(`/competences/etudiant/${studentId}`)
+  return getData(res)
+}
+
+export async function getStudentBadges(studentId) {
+  const res = await api.get(`/badges/etudiant/${studentId}`)
+  return getData(res)
+}
+
+export async function getStudentDetails(studentId) {
+  const [competences, badges] = await Promise.allSettled([
+    getStudentCompetences(studentId),
+    getStudentBadges(studentId),
+  ])
+  return {
+    competences: competences.status === 'fulfilled' ? (Array.isArray(competences.value) ? competences.value : []) : [],
+    badges: badges.status === 'fulfilled' ? (Array.isArray(badges.value) ? badges.value : []) : [],
+  }
 }
