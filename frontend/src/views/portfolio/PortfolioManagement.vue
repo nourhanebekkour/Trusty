@@ -278,7 +278,7 @@ async function loadPortfolios() {
     const res = await api.get('/portfolio/me')
     portfolios.value = res.data.data ?? []
   } catch (e) {
-    errorMsg.value = 'Impossible de charger vos portfolios.'
+    errorMsg.value = e.response?.data?.message ?? 'Impossible de charger vos portfolios.'
     console.error(e)
   } finally {
     loading.value = false
