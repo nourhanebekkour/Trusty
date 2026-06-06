@@ -16,13 +16,8 @@ function mountSidebar() {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: '/professor/dashboard',       component: { template: '<div/>' } },
-      { path: '/professor/portfolios',      component: { template: '<div/>' } },
-      { path: '/professor/validations',     component: { template: '<div/>' } },
-      { path: '/professor/messages',        component: { template: '<div/>' } },
-      { path: '/professor/notifications',   component: { template: '<div/>' } },
-      { path: '/professor/recommendations', component: { template: '<div/>' } },
-      { path: '/settings',                  component: { template: '<div/>' } },
+      { path: '/professor', component: { template: '<div/>' } },
+      { path: '/login',     component: { template: '<div/>' } },
     ],
   })
   setActivePinia(createPinia())
@@ -34,25 +29,30 @@ function mountSidebar() {
 describe('ProfessorSidebar.vue — rendu', () => {
   it('se monte sans erreur', () => {
     const wrapper = mountSidebar()
-    expect(wrapper.find('aside.professor-sidebar').exists()).toBe(true)
+    expect(wrapper.find('aside.sidebar').exists()).toBe(true)
   })
 
   it('affiche les liens de navigation', () => {
     const wrapper = mountSidebar()
-    expect(wrapper.text()).toContain('Dashboard')
-    expect(wrapper.text()).toContain('Portfolios')
-    expect(wrapper.text()).toContain('Validations')
+    expect(wrapper.text()).toContain('Projets à valider')
+    expect(wrapper.text()).toContain('Stages à valider')
+    expect(wrapper.text()).toContain('Mes étudiants')
     expect(wrapper.text()).toContain('Notifications')
   })
 
-  it('affiche le bouton Logout', () => {
+  it('affiche le bouton Déconnexion', () => {
     const wrapper = mountSidebar()
-    expect(wrapper.find('.professor-sidebar__logout').exists()).toBe(true)
-    expect(wrapper.text()).toContain('Logout')
+    expect(wrapper.find('.logout-btn').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Déconnexion')
   })
 
-  it('affiche le lien Settings', () => {
+  it('affiche le lien Paramètres', () => {
     const wrapper = mountSidebar()
-    expect(wrapper.text()).toContain('Settings')
+    expect(wrapper.text()).toContain('Paramètres')
+  })
+
+  it('affiche le bouton toggle collapse', () => {
+    const wrapper = mountSidebar()
+    expect(wrapper.find('.toggle-btn').exists()).toBe(true)
   })
 })
