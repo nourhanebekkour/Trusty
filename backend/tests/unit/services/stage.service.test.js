@@ -96,9 +96,9 @@ describe('Service Stage', () => {
         });
 
         test('doit créer un stage avec validateur et envoyer une notification', async () => {
-            // L'étudiant est en filière GINF, le professeur intervient en GINF → OK
-            mockEtudiantModel.findUnique.mockResolvedValue({ filiere: 'GINF' });
-            mockProfesseurModel.findUnique.mockResolvedValue({ filieres_interv: ['GINF'] });
+            // L'étudiant et le professeur sont dans la même école → OK
+            mockEtudiantModel.findUnique.mockResolvedValue({ filiere: 'GINF', utilisateur: { ecole: 'ENSATanger' } });
+            mockProfesseurModel.findUnique.mockResolvedValue({ filieres_interv: ['GINF'], utilisateur: { ecole: 'ENSATanger' } });
             const mockStage = { id_stage: 's-1', entreprise: 'TechCorp', id_etudiant: 'etud-1', id_validateur: 'prof-1' };
             mockStageModel.create.mockResolvedValue(mockStage);
 
@@ -120,13 +120,13 @@ describe('Service Stage', () => {
             expect(result).toEqual(mockStage);
         });
 
-        test('doit lever une erreur si le professeur n\'intervient pas dans la filière', async () => {
-            // L'étudiant est en GINF, mais le professeur n'intervient qu'en SIC
-            mockEtudiantModel.findUnique.mockResolvedValue({ filiere: 'GINF' });
-            mockProfesseurModel.findUnique.mockResolvedValue({ filieres_interv: ['SIC'] });
+        test('doit lever une erreur si le professeur n\'appartient pas à la même école', async () => {
+            // L'étudiant est à ENSATanger, mais le professeur est à ENCG
+            mockEtudiantModel.findUnique.mockResolvedValue({ filiere: 'GINF', utilisateur: { ecole: 'ENSATanger' } });
+            mockProfesseurModel.findUnique.mockResolvedValue({ filieres_interv: ['SIC'], utilisateur: { ecole: 'ENCG' } });
 
             const donnees = { id_etudiant: 'etud-1', id_validateur: 'prof-1', entreprise: 'TechCorp', date_debut: '2025-07-01', missions: 'Dev', poste: 'Dev' };
-            await expect(creerStage(donnees)).rejects.toThrow('GINF');
+            await expect(creerStage(donnees)).rejects.toThrow('ENSATanger');
         });
 
         test('doit lever une erreur si l\'ID étudiant est absent', async () => {

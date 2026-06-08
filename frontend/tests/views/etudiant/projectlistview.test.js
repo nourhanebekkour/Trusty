@@ -1,8 +1,16 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { setActivePinia, createPinia } from 'pinia'
 import ProjectListView from '@/views/Etudiant/ProjectList.vue'
 
+vi.mock('@/api', () => ({ default: { get: vi.fn().mockResolvedValue({ data: { data: [] } }), post: vi.fn(), put: vi.fn(), delete: vi.fn() } }))
+vi.mock('@/stores/authstore', () => ({ useAuthStore: vi.fn(() => ({ user: { id_utilisateur: 'u1' }, isAuthenticated: true })) }))
+
 describe('ProjectListView — Tests Unitaires', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
   it('1 — se monte sans erreur', () => {
     expect(mount(ProjectListView).exists()).toBe(true)
   })

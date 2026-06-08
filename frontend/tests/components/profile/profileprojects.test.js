@@ -106,7 +106,9 @@ describe('ProfileProjects.vue', () => {
 
     it('affiche la description du projet', () => {
       wrapper = mountComponent(makeUser([makeProjet({ projet: { id_projet: 1, titre: 'Test', description: 'Ma description', status_validation: 'VALIDE' } })]))
-      expect(wrapper.find('.project-desc').text()).toBe('Ma description')
+      // Le composant a deux .project-desc : [0] = type_projet, [1] = description
+      const descs = wrapper.findAll('.project-desc')
+      expect(descs.some(d => d.text().includes('Ma description'))).toBe(true)
     })
 
     it('affiche l\'icône 📁', () => {

@@ -261,13 +261,26 @@ describe('stageStore — Tests Unitaires', () => {
     expect(store.stagesFiltres.length).toBe(1)
     expect(store.stagesFiltres[0].entreprise).toBe('TechCorp')
   })
+
+  it('28 — showToast : le toast disparaît après 3.2s', async () => {
+    vi.useFakeTimers()
+    const store = useStageStore()
+    store.showToast('Test message')
+    expect(store.toast.show).toBe(true)
+    vi.advanceTimersByTime(3200)
+    expect(store.toast.show).toBe(false)
+    vi.useRealTimers()
+  })
 })
 
 // ═════════════════════════════════════════════════════════════
-// TESTS D'INTÉGRATION — store
+// SCÉNARIOS (enchaînements d'actions unitaires)
+// Le service est toujours mocké — ces tests vérifient les transitions d'état
+// du store sur des séquences d'actions (charger → créer, charger → modifier).
+// Ce NE sont PAS des tests d'intégration : voir tests/integration/ pour ça.
 // ═════════════════════════════════════════════════════════════
 
-describe("stageStore — Tests d'Intégration", () => {
+describe("stageStore — Scénarios (enchaînements)", () => {
 
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -306,15 +319,5 @@ describe("stageStore — Tests d'Intégration", () => {
     await store.sauvegarder()
 
     expect(store.stages[0].entreprise).toBe('NewCorp')
-  })
-
-  it('30 — showToast : le toast disparaît après 3.2s', async () => {
-    vi.useFakeTimers()
-    const store = useStageStore()
-    store.showToast('Test message')
-    expect(store.toast.show).toBe(true)
-    vi.advanceTimersByTime(3200)
-    expect(store.toast.show).toBe(false)
-    vi.useRealTimers()
   })
 })
