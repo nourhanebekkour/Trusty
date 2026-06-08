@@ -13,7 +13,8 @@ import Notification from '@/views/Etudiant/Notification.vue'
 import Profile from '@/views/Etudiant/Profile.vue'
 import activites from '@/views/Etudiant/activites.vue'
 import Portfolio from '@/views/portfolio/PortfolioManagement.vue'
-import ProfessionalView from '@/views/ProfessionalView.vue'
+import ProfessionalView from '@/views/Professional/ProfessionalView.vue'
+import ProfessionalLayout from '@/components/Professional/ProfessionalLayout.vue'
 import ProfessorView from '@/views/professor/ProfessorView.vue'
 import { useAuthStore } from '@/stores/authstore'
 import Parcours from '../views/Etudiant/Parcours.vue'
@@ -40,10 +41,20 @@ const router = createRouter({
     },
    
     {
+      path: '/register',
+      name: 'register',
+      component: registerview,
+    },
+    {
       path: '/login',
       name: 'login',
       component: LoginView,
       meta: { guestOnly: true },
+    },
+    {
+      path: '/verify-email',
+      name: 'verify-email',
+      component: VerifyEmailView,
     },
 
     // ── Admin ──────────────────────────────────────────
@@ -175,11 +186,50 @@ const router = createRouter({
     },
 
     // ── Professional ─────────────────────────────────────
-    {
+      {
       path: '/professional',
-      name: 'professional',
-      component: ProfessionalView,
-      meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
+      component: ProfessionalLayout,
+      children: [
+        {
+          path: '',
+          redirect: '/professional/dashboard',
+        },
+        {
+          path: 'dashboard',
+          name: 'professional-dashboard',
+          component: () => import('@/views/Professional/ProfessionalDashboard.vue'),
+        },
+        {
+          path: 'internships',
+          name: 'professional-internships',
+          component: () => import('@/views/Professional/ProfessionalInternships.vue'),
+        },
+        {
+          path: 'projects',
+          name: 'professional-projects',
+          component: () => import('@/views/Professional/ProfessionalProjects.vue'),
+        },
+        {
+          path: 'students',
+          name: 'professional-students',
+          component: () => import('@/views/Professional/ProfessionalStudents.vue'),
+        },
+        {
+          path: 'portfolios',
+          name: 'professional-portfolios',
+          component: () => import('@/views/Professional/ProfessionalPortfolios.vue'),
+        },
+        {
+          path: 'recommendations',
+          name: 'professional-recommendations',
+          component: () => import('@/views/Professional/ProfessionalRecommendations.vue'),
+        },
+        {
+          path: 'dashboard2',
+          name: 'professional-dashboard2',
+          component: ProfessionalView,
+        },
+      ],
     },
 
     // ── Professor ────────────────────────────────────────

@@ -75,6 +75,24 @@ function normalizeReco(r) {
   }
 }
 
+// ─── Normalise un objet projet ────────────────────────────────────────────────
+function normalizeProject(p) {
+  return {
+    id: p.id_projet || p.id,
+    titre: p.titre || p.nom || 'Sans titre',
+    type: p.type_projet || p.type || '',
+    status: p.status_validation || p.status || 'EN_ATTENTE',
+    date_debut: p.date_debut || '',
+    description: p.description || '',
+    est_visible_portfolio: p.est_visible_portfolio ?? true,
+    est_createur: p.est_createur ?? false,
+    role_joue: p.role_joue || '',
+    technologies: p.technologies || [],
+    date_fin: p.date_fin || '',
+    lien: p.lien || '',
+  }
+}
+
 // ─── Mock data (fallback seulement si API inaccessible) ──────────────────────
 const MOCK_STATS = {
   projetsCertifies: 4,
