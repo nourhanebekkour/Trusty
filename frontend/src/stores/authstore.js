@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { getProfile, login as loginRequest } from '@/services/authservices'
+import { authService } from '@/services/auth.service'
 import api from '@/services/api'
 
 // Évite de stocker des données sensibles renvoyées par erreur par l'API
