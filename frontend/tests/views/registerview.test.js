@@ -47,12 +47,12 @@ describe('RegisterView — Tests Unitaires', () => {
 
   it('1 — affiche le champ Prénom', () => {
     const { wrapper } = mountRegister()
-    expect(wrapper.find('input[placeholder="Prénom"]').exists()).toBe(true)
+    expect(wrapper.find('input[placeholder="John"]').exists()).toBe(true)
   })
 
   it('2 — affiche le champ Nom', () => {
     const { wrapper } = mountRegister()
-    expect(wrapper.find('input[placeholder="Nom"]').exists()).toBe(true)
+    expect(wrapper.find('input[placeholder="Doe"]').exists()).toBe(true)
   })
 
   it('3 — affiche le champ Email', () => {
@@ -65,15 +65,15 @@ describe('RegisterView — Tests Unitaires', () => {
     expect(wrapper.find('input[type="password"]').exists()).toBe(true)
   })
 
-  it('5 — affiche le bouton S\'inscrire', () => {
+  it('5 — affiche le bouton "Créer mon compte"', () => {
     const { wrapper } = mountRegister()
     expect(wrapper.find('button[type="submit"]').exists()).toBe(true)
-    expect(wrapper.find('button[type="submit"]').text()).toContain("S'inscrire")
+    expect(wrapper.find('button[type="submit"]').text()).toContain('Créer mon compte')
   })
 
-  it('6 — le bouton affiche "Inscription..." quand loading est true', () => {
+  it('6 — le bouton affiche "Création en cours..." quand loading est true', () => {
     const { wrapper } = mountRegister({ loading: true })
-    expect(wrapper.find('button[type="submit"]').text()).toContain('Inscription...')
+    expect(wrapper.find('button[type="submit"]').text()).toContain('Création en cours...')
   })
 
   it('7 — le bouton est désactivé quand loading est true', () => {
@@ -83,13 +83,13 @@ describe('RegisterView — Tests Unitaires', () => {
 
   it('8 — affiche le message d\'erreur si authStore.error est défini', () => {
     const { wrapper } = mountRegister({ error: 'Email déjà utilisé' })
-    expect(wrapper.find('.error').exists()).toBe(true)
-    expect(wrapper.find('.error').text()).toBe('Email déjà utilisé')
+    expect(wrapper.find('.global-error').exists()).toBe(true)
+    expect(wrapper.find('.global-error').text()).toBe('Email déjà utilisé')
   })
 
   it('9 — n\'affiche pas d\'erreur si authStore.error est null', () => {
     const { wrapper } = mountRegister({ error: null })
-    expect(wrapper.find('.error').exists()).toBe(false)
+    expect(wrapper.find('.global-error').exists()).toBe(false)
   })
 })
 
@@ -108,10 +108,11 @@ describe("RegisterView — Tests d'Intégration", () => {
 
   it('10 — submit appelle authStore.register avec les données du formulaire', async () => {
     const { wrapper, mockStore } = mountRegister()
-    await wrapper.find('input[placeholder="Prénom"]').setValue('Fatine')
-    await wrapper.find('input[placeholder="Nom"]').setValue('Ben')
+    await wrapper.find('input[value="PROFESSIONNEL"]').setChecked()
+    await wrapper.find('input[placeholder="John"]').setValue('Fatine')
+    await wrapper.find('input[placeholder="Doe"]').setValue('Ben')
     await wrapper.find('input[type="email"]').setValue('fatine@test.com')
-    await wrapper.find('input[type="password"]').setValue('pass123')
+    await wrapper.find('input[type="password"]').setValue('Pass1!abc')
     await wrapper.find('form').trigger('submit')
     await flushPromises()
     expect(mockStore.register).toHaveBeenCalledWith(
@@ -122,10 +123,11 @@ describe("RegisterView — Tests d'Intégration", () => {
   it('11 — inscription réussie redirige vers /login', async () => {
     const { wrapper, mockStore } = mountRegister()
     mockStore.register.mockResolvedValue(true)
-    await wrapper.find('input[placeholder="Prénom"]').setValue('Fatine')
-    await wrapper.find('input[placeholder="Nom"]').setValue('Ben')
+    await wrapper.find('input[value="PROFESSIONNEL"]').setChecked()
+    await wrapper.find('input[placeholder="John"]').setValue('Fatine')
+    await wrapper.find('input[placeholder="Doe"]').setValue('Ben')
     await wrapper.find('input[type="email"]').setValue('fatine@test.com')
-    await wrapper.find('input[type="password"]').setValue('pass123')
+    await wrapper.find('input[type="password"]').setValue('Pass1!abc')
     await wrapper.find('form').trigger('submit')
     await flushPromises()
     expect(router.currentRoute.value.path).toBe('/login')

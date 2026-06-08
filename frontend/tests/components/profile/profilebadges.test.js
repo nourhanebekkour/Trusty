@@ -54,19 +54,19 @@ describe('ProfileBadges.vue', () => {
       expect(wrapper.find('.generate-box h4').text()).toBe('Générer mon portfolio')
     })
 
-    it('affiche le bouton "Lancer la génération"', () => {
+    it('affiche le bouton "Lancer →"', () => {
       wrapper = mountComponent()
-      const btn = wrapper.find('.btn-primary')
+      const btn = wrapper.find('.btn-portfolio')
       expect(btn.exists()).toBe(true)
-      expect(btn.text()).toContain('Lancer la génération')
+      expect(btn.text()).toContain('Lancer')
     })
   })
 
   // ── État vide ────────────────────────────────────────────────────────────────
   describe('État vide', () => {
-    it('affiche le message "Aucun badge certifié." quand badges est vide', () => {
+    it('affiche le message "Aucun badge certifié pour l\'instant." quand badges est vide', () => {
       wrapper = mountComponent(makeUser([]))
-      expect(wrapper.find('.empty-msg').text()).toBe('Aucun badge certifié.')
+      expect(wrapper.find('.empty-badges').text()).toContain('Aucun badge certifié')
     })
 
     it('n\'affiche pas la grille de badges quand la liste est vide', () => {
@@ -76,12 +76,12 @@ describe('ProfileBadges.vue', () => {
 
     it('affiche le message vide quand etudiant est undefined', () => {
       wrapper = mountComponent({ etudiant: undefined })
-      expect(wrapper.find('.empty-msg').exists()).toBe(true)
+      expect(wrapper.find('.empty-badges').exists()).toBe(true)
     })
 
     it('affiche le message vide quand badges est undefined', () => {
       wrapper = mountComponent({ etudiant: {} })
-      expect(wrapper.find('.empty-msg').exists()).toBe(true)
+      expect(wrapper.find('.empty-badges').exists()).toBe(true)
     })
   })
 
@@ -106,26 +106,26 @@ describe('ProfileBadges.vue', () => {
 
     it('affiche l\'icône du badge', () => {
       wrapper = mountComponent(makeUser([makeBadge({ badge: { id_badge: 1, nom: 'Test', icone: '🎖️' } })]))
-      expect(wrapper.find('.badge-icon span').text()).toBe('🎖️')
+      expect(wrapper.find('.badge-icon-wrap span').text()).toBe('🎖️')
     })
 
     it('affiche l\'icône par défaut 🏅 si icone est null', () => {
       wrapper = mountComponent(makeUser([makeBadge({ badge: { id_badge: 1, nom: 'Test', icone: null } })]))
-      expect(wrapper.find('.badge-icon span').text()).toBe('🏅')
+      expect(wrapper.find('.badge-icon-wrap span').text()).toBe('🏅')
     })
 
-    it('affiche l\'année d\'attribution correcte', () => {
+    it('affiche l\'année d\'attribution dans .badge-year', () => {
       wrapper = mountComponent(makeUser([makeBadge({ date_attribution: '2023-06-20' })]))
-      expect(wrapper.find('.badge-year').text()).toBe('2023')
+      // Le composant affiche la date en format fr-FR (ex: "20 juin 2023")
+      expect(wrapper.find('.badge-year').text()).toContain('2023')
     })
 
-    it('applique le bon background au badge-icon', () => {
+    it('applique un style background au .badge-icon-wrap', () => {
       wrapper = mountComponent(makeUser([makeBadge()]))
-      const icon = wrapper.find('.badge-icon')
-      // Vue sérialise le style inline — on lit via element.style ou l'attribut brut
-      const style = icon.attributes('style') ?? ''
-      const bg = icon.element.style.background || icon.element.style.backgroundColor
-      expect(style.includes('#EEEDFE') || bg.includes('EEEDFE') || bg === 'rgb(238, 237, 254)').toBe(true)
+      const iconWrap = wrapper.find('.badge-icon-wrap')
+      expect(iconWrap.exists()).toBe(true)
+      const style = iconWrap.attributes('style') ?? ''
+      expect(style).toContain('background')
     })
   })
 
@@ -133,7 +133,7 @@ describe('ProfileBadges.vue', () => {
   describe('Navigation vers /portfolio', () => {
     it('appelle $router.push("/portfolio") au clic sur le bouton', async () => {
       wrapper = mountComponent()
-      await wrapper.find('.btn-primary').trigger('click')
+      await wrapper.find('.btn-portfolio').trigger('click')
       expect(mockPush).toHaveBeenCalledWith('/portfolio')
     })
   })

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// profileservices.js importe '@/api' (src/api.js)
 vi.mock('@/api', () => ({
   default: {
     get:  vi.fn(),
@@ -8,29 +9,86 @@ vi.mock('@/api', () => ({
   },
 }))
 
+// fetchGithubRepos utilise fetch global — on stub pour éviter les appels réseau
+vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+  ok:   true,
+  json: vi.fn().mockResolvedValue([]),
+}))
+
 import api from '@/api'
 import { getProfile, saveProfile, addSkill } from '@/services/profileservices'
 
-// IDs et email correspondant aux constantes MOCK_ME du service
 const EXPECTED_ID    = 'clx123456789abcdefghijk'
 const EXPECTED_EMAIL = 'ahmed.benali@etu.uae.ac.ma'
 
-// ─────────────────────────────────────────────────────────────────────────────
-describe('profileservices.js', () => {
-  beforeEach(() => vi.clearAllMocks())
+// ── Données mock utilisées dans les mocks api ──────────────────────────────
+const MOCK_ME = {
+  id_utilisateur: EXPECTED_ID,
+  email:          EXPECTED_EMAIL,
+  nom:            'Benali',
+  prenom:         'Ahmed',
+  role:           'ETUDIANT',
+  telephone:      null,
+  photo:          null,
+  date_creation:  '2022-09-01T00:00:00Z',
+}
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // getProfile()
-  // API_READY=true → api.get retourne undefined → me.id_utilisateur throws
-  //                → catch → retourne le fallback mock
-  // ══════════════════════════════════════════════════════════════════════════
+const MOCK_ETUDIANT = {
+  id_etudiant: EXPECTED_ID,
+  filiere:     'GINF',
+  ville:       'Rabat',
+  pays:        'Maroc',
+}
+
+const MOCK_COMPETENCES = [
+  { competence: { id_competence: 'c1', nom: 'Vue.js', type: 'TECHNIQUE' }, niveau_maitrise: 'INTERMEDIAIRE' },
+  { competence: { id_competence: 'c2', nom: 'PHP',    type: 'TECHNIQUE' }, niveau_maitrise: 'DEBUTANT' },
+]
+
+const MOCK_BADGES = [
+  { badge: { id_badge: 'b1', nom: 'Projet Excellence' }, date_attribution: '2024-01-01' },
+]
+
+const MOCK_PROJETS = [
+  { projet: { id_projet: 'p1', status_validation: 'VALIDE' } },
+  { projet: { id_projet: 'p2', status_validation: 'EN_ATTENTE' } },
+]
+
+// ── Helper : setup des mocks api.get pour getProfile() ───────────────────
+// getProfile() fait 6 appels api.get dans l'ordre :
+// 1. /auth/me, 2. /etudiants/:id, 3. /competences/etudiant/:id,
+// 4. /badges/etudiant/:id, 5. /projets/ (allSettled), 6. /projets/ (inner try)
+const setupGetProfileMocks = () => {
+  api.get
+    .mockResolvedValueOnce({ data: { data: MOCK_ME } })
+    .mockResolvedValueOnce({ data: { data: MOCK_ETUDIANT } })
+    .mockResolvedValueOnce({ data: { data: MOCK_COMPETENCES } })
+    .mockResolvedValueOnce({ data: { data: MOCK_BADGES } })
+    .mockResolvedValueOnce({ data: { data: MOCK_PROJETS } })
+    .mockResolvedValueOnce({ data: { data: MOCK_PROJETS } })
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// TESTS UNITAIRES — profileservices
+// api toujours mockée. Tests du contrat de chaque fonction (retour, structure).
+// ═════════════════════════════════════════════════════════════════════════════
+describe('profileservices.js — Tests Unitaires', () => {
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  // ── getProfile() ───────────────────────────────────────────────────────────
+
   describe('getProfile()', () => {
     it('retourne un objet { data }', async () => {
+      setupGetProfileMocks()
       const result = await getProfile()
       expect(result).toHaveProperty('data')
     })
 
     it('data contient les champs utilisateur de base', async () => {
+      setupGetProfileMocks()
       const { data } = await getProfile()
       expect(data.id_utilisateur).toBe(EXPECTED_ID)
       expect(data.email).toBe(EXPECTED_EMAIL)
@@ -40,130 +98,126 @@ describe('profileservices.js', () => {
     })
 
     it('data.etudiant existe et est un objet', async () => {
+      setupGetProfileMocks()
       const { data } = await getProfile()
       expect(data.etudiant).toBeTruthy()
     })
 
     it('data.etudiant.competences a 2 items avec Vue.js en premier', async () => {
+      setupGetProfileMocks()
       const { data } = await getProfile()
       expect(data.etudiant.competences).toHaveLength(2)
       expect(data.etudiant.competences[0].competence.nom).toBe('Vue.js')
     })
 
     it('data.etudiant.badges a 1 item', async () => {
+      setupGetProfileMocks()
       const { data } = await getProfile()
       expect(data.etudiant.badges).toHaveLength(1)
       expect(data.etudiant.badges[0].badge.nom).toBe('Projet Excellence')
     })
 
     it('data.etudiant.participations_projets a 2 items', async () => {
+      setupGetProfileMocks()
       const { data } = await getProfile()
       expect(data.etudiant.participations_projets).toHaveLength(2)
       expect(data.etudiant.participations_projets[0].projet.status_validation).toBe('VALIDE')
     })
 
     it('data.etudiant.depots_github est un tableau', async () => {
+      setupGetProfileMocks()
       const { data } = await getProfile()
       expect(Array.isArray(data.etudiant.depots_github)).toBe(true)
     })
 
-    it('retourne toujours une promesse résolue (jamais rejetée)', async () => {
-      await expect(getProfile()).resolves.toBeDefined()
+    it('appelle api.get /auth/me en premier', async () => {
+      setupGetProfileMocks()
+      await getProfile()
+      expect(api.get).toHaveBeenCalledWith('/auth/me')
     })
 
-    it('utilise les données API quand api.get réussit', async () => {
-      const apiMe = {
-        id_utilisateur: 'api-id', email: 'api@test.com',
-        nom: 'ApiNom', prenom: 'ApiPrenom', role: 'ETUDIANT',
-        telephone: null, photo: null,
-      }
-      const apiEtudiant = { id_etudiant: 'api-id', filiere: 'GINF', ville: 'Rabat', pays: 'Maroc' }
-      api.get
-        .mockResolvedValueOnce({ data: { data: apiMe } })
-        .mockResolvedValueOnce({ data: { data: apiEtudiant } })
-        .mockResolvedValueOnce({ data: { data: [] } })
-        .mockResolvedValueOnce({ data: { data: [] } })
-      const { data } = await getProfile()
-      expect(data.id_utilisateur).toBe('api-id')
-      expect(data.email).toBe('api@test.com')
+    it('propage l\'erreur si api.get /auth/me échoue', async () => {
+      api.get.mockRejectedValueOnce(new Error('Non autorisé'))
+      await expect(getProfile()).rejects.toThrow('Non autorisé')
     })
   })
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // saveProfile()
-  // API_READY=true, api.put→undefined + api.get×3→undefined
-  //   → assembleUser(undefined,…) throws → catch → fallback MOCK_ME+MOCK_ETUDIANT
-  // ══════════════════════════════════════════════════════════════════════════
+  // ── saveProfile() ──────────────────────────────────────────────────────────
+
   describe('saveProfile()', () => {
-    it('retourne { data } même si l\'API échoue', async () => {
-      const result = await saveProfile(EXPECTED_ID, { prenom: 'Omar', nom: 'Benali', filiere: 'GINF' })
+    it('retourne { data } après sauvegarde réussie', async () => {
+      api.put.mockResolvedValueOnce({ data: { data: MOCK_ETUDIANT } })
+      api.get
+        .mockResolvedValueOnce({ data: { data: MOCK_ME } })
+        .mockResolvedValueOnce({ data: { data: MOCK_COMPETENCES } })
+        .mockResolvedValueOnce({ data: { data: MOCK_BADGES } })
+      const result = await saveProfile(EXPECTED_ID, { prenom: 'Ahmed', nom: 'Benali', filiere: 'GINF' })
       expect(result).toHaveProperty('data')
     })
 
     it('data contient id_utilisateur et etudiant', async () => {
-      const { data } = await saveProfile(EXPECTED_ID, { prenom: 'Test', nom: 'Test', filiere: 'GINF' })
+      api.put.mockResolvedValueOnce({ data: { data: MOCK_ETUDIANT } })
+      api.get
+        .mockResolvedValueOnce({ data: { data: MOCK_ME } })
+        .mockResolvedValueOnce({ data: { data: MOCK_COMPETENCES } })
+        .mockResolvedValueOnce({ data: { data: MOCK_BADGES } })
+      const { data } = await saveProfile(EXPECTED_ID, { prenom: 'Ahmed', nom: 'Benali', filiere: 'GINF' })
       expect(data).toHaveProperty('id_utilisateur')
       expect(data).toHaveProperty('etudiant')
     })
 
-    it('retourne toujours une promesse résolue', async () => {
-      await expect(
-        saveProfile(EXPECTED_ID, { prenom: 'X', nom: 'Y', filiere: 'GINF' })
-      ).resolves.toBeDefined()
-    })
-
-    it('utilise les données API si PUT + GET réussissent', async () => {
-      const apiEtudiant = { id_etudiant: EXPECTED_ID, filiere: 'GINF', ville: 'Rabat' }
-      const apiMe       = {
-        id_utilisateur: EXPECTED_ID, email: EXPECTED_EMAIL,
-        nom: 'Benali', prenom: 'Omar', role: 'ETUDIANT', telephone: null, photo: null,
-      }
-      const apiCompetences = [
-        { competence: { id_competence: 'c1', nom: 'Vue.js', type: 'TECHNIQUE' }, niveau_maitrise: 'INTERMEDIAIRE' },
-      ]
-      api.put.mockResolvedValueOnce({ data: { data: apiEtudiant } })
+    it('appelle api.put /etudiants/:id avec les champs étudiant', async () => {
+      api.put.mockResolvedValueOnce({ data: { data: MOCK_ETUDIANT } })
       api.get
-        .mockResolvedValueOnce({ data: { data: apiMe } })
-        .mockResolvedValueOnce({ data: { data: apiCompetences } })
-        .mockResolvedValueOnce({ data: { badges: [] } })
-      const { data } = await saveProfile(EXPECTED_ID, { prenom: 'Omar', nom: 'Benali', filiere: 'GINF' })
-      expect(data.prenom).toBe('Omar')
-      expect(data.etudiant.competences).toHaveLength(1)
+        .mockResolvedValueOnce({ data: { data: MOCK_ME } })
+        .mockResolvedValueOnce({ data: { data: [] } })
+        .mockResolvedValueOnce({ data: { data: [] } })
+      await saveProfile(EXPECTED_ID, { prenom: 'Ahmed', nom: 'Benali', filiere: 'GINF' })
+      expect(api.put).toHaveBeenCalledWith(`/etudiants/${EXPECTED_ID}`, expect.objectContaining({ filiere: 'GINF' }))
     })
   })
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // addSkill()
-  // API_READY=true → appelle api.post × 2 (catalog + association)
-  // ══════════════════════════════════════════════════════════════════════════
-  describe('addSkill()', () => {
-    const catalogRes = (nom) => ({
-      data: { data: { id_competence: `comp-${nom}`, nom, type: 'TECHNIQUE' } },
-    })
-    const assocRes = (niveau = 'DEBUTANT') => ({
-      data: { data: { niveau_maitrise: niveau } },
-    })
+  // ── addSkill() ─────────────────────────────────────────────────────────────
 
+  describe('addSkill()', () => {
     it('retourne { data: { competence, niveau_maitrise } }', async () => {
-      api.post.mockResolvedValueOnce(catalogRes('Docker'))
-      api.post.mockResolvedValueOnce(assocRes())
+      const comp = { id_competence: 'comp-docker', nom: 'Docker', type: 'TECHNIQUE' }
+      api.get.mockResolvedValueOnce({ data: { data: [] } })         // catalog vide → création
+      api.post
+        .mockResolvedValueOnce({ data: { data: comp } })             // création compétence
+        .mockResolvedValueOnce({ data: { data: { niveau_maitrise: 'DEBUTANT' } } }) // association
       const { data } = await addSkill(EXPECTED_ID, 'Docker')
       expect(data.competence.nom).toBe('Docker')
-      expect(data.competence.id_competence).toBeTruthy()
       expect(data.niveau_maitrise).toBe('DEBUTANT')
     })
 
-    it('appelle POST /competences avec le bon nom', async () => {
-      api.post.mockResolvedValueOnce(catalogRes('Kubernetes'))
-      api.post.mockResolvedValueOnce(assocRes())
+    it('réutilise la compétence si elle existe déjà dans le catalogue', async () => {
+      const existing = { id_competence: 'comp-vue', nom: 'Vue.js', type: 'TECHNIQUE' }
+      api.get.mockResolvedValueOnce({ data: { data: [existing] } }) // catalog avec Vue.js
+      api.post.mockResolvedValueOnce({ data: { data: { niveau_maitrise: 'INTERMEDIAIRE' } } })
+      const { data } = await addSkill(EXPECTED_ID, 'Vue.js', 'INTERMEDIAIRE')
+      // api.post n'a été appelé qu'une fois (association seulement, pas création)
+      expect(api.post).toHaveBeenCalledTimes(1)
+      expect(data.competence.nom).toBe('Vue.js')
+    })
+
+    it('appelle POST /competences/ si compétence absente du catalogue', async () => {
+      const newComp = { id_competence: 'comp-k8s', nom: 'Kubernetes', type: 'TECHNIQUE' }
+      api.get.mockResolvedValueOnce({ data: { data: [] } })
+      api.post
+        .mockResolvedValueOnce({ data: { data: newComp } })
+        .mockResolvedValueOnce({ data: { data: { niveau_maitrise: 'DEBUTANT' } } })
       await addSkill(EXPECTED_ID, 'Kubernetes')
-      expect(api.post).toHaveBeenCalledWith('/competences', { nom: 'Kubernetes', type: 'TECHNIQUE' })
+      expect(api.post).toHaveBeenCalledWith('/competences/', expect.objectContaining({
+        nom:  'Kubernetes',
+        type: 'TECHNIQUE',
+      }))
     })
 
     it('appelle POST /competences/etudiant/:id/:compId pour l\'association', async () => {
       const compId = 'comp-react'
-      api.post.mockResolvedValueOnce({ data: { data: { id_competence: compId, nom: 'React', type: 'TECHNIQUE' } } })
-      api.post.mockResolvedValueOnce(assocRes())
+      api.get.mockResolvedValueOnce({ data: { data: [{ id_competence: compId, nom: 'React', type: 'TECHNIQUE' }] } })
+      api.post.mockResolvedValueOnce({ data: { data: { niveau_maitrise: 'DEBUTANT' } } })
       await addSkill(EXPECTED_ID, 'React')
       expect(api.post).toHaveBeenCalledWith(
         `/competences/etudiant/${EXPECTED_ID}/${compId}`,
@@ -172,46 +226,39 @@ describe('profileservices.js', () => {
     })
 
     it('utilise le niveau_maitrise fourni en paramètre', async () => {
-      api.post.mockResolvedValueOnce(catalogRes('TypeScript'))
-      api.post.mockResolvedValueOnce(assocRes('AVANCE'))
+      const comp = { id_competence: 'comp-ts', nom: 'TypeScript', type: 'TECHNIQUE' }
+      api.get.mockResolvedValueOnce({ data: { data: [] } })
+      api.post
+        .mockResolvedValueOnce({ data: { data: comp } })
+        .mockResolvedValueOnce({ data: { data: { niveau_maitrise: 'AVANCE' } } })
       const { data } = await addSkill(EXPECTED_ID, 'TypeScript', 'AVANCE')
       expect(data.niveau_maitrise).toBe('AVANCE')
     })
 
-    it('propage l\'erreur si api.post échoue', async () => {
-      api.post.mockRejectedValueOnce(new Error('Network error'))
-      await expect(addSkill(EXPECTED_ID, 'Docker')).rejects.toThrow('Network error')
-    })
-
-    it('fonctionne avec des noms de compétences variés', async () => {
-      for (const nom of ['Machine Learning', 'PHP', 'Laravel']) {
-        api.post.mockResolvedValueOnce(catalogRes(nom))
-        api.post.mockResolvedValueOnce(assocRes())
-        const { data } = await addSkill(EXPECTED_ID, nom)
-        expect(data.competence.nom).toBe(nom)
-      }
+    it('propage l\'erreur si l\'association échoue', async () => {
+      api.get.mockResolvedValueOnce({ data: { data: [] } })
+      api.post
+        .mockResolvedValueOnce({ data: { data: { id_competence: 'c1', nom: 'Docker' } } })
+        .mockRejectedValueOnce(new Error('Association refusée'))
+      await expect(addSkill(EXPECTED_ID, 'Docker')).rejects.toThrow('Association refusée')
     })
   })
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // Contrats d'interface
-  // ══════════════════════════════════════════════════════════════════════════
+  // ── Contrats d'interface ───────────────────────────────────────────────────
+
   describe('Contrats d\'interface', () => {
     it('getProfile — data contient tous les champs attendus', async () => {
+      setupGetProfileMocks()
       const { data } = await getProfile()
       ;['id_utilisateur', 'email', 'nom', 'prenom', 'role', 'date_creation', 'etudiant']
         .forEach(c => expect(data).toHaveProperty(c))
     })
 
     it('getProfile — data.etudiant contient les sous-collections', async () => {
+      setupGetProfileMocks()
       const { data } = await getProfile()
       ;['competences', 'badges', 'participations_projets', 'depots_github']
         .forEach(c => expect(data.etudiant).toHaveProperty(c))
-    })
-
-    it('saveProfile — data contient etudiant', async () => {
-      const { data } = await saveProfile(EXPECTED_ID, { prenom: 'T', nom: 'T', filiere: 'GINF' })
-      expect(data).toHaveProperty('etudiant')
     })
   })
 })

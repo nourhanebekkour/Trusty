@@ -37,21 +37,21 @@ describe('ProfileStats.vue', () => {
       expect(wrapper.find('.stats-grid').exists()).toBe(true)
     })
 
-    it('affiche deux stat-box', () => {
+    it('affiche quatre stat-box (Projets, Validés, Compétences, Badges)', () => {
       wrapper = mountComponent()
-      expect(wrapper.findAll('.stat-box')).toHaveLength(2)
+      expect(wrapper.findAll('.stat-box')).toHaveLength(4)
     })
 
-    it('affiche le label "Projets Total"', () => {
+    it('affiche le label "Projets"', () => {
       wrapper = mountComponent()
       const descs = wrapper.findAll('.stat-desc')
-      expect(descs.some(d => d.text() === 'Projets Total')).toBe(true)
+      expect(descs.some(d => d.text() === 'Projets')).toBe(true)
     })
 
-    it('affiche le label "Projets Validés"', () => {
+    it('affiche le label "Validés"', () => {
       wrapper = mountComponent()
       const descs = wrapper.findAll('.stat-desc')
-      expect(descs.some(d => d.text() === 'Projets Validés')).toBe(true)
+      expect(descs.some(d => d.text() === 'Validés')).toBe(true)
     })
   })
 

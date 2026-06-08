@@ -60,7 +60,7 @@ describe('SideBar.vue', () => {
 
   const navLabels = [
     'Dashboard', 'Mon Profil', 'Parcours', 'Stages', 'Projets',
-    'Recommandations', 'Notifications', 'Modèles', 'Portfolio Complet',
+    'Recommandations', 'Notifications', 'Activités parascolaires', 'Portfolio Complet',
   ]
 
   navLabels.forEach(label => {

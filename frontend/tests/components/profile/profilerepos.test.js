@@ -1,133 +1,175 @@
-import { mount } from '@vue/test-utils'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { mount, flushPromises } from '@vue/test-utils'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import ProfileRepos from '@/components/profile/ProfileRepos.vue'
 
-// ─── Factories ─────────────────────────────────────────────────────────────────
-const makeRepo = (overrides = {}) => ({
-  id_depot: 1,
-  nom_depot: 'mon-projet',
-  url_github: 'https://github.com/user/mon-projet',
-  description_github: 'Un super projet',
-  langage_principal: 'JavaScript',
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+// Le composant fetch directement l'API GitHub (pas de module api).
+// On mock le global fetch pour simuler les réponses.
+
+const makeGithubRepo = (overrides = {}) => ({
+  id: 1,
+  name:              'mon-projet',
+  html_url:          'https://github.com/user/mon-projet',
+  description:       'Un super projet',
+  language:          'JavaScript',
+  stargazers_count:  5,
+  forks_count:       2,
+  pushed_at:         '2024-05-01T10:00:00Z',
+  topics:            [],
+  fork:              false,
   ...overrides,
 })
 
-const makeUser = (repos = []) => ({
-  etudiant: { depots_github: repos },
+const mockFetch = (repos = []) => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+    ok:   true,
+    json: vi.fn().mockResolvedValue(repos),
+  }))
+}
+
+const makeUser = (githubUsername = null) => ({
+  etudiant: { github_username: githubUsername },
 })
 
 // ─── Suite ────────────────────────────────────────────────────────────────────
 describe('ProfileRepos.vue', () => {
   let wrapper
 
-  const mountComponent = (user = makeUser()) =>
-    mount(ProfileRepos, { props: { user } })
-
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    wrapper?.unmount()
+    vi.unstubAllGlobals()
   })
 
   // ── Rendu de base ────────────────────────────────────────────────────────────
   describe('Rendu de base', () => {
     it('affiche le titre "Dépôts GitHub"', () => {
-      wrapper = mountComponent()
+      mockFetch([])
+      wrapper = mount(ProfileRepos, { props: { user: makeUser() } })
       expect(wrapper.find('.section-header h3').text()).toBe('Dépôts GitHub')
     })
 
-    it('affiche le bouton "+ Ajouter"', () => {
-      wrapper = mountComponent()
-      expect(wrapper.find('.add-btn').text()).toBe('+ Ajouter')
+    it('affiche le lien "Voir profil ↗" si github_username est défini', async () => {
+      mockFetch([])
+      wrapper = mount(ProfileRepos, { props: { user: makeUser('myuser') } })
+      await flushPromises()
+      expect(wrapper.find('.add-btn').text()).toContain('Voir profil')
     })
 
-    it('affiche le bouton "Lier un nouveau dépôt"', () => {
-      wrapper = mountComponent()
-      expect(wrapper.find('.link-btn').text()).toBe('Lier un nouveau dépôt')
+    it('n\'affiche pas le lien profil si github_username est null', async () => {
+      mockFetch([])
+      wrapper = mount(ProfileRepos, { props: { user: makeUser(null) } })
+      await flushPromises()
+      expect(wrapper.find('.add-btn').exists()).toBe(false)
     })
   })
 
-  // ── État vide ────────────────────────────────────────────────────────────────
-  describe('État vide', () => {
-    it('affiche le message "Aucun dépôt lié." quand la liste est vide', () => {
-      wrapper = mountComponent(makeUser([]))
-      expect(wrapper.find('.empty-msg').text()).toBe('Aucun dépôt lié.')
+  // ── État vide — pas de username ───────────────────────────────────────────────
+  describe('État vide (pas de github_username)', () => {
+    it('affiche le message "Aucun compte GitHub lié" quand github_username est null', async () => {
+      wrapper = mount(ProfileRepos, { props: { user: makeUser(null) } })
+      await flushPromises()
+      expect(wrapper.find('.empty-msg').exists()).toBe(true)
+      expect(wrapper.find('.empty-msg').text()).toContain('Aucun compte GitHub lié')
     })
 
-    it('n\'affiche pas la liste quand vide', () => {
-      wrapper = mountComponent(makeUser([]))
+    it('n\'affiche pas la liste quand pas de username', async () => {
+      wrapper = mount(ProfileRepos, { props: { user: makeUser(null) } })
+      await flushPromises()
       expect(wrapper.find('.repo-list').exists()).toBe(false)
     })
 
-    it('affiche le message vide quand etudiant est undefined', () => {
-      wrapper = mountComponent({ etudiant: undefined })
+    it('affiche le message vide quand etudiant est undefined', async () => {
+      wrapper = mount(ProfileRepos, { props: { user: { etudiant: undefined } } })
+      await flushPromises()
       expect(wrapper.find('.empty-msg').exists()).toBe(true)
     })
+  })
 
-    it('affiche le message vide quand depots_github est undefined', () => {
-      wrapper = mountComponent({ etudiant: {} })
-      expect(wrapper.find('.empty-msg').exists()).toBe(true)
+  // ── État vide — username OK mais aucun dépôt ─────────────────────────────────
+  describe('État vide (username OK, aucun dépôt)', () => {
+    it('affiche "Aucun dépôt public trouvé." quand la liste est vide', async () => {
+      mockFetch([])
+      wrapper = mount(ProfileRepos, { props: { user: makeUser('myuser') } })
+      await flushPromises()
+      expect(wrapper.find('.empty-msg').text()).toContain('Aucun dépôt public trouvé')
+    })
+
+    it('n\'affiche pas la liste quand vide', async () => {
+      mockFetch([])
+      wrapper = mount(ProfileRepos, { props: { user: makeUser('myuser') } })
+      await flushPromises()
+      expect(wrapper.find('.repo-list').exists()).toBe(false)
     })
   })
 
   // ── Affichage des dépôts ──────────────────────────────────────────────────────
   describe('Affichage des dépôts', () => {
-    it('affiche la liste quand des dépôts existent', () => {
-      wrapper = mountComponent(makeUser([makeRepo()]))
+    it('affiche la liste quand des dépôts existent', async () => {
+      mockFetch([makeGithubRepo()])
+      wrapper = mount(ProfileRepos, { props: { user: makeUser('myuser') } })
+      await flushPromises()
       expect(wrapper.find('.repo-list').exists()).toBe(true)
       expect(wrapper.find('.empty-msg').exists()).toBe(false)
     })
 
-    it('affiche le bon nombre de repo-item', () => {
-      const repos = [
-        makeRepo({ id_depot: 1, nom_depot: 'repo-1' }),
-        makeRepo({ id_depot: 2, nom_depot: 'repo-2' }),
-      ]
-      wrapper = mountComponent(makeUser(repos))
+    it('affiche le bon nombre de repo-item', async () => {
+      mockFetch([
+        makeGithubRepo({ id: 1, name: 'repo-1' }),
+        makeGithubRepo({ id: 2, name: 'repo-2' }),
+      ])
+      wrapper = mount(ProfileRepos, { props: { user: makeUser('myuser') } })
+      await flushPromises()
       expect(wrapper.findAll('.repo-item')).toHaveLength(2)
     })
 
-    it('affiche le nom du dépôt', () => {
-      wrapper = mountComponent(makeUser([makeRepo({ nom_depot: 'awesome-app' })]))
-      expect(wrapper.find('.repo-name').text()).toBe('awesome-app')
+    it('affiche le nom du dépôt', async () => {
+      mockFetch([makeGithubRepo({ name: 'awesome-app' })])
+      wrapper = mount(ProfileRepos, { props: { user: makeUser('myuser') } })
+      await flushPromises()
+      expect(wrapper.find('.repo-name').text()).toContain('awesome-app')
     })
 
-    it('affiche le lien GitHub avec la bonne URL', () => {
-      wrapper = mountComponent(makeUser([makeRepo({ url_github: 'https://github.com/test/repo' })]))
+    it('affiche le lien GitHub avec la bonne URL', async () => {
+      mockFetch([makeGithubRepo({ html_url: 'https://github.com/test/repo' })])
+      wrapper = mount(ProfileRepos, { props: { user: makeUser('myuser') } })
+      await flushPromises()
       expect(wrapper.find('.repo-name').attributes('href')).toBe('https://github.com/test/repo')
     })
 
-    it('utilise "#" comme href si url_github est null', () => {
-      wrapper = mountComponent(makeUser([makeRepo({ url_github: null })]))
-      expect(wrapper.find('.repo-name').attributes('href')).toBe('#')
-    })
-
-    it('affiche le lien en target="_blank"', () => {
-      wrapper = mountComponent(makeUser([makeRepo()]))
+    it('affiche le lien en target="_blank"', async () => {
+      mockFetch([makeGithubRepo()])
+      wrapper = mount(ProfileRepos, { props: { user: makeUser('myuser') } })
+      await flushPromises()
       expect(wrapper.find('.repo-name').attributes('target')).toBe('_blank')
     })
 
-    it('affiche la description du dépôt', () => {
-      wrapper = mountComponent(makeUser([makeRepo({ description_github: 'API REST en Node.js' })]))
+    it('affiche la description du dépôt', async () => {
+      mockFetch([makeGithubRepo({ description: 'API REST en Node.js' })])
+      wrapper = mount(ProfileRepos, { props: { user: makeUser('myuser') } })
+      await flushPromises()
       expect(wrapper.find('.repo-desc').text()).toBe('API REST en Node.js')
     })
 
-    it('affiche le langage principal', () => {
-      wrapper = mountComponent(makeUser([makeRepo({ langage_principal: 'Python' })]))
+    it('affiche le langage principal', async () => {
+      mockFetch([makeGithubRepo({ language: 'Python' })])
+      wrapper = mount(ProfileRepos, { props: { user: makeUser('myuser') } })
+      await flushPromises()
       expect(wrapper.find('.repo-lang').text()).toContain('Python')
     })
 
-    it('affiche l\'icône ⚙', () => {
-      wrapper = mountComponent(makeUser([makeRepo()]))
-      expect(wrapper.find('.repo-icon').text()).toBe('⚙')
-    })
-
-    it('affiche le lien external ↗', () => {
-      wrapper = mountComponent(makeUser([makeRepo()]))
+    it('affiche le lien external ↗', async () => {
+      mockFetch([makeGithubRepo()])
+      wrapper = mount(ProfileRepos, { props: { user: makeUser('myuser') } })
+      await flushPromises()
       expect(wrapper.find('.ext-link').text()).toBe('↗')
     })
   })
 
   // ── Couleurs des langages ─────────────────────────────────────────────────────
-  // Vue normalise les hex en rgb() dans element.style — on accepte les deux formes.
   const hexToRgb = (hex) => {
     const r = parseInt(hex.slice(1, 3), 16)
     const g = parseInt(hex.slice(3, 5), 16)
@@ -137,7 +179,6 @@ describe('ProfileRepos.vue', () => {
 
   const dotStyle = (wrapper) => {
     const dot = wrapper.find('.lang-dot')
-    // Lire la valeur brute depuis element.style.background
     return dot.element.style.background || dot.element.style.backgroundColor || dot.attributes('style') || ''
   }
 
@@ -154,16 +195,20 @@ describe('ProfileRepos.vue', () => {
     ]
 
     langCases.forEach(({ lang, color }) => {
-      it(`applique la couleur ${color} pour le langage ${lang}`, () => {
-        wrapper = mountComponent(makeUser([makeRepo({ langage_principal: lang })]))
+      it(`applique la couleur ${color} pour le langage ${lang}`, async () => {
+        mockFetch([makeGithubRepo({ language: lang })])
+        wrapper = mount(ProfileRepos, { props: { user: makeUser('myuser') } })
+        await flushPromises()
         const style = dotStyle(wrapper)
         const rgb = hexToRgb(color)
         expect(style.includes(color) || style.includes(rgb) || style.replace(/\s/g, '').includes(rgb.replace(/\s/g, ''))).toBe(true)
       })
     })
 
-    it('applique la couleur par défaut #6b7280 pour un langage inconnu', () => {
-      wrapper = mountComponent(makeUser([makeRepo({ langage_principal: 'COBOL' })]))
+    it('applique la couleur par défaut #6b7280 pour un langage inconnu', async () => {
+      mockFetch([makeGithubRepo({ language: 'COBOL' })])
+      wrapper = mount(ProfileRepos, { props: { user: makeUser('myuser') } })
+      await flushPromises()
       const style = dotStyle(wrapper)
       const rgb = hexToRgb('#6b7280')
       expect(style.includes('#6b7280') || style.includes(rgb) || style.replace(/\s/g, '').includes(rgb.replace(/\s/g, ''))).toBe(true)
