@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { useAuthStore } from '@/stores/authstore'
 import {
   fetchCandidats,
   envoyerRecommandation as apiEnvoyerRecommandation,
@@ -21,6 +22,15 @@ function hashId(id) {
   let h = 0
   for (let i = 0; i < str.length; i++) h += str.charCodeAt(i)
   return h
+}
+
+// ── Helper erreur API ──────────────────────────────────────────────────────────
+function getErrorMessage(e) {
+  return (
+    e?.response?.data?.message ||
+    e?.message ||
+    'Erreur inconnue'
+  )
 }
 
 export function normaliserCandidat(e) {
@@ -75,14 +85,22 @@ export function normaliserRec(r) {
 
 export const useProfessionalStore = defineStore('professional', () => {
 
+  const auth = useAuthStore()
+
+  // ── Guard rôle (sans navigation) ───────────────────────────────────────────
+  function isProfessional() {
+    return auth.user?.role === 'PROFESSIONNEL'
+  }
+
   // ── État
-  const candidats     = ref([])
-  const recsEmises    = ref([])
-  const notifications = ref([])
-  const favoris       = ref([])
-  const consultes     = ref(0)
-  const loading       = ref({ candidats: false, notifs: false })
-  const erreur        = ref(null)
+  const candidats              = ref([])
+  const recsEmises             = ref([])
+  const notifications          = ref([])
+  const favoris                = ref([])
+  const consultes              = ref(0)
+  const loading                = ref({ candidats: false, notifs: false })
+  const erreur                 = ref(null)
+  const sendingRecommendation  = ref(false)
 
   // ── Getters
   const totalRecs          = computed(() => recsEmises.value.length)
@@ -92,44 +110,77 @@ export const useProfessionalStore = defineStore('professional', () => {
   // ── Actions API
 
   async function chargerCandidats() {
+    if (!isProfessional()) {
+      erreur.value = 'Accès refusé'
+      return
+    }
     loading.value.candidats = true
     erreur.value = null
     try {
       const data = await fetchCandidats()
       candidats.value = data.map(normaliserCandidat)
     } catch (e) {
-      erreur.value = e.message
+      erreur.value = getErrorMessage(e)
     } finally {
       loading.value.candidats = false
     }
   }
 
   async function chargerNotifications() {
+    if (!isProfessional()) {
+      erreur.value = 'Accès refusé'
+      return
+    }
     loading.value.notifs = true
     try {
       const data = await fetchNotifications()
       notifications.value = data.map((n, i) => normaliserNotif(n, i, data.length))
     } catch (e) {
-      erreur.value = e.message
+      erreur.value = getErrorMessage(e)
     } finally {
       loading.value.notifs = false
     }
   }
 
   async function envoyerRecommandation(candidat, texte, type) {
+    if (!isProfessional()) {
+      throw new Error('Accès refusé')
+    }
+
+    if (sendingRecommendation.value) return
+
+    if (!candidat?.id) {
+      throw new Error('Candidat invalide')
+    }
+
+    const message = texte?.trim()
+
+    if (!message) {
+      throw new Error('Message vide')
+    }
+
+    if (message.length > 1000) {
+      throw new Error('Message trop long')
+    }
+
+    sendingRecommendation.value = true
+
     try {
-      await apiEnvoyerRecommandation(candidat.id, texte)
+      await apiEnvoyerRecommandation(candidat.id, message)
+
       const now  = new Date()
       const mois = now.toLocaleString('fr-FR', { month: 'long' })
+
       recsEmises.value.unshift({
         candidatId: candidat.id,
         nom:        candidat.nom,
         initiales:  candidat.initiales,
         gradient:   candidat.gradient,
         type,
-        extrait:    texte.length > 60 ? texte.slice(0, 60) + '…' : texte,
-        date:       `${mois.charAt(0).toUpperCase() + mois.slice(1)} ${now.getFullYear()}`,
+        extrait:    message.length > 60 ? message.slice(0, 60) + '…' : message,
+        date:       `${mois.charAt(0).toUpperCase()}${mois.slice(1)} ${now.getFullYear()}`,
       })
+
       notifications.value.unshift({
         id:      Date.now(),
         nom:     '',
@@ -138,19 +189,23 @@ export const useProfessionalStore = defineStore('professional', () => {
         color:   '#66c99f',
         last:    false,
       })
+
     } catch (e) {
-      erreur.value = e.message
+      erreur.value = getErrorMessage(e)
       throw e
+    } finally {
+      sendingRecommendation.value = false
     }
   }
 
   async function marquerLue(id) {
+    if (!isProfessional()) return
     try {
       await marquerNotificationLue(id)
       const notif = notifications.value.find(n => n.id === id)
       if (notif) notif.color = '#a0b4ae'
     } catch (e) {
-      erreur.value = e.message
+      erreur.value = getErrorMessage(e)
     }
   }
 
@@ -171,6 +226,7 @@ export const useProfessionalStore = defineStore('professional', () => {
   }
 
   async function init() {
+    if (!isProfessional()) return
     await Promise.all([
       chargerCandidats(),
       chargerNotifications(),
@@ -179,6 +235,7 @@ export const useProfessionalStore = defineStore('professional', () => {
 
   return {
     candidats, recsEmises, notifications, favoris, consultes, loading, erreur,
+    sendingRecommendation,
     totalRecs, candidatsFavoris, candidatsEnAttente,
     init, chargerCandidats, chargerNotifications,
     envoyerRecommandation, marquerLue,

@@ -1,39 +1,83 @@
 <script setup>
-import { computed, onMounted } from 'vue'
-import { RouterView, useRoute } from 'vue-router'
+import { computed, onMounted, watch } from 'vue'
+import { RouterView, useRoute, useRouter } from 'vue-router'
 import SideBar from './components/laayout/SideBar.vue'
 import NavBar from './components/laayout/NavBar.vue'
 import Footer from './components/laayout/Footer.vue'
+import ProfessionalSideBar from './components/professional/ProfessionalSideBar.vue'
 import { useAuthStore } from './stores/authstore'
+import { useThemeStore } from './stores/themeStore'
 
 const authStore = useAuthStore()
+const theme = useThemeStore()
 const route = useRoute()
+const router = useRouter()
+
+// ── Routes publiques (aucune auth requise) ────
+const PUBLIC_ROUTES = ['login', 'home', 'about', 'portfolio-template1']
+
+// ── Mapping rôle → préfixe de route autorisé ──────
+const ROLE_ALLOWED_PREFIXES = {
+  ETUDIANT:       ['/dashboard', '/notifications', '/profile', '/projets', '/settings', '/recommendations', '/stage', '/modele', '/portfolio','/lettres'],
+  PROFESSIONNEL:  ['/professional'],
+  PROFESSEUR:     ['/professor'],
+  ADMINISTRATEUR: ['/admin'],
+}
+
+// ── Garde de sécurité : vérifie rôle vs route courante ───
+function enforceRoleGuard() {
+  // Pages publiques : toujours autorisées
+  if (!route.name || PUBLIC_ROUTES.includes(route.name)) return
+
+  const user = authStore.user
+  // Pas connecté → login
+  if (!user) {
+    router.replace({ name: 'login' })
+    return
+  }
+
+  const allowed = ROLE_ALLOWED_PREFIXES[user.role] ?? []
+  const isAllowed = allowed.some(prefix => route.path.startsWith(prefix))
+
+  if (!isAllowed) {
+    // Redirige vers la page d'accueil du rôle
+    const homeByRole = {
+      ETUDIANT:       '/dashboard',
+      PROFESSIONNEL:  '/professional',
+      PROFESSEUR:     '/professor',
+      ADMINISTRATEUR: '/admin/dashboard',
+    }
+    router.replace(homeByRole[user.role] ?? '/login')
+  }
+}
 
 onMounted(async () => {
-  const publicRoutes = ['login', 'home', 'about', 'professor']
-  if (route.name && !publicRoutes.includes(route.name)) {
+  theme.init()
+  if (route.name && !PUBLIC_ROUTES.includes(route.name)) {
     await authStore.fetchUser()
   }
+  
 })
 
 const isPublicPage = computed(() =>
-  ['home', 'login', 'about', 'professor'].includes(route.name)
+  PUBLIC_ROUTES.includes(route.name)
 )
 
-const isAdminPage        = computed(() => route.path.startsWith('/admin'))
-const isProfessionalPage = computed(() => route.path.startsWith('/professional'))
+const isProfessionalPage = computed(() => route.name === 'professional')
+const isProfessorPage = computed(() => route.path.startsWith('/professor'))
+const isAdminPage = computed(() => route.path.startsWith('/admin'))
 
 const isStudentPage = computed(() => {
   const studentPaths = [
     '/dashboard', '/notifications', '/profile', '/projets', '/parcours',
-    '/settings', '/recommendations', '/stage', '/activites', '/portfolio',
+    '/settings', '/recommendations', '/stage', '/activites', '/portfolio','/lettres'
   ]
   return studentPaths.some(p => route.path.startsWith(p))
 })
 </script>
 
 <template>
-  <!-- ── Pages publiques : home, login, about, professor ── -->
+  <!-- ── Pages publiques : home, login, about ── -->
   <div v-if="isPublicPage">
     <RouterView />
   </div>
@@ -43,9 +87,10 @@ const isStudentPage = computed(() => {
     <RouterView />
   </div>
 
-  <!-- ── Pages Professional : layout géré par ProfessionalLayout ── -->
-  <!-- ── Pages Professional : layout géré par ProfessionalLayout ── -->
-<RouterView v-else-if="isProfessionalPage" />
+  <!-- ── Pages Professeur : layout géré par ProfessorLayout ── -->
+  
+  <RouterView v-else-if="isProfessorPage"/>
+  
 
   <!-- ── Pages Étudiant : navbar + sidebar + footer ── -->
   <div v-else-if="isStudentPage" class="app">
@@ -57,6 +102,17 @@ const isStudentPage = computed(() => {
       </main>
     </div>
     <Footer />
+  </div>
+
+  <!-- ── Pages Professionnel ── -->
+  <div v-else-if="isProfessionalPage" class="app">
+    <NavBar />
+    <div class="layout">
+      <ProfessionalSideBar />
+      <main class="content">
+        <RouterView />
+      </main>
+    </div>
   </div>
 
   <!-- ── Fallback ── -->
@@ -84,6 +140,8 @@ html, body {
   overflow-x: hidden;
 }
 
+/* Remplacez/complétez le style existant */
+
 .app {
   display: flex;
   flex-direction: column;
@@ -98,14 +156,16 @@ html, body {
   width: 100%;
   align-items: stretch;
   min-height: 0;
-  background-color: var(--color-background);
+  background-color: var(--color-page-bg);
 }
 
 .content {
   flex: 1;
   padding: 0px;
-  background-color: var(--color-background);
+  background-color: var(--color-page-bg);
   overflow-y: auto;
+  overflow-x: hidden;
   min-height: 0;
+  min-width: 0; /* ← important pour flex */
 }
 </style>

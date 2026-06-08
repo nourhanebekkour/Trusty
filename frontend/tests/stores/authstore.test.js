@@ -55,7 +55,7 @@ describe('authStore — Tests Unitaires', () => {
 
     await store.login('alice@test.com', '1234')
 
-    expect(authService.login).toHaveBeenCalledWith({ email: 'alice@test.com', password: '1234' })
+    expect(authService.login).toHaveBeenCalledWith({ email: 'alice@test.com', password: '1234', remember: false })
   })
 
   it('3 — login : user mis à jour via fetchUser après succès', async () => {
@@ -209,9 +209,12 @@ describe('authStore — Tests Unitaires', () => {
 })
 
 // ════════════════════════════════════════════════════════════════════════════
-// TESTS D'INTÉGRATION
+// SCÉNARIOS (enchaînements d'actions unitaires)
+// Le service est toujours mocké — ces tests vérifient les transitions d'état
+// du store sur des séquences d'actions. Ce NE sont PAS des tests d'intégration
+// au sens strict (service réel + api mockée) : voir tests/integration/ pour ça.
 // ════════════════════════════════════════════════════════════════════════════
-describe("authStore — Tests d'Intégration", () => {
+describe('authStore — Scénarios (enchaînements)', () => {
 
   beforeEach(() => {
     setActivePinia(createPinia())
