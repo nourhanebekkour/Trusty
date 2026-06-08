@@ -179,7 +179,6 @@ model Administrateur {
   utilisateur       Utilisateur  @relation(fields: [id_administrateur], references: [id_utilisateur], onDelete: Cascade)
   activites_valides ActiviteParascolaire[]
   comptes_valides   Professionnel[]
-  modeles_crees     ModelePortfolio[]
 
   @@map("administrateurs")
 }
@@ -206,7 +205,7 @@ model Etudiant {
   utilisateur               Utilisateur @relation(fields: [id_etudiant], references: [id_utilisateur], onDelete: Cascade)
   
   // Relations métier
-  portfolio                 Portfolio?
+  portfolio                 Portfolio[]
   participations_projets    ParticipationProjet[]
   stages                    Stage[]
   activites_parascolaires   ActiviteParascolaire[]
@@ -575,8 +574,8 @@ model Recommandation {
 
 model Portfolio {
   id_portfolio              String    @id @default(cuid())
-  id_etudiant               String    @unique
-  id_modele                 String?
+  id_etudiant               String    
+  id_modele                 String
   titre_personnalise        String?   @db.VarChar(200)
   sous_titre                String?   @db.VarChar(255)
   url_publique              String?   @unique @db.VarChar(255)
@@ -589,7 +588,7 @@ model Portfolio {
 
   // Relations
   etudiant                  Etudiant          @relation(fields: [id_etudiant], references: [id_etudiant], onDelete: Cascade)
-  modele                    ModelePortfolio?  @relation(fields: [id_modele], references: [id_modele], onDelete: SetNull)
+  modele                    ModelePortfolio  @relation(fields: [id_modele], references: [id_modele], onDelete: Cascade)
   consultations             Consultation[]
 
   @@map("portfolios")
@@ -611,16 +610,12 @@ model Consultation {
 model ModelePortfolio {
   id_modele           String    @id @default(cuid())
   nom                 String    @db.VarChar(100)
-  description         String?   @db.Text
-  categorie           String    @db.VarChar(50)
-  fichier_css         String    @db.VarChar(500)
+  slug                String    @unique @db.VarChar(100)
   est_actif           Boolean   @default(true)
   date_creation       DateTime  @default(now())
-  id_admin_createur   String
   id_apercu           String    @unique
 
   // Relations
-  admin_createur      Administrateur  @relation(fields: [id_admin_createur], references: [id_administrateur], onDelete: Cascade)
   apercu              Fichier         @relation(fields: [id_apercu], references: [id_fichier], onDelete: Cascade)
   portfolios          Portfolio[]
 
