@@ -23,7 +23,7 @@
 
 <style scoped>
 .professor-footer {
-  margin-left: 210px;
+  margin-left: 235px;
   background: #0D2B2B;
   color: #D6EDE8;
   padding: 28px;

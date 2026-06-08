@@ -7,6 +7,7 @@ const USER_ALLOWED_FIELDS = [
   'id_utilisateur', // au lieu de 'id'
   'nom', 'prenom', 'email', 'role',
   'avatar', 'photo', 'isVerified', 'createdAt',
+  'ecole',
 ]
 
 const sanitizeUser = (raw) => {

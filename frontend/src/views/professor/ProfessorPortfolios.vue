@@ -2,8 +2,8 @@
   <div class="prof-page">
     <div class="prof-page-head">
       <div>
-        <h1>Suivi Portfolios</h1>
-        <p>Consultez, certifiez et recommandez les portfolios de vos étudiants.</p>
+        <h1>Portfolios étudiants</h1>
+        <p>Consultez les portfolios des étudiants que vous suivez.</p>
       </div>
 
       <div class="prof-actions">
@@ -20,22 +20,18 @@
     <div v-else-if="error" class="prof-error">{{ error }}</div>
 
     <template v-else>
-      <section class="prof-grid-4">
+      <section class="prof-grid-3">
         <div class="prof-card">
           <span class="prof-stat-label">Portfolios totaux</span>
           <strong class="prof-stat-value">{{ stats.totalPortfolios }}</strong>
         </div>
         <div class="prof-card">
-          <span class="prof-stat-label">En attente</span>
+          <span class="prof-stat-label">Brouillon</span>
           <strong class="prof-stat-value">{{ stats.pendingPortfolios }}</strong>
         </div>
         <div class="prof-card">
-          <span class="prof-stat-label">Certifiés</span>
+          <span class="prof-stat-label">Publiés</span>
           <strong class="prof-stat-value">{{ stats.certifiedPortfolios }}</strong>
-        </div>
-        <div class="prof-card">
-          <span class="prof-stat-label">Critères actifs</span>
-          <strong class="prof-stat-value">{{ stats.activeCriteria }}</strong>
         </div>
       </section>
 
@@ -50,9 +46,8 @@
 
           <select v-model="statusFilter" class="prof-select">
             <option value="">Tous les statuts</option>
-            <option value="PENDING">En attente</option>
-            <option value="CERTIFIED">Certifié</option>
-            <option value="REJECTED">Rejeté</option>
+            <option value="BROUILLON">Brouillon</option>
+            <option value="PUBLIE">Publié</option>
           </select>
         </div>
 
@@ -63,11 +58,9 @@
         <table v-else class="prof-table">
           <thead>
             <tr>
-              <th>Portfolio</th>
               <th>Étudiant</th>
               <th>Statut</th>
-              <th>Date dépôt</th>
-              <th>Modèle</th>
+              <th>Portfolio</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -75,27 +68,27 @@
           <tbody>
             <tr v-for="portfolio in filteredPortfolios" :key="portfolio.id">
               <td>
-                <strong>{{ portfolio.title }}</strong>
-                <p class="prof-muted">{{ portfolio.description || 'Aucune description' }}</p>
+                <strong>{{ portfolio.studentName }}</strong>
+                <p class="prof-muted">{{ portfolio.field || '' }}</p>
               </td>
-              <td>{{ portfolio.studentName }}</td>
               <td>
                 <span :class="statusClass(portfolio.status)">
                   {{ statusLabel(portfolio.status) }}
                 </span>
               </td>
-              <td>{{ formatDate(portfolio.submittedAt) }}</td>
-              <td>{{ portfolio.templateName || 'Standard' }}</td>
+              <td>
+                <a v-if="portfolio.portfolioUrl" :href="portfolio.portfolioUrl" target="_blank" class="prof-link">
+                  Voir le portfolio
+                </a>
+                <span v-else class="prof-muted">Non publié</span>
+              </td>
               <td>
                 <div class="prof-actions">
                   <button class="prof-btn prof-btn-secondary prof-btn-small" @click="openDetails(portfolio)">
-                    Consulter
+                    Détails
                   </button>
                   <button class="prof-btn prof-btn-primary prof-btn-small" @click="downloadPdf(portfolio)">
                     PDF
-                  </button>
-                  <button class="prof-btn prof-btn-green prof-btn-small" @click="validatePortfolio(portfolio)">
-                    Valider
                   </button>
                 </div>
               </td>
@@ -117,19 +110,11 @@
 
         <p class="prof-muted">{{ selectedPortfolio.description || 'Aucune description disponible.' }}</p>
 
-        <textarea
-          v-model="feedback"
-          class="prof-textarea"
-          placeholder="Commentaire ou correction demandée"
-        ></textarea>
+        <p v-if="selectedPortfolio.portfolioUrl" class="prof-muted">
+          URL : <a :href="selectedPortfolio.portfolioUrl" target="_blank">{{ selectedPortfolio.portfolioUrl }}</a>
+        </p>
 
         <div class="prof-actions" style="margin-top: 16px;">
-          <button class="prof-btn prof-btn-green" @click="validatePortfolio(selectedPortfolio)">
-            Valider le portfolio
-          </button>
-          <button class="prof-btn prof-btn-danger" @click="requestChanges(selectedPortfolio)">
-            Demander correction
-          </button>
           <button class="prof-btn prof-btn-secondary" @click="selectedPortfolio = null">
             Fermer
           </button>
@@ -147,8 +132,6 @@ import '@/assets/professor-pages.css'
 import {
   getProfessorPortfolios,
   getProfessorPortfolioDetails,
-  validateProfessorPortfolio,
-  requestPortfolioChanges,
   exportProfessorPortfolioPdf,
 } from '@/services/professorApi'
 
@@ -165,7 +148,6 @@ const stats = ref({
 const search = ref('')
 const statusFilter = ref('')
 const selectedPortfolio = ref(null)
-const feedback = ref('')
 const toast = ref({ show: false, message: '' })
 
 const filteredPortfolios = computed(() => {
@@ -206,66 +188,17 @@ async function openDetails(portfolio) {
   }
 }
 
-async function validatePortfolio(portfolio) {
-  try {
-    await validateProfessorPortfolio(portfolio.id)
-
-    portfolios.value = portfolios.value.map(item =>
-      item.id === portfolio.id ? { ...item, status: 'CERTIFIED' } : item
-    )
-
-    selectedPortfolio.value = null
-    showToast('Portfolio validé avec succès.')
-  } catch (err) {
-    showToast(err.response?.data?.message || 'Impossible de valider ce portfolio.')
-  }
-}
-
-async function requestChanges(portfolio) {
-  if (!feedback.value.trim()) {
-    showToast('Veuillez écrire un commentaire.')
-    return
-  }
-
-  try {
-    await requestPortfolioChanges(portfolio.id, { reason: feedback.value })
-
-    portfolios.value = portfolios.value.map(item =>
-      item.id === portfolio.id ? { ...item, status: 'REJECTED' } : item
-    )
-
-    selectedPortfolio.value = null
-    feedback.value = ''
-    showToast('Correction demandée.')
-  } catch (err) {
-    showToast(err.response?.data?.message || 'Impossible d’envoyer la correction.')
-  }
-}
-
 async function downloadPdf(portfolio) {
-  try {
-    const blob = await exportProfessorPortfolioPdf(portfolio.id)
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-
-    link.href = url
-    link.download = `${portfolio.title || 'portfolio'}.pdf`
-    link.click()
-
-    URL.revokeObjectURL(url)
-  } catch (err) {
-    showToast(err.response?.data?.message || 'Impossible de télécharger le PDF.')
-  }
+  showToast('Export PDF bientôt disponible.')
 }
 
 function exportCsv() {
   const rows = [
-    ['Portfolio', 'Étudiant', 'Statut', 'Date'],
+    ['Étudiant', 'Statut', 'URL'],
     ...portfolios.value.map(item => [
-      item.title || '',
       item.studentName || '',
       statusLabel(item.status),
-      formatDate(item.submittedAt),
+      item.portfolioUrl || '',
     ]),
   ]
 
@@ -282,26 +215,16 @@ function exportCsv() {
 }
 
 function statusClass(status) {
-  if (status === 'CERTIFIED' || status === 'APPROVED') {
-    return 'prof-badge prof-badge-success'
-  }
-
-  if (status === 'REJECTED') {
-    return 'prof-badge prof-badge-danger'
-  }
-
+  if (status === 'PUBLIE') return 'prof-badge prof-badge-success'
   return 'prof-badge prof-badge-pending'
 }
 
 function statusLabel(status) {
   const labels = {
-    PENDING: 'En attente',
-    CERTIFIED: 'Certifié',
-    APPROVED: 'Validé',
-    REJECTED: 'Rejeté',
+    BROUILLON: 'Brouillon',
+    PUBLIE: 'Publié',
   }
-
-  return labels[status] || status || 'En attente'
+  return labels[status] || status || 'Brouillon'
 }
 
 function formatDate(date) {

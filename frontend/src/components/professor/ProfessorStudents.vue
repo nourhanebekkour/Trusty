@@ -5,11 +5,13 @@
       <div class="card-action">Voir tous <i class="ti ti-arrow-right"></i></div>
     </div>
 
-    <div v-for="etudiant in safeEtudiants" :key="etudiant.id" class="student-row">
-      <!--
-        L'avatar affiche uniquement des initiales calculées : on n'injecte
-        jamais de HTML arbitraire. Le gradient est borné à une valeur sûre.
-      -->
+    <div
+      v-for="etudiant in safeEtudiants"
+      :key="etudiant.id"
+      class="student-row"
+      style="cursor: pointer"
+      @click="$emit('select', etudiant.id, etudiant.nom)"
+    >
       <div class="avatar-sm" :style="{ background: safeGradient(etudiant.gradient) }">
         {{ safeInitiales(etudiant.initiales) }}
       </div>
@@ -31,6 +33,8 @@ const props = defineProps({
   etudiants: { type: Array, default: () => [] },
 })
 
+defineEmits(['select'])
+
 // ── Données filtrées ──────────────────────────────────────────────────────────
 
 /**
@@ -38,13 +42,7 @@ const props = defineProps({
  */
 const safeEtudiants = computed(() => {
   if (!Array.isArray(props.etudiants)) return []
-  return props.etudiants.filter(
-    (e) =>
-      e &&
-      typeof e === 'object' &&
-      Number.isInteger(e.id) &&
-      e.id > 0
-  )
+  return props.etudiants.filter(e => e && typeof e === 'object' && e.id != null)
 })
 
 // ── Helpers de rendu ──────────────────────────────────────────────────────────
