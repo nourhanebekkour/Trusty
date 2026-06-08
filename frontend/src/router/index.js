@@ -150,6 +150,7 @@ const router = createRouter({
       path: '/portfolio',
       name: 'portfolio',
       component: Portfolio,
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
       path: '/portfolio/:url_publique',
