@@ -20,6 +20,7 @@ import historiqueActionRoutes from "./systeme/historiqueAction/historiqueAction.
 import badgesRoutes from "./cursus/badges/badges.routes.js";
 import commentaireRoutes from "./systeme/commentaire/commentaire.routes.js";
 import recommandationRoutes from "./systeme/recommandation/recommandation.routes.js";
+import portfolioRoutes from "./portfolio/portfolio.routes.js";
 import { authMiddleware } from '#Middlewares/auth.middleware.js';
 
 
@@ -31,6 +32,7 @@ const router = Router();
 // Brancher les routes auth sur /api/auth
 // Ex: /register devient /api/auth/register
 router.use('/auth', authentificationRoutes);
+router.use('/portfolio', portfolioRoutes);
 
 
 router.use(authMiddleware);
