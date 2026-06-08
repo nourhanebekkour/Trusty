@@ -212,8 +212,8 @@ const router = createRouter({
            meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
         },
         {
-          path: 'messages',
-          name: 'professor-messages',
+          path: 'commentaires',
+          name: 'professor-commentaires',
           component: () => import('../views/professor/ProfessorMessages.vue'), 
           meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
         },
@@ -222,6 +222,12 @@ const router = createRouter({
           name: 'professor-recommandations',
           component: () => import('../views/professor/ProfessorRecommendations.vue'),
            meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
+        },
+        {
+          path: 'historique',
+          name: 'professor-historique',
+          component: () => import('../views/professor/ProfessorHistorique.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
         },
         {
           path: 'profile',

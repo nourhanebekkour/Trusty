@@ -247,6 +247,40 @@ export async function deleteProfessorMessage(messageId) {
   await api.delete(`/commentaires/${messageId}`)
 }
 
+export async function getProfessorComments(studentId) {
+  const res = await api.get(`/commentaires/public/etudiant/${studentId}`)
+  const data = getData(res)
+  return { comments: (Array.isArray(data) ? data : []).map(mapMessage) }
+}
+
+export async function createProfessorComment(payload) {
+  const res = await api.post('/commentaires/', {
+    id_etudiant_cible: payload?.studentId ?? '',
+    contenu: payload?.content ?? '',
+    type_cible: payload?.typeCible ?? 'PROFIL',
+  })
+  const data = getData(res)
+  return { comment: mapMessage(data ?? {}) }
+}
+
+export async function getProfessorReceivedRecommendations() {
+  const res = await api.get('/recommandations/mes-recommandations-recus')
+  const data = getData(res)
+  return { recommendations: Array.isArray(data) ? data : [] }
+}
+
+export async function getProfessorCreatedRecommendations() {
+  const res = await api.get('/recommandations/')
+  const data = getData(res)
+  return { recommendations: Array.isArray(data) ? data : [] }
+}
+
+export async function getProfessorActionHistory() {
+  const res = await api.get('/historique-actions/mes-actions')
+  const data = getData(res)
+  return { actions: Array.isArray(data) ? data : [] }
+}
+
 export async function getProfessorNotifications(params = {}) {
   const res = await api.get('/notifications/', { params })
   const data = getData(res)

@@ -40,8 +40,8 @@ api.interceptors.response.use(
     if (status === 401 && window.location.pathname !== '/login') {
       window.location.href = '/login'
     }
-    if (status === 403 && window.location.pathname !== '/403') {
-      window.location.href = '/403'
+    if (status === 403) {
+      console.warn('[API] Accès interdit (403)')
     }
     if (status === 429) {
       console.warn('[API] Trop de requêtes envoyées.')
