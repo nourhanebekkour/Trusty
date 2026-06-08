@@ -64,3 +64,21 @@ export function buildPayload(form) {
   OPTIONALS.forEach(k => { if (!p[k]) delete p[k] })
   return p
 }
+
+export function badgeClass(status) {
+  return {
+    VALIDE: 'badge--valide',
+    EN_ATTENTE: 'badge--attente',
+    REJETE: 'badge--rejete',
+  }[status] ?? ''
+}
+
+export function participantsList(participations) {
+  if (!participations?.length) return '—'
+  return participations.map(p => nomComplet(p.etudiant)).join(', ')
+}
+
+export function firstParticipantInitials(participations) {
+  if (!participations?.length) return '?'
+  return initiales(participations[0].etudiant)
+}

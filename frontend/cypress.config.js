@@ -46,6 +46,16 @@ module.exports = defineConfig({
           return null
         },
 
+        async createProfessionalUser({ email, password }) {
+          const hash = await bcrypt.hash(password, 12)
+          await prisma.utilisateur.upsert({
+            where: { email },
+            update: { mot_de_passe: hash, status_compte: 'ACTIF' },
+            create: { email, mot_de_passe: hash, nom: 'Test', prenom: 'Professional', role: 'PROFESSIONNEL', status_compte: 'ACTIF' },
+          })
+          return null
+        },
+
         async deleteUserByEmail(email) {
           await prisma.utilisateur.deleteMany({ where: { email } })
           return null

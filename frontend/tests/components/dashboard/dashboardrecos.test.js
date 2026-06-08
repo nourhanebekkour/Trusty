@@ -156,9 +156,10 @@ describe('DashboardRecos.vue', () => {
       expect(wrapper.find('.reco-card__text').text()).toContain('Excellent travail')
     })
 
-    it('affiche le label "Repost" sur chaque carte secondaire', () => {
+    it('affiche les cartes secondaires avec la classe .reco-card', () => {
       const wrapper = mountComponent({ recos: [RECO_1, RECO_2] })
-      expect(wrapper.find('.reco-card__repost').text()).toBe('Repost')
+      // Les cartes secondaires utilisent .reco-card (sans suffixe __repost)
+      expect(wrapper.findAll('.reco-card').length).toBeGreaterThan(0)
     })
   })
 

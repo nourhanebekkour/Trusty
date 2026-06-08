@@ -104,6 +104,31 @@ const navItems = [
       </svg>
     `,
   },
+  {
+    label: 'Catalogue',
+    route: '/admin/catalogue',
+    icon: `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
+    `,
+  },
+  {
+    label: 'Badges',
+    route: '/admin/badges',
+    icon: `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="6"/>
+        <path d="M12 14v8"/>
+        <path d="M8 18h8"/>
+      </svg>
+    `,
+  },
 ]
 
 const settingsIcon = `
@@ -142,8 +167,8 @@ function handleLogout() {
   left: 0;
   width: 160px;
   height: calc(100vh - 60px);
-  background: #1A3838;
-  border-right: 1px solid #2a4a48;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border-light);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -163,7 +188,7 @@ function handleLogout() {
   flex-direction: column;
   gap: 4px;
   padding-top: 12px;
-  border-top: 1px solid #2a4a48;
+  border-top: 1px solid var(--color-border-light);
 }
 
 .sidebar__item {
@@ -176,32 +201,32 @@ function handleLogout() {
   border-radius: 8px;
   border: none;
   background: transparent;
-  color: #8aada9;
+  color: var(--color-text-secondary);
   font-size: 13px;
   text-align: left;
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s, color 0.15s;
 }
 
 .sidebar__item:hover:not(.sidebar__item--active) {
-  background: #0f2424;
-  color: #c8deda;
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
 }
 
 .sidebar__item--active {
-  background: #0f2424;
-  color: #5C8C6A;
+  background: var(--color-accent-light);
+  color: var(--color-accent);
   font-weight: 600;
 }
 
 .sidebar__item--danger {
-  color: #ef4444;
+  color: var(--color-danger);
 }
 
 .sidebar__item--danger:hover {
-  background: #3a1a1a;
-  color: #f87171;
+  background: #fef2f2;
+  color: #dc2626;
 }
 
 .sidebar__item--small {
