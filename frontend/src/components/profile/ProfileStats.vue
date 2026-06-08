@@ -114,7 +114,7 @@ const niveauClass = computed(() => {
 
 .cred-fill {
   height: 100%;
-  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  background: linear-gradient(90deg, var(--color-accent), var(--color-accent-hover));
   border-radius: 10px;
   transition: width .5s ease;
 }

@@ -69,7 +69,7 @@ const categoryColor = (cat) =>
 @import '@/assets/profile.css';
 
 .badge-count {
-  background: #6366f1;
+  background: var(--color-accent);
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -144,8 +144,8 @@ const categoryColor = (cat) =>
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  background: linear-gradient(135deg, #eef2ff 0%, #5C8C6A 100%);
-  border: 1px solid #5C8C6A;
+  background: linear-gradient(135deg, #eef2ff 0%, var(--color-accent) 100%);
+  border: 1px solid var(--color-accent);
   border-radius: 10px;
   padding: 14px 16px;
   margin-top: 4px;
@@ -159,19 +159,19 @@ const categoryColor = (cat) =>
 .generate-box h4 {
   font-size: 13px;
   font-weight: 700;
-  color: #3730a3;
+  color: var(--color-text-primary);
   margin: 0 0 2px;
 }
 .generate-box p {
   font-size: 11px;
-  color: #6366f1;
+  color: var(--color-text-secondary);
   margin: 0;
   line-height: 1.4;
 }
 .btn-portfolio {
   flex-shrink: 0;
   padding: 8px 16px;
-  background: #6366f1;
+  background: var(--color-accent);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -181,5 +181,5 @@ const categoryColor = (cat) =>
   transition: background .15s;
   white-space: nowrap;
 }
-.btn-portfolio:hover { background: #4f46e5; }
+.btn-portfolio:hover { background: var(--color-accent-hover); }
 </style>

@@ -22,16 +22,16 @@ const props = defineProps({
 
 <style scoped>
 .stat-card {
-  background: #1A3838;
-  border: 1px solid #2a4a48;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 20px;
   flex: 1;
   min-width: 0;
 }
 .stat-card--highlight {
-  background: #1A3838;
-  border-color: #2a4a48;
+  background: var(--color-surface);
+  border-color: var(--color-border);
 }
 .stat-card__top {
   display: flex;
@@ -41,22 +41,22 @@ const props = defineProps({
 }
 .stat-card__label {
   font-size: 13px;
-  color: #8aada9;
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 .stat-card__icon {
-  color: #4a6e6a;
+  color: var(--color-text-tertiary);
 }
 .stat-card__value {
   font-size: 28px;
   font-weight: 700;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   line-height: 1;
   margin-bottom: 4px;
 }
 .stat-card__sub {
   font-size: 12px;
-  color: #8aada9;
+  color: var(--color-text-secondary);
   margin-top: 2px;
 }
 </style>

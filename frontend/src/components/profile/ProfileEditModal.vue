@@ -237,14 +237,14 @@ const submit = () => emit('save', { ...form })
 }
 
 .modal {
-  background: #5C8C6A;
+  background: var(--color-surface);
   border-radius: 14px;
   width: 100%;
   max-width: 560px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  box-shadow: var(--shadow-panel);
   overflow: hidden;
 }
 
@@ -253,15 +253,15 @@ const submit = () => emit('save', { ...form })
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--color-border-light);
   flex-shrink: 0;
 }
-.modal-header h3 { margin: 0; font-size: 16px; font-weight: 700; color: #1a1a2e; }
+.modal-header h3 { margin: 0; font-size: 16px; font-weight: 700; color: var(--color-text-primary); }
 .close-btn {
   background: none; border: none; font-size: 18px;
-  cursor: pointer; color: #9ca3af; line-height: 1;
+  cursor: pointer; color: var(--color-text-tertiary); line-height: 1;
 }
-.close-btn:hover { color: #374151; }
+.close-btn:hover { color: var(--color-text-secondary); }
 
 .modal-body {
   padding: 18px 20px;
@@ -269,7 +269,6 @@ const submit = () => emit('save', { ...form })
   flex: 1;
 }
 
-/* Section label */
 .section-label {
   display: flex;
   align-items: center;
@@ -278,7 +277,7 @@ const submit = () => emit('save', { ...form })
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .06em;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   margin-bottom: 10px;
 }
 .section-hint {
@@ -286,11 +285,10 @@ const submit = () => emit('save', { ...form })
   font-weight: 400;
   text-transform: none;
   letter-spacing: 0;
-  color: #9ca3af;
+  color: var(--color-text-tertiary);
   margin-left: auto;
 }
 
-/* Champs verrouillés */
 .locked-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -302,21 +300,21 @@ const submit = () => emit('save', { ...form })
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border-light);
   border-radius: 8px;
   padding: 8px 10px;
 }
 .locked-icon { font-size: 14px; flex-shrink: 0; }
 .locked-label {
   font-size: 10px;
-  color: #9ca3af;
+  color: var(--color-text-tertiary);
   margin: 0 0 1px;
   font-weight: 500;
 }
 .locked-value {
   font-size: 12px;
-  color: #374151;
+  color: var(--color-text-primary);
   margin: 0;
   font-weight: 600;
   white-space: nowrap;
@@ -325,7 +323,6 @@ const submit = () => emit('save', { ...form })
   max-width: 140px;
 }
 
-/* Formulaire */
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -342,7 +339,7 @@ const submit = () => emit('save', { ...form })
 .form-group label {
   font-size: 11px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: .04em;
 }
@@ -351,11 +348,11 @@ const submit = () => emit('save', { ...form })
 .form-group select,
 .form-group textarea {
   padding: 8px 10px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--color-border-light);
   border-radius: 8px;
   font-size: 13px;
-  color: #1f2937;
-  background: #fff;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
   transition: border-color .15s;
   outline: none;
   font-family: inherit;
@@ -363,26 +360,25 @@ const submit = () => emit('save', { ...form })
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-  border-color: #6366f1;
+  border-color: var(--color-accent);
 }
 
-/* Prefix LinkedIn/GitHub */
 .input-prefix-wrap {
   display: flex;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--color-border-light);
   border-radius: 8px;
   overflow: hidden;
   transition: border-color .15s;
 }
-.input-prefix-wrap:focus-within { border-color: #6366f1; }
+.input-prefix-wrap:focus-within { border-color: var(--color-accent); }
 
 .input-prefix {
-  background: #f3f4f6;
+  background: var(--color-surface-alt);
   padding: 8px 8px;
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--color-text-tertiary);
   white-space: nowrap;
-  border-right: 1px solid #e5e7eb;
+  border-right: 1px solid var(--color-border-light);
   display: flex;
   align-items: center;
 }
@@ -395,7 +391,6 @@ const submit = () => emit('save', { ...form })
 }
 .input-prefix-wrap input:focus { border-color: transparent; }
 
-/* Visibilité */
 .visibility-options {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -408,47 +403,46 @@ const submit = () => emit('save', { ...form })
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--color-border-light);
   border-radius: 8px;
   cursor: pointer;
   transition: all .15s;
 }
 .vis-option.active {
-  border-color: #6366f1;
-  background: #eef2ff;
+  border-color: var(--color-accent);
+  background: var(--color-accent-light);
 }
 .vis-icon { font-size: 18px; flex-shrink: 0; }
-.vis-label { font-size: 12px; font-weight: 600; color: #374151; margin: 0; }
-.vis-desc  { font-size: 10px; color: #9ca3af; margin: 0; }
+.vis-label { font-size: 12px; font-weight: 600; color: var(--color-text-primary); margin: 0; }
+.vis-desc  { font-size: 10px; color: var(--color-text-tertiary); margin: 0; }
 
-/* Footer */
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   padding: 14px 20px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--color-border-light);
   flex-shrink: 0;
 }
 
 .btn-cancel {
   padding: 9px 18px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--color-border-light);
   border-radius: 8px;
-  background: #fff;
+  background: var(--color-surface);
   font-size: 13px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all .15s;
 }
-.btn-cancel:hover { background: #f9fafb; }
+.btn-cancel:hover { background: var(--color-surface-hover); }
 
 .btn-save {
   padding: 9px 20px;
   border: none;
   border-radius: 8px;
-  background: #6366f1;
+  background: var(--color-accent);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
@@ -458,7 +452,7 @@ const submit = () => emit('save', { ...form })
   align-items: center;
   gap: 6px;
 }
-.btn-save:hover:not(:disabled) { background: #4f46e5; }
+.btn-save:hover:not(:disabled) { background: var(--color-accent-hover); }
 .btn-save:disabled { opacity: .6; cursor: not-allowed; }
 
 .spinner-sm {

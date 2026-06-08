@@ -7,11 +7,11 @@
 }
 
 body {
-  background: var(--color-background);
+  background: var(--color-page-bg);
 }
 
 #app {
   width: 100%;
   min-height: 100vh;
-  background: var(--color-background);
+  background: var(--color-page-bg);
 }
