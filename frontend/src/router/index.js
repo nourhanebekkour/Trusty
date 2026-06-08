@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import AdminLayout from '../components/admin/AdminLayout.vue'
+import ProfessorLayout from '../components/professor/ProfessorLayout.vue'
 import LoginView from '../views/loginview.vue'
 import Dashboard from '@/views/Etudiant/Dashboard.vue'
 import ProjectList from '@/views/Etudiant/ProjectList.vue'
@@ -12,7 +13,7 @@ import Profile from '@/views/Etudiant/Profile.vue'
 import activites from '@/views/Etudiant/activites.vue'
 import Portfolio from '@/views/portfolio/PortfolioManagement.vue'
 import ProfessionalView from '@/views/ProfessionalView.vue'
-import ProfessorView from '@/views/ProfessorView.vue'
+import ProfessorView from '@/views/professor/ProfessorView.vue'
 import { useAuthStore } from '@/stores/authstore'
 import Parcours from '../views/Etudiant/Parcours.vue'
 import registerview from '@/views/registerview.vue'
@@ -89,6 +90,21 @@ const router = createRouter({
           path: 'notifications',
           name: 'admin-notifications',
           component: () => import('../views/admin/AdminNotifications.vue'),
+        },
+        {
+          path: 'badges',
+          name: 'admin-badges',
+          component: () => import('../views/admin/AdminBadges.vue'),
+        },
+        {
+          path: 'historique',
+          name: 'admin-historique',
+          component: () => import('../views/admin/AdminHistorique.vue'),
+        },
+        {
+          path: 'profil',
+          name: 'admin-profile',
+          component: () => import('../views/admin/AdminProfile.vue'),
         },
       ],
     },
@@ -174,9 +190,59 @@ const router = createRouter({
     // ── Professor ────────────────────────────────────────
     {
       path: '/professor',
-      name: 'professor',
-      component: ProfessorView,
+      component: ProfessorLayout,
       meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
+      children: [
+        { path: '', redirect: '/professor/dashboard' },
+        {
+          path: 'dashboard',
+          name: 'professor-dashboard',
+          component: ProfessorView,
+           meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
+        },
+        {
+          path: 'validations',
+          name: 'professor-validations',
+          component: () => import('../views/professor/ProfessorValidations.vue'),
+           meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
+        },
+        {
+          path: 'portfolios',
+          name: 'professor-portfolios',
+          component: () => import('../views/professor/ProfessorPortfolios.vue'),
+           meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
+        },
+        {
+          path: 'notifications',
+          name: 'professor-notifications',
+          component: () => import('../views/professor/ProfessorNotifications.vue'),
+           meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
+        },
+        {
+          path: 'commentaires',
+          name: 'professor-commentaires',
+          component: () => import('../views/professor/ProfessorMessages.vue'), 
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
+        },
+        {
+          path: 'recommandations',
+          name: 'professor-recommandations',
+          component: () => import('../views/professor/ProfessorRecommendations.vue'),
+           meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
+        },
+        {
+          path: 'historique',
+          name: 'professor-historique',
+          component: () => import('../views/professor/ProfessorHistorique.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
+        },
+        {
+          path: 'profile',
+          name: 'professor-profile',
+          component: () => import('../views/professor/ProfessorProfile.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
+        },
+      ],
     },
 
     // ── Pages d'erreur ────────────────────────────────────
@@ -196,6 +262,14 @@ const router = createRouter({
 // ── Guard principal ────────────────────────────────────────────
 router.beforeEach(async (to) => {
   const authStore = useAuthStore()
+  const PUBLIC_ROUTES = ['home', 'login', 'register', 'about', 'verify-email']
+
+  if (PUBLIC_ROUTES.includes(to.name)) {
+    if (to.meta.guestOnly && authStore.isAuthenticated) {
+      return redirectByRole(authStore.user?.role)
+    }
+    return true
+  }
 
   // Initialisation session
   if (!authStore.isInitialized) {
@@ -206,14 +280,18 @@ router.beforeEach(async (to) => {
     }
   }
 
+  // ── Utilise to.matched pour hériter du meta des parents ──
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+  const allowedRoles = to.matched.flatMap(record => record.meta.roles ?? [])
+
   // Redirection automatique selon rôle
   if (authStore.isAuthenticated) {
-    if (authStore.isAdmin) {
-      if (!to.path.startsWith('/admin')) return '/admin/dashboard'
-    } else if (authStore.isProfesseur) {
-      if (to.name !== 'professor') return '/professor'
-    } else if (authStore.isProfessionnel) {
-      if (!to.path.startsWith('/professional')) return '/professional'
+    if (authStore.isAdmin && !to.path.startsWith('/admin')) {
+      return '/admin/dashboard'
+    } else if (authStore.isProfesseur && !to.path.startsWith('/professor')) {
+      return '/professor/dashboard'
+    } else if (authStore.isProfessionnel && !to.path.startsWith('/professional')) {
+      return '/professional'
     }
   }
 
@@ -232,11 +310,10 @@ router.beforeEach(async (to) => {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
 
-  // Vérification des rôles
-  if (to.meta.roles?.length > 0) {
+  if (allowedRoles.length > 0) {
     const userRole = authStore.user?.role?.toUpperCase()
-    if (!userRole || !to.meta.roles.includes(userRole)) {
-      return { name: 'forbidden' }
+    if (!userRole || !allowedRoles.includes(userRole)) {
+      return { name: 'login' }
     }
   }
 
@@ -248,7 +325,7 @@ function redirectByRole(role) {
   switch (role?.toUpperCase()) {
     case ROLES.ADMIN:        return '/admin/dashboard'
     case ROLES.STUDENT:      return '/dashboard'
-    case ROLES.PROFESSOR:    return '/professor'
+    case ROLES.PROFESSOR:    return '/professor/dashboard'
     case ROLES.PROFESSIONAL: return '/professional'
     default:                 return '/'
   }

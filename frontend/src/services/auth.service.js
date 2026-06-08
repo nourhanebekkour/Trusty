@@ -1,7 +1,7 @@
 import api from '../api.js'
 
 const SECURITY = {
-  REGISTER_ALLOWED_FIELDS: ['nom', 'prenom', 'email', 'password', 'role'],
+  REGISTER_ALLOWED_FIELDS: ['nom', 'prenom', 'email', 'password', 'role', 'ecole'],
 
   MAX_EMAIL_LENGTH: 254,
   MAX_PASSWORD_LENGTH: 128,

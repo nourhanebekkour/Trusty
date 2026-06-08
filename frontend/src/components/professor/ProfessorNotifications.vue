@@ -1,5 +1,5 @@
 <template>
-  <div class="card" style="margin-top: 20px;">
+  <div class="card">
     <div class="card-header">
       <div class="card-title"><i class="ti ti-bell"></i> Activité récente</div>
     </div>

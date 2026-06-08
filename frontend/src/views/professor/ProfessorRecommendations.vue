@@ -1,536 +1,235 @@
 <template>
-  <div class="prof-page">
-    <div class="prof-page-head">
-      <div>
-        <h1>Recommandations</h1>
-        <p>
-          Gérez les recommandations académiques et professionnelles des étudiants suivis.
-        </p>
-      </div>
+  <div class="rec-page">
 
-      <button class="prof-btn prof-btn-primary" type="button" @click="openCreateModal">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="title-icon">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          Recommandations
+        </h1>
+        <p class="page-subtitle">Créez des recommandations académiques et professionnelles.</p>
+      </div>
+      <button class="btn-primary" @click="openCreateModal">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Créer une recommandation
       </button>
     </div>
 
-    <div v-if="loading" class="prof-state">
-      Chargement des recommandations...
+    <div class="empty-card">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" class="empty-icon">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+      </svg>
+      <p class="empty-title">Créer une recommandation</p>
+      <p class="empty-sub">Cliquez sur le bouton ci-dessus pour recommander un étudiant.</p>
     </div>
 
-    <div v-else-if="error" class="prof-error">
-      {{ error }}
-    </div>
-
-    <template v-else>
-      <section class="prof-grid-3">
-        <div class="prof-card">
-          <span class="prof-stat-label">Total</span>
-          <strong class="prof-stat-value">{{ stats.total }}</strong>
-        </div>
-
-        <div class="prof-card">
-          <span class="prof-stat-label">Validées</span>
-          <strong class="prof-stat-value">{{ stats.completed }}</strong>
-        </div>
-
-        <div class="prof-card">
-          <span class="prof-stat-label">En attente</span>
-          <strong class="prof-stat-value">{{ stats.pending }}</strong>
-        </div>
-      </section>
-
-      <section class="prof-card" style="margin-top: 18px;">
-        <div class="prof-toolbar">
-          <input
-            v-model="search"
-            class="prof-input"
-            type="text"
-            placeholder="Rechercher un étudiant ou un référent"
-          />
-
-          <select v-model="statusFilter" class="prof-select">
-            <option value="">Tous les statuts</option>
-            <option value="PENDING">En attente</option>
-            <option value="COMPLETED">Validée</option>
-            <option value="REJECTED">Rejetée</option>
-          </select>
-        </div>
-
-        <div v-if="filteredRecommendations.length === 0" class="prof-empty">
-          Aucune recommandation trouvée.
-        </div>
-
-        <table v-else class="prof-table">
-          <thead>
-            <tr>
-              <th>Étudiant</th>
-              <th>Référent</th>
-              <th>Contexte</th>
-              <th>Date</th>
-              <th>Statut</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            <tr v-for="item in filteredRecommendations" :key="item.id">
-              <td>
-                <strong>{{ item.studentName }}</strong>
-                <p class="prof-muted">{{ item.studentLevel || 'Niveau non renseigné' }}</p>
-              </td>
-
-              <td>{{ item.referentName }}</td>
-
-              <td>
-                <strong>{{ item.context }}</strong>
-                <p class="prof-muted">
-                  {{ item.content ? shortText(item.content) : 'Aucun contenu rédigé.' }}
-                </p>
-              </td>
-
-              <td>{{ formatDate(item.createdAt) }}</td>
-
-              <td>
-                <span :class="statusClass(item.status)">
-                  {{ statusLabel(item.status) }}
-                </span>
-              </td>
-
-              <td>
-                <div class="prof-actions">
-                  <button
-                    class="prof-btn prof-btn-secondary prof-btn-small"
-                    type="button"
-                    @click="openDetails(item)"
-                  >
-                    Consulter
-                  </button>
-
-                  <button
-                    v-if="item.status !== 'COMPLETED'"
-                    class="prof-btn prof-btn-green prof-btn-small"
-                    type="button"
-                    @click="markAsCompleted(item)"
-                  >
-                    Valider
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-
-      <section class="prof-card prof-card-soft" style="margin-top: 18px;">
-        <h2 class="prof-card-title">Utilité des recommandations</h2>
-        <p class="prof-muted">
-          Les recommandations permettent de renforcer la crédibilité du portfolio étudiant.
-          Elles ajoutent une preuve qualitative sur les compétences, l’autonomie et le sérieux
-          de l’étudiant.
-        </p>
-      </section>
-    </template>
-
-    <div v-if="showModal" class="prof-modal-backdrop">
-      <div class="prof-modal">
-        <div class="prof-modal-head">
+    <!-- Create Modal -->
+    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+      <div class="modal">
+        <div class="modal__header">
           <div>
-            <h2>
-              {{ selectedRecommendation ? 'Détail de la recommandation' : 'Créer une recommandation' }}
-            </h2>
-            <p>
-              Recommandation académique ou professionnelle
-            </p>
+            <h2 class="modal__title">Créer une recommandation</h2>
+            <p class="modal__sub">Recommandation académique ou professionnelle</p>
           </div>
-
-          <button class="prof-modal-close" type="button" @click="closeModal">
-            ×
+          <button class="btn-ghost btn--sm" @click="closeModal">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Fermer
           </button>
         </div>
-
-        <template v-if="selectedRecommendation">
-          <div class="details-list">
-            <div class="details-row">
-              <span>Étudiant</span>
-              <strong>{{ selectedRecommendation.studentName }}</strong>
-            </div>
-
-            <div class="details-row">
-              <span>Référent</span>
-              <strong>{{ selectedRecommendation.referentName }}</strong>
-            </div>
-
-            <div class="details-row">
-              <span>Contexte</span>
-              <strong>{{ selectedRecommendation.context }}</strong>
-            </div>
-
-            <div class="details-row">
-              <span>Statut</span>
-              <strong>{{ statusLabel(selectedRecommendation.status) }}</strong>
-            </div>
-          </div>
-
-          <div class="recommendation-content">
-            <p>
-              {{ selectedRecommendation.content || 'Aucun contenu disponible pour cette recommandation.' }}
-            </p>
-          </div>
-
-          <div class="prof-actions" style="margin-top: 16px;">
-            <button
-              v-if="selectedRecommendation.status !== 'COMPLETED'"
-              class="prof-btn prof-btn-green"
-              type="button"
-              @click="markAsCompleted(selectedRecommendation)"
-            >
-              Marquer comme validée
-            </button>
-
-            <button class="prof-btn prof-btn-secondary" type="button" @click="closeModal">
-              Fermer
-            </button>
-          </div>
-        </template>
-
-        <template v-else>
-          <div class="form-grid">
-            <label>
-              <span>Étudiant</span>
-              <select v-model="form.studentId" class="prof-select full-width">
-                <option value="">Sélectionner un étudiant</option>
-                <option
-                  v-for="student in students"
-                  :key="student.id"
-                  :value="student.id"
-                >
-                  {{ student.fullName }}
-                </option>
-              </select>
-            </label>
-
-            <label>
-              <span>Nom du référent</span>
-              <input
-                v-model="form.referentName"
-                class="prof-input full-width"
-                type="text"
-                placeholder="Exemple : Dr. Jean Dupont"
-              />
-            </label>
-
-            <label>
-              <span>Contexte</span>
-              <input
-                v-model="form.context"
-                class="prof-input full-width"
-                type="text"
-                placeholder="Projet final, stage, mémoire..."
-              />
-            </label>
-
-            <label>
-              <span>Message</span>
-              <textarea
-                v-model="form.message"
-                class="prof-textarea"
-                placeholder="Rédiger le message de recommandation"
-              ></textarea>
-            </label>
-          </div>
-
-          <div class="prof-actions" style="margin-top: 16px;">
-            <button class="prof-btn prof-btn-primary" type="button" @click="submitRecommendation">
-              Enregistrer
-            </button>
-
-            <button class="prof-btn prof-btn-secondary" type="button" @click="closeModal">
-              Annuler
-            </button>
-          </div>
-        </template>
+        <div class="modal__body">
+          <label class="form-field">
+            <span class="form-label">Étudiant</span>
+            <select v-model="form.studentId" class="form-select">
+              <option value="">Sélectionner un étudiant</option>
+              <option v-for="s in students" :key="s.id" :value="s.id">{{ s.fullName }}</option>
+            </select>
+          </label>
+          <label class="form-field">
+            <span class="form-label">Message</span>
+            <textarea v-model="form.message" class="form-textarea" placeholder="Rédiger le message de recommandation" rows="4"></textarea>
+          </label>
+        </div>
+        <div class="modal__footer">
+          <button class="btn-primary" @click="submitRec" :disabled="sending">
+            <span v-if="sending" class="spinner-sm"></span>
+            <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Enregistrer
+          </button>
+          <button class="btn-ghost" @click="closeModal">Annuler</button>
+        </div>
       </div>
     </div>
 
-    <div v-if="toast.show" class="prof-toast">
-      {{ toast.message }}
-    </div>
+    <div v-if="toast.show" class="toast">{{ toast.message }}</div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
-import '@/assets/professor-pages.css'
+import { onMounted, ref } from 'vue'
 import {
   getProfessorStudents,
-  getProfessorRecommendations,
   createProfessorRecommendationRequest,
-  updateProfessorRecommendation,
 } from '@/services/professorApi'
 
-const loading = ref(false)
-const error = ref(null)
-
-const recommendations = ref([])
 const students = ref([])
-
-const stats = ref({
-  total: 0,
-  completed: 0,
-  pending: 0,
-})
-
-const search = ref('')
-const statusFilter = ref('')
-
 const showModal = ref(false)
-const selectedRecommendation = ref(null)
+const sending = ref(false)
+const toast = ref({ show: false, message: '' })
+const form = ref({ studentId: '', message: '' })
 
-const form = ref({
-  studentId: '',
-  referentName: '',
-  context: '',
-  message: '',
-})
-
-const toast = ref({
-  show: false,
-  message: '',
-})
-
-const filteredRecommendations = computed(() => {
-  const query = search.value.trim().toLowerCase()
-
-  return recommendations.value.filter(item => {
-    const matchesSearch =
-      !query ||
-      item.studentName?.toLowerCase().includes(query) ||
-      item.referentName?.toLowerCase().includes(query) ||
-      item.context?.toLowerCase().includes(query)
-
-    const matchesStatus =
-      !statusFilter.value || item.status === statusFilter.value
-
-    return matchesSearch && matchesStatus
-  })
-})
-
-async function loadPage() {
-  loading.value = true
-  error.value = null
-
-  try {
-    const [studentsData, recommendationsData] = await Promise.all([
-      getProfessorStudents(),
-      getProfessorRecommendations(),
-    ])
-
-    students.value = Array.isArray(studentsData)
-      ? studentsData
-      : studentsData.students || []
-
-    recommendations.value = Array.isArray(recommendationsData)
-      ? recommendationsData
-      : recommendationsData.recommendations || []
-
-    stats.value = recommendationsData.stats || calculateStats(recommendations.value)
-  } catch (err) {
-    error.value =
-      err.response?.data?.message ||
-      'Impossible de charger les recommandations. Vérifiez que les APIs backend existent.'
-  } finally {
-    loading.value = false
-  }
+function showToast(m) {
+  toast.value = { show: true, message: m }
+  setTimeout(() => { toast.value.show = false }, 2800)
 }
 
-function calculateStats(items) {
-  return {
-    total: items.length,
-    completed: items.filter(item => item.status === 'COMPLETED').length,
-    pending: items.filter(item => item.status === 'PENDING').length,
-  }
+async function loadStudents() {
+  try {
+    const data = await getProfessorStudents()
+    students.value = Array.isArray(data) ? data : data.students || []
+  } catch {}
 }
 
 function openCreateModal() {
-  selectedRecommendation.value = null
-
-  form.value = {
-    studentId: '',
-    referentName: '',
-    context: '',
-    message: '',
-  }
-
+  form.value = { studentId: '', message: '' }
   showModal.value = true
 }
 
-function openDetails(item) {
-  selectedRecommendation.value = item
-  showModal.value = true
-}
+function closeModal() { showModal.value = false }
 
-function closeModal() {
-  showModal.value = false
-  selectedRecommendation.value = null
-}
-
-async function submitRecommendation() {
-  if (!form.value.studentId || !form.value.referentName || !form.value.context || !form.value.message) {
+async function submitRec() {
+  if (!form.value.studentId || !form.value.message) {
     showToast('Veuillez remplir tous les champs.')
     return
   }
-
+  sending.value = true
   try {
     await createProfessorRecommendationRequest({
       studentId: form.value.studentId,
-      referentName: form.value.referentName,
-      context: form.value.context,
       message: form.value.message,
     })
-
-    await loadPage()
     closeModal()
     showToast('Recommandation créée avec succès.')
   } catch (err) {
     showToast(err.response?.data?.message || 'Impossible de créer la recommandation.')
-  }
+  } finally { sending.value = false }
 }
 
-async function markAsCompleted(item) {
-  try {
-    await updateProfessorRecommendation(item.id, {
-      status: 'COMPLETED',
-    })
-
-    recommendations.value = recommendations.value.map(recommendation =>
-      recommendation.id === item.id
-        ? { ...recommendation, status: 'COMPLETED' }
-        : recommendation
-    )
-
-    stats.value = calculateStats(recommendations.value)
-
-    if (selectedRecommendation.value?.id === item.id) {
-      selectedRecommendation.value = {
-        ...selectedRecommendation.value,
-        status: 'COMPLETED',
-      }
-    }
-
-    showToast('Recommandation validée.')
-  } catch (err) {
-    showToast(err.response?.data?.message || 'Impossible de valider la recommandation.')
-  }
-}
-
-function statusClass(status) {
-  if (status === 'COMPLETED') {
-    return 'prof-badge prof-badge-success'
-  }
-
-  if (status === 'REJECTED') {
-    return 'prof-badge prof-badge-danger'
-  }
-
-  return 'prof-badge prof-badge-pending'
-}
-
-function statusLabel(status) {
-  const labels = {
-    PENDING: 'En attente',
-    COMPLETED: 'Validée',
-    REJECTED: 'Rejetée',
-  }
-
-  return labels[status] || status || 'En attente'
-}
-
-function formatDate(date) {
-  if (!date) {
-    return '—'
-  }
-
-  return new Date(date).toLocaleDateString('fr-FR')
-}
-
-function shortText(text) {
-  if (!text) {
-    return ''
-  }
-
-  return text.length > 80 ? `${text.slice(0, 80)}...` : text
-}
-
-function showToast(message) {
-  toast.value = {
-    show: true,
-    message,
-  }
-
-  setTimeout(() => {
-    toast.value.show = false
-  }, 2800)
-}
-
-onMounted(loadPage)
+onMounted(loadStudents)
 </script>
 
 <style scoped>
-.form-grid {
-  display: grid;
-  gap: 14px;
+* { box-sizing: border-box; }
+
+.rec-page {
+  font-family: 'Inter', sans-serif;
+  background: var(--color-page-bg);
+  min-height: 100vh;
+  padding: 2rem 2rem 4rem;
+  color: var(--color-text-primary);
 }
 
-.form-grid label {
-  display: grid;
-  gap: 6px;
+.page-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; margin-bottom: 1.75rem;
+  gap: 1rem; flex-wrap: wrap;
+}
+.page-title {
+  font-size: 1.65rem; font-weight: 700; color: var(--color-text-primary);
+  margin: 0 0 0.3rem; display: flex; align-items: center;
+  gap: 0.55rem; letter-spacing: -0.02em;
+}
+.title-icon { color: var(--color-accent); opacity: 0.85; flex-shrink: 0; }
+.page-subtitle { font-size: 0.875rem; color: var(--color-text-secondary); margin: 0; }
+
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  background: var(--color-accent); color: var(--color-page-bg); border: none;
+  padding: 0.55rem 1.1rem; border-radius: 8px;
+  font-family: 'Inter', sans-serif; font-size: 0.84rem; font-weight: 600;
+  cursor: pointer; transition: background 0.18s, transform 0.15s; white-space: nowrap;
+}
+.btn-primary:hover { background: var(--color-accent-hover); transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  background: transparent; border: 1px solid var(--color-border);
+  color: var(--color-text-secondary); padding: 0.5rem 1rem; border-radius: 8px;
+  font-family: 'Inter', sans-serif; font-size: 0.84rem; font-weight: 500;
+  cursor: pointer; transition: all 0.18s;
+}
+.btn-ghost:hover { border-color: var(--color-accent); color: var(--color-text-primary); }
+.btn--sm { padding: 0.4rem 0.7rem; font-size: 0.78rem; }
+
+.empty-card {
+  background: var(--color-surface); border: 1px dashed var(--color-border);
+  border-radius: 14px; padding: 3rem 2rem; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
+}
+.empty-icon { color: var(--color-accent); opacity: 0.5; margin-bottom: 0.25rem; }
+.empty-title { font-size: 1rem; font-weight: 600; color: var(--color-text-primary); margin: 0; }
+.empty-sub { font-size: 0.84rem; color: var(--color-text-secondary); margin: 0; }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200; animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal {
+  width: 480px; max-width: 90vw; max-height: 85vh;
+  background: var(--color-surface); border-radius: 16px;
+  padding: 1.5rem; box-shadow: var(--shadow-panel);
+  display: flex; flex-direction: column;
+}
+.modal__header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 1rem; margin-bottom: 1.25rem;
+}
+.modal__title { font-size: 1.1rem; font-weight: 700; color: var(--color-text-primary); margin: 0; }
+.modal__sub { font-size: 0.8rem; color: var(--color-text-tertiary); margin-top: 0.25rem; }
+.modal__body { display: flex; flex-direction: column; gap: 1rem; flex: 1; }
+.modal__footer { display: flex; gap: 0.6rem; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--color-border); }
+
+.form-field { display: flex; flex-direction: column; gap: 0.4rem; }
+.form-label { font-size: 0.78rem; font-weight: 600; color: var(--color-text-secondary); }
+.form-select, .form-textarea {
+  border: 1px solid var(--color-border); background: var(--color-surface-alt);
+  color: var(--color-text-primary); border-radius: 8px;
+  padding: 0.55rem 0.75rem; font-family: 'Inter', sans-serif;
+  font-size: 0.84rem; outline: none;
+}
+.form-select:focus, .form-textarea:focus {
+  border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-light);
+}
+.form-textarea { resize: vertical; min-height: 80px; }
+
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--color-text-primary); color: var(--color-page-bg);
+  padding: 0.75rem 1.2rem; border-radius: 10px;
+  font-size: 0.84rem; font-weight: 500; z-index: 300;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  animation: fadeUp 0.25s ease;
 }
 
-.form-grid span {
-  color: #6F7F7C;
-  font-size: 12px;
-  font-weight: 700;
+.spinner-sm {
+  display: inline-block; width: 13px; height: 13px;
+  border: 2px solid var(--color-border-light); border-top-color: var(--color-page-bg);
+  border-radius: 50%; animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.full-width {
-  width: 100%;
-}
-
-.details-list {
-  display: grid;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.details-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 18px;
-  border-bottom: 1px solid #E5E0D6;
-  padding-bottom: 10px;
-  font-size: 13px;
-}
-
-.details-row span {
-  color: #6F7F7C;
-}
-
-.details-row strong {
-  color: #263534;
-  text-align: right;
-}
-
-.recommendation-content {
-  background: #FAF8F2;
-  border: 1px solid #E5E0D6;
-  border-radius: 12px;
-  padding: 14px;
-}
-
-.recommendation-content p {
-  margin: 0;
-  color: #263534;
-  font-size: 13px;
-  line-height: 1.6;
+@media (max-width: 768px) {
+  .rec-page { padding: 1.25rem 1rem 3rem; }
 }
 </style>
