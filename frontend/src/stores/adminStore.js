@@ -1,55 +1,81 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { useAuthStore } from '@/stores/authstore'
 import api from '../services/api'
+
+function getErrorMessage(e) {
+  return e?.response?.data?.message || e?.message || 'Erreur inconnue'
+}
+
+function extractData(res) {
+  const body = res?.data ?? res
+  return body?.data ?? body
+}
 
 export const useAdminStore = defineStore('admin', () => {
 
-  // ── State ──────────────────────────────────────────────
+  const auth = useAuthStore()
+
+  function isAdmin() {
+    return auth.user?.role === 'ADMINISTRATEUR'
+  }
+
   const users             = ref([])
   const verificationQueue = ref([])
-  const portfolios        = ref([])
+  const students          = ref([])
   const certHistory       = ref([])
 
   const stats = ref({
-    studentsActive:    0,
-    portfoliosCreated: 0,
-    professors:        0,
-    partners:          0,
+    studentsActive: 0,
+    professors:     0,
+    partners:       0,
   })
 
-  const loading = ref(false)
-  const error   = ref(null)
-
-  // ── Actions existantes ─────────────────────────────────
+  const loading      = ref(false)
+  const error        = ref(null)
+  const creatingUser = ref(false)
+  const validatingId = ref(null)
 
   async function fetchDashboardStats() {
+    if (!isAdmin()) { error.value = 'Accès refusé'; return }
     try {
       loading.value = true
-      const res = await api.get('/admin/stats')
-      stats.value = res.data
+      const res = await api.get('/utilisateurs/')
+      const data = extractData(res)
+      if (Array.isArray(data)) {
+        stats.value = {
+          studentsActive: data.filter(u => u.role === 'ETUDIANT').length,
+          professors:     data.filter(u => u.role === 'PROFESSEUR').length,
+          partners:       data.filter(u => u.role === 'PROFESSIONNEL').length,
+        }
+      }
     } catch (e) {
-      error.value = e.response?.data?.message || 'Erreur lors du chargement des stats'
+      error.value = getErrorMessage(e)
     } finally {
       loading.value = false
     }
   }
 
   async function fetchUsers() {
+    if (!isAdmin()) { error.value = 'Accès refusé'; return }
     try {
       loading.value = true
-      const res = await api.get('/admin/users')
-      users.value = res.data
+      const res = await api.get('/utilisateurs/')
+      users.value = extractData(res)
     } catch (e) {
-      error.value = e.response?.data?.message || 'Erreur lors du chargement des utilisateurs'
+      error.value = getErrorMessage(e)
     } finally {
       loading.value = false
     }
   }
 
-  // ── createUser : crée via POST /api/auth/register ──────
-  // Corps attendu : { email, password, nom, prenom, role, telephone? }
-  // Rôles valides (enum Prisma) : ETUDIANT | PROFESSEUR | ADMINISTRATEUR | PROFESSIONNEL
   async function createUser(userData) {
+    if (!isAdmin()) return { success: false, message: 'Accès refusé' }
+    if (creatingUser.value) return { success: false, message: 'Création déjà en cours' }
+    if (!userData?.email || !userData?.password || !userData?.firstName || !userData?.lastName) {
+      return { success: false, message: 'Champs obligatoires manquants' }
+    }
+    creatingUser.value = true
     try {
       const payload = {
         email:    userData.email,
@@ -59,22 +85,16 @@ export const useAdminStore = defineStore('admin', () => {
         role:     mapRoleToEnum(userData.role),
         ...(userData.phone && { telephone: userData.phone }),
       }
-
-      const res = await api.post('/auth/register', payload)
-
-      // Rafraîchir la liste après création
+      await api.post('/auth/register', payload)
       await fetchUsers()
-
-      return { success: true, data: res.data }
+      return { success: true }
     } catch (e) {
-      return {
-        success: false,
-        message: e.response?.data?.message || 'Erreur lors de la création'
-      }
+      return { success: false, message: getErrorMessage(e) }
+    } finally {
+      creatingUser.value = false
     }
   }
 
-  // Convertit le label français du select vers l'enum Prisma
   function mapRoleToEnum(label) {
     const map = {
       'Étudiant':       'ETUDIANT',
@@ -86,96 +106,127 @@ export const useAdminStore = defineStore('admin', () => {
   }
 
   async function deleteUser(id) {
+    if (!isAdmin()) { error.value = 'Accès refusé'; return }
     try {
-      await api.delete(`/admin/users/${id}`)
-      users.value = users.value.filter(u => u.id_administrateur !== id)
+      await api.delete(`/utilisateurs/${id}`)
+      users.value = users.value.filter(u => u.id_utilisateur !== id && u.utilisateur?.id_utilisateur !== id)
     } catch (e) {
-      error.value = e.response?.data?.message || 'Erreur lors de la suppression'
+      error.value = getErrorMessage(e)
     }
   }
 
-  // ── File de vérification ───────────────────────────────
-  // GET /admin/verifications → Projets + Stages avec status_validation = EN_ATTENTE
-  // Structure attendue par item :
-  // {
-  //   id: string,
-  //   studentName: string,       ← prenom + nom de l'étudiant
-  //   type: 'PROJET' | 'STAGE',
-  //   description: string,       ← titre du projet ou poste du stage
-  //   createdAt: string,         ← date_soumission
-  // }
+  async function updateUserRole(id, role) {
+    if (!isAdmin()) return { success: false, message: 'Accès refusé' }
+    try {
+      await api.patch(`/utilisateurs/${id}/role`, { role })
+      await fetchUsers()
+      return { success: true }
+    } catch (e) {
+      return { success: false, message: getErrorMessage(e) }
+    }
+  }
+
+  async function updateUserStatus(id, status) {
+    if (!isAdmin()) return { success: false, message: 'Accès refusé' }
+    try {
+      await api.patch(`/utilisateurs/${id}/statut`, { status })
+      await fetchUsers()
+      return { success: true }
+    } catch (e) {
+      return { success: false, message: getErrorMessage(e) }
+    }
+  }
+
   async function fetchVerificationQueue() {
+    if (!isAdmin()) { error.value = 'Accès refusé'; return }
     try {
       loading.value = true
-      const res = await api.get('/admin/verifications')
-      verificationQueue.value = res.data
+      const [activitesRes, prosRes] = await Promise.allSettled([
+        api.get('/activites/a-valider'),
+        api.get('/professionnels/en-attente'),
+      ])
+
+      const activites = activitesRes.status === 'fulfilled' ? (extractData(activitesRes.value) ?? []) : []
+      const pros      = prosRes.status      === 'fulfilled' ? (extractData(prosRes.value)      ?? []) : []
+
+      const mappedActivites = (Array.isArray(activites) ? activites : []).map(a => ({
+        id:          a.id_activite || a.id,
+        type:        'ACTIVITE',
+        title:       a.nom_activite || a.type_activite || 'Activité',
+        author:      a.etudiant?.utilisateur?.nom ? `${a.etudiant.utilisateur.prenom || ''} ${a.etudiant.utilisateur.nom || ''}`.trim() : a.etudiant?.nom || 'Étudiant',
+        description: a.description || '',
+        date:        a.date_demande || a.date_creation || a.date_debut || '',
+        entity:      a,
+      }))
+
+      const mappedPros = (Array.isArray(pros) ? pros : []).map(p => ({
+        id:          p.id_professionnel || p.id,
+        type:        'PROFESSIONNEL',
+        title:       p.entreprise || 'Professionnel',
+        author:      p.utilisateur?.nom ? `${p.utilisateur.prenom || ''} ${p.utilisateur.nom || ''}`.trim() : p.nom || 'Professionnel',
+        description: p.poste || p.missions || '',
+        date:        p.date_demande || p.date_creation || '',
+        entity:      p,
+      }))
+
+      verificationQueue.value = [...mappedActivites, ...mappedPros]
     } catch (e) {
-      error.value = e.response?.data?.message || 'Erreur lors du chargement de la file'
+      error.value = getErrorMessage(e)
     } finally {
       loading.value = false
     }
   }
 
-  async function certifyPortfolio(id) {
+  async function validateEntity(type, id, decision, comment) {
+    if (!isAdmin()) return { success: false, message: 'Accès refusé' }
+    validatingId.value = id
     try {
-      await api.post(`/admin/portfolios/${id}/certify`)
-      verificationQueue.value = verificationQueue.value.filter(p => p.id !== id)
+      if (type === 'ACTIVITE') {
+        await api.post(`/activites/${id}/valider`, { decision, ...(comment && { commentaire: comment }) })
+      } else if (type === 'PROFESSIONNEL') {
+        await api.patch(`/professionnels/${id}/valider`, { action: decision })
+      }
+      verificationQueue.value = verificationQueue.value.filter(v => !(v.id === id && v.type === type))
       return { success: true }
     } catch (e) {
-      return { success: false, message: e.response?.data?.message || 'Erreur' }
+      return { success: false, message: getErrorMessage(e) }
+    } finally {
+      validatingId.value = null
     }
   }
 
-  async function requestCorrections(id, note) {
-    try {
-      await api.post(`/admin/portfolios/${id}/corrections`, { note })
-      return { success: true }
-    } catch (e) {
-      return { success: false, message: e.response?.data?.message || 'Erreur' }
-    }
-  }
-
-  // ── Historique des certifications ──────────────────────
-  // GET /admin/certifications/history → HistoriqueValidation + HistoriqueAction
-  // Structure attendue par item :
-  // {
-  //   id: string,
-  //   validatorName: string,     ← prenom + nom du validateur
-  //   actionLabel: string,       ← 'certifié' | 'validé' | 'rejeté'
-  //   entityType: string,        ← 'projet' | 'stage' | 'portfolio'
-  //   entityTitle: string,       ← titre de l'entité concernée
-  //   targetName: string,        ← prenom + nom de l'étudiant cible
-  //   createdAt: string,
-  // }
   async function fetchCertHistory() {
+    if (!isAdmin()) { error.value = 'Accès refusé'; return }
     try {
       loading.value = true
-      const res = await api.get('/admin/certifications/history')
-      certHistory.value = res.data
+      const res = await api.get('/historique-actions/')
+      certHistory.value = extractData(res)
     } catch (e) {
-      error.value = e.response?.data?.message || 'Erreur lors du chargement de l\'historique'
+      error.value = getErrorMessage(e)
     } finally {
       loading.value = false
     }
   }
 
-  async function fetchPortfolios() {
+  async function fetchStudents() {
+    if (!isAdmin()) { error.value = 'Accès refusé'; return }
     try {
       loading.value = true
-      const res = await api.get('/admin/portfolios')
-      portfolios.value = res.data
+      const res = await api.get('/etudiants/')
+      students.value = extractData(res)
     } catch (e) {
-      error.value = e.response?.data?.message || 'Erreur'
+      error.value = getErrorMessage(e)
     } finally {
       loading.value = false
     }
   }
 
   return {
-    users, verificationQueue, portfolios, certHistory, stats,
-    loading, error,
+    users, verificationQueue, students, certHistory, stats,
+    loading, error, creatingUser, validatingId,
     fetchDashboardStats, fetchUsers, createUser, deleteUser,
-    fetchVerificationQueue, certifyPortfolio, requestCorrections,
-    fetchPortfolios, fetchCertHistory,
+    updateUserRole, updateUserStatus,
+    fetchVerificationQueue, validateEntity,
+    fetchCertHistory, fetchStudents,
   }
 })

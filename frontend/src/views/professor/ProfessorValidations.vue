@@ -40,9 +40,8 @@
 
           <select v-model="typeFilter" class="prof-select">
             <option value="">Tous les types</option>
-            <option value="PROJECT">Projet</option>
-            <option value="INTERNSHIP">Stage</option>
-            <option value="PORTFOLIO">Portfolio</option>
+            <option value="projet">Projet</option>
+            <option value="stage">Stage</option>
           </select>
         </div>
 
@@ -67,7 +66,7 @@
               <td>{{ item.studentName }}</td>
               <td>{{ typeLabel(item.type) }}</td>
               <td>{{ item.title }}</td>
-              <td>{{ formatDate(item.submittedAt) }}</td>
+              <td>{{ formatDate(item.date) }}</td>
               <td>
                 <span :class="statusClass(item.status)">
                   {{ statusLabel(item.status) }}
@@ -204,7 +203,7 @@ function closeModal() {
 
 async function approve(item) {
   try {
-    await approveProfessorValidation(item.id)
+    await approveProfessorValidation(item.id, item.type)
 
     validations.value = validations.value.filter(validation => validation.id !== item.id)
     closeModal()
@@ -222,38 +221,36 @@ async function reject(item) {
   }
 
   try {
-    await requestProfessorChanges(item.id, { reason: reason.value })
+    await requestProfessorChanges(item.id, { reason: reason.value }, item.type)
 
     validations.value = validations.value.filter(validation => validation.id !== item.id)
     closeModal()
     showToast('Correction envoyée.')
   } catch (err) {
-    showToast(err.response?.data?.message || 'Impossible d’envoyer la correction.')
+    showToast(err.response?.data?.message || 'Impossible d\'envoyer la correction.')
   }
 }
 
 function typeLabel(type) {
   const labels = {
-    PROJECT: 'Projet',
-    INTERNSHIP: 'Stage',
-    PORTFOLIO: 'Portfolio',
+    projet: 'Projet',
+    stage: 'Stage',
   }
 
   return labels[type] || type || 'Élément'
 }
 
 function statusClass(status) {
-  if (status === 'APPROVED') return 'prof-badge prof-badge-success'
-  if (status === 'CHANGES_REQUESTED' || status === 'REJECTED') return 'prof-badge prof-badge-danger'
+  if (status === 'VALIDE') return 'prof-badge prof-badge-success'
+  if (status === 'REJETE') return 'prof-badge prof-badge-danger'
   return 'prof-badge prof-badge-pending'
 }
 
 function statusLabel(status) {
   const labels = {
-    PENDING: 'En attente',
-    APPROVED: 'Validé',
-    CHANGES_REQUESTED: 'Correction demandée',
-    REJECTED: 'Rejeté',
+    EN_ATTENTE: 'En attente',
+    VALIDE: 'Validé',
+    REJETE: 'Rejeté',
   }
 
   return labels[status] || status || 'En attente'

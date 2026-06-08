@@ -16,23 +16,28 @@
         <p class="subtitle">Gérez votre identité numérique et vos certifications professionnelles.</p>
       </div>
 
-      <div class="profile-grid">
-        <div class="sidebar">
-          <ProfileCard  :user="user" @edit="openEditModal" @avatar-change="onAvatarChange" />
-          <ProfileStats :user="user" />
-        </div>
-        <div class="content">
-          <ProfileSkills
-            :user="user"
-            @add="showSkillModal = true"
-            @remove="handleRemoveSkill"
-          />
-          <ProfileBadges :user="user" />
-          <div class="two-cols">
-            <ProfileRepos    :user="user" />
-            <ProfileProjects :user="user" />
+      <div style="background: var(--color-background-tertiary); padding: 24px;">
+
+        <div style="display: grid; grid-template-columns: 300px 1fr; gap: 16px; margin-bottom: 16px; align-items: start;">
+          <div style="height: 100%;">
+            <ProfileCard  :user="user" @edit="openEditModal" @avatar-change="onAvatarChange" />
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <ProfileSkills
+              :user="user"
+              @add="showSkillModal = true"
+              @remove="handleRemoveSkill"
+            />
+            <ProfileBadges :user="user" />
           </div>
         </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+          <div><ProfileStats :user="user" /></div>
+          <div><ProfileRepos :user="user" /></div>
+          <div><ProfileProjects :user="user" /></div>
+        </div>
+
       </div>
 
       <ProfileEditModal
@@ -136,7 +141,7 @@ const onAvatarChange = async (file) => {
 
 // ── Compétences ───────────────────────────────────────────────────────────────
 
-const handleAddSkill = async (payload) => {
+const handleAddSkill = async ({ competence, niveau_maitrise }) => {
   const id_etudiant = user.value?.etudiant?.id_etudiant ?? user.value?.id_utilisateur
 
   if (!id_etudiant) {
@@ -144,10 +149,8 @@ const handleAddSkill = async (payload) => {
     return
   }
 
-  const skillName = typeof payload === 'string' ? payload : payload?.competence?.nom
-
   try {
-    const res = await addSkill(id_etudiant, skillName)
+    const res = await addSkill(id_etudiant, competence.nom, niveau_maitrise, competence.type ?? 'TECHNIQUE')
 
     if (!user.value.etudiant.competences) user.value.etudiant.competences = []
     user.value.etudiant.competences.push(res.data)
@@ -155,9 +158,7 @@ const handleAddSkill = async (payload) => {
     showSkillModal.value = false
   } catch (e) {
     console.error('[handleAddSkill] :', e.response?.status, e.response?.data)
-    if (!user.value.etudiant.competences) user.value.etudiant.competences = []
-    user.value.etudiant.competences.push({ competence: { nom: skillName } })
-    showSkillModal.value = false
+    alert(e.response?.data?.message || "Impossible d'ajouter cette compétence.")
   }
 }
 

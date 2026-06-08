@@ -44,7 +44,7 @@ const filters = ['Toutes', 'Club', 'Événement', 'Hackathon', 'Compétition', '
 .filter-label {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
   white-space: nowrap;
 }
 
@@ -57,9 +57,9 @@ const filters = ['Toutes', 'Club', 'Événement', 'Hackathon', 'Compétition', '
 .filter-tab {
   padding: 0.3rem 0.85rem;
   border-radius: 20px;
-  border: 1px solid rgba(214, 237, 232, 0.15);
+  border: 1px solid var(--color-border-light);
   background: transparent;
-  color: rgba(214, 237, 232, 0.6);
+  color: var(--color-text-secondary);
   font-size: 0.78rem;
   font-weight: 500;
   cursor: pointer;
@@ -68,14 +68,14 @@ const filters = ['Toutes', 'Club', 'Événement', 'Hackathon', 'Compétition', '
 }
 
 .filter-tab:hover {
-  border-color: rgba(214, 237, 232, 0.35);
-  color: #D6EDE8;
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
 }
 
 .filter-tab.active {
-  background: rgba(92, 140, 106, 0.25);
-  border-color: #5C8C6A;
-  color: #D6EDE8;
+  background: var(--color-accent-light);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .sort-btn {
@@ -85,9 +85,9 @@ const filters = ['Toutes', 'Club', 'Événement', 'Hackathon', 'Compétition', '
   gap: 0.4rem;
   padding: 0.3rem 0.85rem;
   background: transparent;
-  border: 1px solid rgba(214, 237, 232, 0.12);
+  border: 1px solid var(--color-border-light);
   border-radius: 8px;
-  color: rgba(214, 237, 232, 0.5);
+  color: var(--color-text-tertiary);
   font-size: 0.75rem;
   cursor: pointer;
   font-family: inherit;
@@ -95,7 +95,7 @@ const filters = ['Toutes', 'Club', 'Événement', 'Hackathon', 'Compétition', '
 }
 
 .sort-btn:hover {
-  border-color: rgba(214, 237, 232, 0.25);
-  color: #D6EDE8;
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
 }
 </style>
