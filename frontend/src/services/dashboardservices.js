@@ -1,4 +1,4 @@
-import api from '@/api'
+import api from '@/services/api'
 
 // ─── Helper extraction ────────────────────────────────────────────────────────
 function extractData(res) {
@@ -164,7 +164,7 @@ export async function fetchProjects(idEtudiant) {
 
     if (!Array.isArray(data) || isEmpty(data)) {
       console.warn('[fetchProjects] réponse vide → mock')
-      return MOCK_PROJECTS
+      return MOCK_PROJECTS.map(normalizeProject)
     }
 
     const filtered = data.reduce((acc, projet) => {
@@ -186,13 +186,13 @@ export async function fetchProjects(idEtudiant) {
 
     if (isEmpty(filtered)) {
       console.warn('[fetchProjects] aucun projet → mock')
-      return MOCK_PROJECTS
+      return MOCK_PROJECTS.map(normalizeProject)
     }
 
-    return filtered
+    return filtered.map(normalizeProject)
   } catch (err) {
     console.error('[fetchProjects] erreur API → mock', err)
-    return MOCK_PROJECTS
+    return MOCK_PROJECTS.map(normalizeProject)
   }
 }
 

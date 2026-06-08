@@ -8,8 +8,14 @@ vi.mock('@/stores/authstore', () => ({
   useAuthStore: vi.fn(),
 }))
 
+<<<<<<< HEAD
+import { useAuthStore } from '../../src/stores/authstore'
+// ✅
+import LoginView from '../../src/views/loginview.vue'
+=======
 import { useAuthStore } from '@/stores/authstore'
 import LoginView from '@/views/loginview.vue'
+>>>>>>> 9a228362e91466924d2b2fd34d9fa9cb2d0df88a
 
 // ─── Router minimal ───────────────────────────────────────────────────────────
 const router = createRouter({

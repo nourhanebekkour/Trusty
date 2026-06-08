@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import { authService } from '../services/auth.service.js'
-import api from '../api'
+import { getProfile, login as loginRequest } from '@/services/authservices'
+import api from '@/services/api'
 
 // Évite de stocker des données sensibles renvoyées par erreur par l'API
 const USER_ALLOWED_FIELDS = [
@@ -39,45 +39,64 @@ const withTimeout = (promise, ms = 8000) =>
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null,
+    token: localStorage.getItem('token'),
     loading: false,
     error: null,
-    isInitialized: false,
   }),
 
   getters: {
     isAuthenticated: (state) => !!state.user,
-    isAdmin:         (state) => state.user?.role?.toUpperCase() === 'ADMINISTRATEUR',
-    isEtudiant:      (state) => state.user?.role?.toUpperCase() === 'ETUDIANT',
-    isProfesseur:    (state) => state.user?.role?.toUpperCase() === 'PROFESSEUR',
-    isProfessionnel: (state) => state.user?.role?.toUpperCase() === 'PROFESSIONNEL',
+    isAdmin:         (state) => state.user?.role === 'ADMINISTRATEUR',
+    isEtudiant:      (state) => state.user?.role === 'ETUDIANT',
+    isProfesseur:    (state) => state.user?.role === 'PROFESSEUR',
+    isProfessionnel: (state) => state.user?.role === 'PROFESSIONNEL',
+
+    homeRoute: (state) => {
+      switch (state.user?.role) {
+        case 'ADMINISTRATEUR': return '/admin/dashboard'
+        case 'ETUDIANT':       return '/dashboard'
+        case 'PROFESSIONNEL':  return '/professional/dashboard'
+        case 'PROFESSEUR':     return '/professor'
+        default:               return '/'
+      }
+    },
   },
 
   actions: {
-    // Login
-    async login(email, password) {
-      if (typeof email !== 'string' || typeof password !== 'string') {
-        this.error = 'Données de connexion invalides'
-        return false
-      }
-
+    async login(credentials) {
       this.loading = true
       this.error = null
+
       try {
-        await withTimeout(authService.login({ email: email.trim(), password }))
-        await this.fetchUser()
-        return true
-      } catch (err) {
-        this.error = 'Email ou mot de passe invalide'
-        if (import.meta.env.DEV) {
-          console.error('[AuthStore] Login error:', err.response?.data?.message || err.message)
+        const response = await loginRequest(credentials)
+        const payload  = response?.data ?? response
+        const data     = payload?.data ?? payload
+
+        // Token peut être dans le body ou en cookie HttpOnly (auquel cas il est null ici)
+        const token = data?.token ?? data?.accessToken ?? null
+        const user  = data?.user  ?? data?.utilisateur ?? null
+
+        if (token) {
+          this.token = token
+          localStorage.setItem('token', token)
         }
-        return false
+
+        // Si pas de user dans le body (cookie-based), on le fetch immédiatement
+        if (user) {
+          this.user = user
+        } else {
+          await this.fetchProfile()
+        }
+
+        return { success: true }
+      } catch (err) {
+        this.error = err?.response?.data?.message || 'Erreur de connexion'
+        return { success: false }
       } finally {
         this.loading = false
       }
     },
 
-    // Register
     async register(data) {
       if (!data || typeof data !== 'object' || Array.isArray(data)) {
         this.error = 'Données d\'inscription invalides'
@@ -87,72 +106,46 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true
       this.error = null
       try {
-        await withTimeout(authService.register(data))
+        await api.post('/auth/register', data)
         return true
       } catch (err) {
-        this.error = 'Erreur lors de l\'inscription. Veuillez réessayer.'
-        if (import.meta.env.DEV) {
-          console.error('[AuthStore] Register error:', err.response?.data?.message || err.message)
-        }
+        this.error = err?.response?.data?.message || 'Erreur inscription'
         return false
       } finally {
         this.loading = false
       }
     },
 
-    // Fetch user
+    async fetchProfile() {
+      try {
+        const response = await getProfile()
+        const payload  = response?.data ?? response
+        // Backend: { status, success, data: { user: {...} } }
+        this.user = payload?.data?.user ?? payload?.data ?? payload ?? null
+      } catch {
+        this.user = null
+      }
+    },
+
     async fetchUser() {
-      try {
-        const res = await withTimeout(authService.getMe())
-        const rawUser = res?.data ?? res?.user ?? res ?? null
-
-        const safeUser = sanitizeUser(rawUser)
-
-        if (!safeUser) {
-          this.user = null
-          return
-        }
-
-        if (!isValidRole(safeUser.role)) {
-          if (import.meta.env.DEV) {
-            console.warn('[AuthStore] Rôle inattendu reçu:', safeUser.role)
-          }
-          this.user = null
-          return
-        }
-
-        this.user = safeUser
-      } catch {
-        this.user = null
-      } finally {
-        this.isInitialized = true
-      }
+      await this.fetchProfile()
     },
 
-    // Logout
-    async logout() {
-      try {
-        await withTimeout(api.post('/auth/logout'))
-      } catch {
-        if (import.meta.env.DEV) {
-          console.warn('[AuthStore] Logout API call failed, clearing local session anyway')
-        }
-      } finally {
-        this.user = null
-        this.error = null
-        this.isInitialized = false
-      }
+    logout() {
+      this.user  = null
+      this.token = null
+      localStorage.removeItem('token')
+      api.post('/auth/logout').catch(() => {})
     },
 
-    // Verify Email
     async verifyEmail(token) {
       this.loading = true
       this.error = null
       try {
-        await authService.verifyEmail(token)
+        await api.post('/auth/verify-email', { token })
         return true
       } catch (err) {
-        this.error = err.response?.data?.message || 'Erreur lors de la vérification'
+        this.error = err?.response?.data?.message || 'Erreur lors de la vérification'
         throw err
       } finally {
         this.loading = false

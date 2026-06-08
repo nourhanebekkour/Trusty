@@ -110,10 +110,10 @@ const remember = ref(false)
 const isSubmitting = ref(false)
 
 /* ERRORS */
-const error       = ref('')
+const error = ref('')
 const fieldErrors = ref({ email: '', password: '' })
 
-/* SECURITY — rate limiting côté client */
+/* SECURITY */
 const loginAttempts = ref(0)
 const lockUntil     = ref(null)
 const lockCountdown = ref(0)
@@ -129,13 +129,20 @@ const BASE_LOCK_TIME = 10 * 1000 // 10 secondes, double à chaque dépassement
 
 /* HELPERS */
 const normalizeEmail = (v) => v.trim().toLowerCase()
-
 const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
-
+const isStrongPassword = (v) => {
+  if (typeof v !== 'string') return false
+  return (
+    v.length >= 8 &&
+    /[A-Z]/.test(v) &&
+    /[a-z]/.test(v) &&
+    /[0-9]/.test(v) &&
+    /[!@#$%^&*(),.?":{}|<>_\-\\/\[\]=+;]/.test(v)
+  )
+}
 
 /* LOCK LOGIC */
 const isLocked = computed(() => lockUntil.value && Date.now() < lockUntil.value)
-
 const applyLock = () => {
   const delay = BASE_LOCK_TIME * Math.pow(2, Math.max(0, loginAttempts.value - MAX_ATTEMPTS))
   lockUntil.value = Date.now() + delay
@@ -153,17 +160,11 @@ const applyLock = () => {
 
 /* ERROR HANDLING */
 const clearErrors = () => {
-  error.value      = ''
-  authStore.error  = null
+  error.value = ''
+  authStore.error = null
   fieldErrors.value = { email: '', password: '' }
 }
-
-// Message générique — évite l'énumération email/password
-const safeError = computed(() => {
-  const raw = authStore.error || error.value
-  return raw ? 'Email ou mot de passe invalide' : ''
-})
-
+const safeError = computed(() => authStore.error || error.value)
 const setGenericError = () => { error.value = 'Email ou mot de passe invalide' }
 
 const validateFields = () => {
@@ -181,6 +182,9 @@ const validateFields = () => {
   if (!password.value) {
     fieldErrors.value.password = 'Mot de passe requis'
     ok = false
+  } else if (!isStrongPassword(password.value)) {
+    fieldErrors.value.password = 'Min 8 caractères, majuscule, minuscule, nombre et symbole'
+    ok = false
   }
 
   return ok
@@ -195,31 +199,30 @@ const isDisabled = computed(() =>
   !password.value
 )
 
-/* SUBMIT */
+/* LOGIN */
 const handleLogin = async () => {
   if (isSubmitting.value || isLocked.value) return
-
   clearErrors()
   if (!validateFields()) return
 
   isSubmitting.value = true
 
   try {
-    const cleanEmail = normalizeEmail(email.value)
+    const result = await authStore.login({
+      email: normalizeEmail(email.value),
+      password: password.value,
+      remember: remember.value,
+    })
 
-    const success = await authStore.login(cleanEmail, password.value)
-
-    if (success) {
+    if (result?.success === true) {
       loginAttempts.value = 0
-      lockUntil.value     = null
+      lockUntil.value = null
 
-      const redirectTo   = router.currentRoute.value.query.redirect || '/dashboard'
-      const safeRedirect = redirectTo.startsWith('/') ? redirectTo : '/dashboard'
-      router.push(safeRedirect)
+      // Redirect based on role coming from the token/user object
+      router.push(authStore.homeRoute)
       return
     }
 
-    /* ÉCHEC */
     loginAttempts.value++
     if (loginAttempts.value >= MAX_ATTEMPTS) applyLock()
     setGenericError()

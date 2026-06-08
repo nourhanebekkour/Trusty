@@ -1,8 +1,7 @@
 <template>
   <div class="professional-page">
 
-    <!-- Topbar -->
-    <ProfessionalTopbar />
+    
 
     <!-- Stats -->
     <ProfessionalStats
@@ -51,15 +50,17 @@
 import { ref, onMounted } from 'vue'
 import { useProfessionalStore } from '@/stores/professionalStore'
 
-import ProfessionalTopbar       from '@/components/professional/ProfessionalTopbar.vue'
-import ProfessionalStats        from '@/components/professional/ProfessionalStats.vue'
-import ProfessionalCandidates   from '@/components/professional/ProfessionalCandidates.vue'
-import RecommendationForm       from '@/components/professional/RecommendationForm.vue'
-import FavoriteCandidates       from '@/components/professional/FavoriteCandidates.vue'
-import RecommendationsList      from '@/components/professional/RecommendationsList.vue'
-import ProfessionalNotifications from '@/components/professional/ProfessionalNotifications.vue'
+import ProfessionalTopbar        from '@/components/Professional/ProfessionalTopbar.vue'
+import ProfessionalStats         from '@/components/Professional/ProfessionalStats.vue'
+import ProfessionalCandidates    from '@/components/Professional/ProfessionalCandidates.vue'
+import RecommendationForm        from '@/components/Professional/RecommendationForm.vue'
+import FavoriteCandidates        from '@/components/Professional/FavoriteCandidates.vue'
+import RecommendationsList       from '@/components/Professional/RecommendationsList.vue'
+import ProfessionalNotifications from '@/components/Professional/ProfessionalNotifications.vue'
 
 import '@/assets/professional.css'
+
+
 
 const store = useProfessionalStore()
 

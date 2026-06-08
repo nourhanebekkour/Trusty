@@ -80,6 +80,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { getActivePinia } from 'pinia'
 import { useAuthStore } from '@/stores/authstore'
 import { useRouter } from 'vue-router'
 
@@ -96,7 +97,9 @@ import iconModeles          from '@/assets/icons/modeles.svg'
 import iconPortfolioComplet from '@/assets/icons/portfoliocomplet.svg'
 
 const isCollapsed = ref(false)
-const authStore   = useAuthStore()
+const emit        = defineEmits(['logout'])
+const activePinia = getActivePinia()
+const authStore   = activePinia ? useAuthStore(activePinia) : null
 const router      = useRouter()
 
 function toggleSidebar() {
@@ -104,8 +107,13 @@ function toggleSidebar() {
 }
 
 async function handleLogout() {
-  await authStore.logout()
-  router.push('/login')
+  emit('logout')
+
+  if (authStore?.logout) {
+    await authStore.logout()
+  }
+
+  router?.push?.('/login')
 }
 </script>
 
