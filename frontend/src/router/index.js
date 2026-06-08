@@ -11,7 +11,7 @@ import Recommendations from '@/views/Etudiant/Recommendations.vue'
 import Notification from '@/views/Etudiant/Notification.vue'
 import Profile from '@/views/Etudiant/Profile.vue'
 import activites from '@/views/Etudiant/activites.vue'
-import Portfolio from '@/views/Etudiant/Portfolio.vue'
+import Portfolio from '@/views/portfolio/PortfolioManagement.vue'
 import ProfessionalView from '@/views/ProfessionalView.vue'
 import ProfessorView from '@/views/professor/ProfessorView.vue'
 import { useAuthStore } from '@/stores/authstore'
@@ -19,6 +19,7 @@ import Parcours from '../views/Etudiant/Parcours.vue'
 import registerview from '@/views/registerview.vue'
 import VerifyEmailView from '@/views/VerifyEmailView.vue'
 import LettresRecommandation from '@/views/Etudiant/LettresRecommandation.vue'
+import PortfolioTemplate1 from '@/views/portfolio/PortfolioTemplate1.vue'
 
 // ── Roles autorisés ──────────────────────────────
 const ROLES = {
@@ -165,6 +166,12 @@ const router = createRouter({
       path: '/portfolio',
       name: 'portfolio',
       component: Portfolio,
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
+    },
+    {
+      path: '/portfolio/:url_publique',
+      name: 'portfolio-template1',
+      component: PortfolioTemplate1,
     },
     {
       path: '/activites',
@@ -264,6 +271,7 @@ router.beforeEach(async (to) => {
     return true
   }
 
+  // Initialisation session
   if (!authStore.isInitialized) {
     try {
       await authStore.fetchUser()
@@ -276,6 +284,7 @@ router.beforeEach(async (to) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const allowedRoles = to.matched.flatMap(record => record.meta.roles ?? [])
 
+  // Redirection automatique selon rôle
   if (authStore.isAuthenticated) {
     if (authStore.isAdmin && !to.path.startsWith('/admin')) {
       return '/admin/dashboard'
@@ -286,7 +295,18 @@ router.beforeEach(async (to) => {
     }
   }
 
-  if (requiresAuth && !authStore.isAuthenticated) {
+  // Pages publiques (après la redirection par rôle)
+  if (['home', 'login', 'register', 'about', 'verify-email', 'portfolio-template1'].includes(to.name)) {
+    return true
+  }
+
+  // Pages invité uniquement
+  if (to.meta.guestOnly && authStore.isAuthenticated) {
+    return redirectByRole(authStore.user?.role)
+  }
+
+  // Routes protégées
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
 

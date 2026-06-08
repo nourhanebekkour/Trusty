@@ -213,3 +213,92 @@ jobs:
         with:
           sarif_file: trivy-image-frontend.sarif
           category: trivy-image-frontend
+  frontend-test-report:
+    name: Frontend — Tests & Rapport
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+
+      - name: Run Vitest (JSON output)
+        run: npm run test:ci
+        continue-on-error: true
+
+      - name: Generate HTML report
+        run: npm run report:generate
+
+      - name: Send report (email + Jira)
+        run: npm run report:send
+        env:
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_TO:   ${{ secrets.SMTP_TO }}
+          JIRA_BASE_URL:     ${{ secrets.JIRA_BASE_URL }}
+          JIRA_PROJECT_KEY:  ${{ secrets.JIRA_PROJECT_KEY }}
+          JIRA_USER_EMAIL:   ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN:    ${{ secrets.JIRA_API_TOKEN }}
+
+      - name: Upload HTML report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-report
+          path: frontend/test-report.html
+
+  trivy-scan:
+    name: Security — Trivy Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+#   trivy-scan:
+#     name: Security — Trivy Scan
+#     runs-on: ubuntu-latest
+#     permissions:
+#       security-events: write
+#       actions: read
+#       contents: read
+#     steps:
+#       - uses: actions/checkout@v4
+
+#       - name: Build backend image
+#         run: docker build -t trusty-backend:ci ./backend
+
+#       - name: Build frontend image
+#         run: docker build -t trusty-frontend:ci ./frontend
+
+#       - name: Scan trusty-backend
+#         uses: aquasecurity/trivy-action@master
+#         with:
+#           image-ref: trusty-backend:ci
+#           format: sarif
+#           output: trivy-backend.sarif
+#           severity: CRITICAL,HIGH
+#           exit-code: '0'
+
+#       - name: Scan trusty-frontend
+#         uses: aquasecurity/trivy-action@master
+#         with:
+#           image-ref: trusty-frontend:ci
+#           format: sarif
+#           output: trivy-frontend.sarif
+#           severity: CRITICAL,HIGH
+#           exit-code: '0'
+
+#       - name: Upload backend results to GitHub Security
+#         uses: github/codeql-action/upload-sarif@v4
+#         with:
+#           sarif_file: trivy-backend.sarif
+#           category: trivy-backend
+
+#       - name: Upload frontend results to GitHub Security
+#         uses: github/codeql-action/upload-sarif@v4
+#         with:
+#           sarif_file: trivy-frontend.sarif
+#           category: trivy-frontend
