@@ -13,37 +13,45 @@
 
     <nav class="sidebar-nav">
       <router-link to="/professor/dashboard" class="nav-item">
-        <img :src="iconProjets" class="nav-icon" />
+        <img :src="iconDashboard" class="nav-icon" />
         <span class="nav-label" v-show="!isCollapsed">Dashboard</span>
       </router-link>
 
       <router-link to="/professor/validations" class="nav-item">
-        <img :src="iconStages" class="nav-icon" />
+        <img :src="iconCertifie" class="nav-icon" />
         <span class="nav-label" v-show="!isCollapsed">Validations</span>
       </router-link>
 
       <router-link to="/professor/portfolios" class="nav-item">
-        <img :src="iconProfile" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">portfolios</span>
+        <img :src="iconPortfolio" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Portfolios</span>
       </router-link>
 
       <router-link to="/professor/notifications" class="nav-item">
-        <img :src="iconRecommandations" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">notifications</span>
+        <img :src="iconNotifications" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Notifications</span>
       </router-link>
 
       <router-link to="/professor/recommandations" class="nav-item">
-        <img :src="iconNotifications" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">recommandation</span>
+        <img :src="iconRecommandations" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Recommandation</span>
       </router-link>
 
-      <router-link to="/professor/messages" class="nav-item">
-        <img :src="iconNotifications" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">messages</span>
+      <router-link to="/professor/commentaires" class="nav-item">
+        <img :src="iconShare" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Commentaires</span>
+      </router-link>
+
+      <router-link to="/professor/historique" class="nav-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="nav-icon">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span class="nav-label" v-show="!isCollapsed">Historique</span>
       </router-link>
 
       <router-link to="/professor/profile" class="nav-item">
-        <img :src="iconSettings" class="nav-icon" />
+        <img :src="iconProfile" class="nav-icon" />
         <span class="nav-label" v-show="!isCollapsed">Mon Profil</span>
       </router-link>
     </nav>
@@ -68,11 +76,13 @@ import { ref, inject } from 'vue'
 import { useAuthStore } from '@/stores/authstore'
 import { useRouter } from 'vue-router'
 
-import iconProjets         from '@/assets/icons/projets.svg'
-import iconStages          from '@/assets/icons/stages.svg'
-import iconProfile         from '@/assets/icons/profile.svg'
-import iconRecommandations from '@/assets/icons/recommandations.svg'
+import iconDashboard       from '@/assets/icons/dashboard.svg'
+import iconCertifie        from '@/assets/icons/certifie.svg'
+import iconPortfolio       from '@/assets/icons/portfoliocomplet.svg'
 import iconNotifications   from '@/assets/icons/notifications.svg'
+import iconRecommandations from '@/assets/icons/recommandations.svg'
+import iconShare           from '@/assets/icons/share.svg'
+import iconProfile         from '@/assets/icons/profile.svg'
 import iconSettings        from '@/assets/icons/settings.svg'
 import iconLogout          from '@/assets/icons/logout.svg'
 
