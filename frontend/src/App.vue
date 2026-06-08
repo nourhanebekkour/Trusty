@@ -14,7 +14,7 @@ const route = useRoute()
 const router = useRouter()
 
 // ── Routes publiques (aucune auth requise) ────
-const PUBLIC_ROUTES = ['login', 'home', 'about']
+const PUBLIC_ROUTES = ['login', 'home', 'about', 'portfolio-template1']
 
 // ── Mapping rôle → préfixe de route autorisé ──────
 const ROLE_ALLOWED_PREFIXES = {
@@ -27,7 +27,7 @@ const ROLE_ALLOWED_PREFIXES = {
 // ── Garde de sécurité : vérifie rôle vs route courante ───
 function enforceRoleGuard() {
   // Pages publiques : toujours autorisées
-  if (PUBLIC_ROUTES.includes(route.name)) return
+  if (!route.name || PUBLIC_ROUTES.includes(route.name)) return
 
   const user = authStore.user
   // Pas connecté → login
@@ -140,6 +140,8 @@ html, body {
   overflow-x: hidden;
 }
 
+/* Remplacez/complétez le style existant */
+
 .app {
   display: flex;
   flex-direction: column;
@@ -162,6 +164,8 @@ html, body {
   padding: 0px;
   background-color: var(--color-page-bg);
   overflow-y: auto;
+  overflow-x: hidden;
   min-height: 0;
+  min-width: 0; /* ← important pour flex */
 }
 </style>
