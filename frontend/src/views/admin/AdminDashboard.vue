@@ -8,31 +8,31 @@
         <p class="page__subtitle">Gérez les certifications et surveillez l'activité de la plateforme.</p>
       </div>
       <div class="page__actions">
-        <button class="btn btn--secondary"> Rapport d'activité</button>
+        <button class="btn btn--secondary" @click="$router.push('/admin/portfolios')"> Rapports</button>
         <button class="btn btn--primary" @click="showCreateModal = true">+ Créer un utilisateur</button>
       </div>
     </div>
 
     <!-- Stats row -->
     <div class="stats-row">
-      <StatCard label="Étudiants Actifs"
+      <StatCard label="Étudiants"
                 :value="admin.loading ? '…' : formatNumber(admin.stats.studentsActive)"
-                trend="↑ +12%" trend-color="green" sub="Nouveaux inscrits ce mois-ci">
-        <template #icon></template>
-      </StatCard>
-      <StatCard label="Portfolios Créés"
-                :value="admin.loading ? '…' : formatNumber(admin.stats.portfoliosCreated)"
-                trend="↑ +8%" trend-color="blue" sub="Taux de complétion de 85%">
+                sub="Comptes actifs sur la plateforme">
         <template #icon></template>
       </StatCard>
       <StatCard label="Professeurs"
                 :value="admin.loading ? '…' : formatNumber(admin.stats.professors)"
-                trend="↑ +4%" trend-color="green" sub="Validations académiques">
+                sub="Validations académiques">
         <template #icon></template>
       </StatCard>
-      <StatCard label="Partenaires Pro"
+      <StatCard label="Professionnels"
                 :value="admin.loading ? '…' : formatNumber(admin.stats.partners)"
-                trend="↑ +15%" trend-color="blue" sub="Recruteurs certifiés">
+                sub="Partenaires certifiés">
+        <template #icon></template>
+      </StatCard>
+      <StatCard label="Total Utilisateurs"
+                :value="admin.loading ? '…' : formatNumber(totalUsers)"
+                sub="Tous rôles confondus">
         <template #icon></template>
       </StatCard>
     </div>
@@ -45,9 +45,6 @@
       <div class="content-grid__main">
 
         <!-- ── File de vérification ── -->
-        <!-- Source : admin.verificationQueue (GET /admin/verifications)
-             Service : recupererFileVerification() dans administrateurService.js
-             Structure item : { id, studentName, type, description, createdAt } -->
         <div class="card">
           <div class="card__header">
             <div>
@@ -75,20 +72,20 @@
               <tr v-for="item in admin.verificationQueue" :key="item.id">
                 <td>
                   <div class="user-cell">
-                    <div class="avatar">{{ initials(item.studentName) }}</div>
-                    <span>{{ item.studentName }}</span>
+                    <div class="avatar">{{ initials(item.author) }}</div>
+                    <span>{{ item.author }}</span>
                   </div>
                 </td>
-                <td><span class="type-badge">{{ item.type }}</span></td>
-                <td>{{ item.description }}</td>
-                <td class="text-muted">{{ formatRelativeDate(item.createdAt) }}</td>
+                <td><span class="type-badge">{{ item.type === 'ACTIVITE' ? 'Activité' : 'Professionnel' }}</span></td>
+                <td>{{ item.title }}</td>
+                <td class="text-muted">{{ formatRelativeDate(item.date) }}</td>
                 <td>
                   <div class="action-btns">
-                    <button class="btn btn--ghost btn--sm"> Consulter</button>
+                    <button class="btn btn--ghost btn--sm" @click="$router.push('/admin/verifications')"> Consulter</button>
                     <button class="btn btn--primary btn--sm"
-                            :disabled="certifyingId === item.id"
-                            @click="handleCertify(item.id)">
-                      {{ certifyingId === item.id ? '…' : '✓ Vérifier' }}
+                            :disabled="admin.validatingId === item.id"
+                            @click="handleValidate(item)">
+                      {{ admin.validatingId === item.id ? '…' : '✓ Valider' }}
                     </button>
                   </div>
                 </td>
@@ -100,14 +97,11 @@
           </table>
 
           <div class="card__footer">
-            <a href="#" class="link">Voir tous les éléments en attente →</a>
+            <a href="/admin/verifications" class="link">Voir tous les éléments en attente →</a>
           </div>
         </div>
 
         <!-- ── Gestion des Utilisateurs ── -->
-        <!-- Source : admin.users (GET /admin/users → recupererTousLesAdmins)
-             Structure item : { id_administrateur, niveau_acces,
-               utilisateur: { nom, prenom, email, date_creation, status_compte } } -->
         <div class="card" style="margin-top:20px">
           <div class="card__header">
             <div>
@@ -115,8 +109,7 @@
               <p class="card__subtitle">Administration globale des comptes SkillIOS</p>
             </div>
             <div class="search-box">
-              <input v-model="userSearch" type="text" placeholder="🔍 Rechercher un utilisateur..." />
-              <button class="btn btn--icon">⚙</button>
+              <input v-model="userSearch" type="text" placeholder="Rechercher un utilisateur..." />
             </div>
           </div>
 
@@ -134,15 +127,15 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="u in filteredUsers" :key="u.id_administrateur">
-                <td>{{ u.utilisateur?.prenom }} {{ u.utilisateur?.nom }}</td>
-                <td><StatusBadge :status="u.niveau_acces || 'ADMIN'" /></td>
-                <td>{{ formatStatus(u.utilisateur?.status_compte) }}</td>
-                <td class="text-muted">{{ u.utilisateur?.email }}</td>
-                <td class="text-muted">{{ formatDate(u.utilisateur?.date_creation) }}</td>
+              <tr v-for="u in filteredUsers" :key="u.id_utilisateur">
+                <td>{{ u.prenom }} {{ u.nom }}</td>
+                <td><StatusBadge :status="u.role || 'ADMIN'" /></td>
+                <td>{{ formatStatus(u.status_compte) }}</td>
+                <td class="text-muted">{{ u.email }}</td>
+                <td class="text-muted">{{ formatDate(u.date_creation) }}</td>
                 <td>
                   <button class="btn btn--icon btn--sm"
-                          @click="handleDeleteUser(u.id_administrateur)">•••</button>
+                          @click="handleDeleteUser(u.id_utilisateur)">•••</button>
                 </td>
               </tr>
               <tr v-if="!admin.loading && filteredUsers.length === 0">
@@ -154,10 +147,6 @@
       </div>
 
       <!-- ── Historique des Certifications ── -->
-      <!-- Source : admin.certHistory (GET /admin/certifications/history)
-           Service : recupererHistoriqueCertifications() dans administrateurService.js
-           Structure item : { id, validatorName, actionLabel, entityType,
-                              entityTitle, targetName, createdAt } -->
       <div class="content-grid__side">
         <div class="card">
           <h2 class="card__title">Historique des Certifications</h2>
@@ -166,16 +155,15 @@
           <div v-if="admin.loading" class="state-msg">Chargement…</div>
 
           <div v-else class="cert-list">
-            <div v-for="cert in admin.certHistory" :key="cert.id" class="cert-item">
+            <div v-for="cert in admin.certHistory.slice(0, 10)" :key="cert.id_historique || cert.id" class="cert-item">
               <div class="cert-item__icon">✓</div>
               <div class="cert-item__body">
                 <p class="cert-item__text">
-                  <strong>{{ cert.validatorName }}</strong>
-                  {{ cert.actionLabel }} le {{ cert.entityType }}
-                  <em>"{{ cert.entityTitle }}"</em>
-                  pour <strong>{{ cert.targetName }}</strong>
+                  <strong>{{ cert.utilisateur?.prenom || '' }} {{ cert.utilisateur?.nom || '' }}</strong>
+                  {{ cert.action || 'action' }}
+                  <em>{{ cert.type_entite || '' }}</em>
                 </p>
-                <span class="cert-item__time">{{ formatDate(cert.createdAt) }}</span>
+                <span class="cert-item__time">{{ formatDate(cert.date_action || cert.date_creation) }}</span>
               </div>
             </div>
             <div v-if="admin.certHistory.length === 0" class="state-msg">
@@ -184,14 +172,13 @@
           </div>
 
           <div class="card__footer">
-            <a href="#" class="link">Voir l'audit complet →</a>
+            <a href="/admin/historique" class="link">Voir l'audit complet →</a>
           </div>
         </div>
       </div>
     </div>
 
     <!-- ── Modal Créer un utilisateur ── -->
-    <!-- Envoie POST /api/auth/register avec { email, password, nom, prenom, role } -->
     <AppModal
       :show="showCreateModal"
       title="Créer un profil complet"
@@ -199,7 +186,6 @@
       @close="closeModal"
       @confirm="handleCreateUser"
     >
-      <!-- Feedback erreur dans le modal -->
       <div v-if="createError" class="error-banner" style="margin-bottom:16px">
          {{ createError }}
       </div>
@@ -210,24 +196,27 @@
           <div class="field">
             <label>Prénom <span class="required">*</span></label>
             <input v-model="newUser.firstName" type="text" placeholder="Ex: Thomas"
+                   maxlength="50"
                    :class="{ 'input--error': v$.firstName.$error }" @blur="v$.firstName.$touch()" />
             <span v-if="v$.firstName.$error" class="field-error">Prénom requis</span>
           </div>
           <div class="field">
             <label>Nom <span class="required">*</span></label>
             <input v-model="newUser.lastName" type="text" placeholder="Ex: Durand"
+                   maxlength="50"
                    :class="{ 'input--error': v$.lastName.$error }" @blur="v$.lastName.$touch()" />
             <span v-if="v$.lastName.$error" class="field-error">Nom requis</span>
           </div>
           <div class="field">
             <label>Email professionnel <span class="required">*</span></label>
             <input v-model="newUser.email" type="email" placeholder="t.durand@exemple.com"
+                   maxlength="100"
                    :class="{ 'input--error': v$.email.$error }" @blur="v$.email.$touch()" />
             <span v-if="v$.email.$error" class="field-error">Email valide requis</span>
           </div>
           <div class="field">
             <label>Téléphone</label>
-            <input v-model="newUser.phone" type="tel" placeholder="06 00 00 00 00" />
+            <input v-model="newUser.phone" type="tel" placeholder="06 00 00 00 00" maxlength="20" />
           </div>
           <div class="field">
             <label>Rôle Plateforme <span class="required">*</span></label>
@@ -253,6 +242,7 @@
             <input v-model="newUser.password"
                    :type="showPwd ? 'text' : 'password'"
                    placeholder="••••••••"
+                   minlength="8" maxlength="128"
                    :class="{ 'input--error': v$.password.$error }"
                    @blur="v$.password.$touch()" />
             <button type="button" class="input-group__btn" @click="showPwd = !showPwd">👁</button>
@@ -280,21 +270,28 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useVuelidate }  from '@vuelidate/core'
 import { required, email as emailRule, minLength } from '@vuelidate/validators'
 import StatCard    from '../../components/ui/StatCard.vue'
 import StatusBadge from '../../components/ui/StatusBadge.vue'
 import AppModal    from '../../components/ui/AppModal.vue'
 import { useAdminStore } from '../../stores/adminStore'
+import { useAuthStore }  from '../../stores/authstore'
 
-const admin = useAdminStore()
+const admin     = useAdminStore()
+const authStore = useAuthStore()
+const router    = useRouter()
 
 // ── État modal ────────────────────────────────────────────
 const showCreateModal = ref(false)
 const showPwd         = ref(false)
 const createError     = ref(null)
-const certifyingId    = ref(null)
 const creating        = ref(false)
+
+const totalUsers = computed(() =>
+  (admin.users || []).length
+)
 
 const emptyUser = () => ({
   firstName: '', lastName: '', email: '', phone: '',
@@ -312,6 +309,22 @@ const rules = {
 }
 const v$ = useVuelidate(rules, newUser)
 
+// ── Sécurité : sanitisation avant envoi ──────────────────
+function sanitize(str) {
+  return (str || '').trim().replace(/[<>"'`]/g, '')
+}
+
+function sanitizeUser(user) {
+  return {
+    ...user,
+    firstName: sanitize(user.firstName),
+    lastName:  sanitize(user.lastName),
+    email:     sanitize(user.email),
+    phone:     sanitize(user.phone),
+    password:  user.password, // le hash est géré côté serveur
+  }
+}
+
 // ── Actions modal ─────────────────────────────────────────
 function closeModal() {
   showCreateModal.value = false
@@ -328,14 +341,14 @@ function generatePassword() {
 }
 
 async function handleCreateUser() {
-  // Valider tous les champs
   const valid = await v$.value.$validate()
   if (!valid) return
 
   creating.value    = true
   createError.value = null
 
-  const result = await admin.createUser(newUser.value)
+  // Sécurité : soumettre les données sanitisées
+  const result = await admin.createUser(sanitizeUser(newUser.value))
 
   creating.value = false
 
@@ -348,14 +361,11 @@ async function handleCreateUser() {
 
 // ── Actions table ─────────────────────────────────────────
 async function handleDeleteUser(id) {
-  if (!confirm('Supprimer cet utilisateur ?')) return
   await admin.deleteUser(id)
 }
 
-async function handleCertify(id) {
-  certifyingId.value = id
-  await admin.certifyPortfolio(id)
-  certifyingId.value = null
+async function handleValidate(item) {
+  await admin.validateEntity(item.type, item.id, 'VALIDE')
 }
 
 // ── Recherche utilisateurs ────────────────────────────────
@@ -363,8 +373,8 @@ const userSearch = ref('')
 
 const filteredUsers = computed(() =>
   (admin.users || []).filter(u => {
-    const fullName = `${u.utilisateur?.prenom || ''} ${u.utilisateur?.nom || ''}`.toLowerCase()
-    const email    = (u.utilisateur?.email || '').toLowerCase()
+    const fullName = `${u.prenom || ''} ${u.nom || ''}`.toLowerCase()
+    const email    = (u.email || '').toLowerCase()
     const q        = userSearch.value.toLowerCase()
     return fullName.includes(q) || email.includes(q)
   })
@@ -409,13 +419,18 @@ function initials(name) {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 }
 
-// ── Chargement initial ────────────────────────────────────
+// ── Chargement initial avec guard de rôle ────────────────
 onMounted(async () => {
+  if (!authStore.user || authStore.user.role !== 'ADMINISTRATEUR') {
+    router.replace('/login')
+    return
+  }
+
   await Promise.all([
-    admin.fetchDashboardStats(),     // GET /admin/stats
-    admin.fetchUsers(),              // GET /admin/users
-    admin.fetchVerificationQueue(),  // GET /admin/verifications
-    admin.fetchCertHistory(),        // GET /admin/certifications/history
+    admin.fetchDashboardStats(),
+    admin.fetchUsers(),
+    admin.fetchVerificationQueue(),
+    admin.fetchCertHistory(),
   ])
 })
 </script>
@@ -429,8 +444,8 @@ onMounted(async () => {
   align-items: flex-start;
   margin-bottom: 24px;
 }
-.page__title    { font-size: 24px; font-weight: 700; color: #D6EDE8; }
-.page__subtitle { font-size: 14px; color: #8aada9; margin-top: 4px; }
+.page__title    { font-size: 24px; font-weight: 700; color: var(--color-text-primary); }
+.page__subtitle { font-size: 14px; color: var(--color-text-secondary); margin-top: 4px; }
 .page__actions  { display: flex; gap: 12px; }
 
 .stats-row { display: flex; gap: 16px; margin-bottom: 24px; }
@@ -442,8 +457,8 @@ onMounted(async () => {
 }
 
 .card {
-  background: #1A3838;
-  border: 1px solid #2a4a48;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
   border-radius: 12px;
   padding: 20px;
 }
@@ -453,8 +468,8 @@ onMounted(async () => {
   align-items: flex-start;
   margin-bottom: 16px;
 }
-.card__title    { font-size: 16px; font-weight: 600; color: #D6EDE8; }
-.card__subtitle { font-size: 13px; color: #8aada9; margin-top: 2px; }
+.card__title    { font-size: 16px; font-weight: 600; color: var(--color-text-primary); }
+.card__subtitle { font-size: 13px; color: var(--color-text-secondary); margin-top: 2px; }
 .card__footer   { margin-top: 12px; text-align: center; }
 
 .table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -463,24 +478,24 @@ onMounted(async () => {
   padding: 8px 10px;
   font-size: 12px;
   font-weight: 600;
-  color: #8aada9;
+  color: var(--color-text-tertiary);
   text-transform: uppercase;
-  background: #0f2424;
-  border-bottom: 1px solid #2a4a48;
+  background: var(--color-surface-alt);
+  border-bottom: 1px solid var(--color-border-light);
 }
 .table td {
   padding: 10px;
-  border-bottom: 1px solid #1e3a3a;
-  color: #c8deda;
+  border-bottom: 1px solid var(--color-border-light);
+  color: var(--color-text-primary);
   vertical-align: middle;
 }
-.table tr:hover td { background: #0f2424; }
+.table tr:hover td { background: var(--color-surface-hover); }
 
 .user-cell { display: flex; align-items: center; gap: 8px; }
 .avatar {
   width: 28px; height: 28px;
   border-radius: 50%;
-  background: #5C8C6A;
+  background: var(--color-accent);
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -488,20 +503,20 @@ onMounted(async () => {
   flex-shrink: 0;
 }
 .type-badge {
-  background: #162e2e;
-  color: #c8deda;
+  background: var(--color-accent-light);
+  color: var(--color-accent);
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 11px;
   font-weight: 600;
 }
-.text-muted { color: #4a6e6a; }
+.text-muted { color: var(--color-text-tertiary); }
 .action-btns { display: flex; gap: 6px; }
 
 .state-msg {
   text-align: center;
   padding: 20px;
-  color: #4a6e6a;
+  color: var(--color-text-tertiary);
   font-size: 13px;
 }
 
@@ -510,13 +525,14 @@ onMounted(async () => {
 .cert-item__icon {
   width: 24px; height: 24px; min-width: 24px;
   border-radius: 50%;
-  background: #dcfce7;
-  color: #16a34a;
+  background: var(--color-valid-bg);
+  color: var(--color-valid-text);
   font-size: 12px;
   display: flex; align-items: center; justify-content: center;
 }
-.cert-item__text { font-size: 13px; color: #c8deda; line-height: 1.4; }
-.cert-item__time { font-size: 11px; color: #4a6e6a; margin-top: 2px; display: block; }
+.cert-item__text { font-size: 13px; color: var(--color-text-primary); line-height: 1.4; }
+.cert-item__text strong { color: var(--color-text-primary); }
+.cert-item__time { font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; display: block; }
 
 .btn {
   padding: 8px 14px;
@@ -528,48 +544,48 @@ onMounted(async () => {
   transition: all 0.15s;
 }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.btn--primary         { background: #5C8C6A; color: #fff; }
-.btn--primary:hover   { background: #4a7058; }
-.btn--secondary       { background: #1A3838; border: 1px solid #2a4a48; color: #c8deda; }
-.btn--secondary:hover { background: #162e2e; }
-.btn--ghost           { background: transparent; color: #5C8C6A; border: 1px solid #2a4a48; }
+.btn--primary         { background: var(--color-accent); color: #fff; }
+.btn--primary:hover   { background: var(--color-accent-hover); }
+.btn--secondary       { background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-secondary); }
+.btn--secondary:hover { background: var(--color-surface-hover); }
+.btn--ghost           { background: transparent; color: var(--color-accent); border: 1px solid var(--color-border); }
 .btn--sm              { padding: 5px 10px; font-size: 12px; }
-.btn--icon            { background: transparent; border: 1px solid #2a4a48; color: #8aada9; padding: 6px 10px; }
+.btn--icon            { background: transparent; border: 1px solid var(--color-border); color: var(--color-text-tertiary); padding: 6px 10px; }
+.btn--icon:hover      { background: var(--color-surface-hover); }
 
 .search-box { display: flex; gap: 8px; align-items: center; }
 .search-box input {
   padding: 7px 12px;
-  border: 1px solid #2a4a48;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   font-size: 13px;
   outline: none;
   width: 220px;
-  background: #0f2424;
-  color: #D6EDE8;
+  background: var(--color-surface-alt);
+  color: var(--color-text-primary);
 }
-.search-box input:focus { border-color: #5C8C6A; }
+.search-box input:focus { border-color: var(--color-accent); }
 
 .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
-.badge--warning { background: #fef9c3; color: #ca8a04; }
+.badge--warning { background: var(--color-waiting-bg); color: var(--color-waiting-text); }
 
-.link { color: #5C8C6A; font-size: 13px; text-decoration: none; }
+.link { color: var(--color-accent); font-size: 13px; text-decoration: none; }
 .link:hover { text-decoration: underline; }
 
 .error-banner {
-  background: #3a1a1a;
-  border: 1px solid #6a2a2a;
-  color: #f87171;
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: var(--color-danger);
   padding: 10px 16px;
   border-radius: 8px;
   font-size: 13px;
   margin-bottom: 20px;
 }
 
-/* Form */
 .form-section { margin-bottom: 20px; }
 .form-section--security {
-  background: #0f2424;
-  border: 1px solid #2a4a48;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border-light);
   border-radius: 10px;
   padding: 16px;
 }
@@ -577,43 +593,43 @@ onMounted(async () => {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.5px;
-  color: #8aada9;
+  color: var(--color-text-tertiary);
   text-transform: uppercase;
   margin-bottom: 14px;
 }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .field { display: flex; flex-direction: column; gap: 4px; }
-.field label { font-size: 13px; font-weight: 600; color: #c8deda; }
-.required { color: #f87171; }
+.field label { font-size: 13px; font-weight: 600; color: var(--color-text-secondary); }
+.required { color: var(--color-danger); }
 .field input, .field select {
   padding: 10px 12px;
-  border: 1px solid #2a4a48;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   font-size: 13px;
   outline: none;
-  background: #1A3838;
-  color: #D6EDE8;
+  background: var(--color-surface-alt);
+  color: var(--color-text-primary);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .field input:focus, .field select:focus {
-  border-color: #5C8C6A;
-  box-shadow: 0 0 0 3px rgba(92,140,106,0.15);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-light);
 }
-.input--error { border-color: #f87171 !important; }
-.field-error  { font-size: 11px; color: #f87171; margin-top: 2px; }
+.input--error { border-color: var(--color-danger) !important; }
+.field-error  { font-size: 11px; color: var(--color-danger); margin-top: 2px; }
 
 .input-group { display: flex; gap: 8px; }
 .input-group input { flex: 1; }
 .input-group__btn {
   padding: 8px 12px;
-  border: 1px solid #2a4a48;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  background: #1A3838;
+  background: var(--color-surface);
   cursor: pointer;
   font-size: 12px;
-  color: #c8deda;
+  color: var(--color-text-secondary);
   white-space: nowrap;
 }
 .checkbox-group { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
-.checkbox-group label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #c8deda; cursor: pointer; }
+.checkbox-group label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-text-secondary); cursor: pointer; }
 </style>

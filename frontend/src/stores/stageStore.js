@@ -69,6 +69,7 @@ export const useStageStore = defineStore('stages', () => {
     total:     stages.value.length,
     valides:   stages.value.filter(s => s.status_validation === 'VALIDE').length,
     enAttente: stages.value.filter(s => s.status_validation === 'EN_ATTENTE').length,
+    avecRapport: stages.value.filter(s => s.rapport_url || s.rapport?.url).length,
   }))
 
   // ── Filtres & pagination ───────────────────────────────────────────────────
@@ -171,7 +172,6 @@ export const useStageStore = defineStore('stages', () => {
   }
 
   async function confirmerSuppression(stage) {
-    if (!confirm(`Supprimer le stage chez "${stage.entreprise}" ?`)) return
     try {
       await apiSupprimer(stage.id_stage)
       stages.value = stages.value.filter(s => s.id_stage !== stage.id_stage)
