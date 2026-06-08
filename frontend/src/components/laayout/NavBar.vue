@@ -149,13 +149,13 @@ const userInitials = computed(() => {
 
 .user-text {
   text-align: right;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
 }
 
 .user-name {
   font-size: 14px;
   font-weight: 600;
-  color: #D6EDE8;
+  color: var(--color-text-primary);
 }
 
 .user-role {

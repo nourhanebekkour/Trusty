@@ -10,9 +10,10 @@ export const useProjetStore = defineStore('projets', {
 
   getters: {
     stats: (state) => ({
-      total:     state.projets.length,
-      valides:   state.projets.filter(p => p.status_validation === 'VALIDE').length,
-      enAttente: state.projets.filter(p => p.status_validation === 'EN_ATTENTE').length,
+      total:       state.projets.length,
+      valides:     state.projets.filter(p => p.status_validation === 'VALIDE').length,
+      enAttente:   state.projets.filter(p => p.status_validation === 'EN_ATTENTE').length,
+      avecRapport: state.projets.filter(p => p.rapport || p.lien_github || p.lien_demo || p.lien_youtube).length,
     }),
   },
 
@@ -27,6 +28,10 @@ export const useProjetStore = defineStore('projets', {
       } finally {
         this.loading = false
       }
+    },
+
+    async getProjetById(id) {
+      return await projetService.getById(id)
     },
 
     async createProjet(payload) {
