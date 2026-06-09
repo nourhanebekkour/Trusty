@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import { authService } from '../services/auth.service.js'
-import api from '../api'
+import { authService } from '@/services/auth.service'
+import api from '@/services/api'
 
 // Évite de stocker des données sensibles renvoyées par erreur par l'API
 const USER_ALLOWED_FIELDS = [
@@ -62,6 +62,7 @@ export const useAuthStore = defineStore('auth', {
 
       this.loading = true
       this.error = null
+
       try {
         await withTimeout(authService.login({ email: email.trim(), password }))
         await this.fetchUser()
@@ -77,7 +78,6 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // Register
     async register(data) {
       if (!data || typeof data !== 'object' || Array.isArray(data)) {
         this.error = 'Données d\'inscription invalides'
@@ -144,15 +144,14 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    // Verify Email
     async verifyEmail(token) {
       this.loading = true
       this.error = null
       try {
-        await authService.verifyEmail(token)
+        await api.post('/auth/verify-email', { token })
         return true
       } catch (err) {
-        this.error = err.response?.data?.message || 'Erreur lors de la vérification'
+        this.error = err?.response?.data?.message || 'Erreur lors de la vérification'
         throw err
       } finally {
         this.loading = false
