@@ -715,7 +715,7 @@ const student = computed(() => {
         specialization: e.filiere || 'Génie Informatique',
         objective: e.objectif_professionnel || '',
         score: e.score_credibilite || 0,
-        bio: e.biographie || '',
+        bio: portfolioData.value.sous_titre || e.biographie || '',
         about: e.biographie || '',
         linkedin: e.linkedin_url || '#',
         github: e.github_username ? `https://github.com/${e.github_username}` : '#',
