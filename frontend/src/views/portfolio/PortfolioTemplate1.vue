@@ -654,7 +654,7 @@ const fontStyle = computed(() => ({
     fontFamily: "'Inter', system-ui, -apple-system, sans-serif"
 }))
 
-const tabs = [
+const tabs = computed(() => [
     { id: 'parcours',        label: 'À propos' },
     { id: 'projets',         label: 'Projets' },
     { id: 'competences',     label: 'Compétences' },
@@ -663,8 +663,8 @@ const tabs = [
     { id: 'badges',          label: 'Badges' },
     { id: 'recommandations', label: 'Recommandations' },
     { id: 'lettres',         label: 'Lettres' },
-    { id: 'github',          label: 'GitHub' },
-]
+    ...(student.value.github ? [{ id: 'github', label: 'GitHub' }] : []),
+])
 
 const route = useRoute()
 const portfolioData = ref(null)
