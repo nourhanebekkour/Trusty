@@ -1,169 +1,25 @@
 <template>
-  <section class="professional-page">
-    <div class="professional-page__header">
+  <div class="prof-page">
+
+    <div class="prof-page-head">
       <div>
-        <h2>Portfolios</h2>
-        <p>Consult student portfolios linked to your company supervision.</p>
+        <h1>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="margin-right: 8px; vertical-align: middle;">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+          Portfolios
+        </h1>
+        <p>Consultez les portfolios des étudiants.</p>
       </div>
     </div>
 
-    <div v-if="loading" class="professional-loading">
-      Loading portfolios...
+    <div class="prof-empty-card">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" class="empty-icon">
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+      </svg>
+      <p class="empty-title">API en cours d'intégration</p>
+      <p class="empty-sub">La liste des portfolios sera bientôt disponible. Revenez ultérieurement.</p>
     </div>
 
-    <div v-else-if="error" class="professional-error">
-      {{ error }}
-    </div>
-
-    <div v-else-if="portfolios.length === 0" class="professional-empty">
-      No portfolios found for your assigned students.
-    </div>
-
-    <div v-else class="professional-grid-3">
-      <article
-        v-for="portfolio in portfolios"
-        :key="portfolio.id"
-        class="professional-panel portfolio-card"
-      >
-        <div class="portfolio-card__top">
-          <h3>{{ portfolio.title }}</h3>
-
-          <span class="professional-badge">
-            {{ portfolio.isPublished ? 'Published' : 'Not published' }}
-          </span>
-        </div>
-
-        <p class="portfolio-subtitle">
-          {{ portfolio.subtitle }}
-        </p>
-
-        <div class="portfolio-info">
-          <div>
-            <span>Student</span>
-            <strong>{{ portfolio.student.fullName }}</strong>
-          </div>
-
-          <div>
-            <span>Views</span>
-            <strong>{{ portfolio.views }}</strong>
-          </div>
-
-          <div>
-            <span>Recommendations</span>
-            <strong>{{ portfolio.recommendationsCount }}</strong>
-          </div>
-
-          <div>
-            <span>Published at</span>
-            <strong>{{ portfolio.publishedAt }}</strong>
-          </div>
-        </div>
-
-        <div class="professional-actions">
-          <a
-            v-if="portfolio.publicUrl"
-            :href="portfolio.publicUrl"
-            target="_blank"
-            class="professional-btn"
-          >
-            Open portfolio
-          </a>
-
-          <button
-            v-else
-            class="professional-btn-light"
-            disabled
-          >
-            No public link
-          </button>
-        </div>
-      </article>
-    </div>
-
-    <p class="professional-warning">
-      Professional users can consult portfolios, but they cannot edit or validate them.
-    </p>
-  </section>
+  </div>
 </template>
-
-<script setup>
-import { onMounted, ref } from 'vue'
-import { professionalApi } from '@/services/professionalApi'
-
-const portfolios = ref([])
-const loading = ref(false)
-const error = ref(null)
-
-const loadPortfolios = async () => {
-  try {
-    loading.value = true
-    error.value = null
-    portfolios.value = await professionalApi.getPortfolios()
-  } catch (err) {
-    console.error(err)
-    error.value = 'Unable to load portfolios. Check your API endpoints.'
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(loadPortfolios)
-</script>
-
-<style scoped>
-.portfolio-card {
-  padding: 20px;
-}
-
-.portfolio-card__top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.portfolio-card__top h3 {
-  margin: 0;
-  color: #2d2a26;
-  font-size: 18px;
-}
-
-.portfolio-subtitle {
-  color: #7b7164;
-  line-height: 1.6;
-}
-
-.portfolio-info {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin: 18px 0;
-}
-
-.portfolio-info div {
-  background: #f8f6f1;
-  padding: 12px;
-  border-radius: 12px;
-}
-
-.portfolio-info span {
-  display: block;
-  color: #7b7164;
-  font-size: 12px;
-  margin-bottom: 5px;
-}
-
-.portfolio-info strong {
-  color: #2d2a26;
-  font-size: 14px;
-}
-
-a.professional-btn {
-  text-decoration: none;
-}
-
-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-</style>

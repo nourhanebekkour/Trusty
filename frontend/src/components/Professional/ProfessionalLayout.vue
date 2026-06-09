@@ -1,11 +1,13 @@
 <template>
   <div class="professional-layout">
     <ProfessionalTopbar />
-    <ProfessionalSidebar />
 
-    <main class="professional-layout__main">
-      <RouterView />
-    </main>
+    <div class="layout-body">
+      <ProfessionalSidebar />
+      <main class="layout-content">
+        <RouterView />
+      </main>
+    </div>
 
     <ProfessionalFooter />
   </div>
@@ -13,6 +15,7 @@
 
 <script setup>
 import '@/assets/professional.css'
+import '@/assets/professional-pages.css'
 import ProfessionalTopbar from './ProfessionalTopbar.vue'
 import ProfessionalSidebar from './ProfessionalSidebar.vue'
 import ProfessionalFooter from './ProfessionalFooter.vue'
@@ -20,20 +23,29 @@ import ProfessionalFooter from './ProfessionalFooter.vue'
 
 <style scoped>
 .professional-layout {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
-  background: #f4f2ec;
+  width: 100%;
+  overflow-x: hidden;
+  background: var(--color-page-bg, #F5F3EE);
 }
 
-.professional-layout__main {
-  min-height: calc(100vh - 64px);
-  margin-left: 260px;
-  padding: 64px 0px 0px;  
+.layout-body {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  align-items: stretch;
+  min-height: 0;
 }
 
-@media (max-width: 900px) {
-  .professional-layout__main {
-    margin-left: 0;
-    padding: 88px 18px 72px;
-  }
+.layout-content {
+  flex: 1;
+  padding: 0;
+  background: var(--color-page-bg, #F5F3EE);
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  min-width: 0;
 }
 </style>

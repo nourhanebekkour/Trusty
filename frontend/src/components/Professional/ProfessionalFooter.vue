@@ -1,35 +1,20 @@
 <template>
   <footer class="professional-footer">
-    <span>Professional Space</span>
-    <span>Supervision only — no official validation</span>
+    <span>Espace Professionnel</span>
+    <span>Supervision — pas de validation officielle</span>
   </footer>
 </template>
 
-<script setup>
-</script>
-
 <style scoped>
 .professional-footer {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 260px;
-  z-index: 15;
   height: 44px;
-  padding: 0 32px;
-  background: #ffffff;
-  border-top: 1px solid #e7e1d6;
-  color: #7b7164;
+  padding: 0 24px;
+  background: var(--color-surface, #FFFFFF);
+  border-top: 1px solid var(--color-border, #D6D0C4);
+  color: var(--color-text-secondary, #6B7280);
   font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-@media (max-width: 900px) {
-  .professional-footer {
-    left: 0;
-    padding: 0 18px;
-  }
 }
 </style>

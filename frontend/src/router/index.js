@@ -186,9 +186,10 @@ const router = createRouter({
     },
 
     // ── Professional ─────────────────────────────────────
-      {
+    {
       path: '/professional',
       component: ProfessionalLayout,
+      meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
       children: [
         {
           path: '',
@@ -197,37 +198,62 @@ const router = createRouter({
         {
           path: 'dashboard',
           name: 'professional-dashboard',
-          component: () => import('@/views/Professional/ProfessionalDashboard.vue'),
+          component: ProfessionalView,
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
         },
         {
-          path: 'internships',
-          name: 'professional-internships',
+          path: 'recommandations',
+          name: 'professional-recommandations',
+          component: () => import('@/views/Professional/ProfessionalRecommandations.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
+        },
+        {
+          path: 'commentaires',
+          name: 'professional-commentaires',
+          component: () => import('@/views/Professional/ProfessionalCommentaires.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
+        },
+        {
+          path: 'notifications',
+          name: 'professional-notifications',
+          component: () => import('@/views/Professional/ProfessionalNotifications.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
+        },
+        {
+          path: 'historique',
+          name: 'professional-historique',
+          component: () => import('@/views/Professional/ProfessionalHistorique.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
+        },
+        {
+          path: 'stages',
+          name: 'professional-stages',
           component: () => import('@/views/Professional/ProfessionalInternships.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
         },
         {
-          path: 'projects',
-          name: 'professional-projects',
+          path: 'projets',
+          name: 'professional-projets',
           component: () => import('@/views/Professional/ProfessionalProjects.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
         },
         {
-          path: 'students',
-          name: 'professional-students',
+          path: 'etudiants',
+          name: 'professional-etudiants',
           component: () => import('@/views/Professional/ProfessionalStudents.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
         },
         {
           path: 'portfolios',
           name: 'professional-portfolios',
           component: () => import('@/views/Professional/ProfessionalPortfolios.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
         },
         {
-          path: 'recommendations',
-          name: 'professional-recommendations',
-          component: () => import('@/views/Professional/ProfessionalRecommendations.vue'),
-        },
-        {
-          path: 'dashboard2',
-          name: 'professional-dashboard2',
-          component: ProfessionalView,
+          path: 'profile',
+          name: 'professional-profile',
+          component: () => import('@/views/Professional/ProfessionalProfile.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
         },
       ],
     },
