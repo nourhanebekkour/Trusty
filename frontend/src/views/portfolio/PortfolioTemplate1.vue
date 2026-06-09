@@ -497,7 +497,7 @@
             </section>
 
             <!-- ── GITHUB ─────────────────────────────────────────────── -->
-            <section id="github" class="pf2-section pf2-section--light">
+            <section v-if="student.github" id="github" class="pf2-section pf2-section--light">
                 <div class="pf2-section__header">
                     <p class="pf2-section__label">Open source</p>
                     <h2 class="pf2-section__title">Activité GitHub</h2>
@@ -912,9 +912,18 @@ const parcours = computed(() => {
     }))
 })
 
-const contributions = Array.from({ length: 52 }, () =>
-    Array.from({ length: 7 }, () => Math.floor(Math.random() * 5))
-)
+const contributions = computed(() => {
+    const seed = [...(portfolioData.value?.etudiant?.github_username || 'trusty')]
+        .reduce((acc, c) => acc + c.charCodeAt(0), 0)
+    let s = seed
+    function rand() {
+        s = (s * 1103515245 + 12345) & 0x7fffffff
+        return s % 5
+    }
+    return Array.from({ length: 52 }, () =>
+        Array.from({ length: 7 }, () => rand())
+    )
+})
 
 function langColor(lang) {
     const map = { TypeScript: '#3178C6', JavaScript: '#F7DF1E', Python: '#3776AB', Go: '#00ADD8', Rust: '#CE422B' }
