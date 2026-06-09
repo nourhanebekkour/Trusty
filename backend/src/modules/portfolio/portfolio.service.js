@@ -49,6 +49,9 @@ const portfolioIncludeConfig = {
                 }
             },
             depots_github: true,
+            formations: {
+                orderBy: { date_debut: 'asc' }
+            },
             participations_projets: {
                 where: {
                     projet: {
@@ -98,7 +101,7 @@ const portfolioIncludeConfig = {
                         }
                     }
                 }
-            }   
+            }
         }
     }
 };
@@ -182,7 +185,7 @@ export const getMyPortfolios = async (id_etudiant) => {
 
 export const createPortfolio = async (id_etudiant, data) => {
     const { titre_personnalise, sous_titre, id_modele, est_publie } = data;
-    
+
     let url_publique = data.url_publique;
 
     if (!url_publique) {
@@ -191,7 +194,7 @@ export const createPortfolio = async (id_etudiant, data) => {
             where: { id_etudiant },
             include: { utilisateur: true }
         });
-        
+
         if (!etudiant || !etudiant.utilisateur) {
             throw new Error("Étudiant introuvable");
         }
@@ -199,7 +202,7 @@ export const createPortfolio = async (id_etudiant, data) => {
         const nom = etudiant.utilisateur.nom.toLowerCase().replace(/[^a-z0-9]/g, '-');
         const prenom = etudiant.utilisateur.prenom.toLowerCase().replace(/[^a-z0-9]/g, '-');
         const titre = titre_personnalise ? titre_personnalise.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'portfolio';
-        
+
         let base_url = `${prenom}-${nom}-${titre}`;
         url_publique = base_url;
         let counter = 1;
@@ -211,7 +214,7 @@ export const createPortfolio = async (id_etudiant, data) => {
             counter++;
         }
     }
-    
+
     return prisma.portfolio.create({
         data: {
             id_etudiant,
@@ -227,14 +230,14 @@ export const createPortfolio = async (id_etudiant, data) => {
 
 export const updatePortfolio = async (id_portfolio, id_etudiant, data) => {
     const { titre_personnalise, sous_titre, url_publique, id_modele, est_publie } = data;
-    
+
     // First, verify the portfolio belongs to the student
     const existing = await prisma.portfolio.findFirst({
         where: { id_portfolio, id_etudiant }
     });
-    
+
     if (!existing) return null;
-    
+
     return prisma.portfolio.update({
         where: { id_portfolio },
         data: {
@@ -255,7 +258,7 @@ export const publishPortfolio = async (id_portfolio, id_etudiant, est_publie) =>
     const existing = await prisma.portfolio.findFirst({
         where: { id_portfolio, id_etudiant }
     });
-    
+
     if (!existing) return null;
 
     return prisma.portfolio.update({
