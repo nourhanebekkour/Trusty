@@ -16,7 +16,7 @@
 <script setup>
 import '@/assets/professional.css'
 import '@/assets/professional-pages.css'
-import ProfessionalTopbar from './ProfessionalTopbar.vue'
+import ProfessionalTopbar from './ProfessionalTopbar.vue/index.js'
 import ProfessionalSidebar from './ProfessionalSidebar.vue'
 import ProfessionalFooter from './ProfessionalFooter.vue'
 </script>
