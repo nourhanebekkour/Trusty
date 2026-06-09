@@ -160,7 +160,7 @@ const displayUnreadCount = computed(() => {
 
 const fullName = computed(() => {
   if (!auth.user) {
-    return 'Chargement...'
+    return 'Chargement…'
   }
 
   const firstName = auth.user.prenom || ''
