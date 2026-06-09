@@ -899,11 +899,18 @@ const keyNumbers = computed(() => [
     { value: stages.value.length || 0, label: 'Stages' },
 ])
 
-const parcours = [
-    { year: '2022',      title: 'Baccalauréat Sciences Maths', school: 'Lycée Mohamed V',  mention: 'Mention Très Bien' },
-    { year: '2022-2024', title: 'Cycle Préparatoire',          school: 'CPGE Tanger',       mention: null },
-    { year: '2024-2025', title: 'Génie Informatique — 1ère année', school: 'ENSA Tanger',  mention: null },
-]
+const parcours = computed(() => {
+    const formations = portfolioData.value?.etudiant?.formations || []
+    if (!formations.length) return []
+    return formations.map(f => ({
+        year: f.date_fin
+            ? `${new Date(f.date_debut).getFullYear()}–${new Date(f.date_fin).getFullYear()}`
+            : `${new Date(f.date_debut).getFullYear()}–présent`,
+        title:   f.diplome,
+        school:  f.etablissement,
+        mention: f.mention || null
+    }))
+})
 
 const contributions = Array.from({ length: 52 }, () =>
     Array.from({ length: 7 }, () => Math.floor(Math.random() * 5))
