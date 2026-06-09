@@ -12,7 +12,7 @@
         <!-- ── STICKY NAV ────────────────────────────────────────────── -->
         <nav class="pf2-nav" :class="{ 'pf2-nav--scrolled': isScrolled }">
             <div class="pf2-nav__inner">
-                <a href="/" class="pf2-back">
+                <a href="/portfolio" class="pf2-back">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M19 12H5M5 12l7 7M5 12l7-7" />
                     </svg>
@@ -241,49 +241,41 @@
                     </div>
                     <div class="pf2-skills__radar">
                         <h3 class="pf2-skills__subtitle">Vue d'ensemble par domaine</h3>
-                        <svg class="pf2-radar-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
-                            <!-- grille -->
-                            <polygon points="150,30 255,97.5 255,202.5 150,270 45,202.5 45,97.5" fill="none" stroke="#E5E8ED" stroke-width="1"/>
-                            <polygon points="150,60 232.5,112.5 232.5,187.5 150,240 67.5,187.5 67.5,112.5" fill="none" stroke="#E5E8ED" stroke-width="1"/>
-                            <polygon points="150,90 210,127.5 210,172.5 150,210 90,172.5 90,127.5" fill="none" stroke="#E5E8ED" stroke-width="1"/>
-                            <polygon points="150,120 187.5,142.5 187.5,157.5 150,180 112.5,157.5 112.5,142.5" fill="none" stroke="#E5E8ED" stroke-width="1"/>
-                            <!-- axes -->
-                            <line x1="150" y1="150" x2="150" y2="30"   stroke="#D1D5DB" stroke-width="1"/>
-                            <line x1="150" y1="150" x2="255" y2="97.5" stroke="#D1D5DB" stroke-width="1"/>
-                            <line x1="150" y1="150" x2="255" y2="202.5" stroke="#D1D5DB" stroke-width="1"/>
-                            <line x1="150" y1="150" x2="150" y2="270"  stroke="#D1D5DB" stroke-width="1"/>
-                            <line x1="150" y1="150" x2="45" y2="202.5" stroke="#D1D5DB" stroke-width="1"/>
-                            <line x1="150" y1="150" x2="45" y2="97.5"  stroke="#D1D5DB" stroke-width="1"/>
-                            <!-- data : DevOps 95%, Cloud 82%, Sécurité 70%, Web 65%, Data 55%, IaC 80% -->
-                            <!-- calcul : centre=150, rayon max=120, val*1.2 depuis centre -->
-                            <polygon
-                                points="150,36 245.4,105.6 233.4,201 150,246 66.6,195 82.8,100.2"
-                                fill="rgba(90,137,216,0.18)"
-                                stroke="#5A89D8"
-                                stroke-width="2"
-                                stroke-linejoin="round"/>
-                            <!-- points data -->
-                            <circle cx="150"  cy="36"   r="4" fill="#5A89D8"/>
-                            <circle cx="245.4" cy="105.6" r="4" fill="#5A89D8"/>
-                            <circle cx="233.4" cy="201"  r="4" fill="#5A89D8"/>
-                            <circle cx="150"  cy="246"  r="4" fill="#5A89D8"/>
-                            <circle cx="66.6" cy="195"  r="4" fill="#5A89D8"/>
-                            <circle cx="82.8" cy="100.2" r="4" fill="#5A89D8"/>
-                            <!-- labels -->
-                            <text x="150"  y="22"   text-anchor="middle" font-size="11" font-family="Inter,sans-serif" font-weight="600" fill="#0F2040">DevOps</text>
-                            <text x="268"  y="100"  text-anchor="start"  font-size="11" font-family="Inter,sans-serif" font-weight="600" fill="#0F2040">Cloud</text>
-                            <text x="268"  y="212"  text-anchor="start"  font-size="11" font-family="Inter,sans-serif" font-weight="600" fill="#0F2040">Sécurité</text>
-                            <text x="150"  y="286"  text-anchor="middle" font-size="11" font-family="Inter,sans-serif" font-weight="600" fill="#0F2040">Web</text>
-                            <text x="32"   y="212"  text-anchor="end"    font-size="11" font-family="Inter,sans-serif" font-weight="600" fill="#0F2040">Data</text>
-                            <text x="32"   y="100"  text-anchor="end"    font-size="11" font-family="Inter,sans-serif" font-weight="600" fill="#0F2040">IaC</text>
-                            <!-- valeurs -->
-                            <text x="156"  y="34"   font-size="9" fill="#2B5090" font-family="Inter,sans-serif">95%</text>
-                            <text x="248"  y="103"  font-size="9" fill="#2B5090" font-family="Inter,sans-serif">82%</text>
-                            <text x="236"  y="209"  font-size="9" fill="#2B5090" font-family="Inter,sans-serif">70%</text>
-                            <text x="140"  y="258"  font-size="9" fill="#2B5090" font-family="Inter,sans-serif">65%</text>
-                            <text x="46"   y="200"  font-size="9" fill="#2B5090" font-family="Inter,sans-serif">55%</text>
-                            <text x="60"   y="100"  font-size="9" fill="#2B5090" font-family="Inter,sans-serif">80%</text>
-                        </svg>
+<svg class="pf2-radar-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+    <!-- grille -->
+    <polygon points="150,30 255,97.5 255,202.5 150,270 45,202.5 45,97.5"   fill="none" stroke="#E5E8ED" stroke-width="1"/>
+    <polygon points="150,60 232.5,112.5 232.5,187.5 150,240 67.5,187.5 67.5,112.5" fill="none" stroke="#E5E8ED" stroke-width="1"/>
+    <polygon points="150,90 210,127.5 210,172.5 150,210 90,172.5 90,127.5"  fill="none" stroke="#E5E8ED" stroke-width="1"/>
+    <polygon points="150,120 187.5,142.5 187.5,157.5 150,180 112.5,157.5 112.5,142.5" fill="none" stroke="#E5E8ED" stroke-width="1"/>
+    <!-- axes -->
+    <line v-for="ax in radarData.axes" :key="ax.i"
+        x1="150" y1="150" :x2="ax.x2" :y2="ax.y2"
+        stroke="#D1D5DB" stroke-width="1"/>
+    <!-- polygone données -->
+    <polygon
+        v-if="radarData.polyPoints"
+        :points="radarData.polyPoints"
+        fill="rgba(90,137,216,0.18)"
+        stroke="#5A89D8"
+        stroke-width="2"
+        stroke-linejoin="round"/>
+    <!-- points -->
+    <circle v-for="pt in radarData.points" :key="'d'+pt.i"
+        :cx="pt.x" :cy="pt.y" r="4" fill="#5A89D8"/>
+    <!-- labels -->
+    <text v-for="pt in radarData.points" :key="'l'+pt.i"
+        :x="pt.lx" :y="pt.ly"
+        :text-anchor="pt.anchor"
+        font-size="11" font-family="Inter,sans-serif" font-weight="600" fill="#0F2040">
+        {{ pt.label }}
+    </text>
+    <!-- valeurs -->
+    <text v-for="pt in radarData.points" :key="'v'+pt.i"
+        :x="pt.vx" :y="pt.vy"
+        font-size="9" fill="#2B5090" font-family="Inter,sans-serif">
+        {{ pt.valLabel }}
+    </text>
+</svg>
                     </div>
                 </div>
                 <div class="pf2-soft-section">
@@ -784,6 +776,43 @@ const skills = computed(() => {
         soft: competences
             .filter(c => c.competence.type === 'COMPORTEMENTALE')
             .map(c => c.competence.nom)
+    }
+})
+
+const RADAR_AXES = [
+    { dx: 0,    dy: -120, anchor: 'middle', ldx: 0,    ldy: -140 },
+    { dx: 105,  dy: -52.5, anchor: 'start', ldx: 122,  ldy: -58  },
+    { dx: 105,  dy:  52.5, anchor: 'start', ldx: 122,  ldy:  65  },
+    { dx: 0,    dy:  120, anchor: 'middle', ldx: 0,    ldy:  140 },
+    { dx: -105, dy:  52.5, anchor: 'end',   ldx: -122, ldy:  65  },
+    { dx: -105, dy: -52.5, anchor: 'end',   ldx: -122, ldy: -58  },
+]
+
+const radarData = computed(() => {
+    const techSkills = [...skills.value.technical.slice(0, 6)]
+    while (techSkills.length < 6) techSkills.push({ name: '', pct: 0 })
+
+    const points = techSkills.map((s, i) => {
+        const ax = RADAR_AXES[i]
+        const pct = s.pct / 100
+        return {
+            i,
+            x:      150 + pct * ax.dx,
+            y:      150 + pct * ax.dy,
+            lx:     150 + ax.ldx,
+            ly:     150 + ax.ldy,
+            anchor: ax.anchor,
+            label:  s.name,
+            valLabel: s.pct > 0 ? `${s.pct}%` : '',
+            vx:     150 + pct * ax.dx + (ax.dx > 0 ? 6 : ax.dx < 0 ? -6 : 0),
+            vy:     150 + pct * ax.dy + (ax.dy > 0 ? 10 : -4),
+        }
+    })
+
+    return {
+        points,
+        axes: RADAR_AXES.map((ax, i) => ({ i, x2: 150 + ax.dx, y2: 150 + ax.dy })),
+        polyPoints: points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
     }
 })
 
