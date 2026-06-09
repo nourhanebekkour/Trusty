@@ -1,4 +1,4 @@
-import api from '@/api'
+import api from '@/services/api'
 
 // ─── Helper extraction ────────────────────────────────────────────────────────
 function extractData(res) {
@@ -72,6 +72,24 @@ function normalizeReco(r) {
     status:            r.status  ?? 'EN_ATTENTE',
     date_creation:     r.date_creation ?? null,
     auteur,
+  }
+}
+
+// ─── Normalise un objet projet ────────────────────────────────────────────────
+function normalizeProject(p) {
+  return {
+    id: p.id_projet || p.id,
+    titre: p.titre || p.nom || 'Sans titre',
+    type: p.type_projet || p.type || '',
+    status: p.status_validation || p.status || 'EN_ATTENTE',
+    date_debut: p.date_debut || '',
+    description: p.description || '',
+    est_visible_portfolio: p.est_visible_portfolio ?? true,
+    est_createur: p.est_createur ?? false,
+    role_joue: p.role_joue || '',
+    technologies: p.technologies || [],
+    date_fin: p.date_fin || '',
+    lien: p.lien || '',
   }
 }
 
@@ -164,7 +182,7 @@ export async function fetchProjects(idEtudiant) {
 
     if (!Array.isArray(data) || isEmpty(data)) {
       console.warn('[fetchProjects] réponse vide → mock')
-      return MOCK_PROJECTS
+      return MOCK_PROJECTS.map(normalizeProject)
     }
 
     const filtered = data.reduce((acc, projet) => {
@@ -186,13 +204,13 @@ export async function fetchProjects(idEtudiant) {
 
     if (isEmpty(filtered)) {
       console.warn('[fetchProjects] aucun projet → mock')
-      return MOCK_PROJECTS
+      return MOCK_PROJECTS.map(normalizeProject)
     }
 
-    return filtered
+    return filtered.map(normalizeProject)
   } catch (err) {
     console.error('[fetchProjects] erreur API → mock', err)
-    return MOCK_PROJECTS
+    return MOCK_PROJECTS.map(normalizeProject)
   }
 }
 
