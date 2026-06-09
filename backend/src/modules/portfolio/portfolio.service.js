@@ -49,6 +49,9 @@ const portfolioIncludeConfig = {
                 }
             },
             depots_github: true,
+            formations: {
+                orderBy: { date_debut: 'asc' }
+            },
             participations_projets: {
                 where: {
                     projet: {
@@ -68,9 +71,6 @@ const portfolioIncludeConfig = {
                         }
                     }
                 }
-            },
-            formations: {
-                orderBy: { date_debut: 'asc' }
             },
             recommendation: {
                 where: {
