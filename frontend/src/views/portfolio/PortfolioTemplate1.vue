@@ -131,7 +131,7 @@
             </section>
 
             <!-- ── PARCOURS ACADÉMIQUE ────────────────────────────────── -->
-            <section id="parcours" class="pf2-section pf2-section--mid">
+            <section v-if="editConfig.sections_visibles.parcours" id="parcours" class="pf2-section pf2-section--mid">
                 <div class="pf2-section__header">
                     <p class="pf2-section__label">Mon parcours</p>
                     <h2 class="pf2-section__title">Parcours Académique</h2>
@@ -162,7 +162,7 @@
             </section>
 
             <!-- ── PROJETS ────────────────────────────────────────────── -->
-            <section id="projets" class="pf2-section pf2-section--dark">
+            <section v-if="editConfig.sections_visibles.projets" id="projets" class="pf2-section pf2-section--dark">
                 <div class="pf2-section__header pf2-section__header--with-nav">
                     <div>
                         <p class="pf2-section__label">Mes réalisations</p>
@@ -217,7 +217,7 @@
             </section>
 
             <!-- ── COMPÉTENCES ────────────────────────────────────────── -->
-            <section id="competences" class="pf2-section pf2-section--light">
+            <section v-if="editConfig.sections_visibles.competences" id="competences" class="pf2-section pf2-section--light">
                 <div class="pf2-section__header">
                     <p class="pf2-section__label">Expertise</p>
                     <h2 class="pf2-section__title">Compétences</h2>
@@ -287,7 +287,7 @@
             </section>
 
             <!-- ── STAGES ─────────────────────────────────────────────── -->
-            <section id="stages" class="pf2-section pf2-section--dark">
+            <section v-if="editConfig.sections_visibles.stages" id="stages" class="pf2-section pf2-section--dark">
                 <div class="pf2-section__header">
                     <p class="pf2-section__label">Expériences</p>
                     <h2 class="pf2-section__title">Stages et Expériences</h2>
@@ -346,7 +346,7 @@
             </section>
 
             <!-- ── ACTIVITÉS ──────────────────────────────────────────── -->
-            <section id="activites" class="pf2-section pf2-section--light">
+            <section v-if="editConfig.sections_visibles.activites" id="activites" class="pf2-section pf2-section--light">
                 <div class="pf2-section__header">
                     <p class="pf2-section__label">Engagement</p>
                     <h2 class="pf2-section__title">Activités Parascolaires</h2>
@@ -388,7 +388,7 @@
             </section>
 
             <!-- ── BADGES ─────────────────────────────────────────────── -->
-            <section id="badges" class="pf2-section pf2-section--dark">
+            <section v-if="editConfig.sections_visibles.badges" id="badges" class="pf2-section pf2-section--dark">
                 <div class="pf2-section__header">
                     <p class="pf2-section__label">Distinctions</p>
                     <h2 class="pf2-section__title">Badges & Accomplissements</h2>
@@ -408,7 +408,7 @@
             </section>
 
             <!-- ── RECOMMANDATIONS ────────────────────────────────────── -->
-            <section id="recommandations" class="pf2-section pf2-section--mid">
+            <section v-if="editConfig.sections_visibles.recommandations" id="recommandations" class="pf2-section pf2-section--mid">
                 <div class="pf2-section__header pf2-section__header--with-nav">
                     <div>
                         <p class="pf2-section__label">Ce qu'on dit de moi</p>
@@ -447,7 +447,7 @@
             </section>
 
             <!-- ── LETTRES ────────────────────────────────────────────── -->
-            <section id="lettres" class="pf2-section pf2-section--dark">
+            <section v-if="editConfig.sections_visibles.lettres" id="lettres" class="pf2-section pf2-section--dark">
                 <div class="pf2-section__header">
                     <p class="pf2-section__label">Documents officiels</p>
                     <h2 class="pf2-section__title">Lettres de Recommandation</h2>
@@ -497,7 +497,7 @@
             </section>
 
             <!-- ── GITHUB ─────────────────────────────────────────────── -->
-            <section v-if="student.github" id="github" class="pf2-section pf2-section--light">
+            <section v-if="student.github && editConfig.sections_visibles.github" id="github" class="pf2-section pf2-section--light">
                 <div class="pf2-section__header">
                     <p class="pf2-section__label">Open source</p>
                     <h2 class="pf2-section__title">Activité GitHub</h2>
@@ -635,15 +635,183 @@
             </div>
         </div>
         </template>
+<!-- ── EDIT PANEL ─────────────────────────────────────────────────── -->
+<template v-if="isEditMode">
 
+  <!-- FAB -->
+  <button class="pf2-edit-fab" @click="panelOpen = !panelOpen">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
+    Modifier
+  </button>
+
+  <!-- PANEL -->
+  <div :class="['pf2-edit-panel', panelOpen && 'pf2-edit-panel--open']">
+
+    <div class="pf2-ep-header">
+      <h3>Personnalisation</h3>
+      <button @click="panelOpen = false">✕</button>
+    </div>
+
+    <div class="pf2-ep-body">
+
+      <!-- Titre -->
+      <div class="pf2-ep-field">
+        <label>Titre du portfolio</label>
+        <input v-model="editConfig.titre_personnalise" placeholder="ex: Portfolio DevOps" />
+      </div>
+
+      <!-- Bio -->
+      <div class="pf2-ep-field">
+        <label>Sous-titre / Bio</label>
+        <textarea v-model="editConfig.sous_titre" rows="3" placeholder="Une phrase qui te décrit..."></textarea>
+      </div>
+
+      <!-- Couleur accent -->
+      <div class="pf2-ep-field">
+        <label>Couleur accent</label>
+        <div class="pf2-ep-color-row">
+          <input type="color" v-model="editConfig.couleur_accent" />
+          <span class="pf2-ep-color-val">{{ editConfig.couleur_accent }}</span>
+        </div>
+      </div>
+
+      <!-- Sections visibles -->
+      <div class="pf2-ep-field">
+        <label>Sections visibles</label>
+        <div class="pf2-ep-toggles">
+          <div v-for="(val, key) in editConfig.sections_visibles" :key="key" class="pf2-ep-toggle">
+            <span>{{ key.charAt(0).toUpperCase() + key.slice(1) }}</span>
+            <button
+              :class="['pf2-ep-toggle__btn', editConfig.sections_visibles[key] && 'pf2-ep-toggle__btn--on']"
+              @click="editConfig.sections_visibles[key] = !editConfig.sections_visibles[key]"
+            >
+              {{ editConfig.sections_visibles[key] ? 'Visible' : 'Cachée' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Projets -->
+      <div class="pf2-ep-field">
+        <label>Projets affichés</label>
+        <div class="pf2-ep-checks">
+          <div v-for="p in portfolioData?.etudiant?.participations_projets" :key="p.projet.id_projet" class="pf2-ep-check">
+            <input type="checkbox" :value="p.projet.id_projet" v-model="editConfig.projets_selectionnes" :id="'pr-'+p.projet.id_projet" />
+            <label :for="'pr-'+p.projet.id_projet">{{ p.projet.titre }}</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stages -->
+      <div class="pf2-ep-field">
+        <label>Stages affichés</label>
+        <div class="pf2-ep-checks">
+          <div v-for="s in portfolioData?.etudiant?.stages" :key="s.id_stage" class="pf2-ep-check">
+            <input type="checkbox" :value="s.id_stage" v-model="editConfig.stages_selectionnes" :id="'st-'+s.id_stage" />
+            <label :for="'st-'+s.id_stage">{{ s.poste }} — {{ s.entreprise }}</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compétences -->
+      <div class="pf2-ep-field">
+        <label>Compétences affichées</label>
+        <div class="pf2-ep-checks">
+          <div v-for="c in portfolioData?.etudiant?.competences" :key="c.id_competence" class="pf2-ep-check">
+            <input type="checkbox" :value="c.id_competence" v-model="editConfig.competences_selectionnees" :id="'cp-'+c.id_competence" />
+            <label :for="'cp-'+c.id_competence">{{ c.competence.nom }}</label>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="pf2-ep-footer">
+      <button class="pf2-btn-accent" :disabled="saving" @click="saveEdit" style="width:100%;justify-content:center;padding:12px;">
+        {{ saving ? 'Enregistrement...' : 'Enregistrer les modifications' }}
+      </button>
+    </div>
+
+  </div>
+
+</template>
     </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, reactive } from 'vue'
 import { useRoute } from 'vue-router'
+import api from '@/api'
 
-const accentColor = '#5A89D8'
+const route = useRoute()
+const portfolioData = ref(null)
+const loading = ref(true)
+const error = ref(null)
+
+const accentColor = computed(() => portfolioData.value?.couleur_accent || '#5A89D8')
+const isEditMode = computed(() => route.query.edit === 'true')
+const panelOpen = ref(false)
+const saving = ref(false)
+const portfolioId = computed(() => portfolioData.value?.id_portfolio)
+const editConfig = reactive({
+  titre_personnalise: '',
+  sous_titre: '',
+  couleur_accent: '#5A89D8',
+  projets_selectionnes: [],
+  competences_selectionnees: [],
+  stages_selectionnes: [],
+  sections_visibles: {
+    parcours: true,
+    projets: true,
+    competences: true,
+    stages: true,
+    activites: true,
+    badges: true,
+    recommandations: true,
+    lettres: true,
+    github: true,
+  }
+})
+watch(portfolioData, (val) => {
+  if (!val) return
+  editConfig.titre_personnalise = val.titre_personnalise || ''
+  editConfig.sous_titre = val.sous_titre || ''
+  editConfig.couleur_accent = val.couleur_accent || '#5A89D8'
+  editConfig.projets_selectionnes = val.projets_selectionnes || []
+  editConfig.competences_selectionnees = val.competences_selectionnees || []
+  editConfig.stages_selectionnes = val.stages_selectionnes || []
+  editConfig.sections_visibles = val.sections_config || editConfig.sections_visibles
+})
+async function saveEdit() {
+  saving.value = true
+  try {
+    await api.put(`/portfolio/me/${portfolioId.value}`, {
+      titre_personnalise: editConfig.titre_personnalise,
+      sous_titre: editConfig.sous_titre,
+      couleur_accent: editConfig.couleur_accent,
+      projets_selectionnes: editConfig.projets_selectionnes,
+      competences_selectionnees: editConfig.competences_selectionnees,
+      stages_selectionnes: editConfig.stages_selectionnes,
+      sections_config: editConfig.sections_visibles,
+    })
+    // mise à jour locale sans reload
+    portfolioData.value.titre_personnalise = editConfig.titre_personnalise
+    portfolioData.value.sous_titre = editConfig.sous_titre
+    portfolioData.value.couleur_accent = editConfig.couleur_accent
+    portfolioData.value.projets_selectionnes = editConfig.projets_selectionnes
+    portfolioData.value.competences_selectionnees = editConfig.competences_selectionnees
+    portfolioData.value.stages_selectionnes = editConfig.stages_selectionnes
+    portfolioData.value.sections_config = editConfig.sections_visibles
+    panelOpen.value = false
+  } catch(e) {
+    console.error(e)
+  } finally {
+    saving.value = false
+  }
+}
 const isScrolled = ref(false)
 const activeTab = ref('hero')
 const projectsIdx = ref(0)
@@ -666,10 +834,6 @@ const tabs = computed(() => [
     ...(student.value.github ? [{ id: 'github', label: 'GitHub' }] : []),
 ])
 
-const route = useRoute()
-const portfolioData = ref(null)
-const loading = ref(true)
-const error = ref(null)
 
 onMounted(async () => {
     window.addEventListener('scroll', handleScroll)
@@ -738,7 +902,10 @@ const studentStats = computed(() => [
 
 const projects = computed(() => {
     if (!portfolioData.value) return []
-    return (portfolioData.value.etudiant.participations_projets || []).map(p => ({
+    const selected = portfolioData.value.projets_selectionnes
+    return (portfolioData.value.etudiant.participations_projets || [])
+    .filter(p => !selected?.length || selected.includes(p.projet.id_projet))
+    .map(p => ({
         id: p.projet.id_projet,
         category: p.projet.type_projet || 'Projet',
         title: p.projet.titre,
@@ -767,7 +934,10 @@ const skills = computed(() => {
     const competences = portfolioData.value.etudiant.competences || []
     return {
         technical: competences
-            .filter(c => c.competence.type === 'TECHNIQUE')
+            .filter(c => {
+            const selectedC = portfolioData.value.competences_selectionnees
+            return c.competence.type === 'TECHNIQUE' && (!selectedC?.length || selectedC.includes(c.id_competence))
+            })
             .map(c => ({
                 name: c.competence.nom,
                 level: c.niveau_maitrise,
@@ -818,7 +988,10 @@ const radarData = computed(() => {
 
 const stages = computed(() => {
     if (!portfolioData.value) return []
-    return (portfolioData.value.etudiant.stages || []).map(s => ({
+    const selectedS = portfolioData.value.stages_selectionnes
+    return (portfolioData.value.etudiant.stages || [])
+    .filter(s => !selectedS?.length || selectedS.includes(s.id_stage))
+    .map(s => ({
         id: s.id_stage,
         company: s.entreprise,
         role: s.poste,
@@ -936,7 +1109,7 @@ function downloadPDF() { window.print() }
 
 function handleScroll() {
     isScrolled.value = window.scrollY > 80
-    const ids = ['hero', ...tabs.map(t => t.id)]
+    const ids = ['hero', ...tabs.value.map(t => t.id)]
     for (const id of ids) {
         const el = document.getElementById(id)
         if (el) {
@@ -1899,4 +2072,86 @@ function handleScroll() {
     border-radius: 50%;
     animation: pf2spin 0.8s linear infinite;
 }
+
+/* ── EDIT FAB ────────────────────────────────────────────────────────── */
+.pf2-edit-fab {
+  position: fixed; bottom: 28px; right: 28px; z-index: 300;
+  display: flex; align-items: center; gap: 8px;
+  background: #2B5090; color: #fff; border: none;
+  padding: 12px 20px; border-radius: 30px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(43,80,144,0.4);
+  font-family: inherit; transition: background 0.2s;
+}
+.pf2-edit-fab:hover { background: #3B6BC4; }
+
+/* ── EDIT PANEL ──────────────────────────────────────────────────────── */
+.pf2-edit-panel {
+  position: fixed; top: 0; right: -400px; bottom: 0; width: 360px;
+  background: #fff; border-left: 1px solid #E5E8ED;
+  z-index: 400; display: flex; flex-direction: column;
+  transition: right 0.3s ease;
+  box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+}
+.pf2-edit-panel--open { right: 0; }
+
+.pf2-ep-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px; border-bottom: 1px solid #E5E8ED; flex-shrink: 0;
+}
+.pf2-ep-header h3 { font-size: 16px; font-weight: 700; color: #0F2040; margin: 0; }
+.pf2-ep-header button { background: none; border: none; font-size: 18px; cursor: pointer; color: #6B7280; }
+
+.pf2-ep-body {
+  flex: 1; overflow-y: auto; padding: 20px 24px;
+  display: flex; flex-direction: column; gap: 24px;
+}
+
+.pf2-ep-field { display: flex; flex-direction: column; gap: 8px; }
+.pf2-ep-field > label {
+  font-size: 11px; font-weight: 700; color: #6B7280;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.pf2-ep-field input:not([type="checkbox"]):not([type="color"]),
+.pf2-ep-field textarea {
+  border: 1px solid #D1D5DB; border-radius: 8px; padding: 8px 12px;
+  font-size: 13px; color: #1A1D2E; font-family: inherit;
+  outline: none; transition: border-color 0.2s; resize: vertical;
+}
+.pf2-ep-field input:focus,
+.pf2-ep-field textarea:focus { border-color: #2B5090; }
+
+.pf2-ep-color-row { display: flex; align-items: center; gap: 12px; }
+.pf2-ep-field input[type="color"] {
+  width: 48px; height: 36px; border-radius: 8px;
+  border: 1px solid #D1D5DB; cursor: pointer; padding: 2px;
+}
+.pf2-ep-color-val { font-size: 13px; color: #374151; font-weight: 500; }
+
+.pf2-ep-toggles { display: flex; flex-direction: column; gap: 8px; }
+.pf2-ep-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; background: #F8FAFC; border-radius: 8px;
+  border: 1px solid #E5E8ED;
+}
+.pf2-ep-toggle span { font-size: 13px; color: #374151; font-weight: 500; }
+.pf2-ep-toggle__btn {
+  font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px;
+  border: 1px solid #D1D5DB; background: #fff; color: #9CA3AF;
+  cursor: pointer; transition: all 0.15s; font-family: inherit;
+}
+.pf2-ep-toggle__btn--on {
+  background: rgba(43,80,144,0.1); color: #2B5090;
+  border-color: rgba(43,80,144,0.3);
+}
+
+.pf2-ep-checks { display: flex; flex-direction: column; gap: 8px; }
+.pf2-ep-check { display: flex; align-items: center; gap: 10px; }
+.pf2-ep-check input[type="checkbox"] { accent-color: #2B5090; width: 15px; height: 15px; cursor: pointer; }
+.pf2-ep-check label { font-size: 13px; color: #374151; cursor: pointer; }
+
+.pf2-ep-footer {
+  padding: 16px 24px; border-top: 1px solid #E5E8ED; flex-shrink: 0;
+}
+
 </style>
