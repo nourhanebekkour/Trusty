@@ -64,7 +64,8 @@
 
         <div class="pf-card__actions">
           <button class="btn btn--ghost" @click="editPortfolio(p)">Modifier</button>
-          <button class="btn btn--ghost" :disabled="!p.est_publie" @click="viewPortfolio(p)">Voir</button>
+          <button class="btn btn--ghost" @click="viewPortfolio(p)">Voir</button>
+          <button class="btn btn--delete" @click="deletePortfolio(p)">Supprimer</button>
           <button
             :class="['btn', p.est_publie ? 'btn--unpublish' : 'btn--publish']"
             :disabled="publishingId === p.id_portfolio"
@@ -355,6 +356,15 @@ async function togglePublish(p) {
     console.error(e)
   } finally {
     publishingId.value = null
+  }
+}
+async function deletePortfolio(p) {
+  if (!confirm(`Supprimer "${p.titre_personnalise}" ?`)) return
+  try {
+    await api.delete(`/portfolio/me/${p.id_portfolio}`)
+    portfolios.value = portfolios.value.filter(pf => pf.id_portfolio !== p.id_portfolio)
+  } catch (e) {
+    errorMsg.value = e.response?.data?.message ?? 'Erreur lors de la suppression.'
   }
 }
 </script>
@@ -667,4 +677,12 @@ async function togglePublish(p) {
   .template-grid { grid-template-columns: 1fr 1fr; }
   .tpl-showcase-grid { grid-template-columns: 1fr 1fr; }
 }
+
+.btn--delete {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: transparent; color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px;
+  padding: 6px 12px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: background 0.15s;
+}
+.btn--delete:hover { background: rgba(239, 68, 68, 0.08); }
 </style>
