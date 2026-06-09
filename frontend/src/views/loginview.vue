@@ -129,20 +129,13 @@ const BASE_LOCK_TIME = 10 * 1000 // 10 secondes, double à chaque dépassement
 
 /* HELPERS */
 const normalizeEmail = (v) => v.trim().toLowerCase()
+
 const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
-const isStrongPassword = (v) => {
-  if (typeof v !== 'string') return false
-  return (
-    v.length >= 8 &&
-    /[A-Z]/.test(v) &&
-    /[a-z]/.test(v) &&
-    /[0-9]/.test(v) &&
-    /[!@#$%^&*(),.?":{}|<>_\-\\/\[\]=+;]/.test(v)
-  )
-}
+
 
 /* LOCK LOGIC */
 const isLocked = computed(() => lockUntil.value && Date.now() < lockUntil.value)
+
 const applyLock = () => {
   const delay = BASE_LOCK_TIME * Math.pow(2, Math.max(0, loginAttempts.value - MAX_ATTEMPTS))
   lockUntil.value = Date.now() + delay
@@ -188,9 +181,6 @@ const validateFields = () => {
   if (!password.value) {
     fieldErrors.value.password = 'Mot de passe requis'
     ok = false
-  } else if (!isStrongPassword(password.value)) {
-    fieldErrors.value.password = 'Min 8 caractères, majuscule, minuscule, nombre et symbole'
-    ok = false
   }
 
   return ok
@@ -208,6 +198,7 @@ const isDisabled = computed(() =>
 /* SUBMIT */
 const handleLogin = async () => {
   if (isSubmitting.value || isLocked.value) return
+
   clearErrors()
   if (!validateFields()) return
 

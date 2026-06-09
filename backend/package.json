@@ -47,21 +47,20 @@
     "nodemailer": "^8.0.7",
     "nodemon": "^3.1.14",
     "swagger-ui-express": "^5.0.1",
-    "swagger-autogen": "^2.23.7",
     "swot-node": "^2.0.1489",
-    "cross-env": "^10.1.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@faker-js/faker": "^10.4.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
+    "cross-env": "^10.1.0",
     "dotenv-cli": "^11.0.0",
     "eslint": "^8.0.0",
     "jest": "^30.3.0",
     "jest-html-reporter": "^4.4.0",
     "nodemon": "^3.1.14",
     "prisma": "^6.19.3",
-    "supertest": "^7.2.2"
+    "supertest": "^7.2.2",
+    "swagger-autogen": "^2.23.7"
   }
 }
