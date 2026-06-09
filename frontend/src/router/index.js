@@ -156,6 +156,7 @@ const router = createRouter({
       path: '/lettres',
       name: 'lettres',
       component: LettresRecommandation,
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
       path: '/stage',
