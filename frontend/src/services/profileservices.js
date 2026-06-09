@@ -1,4 +1,4 @@
-import api from '@/api'
+import api from '@/services/api'
 
 // ─── GitHub API ──────────────────────────────────────────────────────────────
 
@@ -38,6 +38,16 @@ export async function fetchGithubRepos(username) {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const MOCK_DEPOTS = [
+  {
+    id_depot: 'depot1',
+    nom_depot: 'my-portfolio',
+    url_github: 'https://github.com/ahmed/my-portfolio',
+    description_github: 'Portfolio personnel en Vue.js',
+    langage_principal: 'JavaScript',
+  },
+]
 
 function extractData(res) {
   const body = res?.data ?? res

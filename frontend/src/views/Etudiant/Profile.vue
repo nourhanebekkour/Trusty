@@ -111,7 +111,7 @@ const closeEditModal = () => { showEditModal.value = false }
 const onSaveProfile = async (formData) => {
   saving.value = true
   try {
-    const res      = await saveProfile(user.value.id_utilisateur, formData)
+    const res      = await patchProfile(user.value.id_utilisateur, formData)
     user.value     = res.data
     authStore.user = res.data
     closeEditModal()
@@ -141,17 +141,10 @@ const onAvatarChange = async (file) => {
 
 // ── Compétences ───────────────────────────────────────────────────────────────
 
-const handleAddSkill = async ({ competence, niveau_maitrise }) => {
-  const id_etudiant = user.value?.etudiant?.id_etudiant ?? user.value?.id_utilisateur
-
-  if (!id_etudiant) {
-    console.error('[handleAddSkill] id_etudiant introuvable :', user.value)
-    return
-  }
-
+const onSkillAdded = async (skillName) => {
   try {
-    const res = await addSkill(id_etudiant, competence.nom, niveau_maitrise, competence.type ?? 'TECHNIQUE')
-
+    const res = await addSkill(skillName)
+    if (!user.value.etudiant) user.value.etudiant = {}
     if (!user.value.etudiant.competences) user.value.etudiant.competences = []
     user.value.etudiant.competences.push(res.data)
 
@@ -177,6 +170,8 @@ const handleRemoveSkill = async (id_competence) => {
 // ── Montage ───────────────────────────────────────────────────────────────────
 
 onMounted(loadProfile)
+
+defineExpose({ user })
 </script>
 
 <style scoped>
