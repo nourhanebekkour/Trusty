@@ -11,6 +11,7 @@ router.get('/public/etudiant/:id_etudiant', recommandationController.recupererRe
 
 // --- ROUTES ÉTUDIANT (Recommandations reçues, validées ou non) ---
 router.get('/mes-recommandations-recus', recommandationController.recupererMesRecommandationsRecus);
+router.get('/mes-recommandations-emises', recommandationController.recupererMesRecommandationsEmises);
 
 // --- ROUTES PRIVÉES / GESTION ---
 router.post('/', validate(recommandationSchema), recommandationController.creerRecommandation);

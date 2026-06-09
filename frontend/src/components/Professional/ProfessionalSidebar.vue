@@ -1,152 +1,176 @@
 <template>
-  <aside class="professional-sidebar">
-    <div class="professional-sidebar__brand">
-      <div class="professional-sidebar__logo">P</div>
+  <aside class="sidebar">
 
-      <div>
-        <h2>Professional</h2>
-        <span>Company area</span>
-      </div>
-    </div>
+    <nav class="sidebar-nav">
+      <router-link to="/professional/dashboard" class="nav-item">
+        <img :src="iconDashboard" class="nav-icon" />
+        <span class="nav-label">Dashboard</span>
+      </router-link>
 
-    <nav class="professional-sidebar__nav">
-      <RouterLink to="/professional/dashboard" active-class="active">
-        Dashboard
-      </RouterLink>
+      <router-link to="/professional/recommandations" class="nav-item">
+        <img :src="iconRecommandations" class="nav-icon" />
+        <span class="nav-label">Recommandations</span>
+      </router-link>
 
-      <RouterLink to="/professional/dashboard2" active-class="active">
-        Dashboard2
-      </RouterLink>
+      <router-link to="/professional/commentaires" class="nav-item">
+        <img :src="iconShare" class="nav-icon" />
+        <span class="nav-label">Commentaires</span>
+      </router-link>
 
-      <RouterLink to="/professional/internships" active-class="active">
-        Internships
-      </RouterLink>
+      <router-link to="/professional/notifications" class="nav-item">
+        <img :src="iconNotifications" class="nav-icon" />
+        <span class="nav-label">Notifications</span>
+      </router-link>
 
-      <RouterLink to="/professional/projects" active-class="active">
-        Projects
-      </RouterLink>
+      <router-link to="/professional/historique" class="nav-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="nav-icon">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span class="nav-label">Historique</span>
+      </router-link>
 
-      <RouterLink to="/professional/students" active-class="active">
-        Students
-      </RouterLink>
+      <router-link to="/professional/stages" class="nav-item">
+        <img :src="iconStages" class="nav-icon" />
+        <span class="nav-label">Stages</span>
+      </router-link>
 
-      <RouterLink to="/professional/portfolios" active-class="active">
-        Portfolios
-      </RouterLink>
+      <router-link to="/professional/projets" class="nav-item">
+        <img :src="iconProjets" class="nav-icon" />
+        <span class="nav-label">Projets</span>
+      </router-link>
 
-      <RouterLink to="/professional/recommendations" active-class="active">
-        Recommendations
-      </RouterLink>
+      <router-link to="/professional/etudiants" class="nav-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="nav-icon">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <span class="nav-label">Étudiants</span>
+      </router-link>
+
+      <router-link to="/professional/portfolios" class="nav-item">
+        <img :src="iconPortfolio" class="nav-icon" />
+        <span class="nav-label">Portfolios</span>
+      </router-link>
     </nav>
 
-    <div class="professional-sidebar__note">
-      <strong>Access level</strong>
-      <p>
-        Professional users can supervise internships, consult projects,
-        view portfolios and add recommendations, but they cannot officially
-        validate internships or projects.
-      </p>
+    <div class="sidebar-bottom">
+      <router-link to="/professional/profile" class="nav-item">
+        <img :src="iconProfile" class="nav-icon" />
+        <span class="nav-label">Mon Profil</span>
+      </router-link>
+
+      <button class="nav-item logout-btn" @click="handleLogout">
+        <img :src="iconLogout" class="nav-icon" />
+        <span class="nav-label">Déconnexion</span>
+      </button>
     </div>
+
   </aside>
 </template>
 
 <script setup>
+import { useAuthStore } from '@/stores/authstore'
+import { useRouter } from 'vue-router'
+
+import iconDashboard       from '@/assets/icons/dashboard.svg'
+import iconProfile         from '@/assets/icons/profile.svg'
+import iconStages          from '@/assets/icons/stages.svg'
+import iconProjets         from '@/assets/icons/projets.svg'
+import iconLogout          from '@/assets/icons/logout.svg'
+import iconRecommandations from '@/assets/icons/recommandations.svg'
+import iconNotifications   from '@/assets/icons/notifications.svg'
+import iconPortfolio       from '@/assets/icons/portfoliocomplet.svg'
+import iconShare           from '@/assets/icons/share.svg'
+
+const authStore = useAuthStore()
+const router = useRouter()
+
+async function handleLogout() {
+  await authStore.logout()
+  router.push('/login')
+}
 </script>
 
 <style scoped>
-.professional-sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 30;
-  width: 260px;
-  height: 100vh;
-  background: #1f3f38;
-  color: #ffffff;
-  padding: 24px 18px;
+.sidebar {
+  width: 235px;
+  min-height: 100%;
+  background: var(--color-surface, #FFFFFF);
+  border-right: 1px solid var(--color-border, #D6D0C4);
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
   overflow-y: auto;
 }
 
-.professional-sidebar__brand {
+.sidebar-nav {
+  flex: 1;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 36px;
+  width: 100%;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 0 12px;
+  color: var(--color-text-secondary, #6B7280);
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  border: none;
+  border-radius: 10px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
-.professional-sidebar__logo {
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  border-radius: 14px;
-  background: #d8b76a;
-  color: #1f3f38;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 22px;
+.nav-item:hover {
+  background: var(--color-surface-hover, #F0EDE6);
+  color: var(--color-text-primary, #0F1B2D);
 }
 
-.professional-sidebar__brand h2 {
-  margin: 0;
-  font-size: 18px;
+.router-link-active {
+  background: var(--color-accent-light, #E8F2EF);
+  color: var(--color-accent, #3D6B5E);
+  font-weight: 600;
 }
 
-.professional-sidebar__brand span {
-  font-size: 12px;
-  color: #d8d1c4;
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
-.professional-sidebar__nav {
+.sidebar-bottom {
+  padding: 10px 8px;
+  border-top: 1px solid var(--color-border, #D6D0C4);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
-.professional-sidebar__nav a {
-  text-decoration: none;
-  color: #f7f2e8;
-  padding: 12px 14px;
-  border-radius: 12px;
-  font-size: 14px;
-  transition: 0.2s ease;
+.logout-btn {
+  cursor: pointer;
 }
 
-.professional-sidebar__nav a:hover {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.professional-sidebar__nav a.active {
-  background: #ffffff;
-  color: #1f3f38;
-  font-weight: 700;
-}
-
-.professional-sidebar__note {
-  margin-top: auto;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 14px;
-  border-radius: 14px;
-}
-
-.professional-sidebar__note strong {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 13px;
-}
-
-.professional-sidebar__note p {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.5;
-  color: #eee7da;
+.logout-btn:hover {
+  color: var(--color-danger, #ef4444);
 }
 
 @media (max-width: 900px) {
-  .professional-sidebar {
+  .sidebar {
     display: none;
   }
 }

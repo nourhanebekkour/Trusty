@@ -5,20 +5,23 @@ import ProfessorLayout from '../components/professor/ProfessorLayout.vue'
 import LoginView from '../views/loginview.vue'
 import Dashboard from '@/views/Etudiant/Dashboard.vue'
 import ProjectList from '@/views/Etudiant/ProjectList.vue'
+import ProjectDetail from '@/views/Etudiant/ProjectDetail.vue'
 import Settings from '@/views/Settings.vue'
 import StageList from '@/views/Etudiant/StageList.vue'
 import Recommendations from '@/views/Etudiant/Recommendations.vue'
 import Notification from '@/views/Etudiant/Notification.vue'
 import Profile from '@/views/Etudiant/Profile.vue'
 import activites from '@/views/Etudiant/activites.vue'
-import Portfolio from '@/views/Etudiant/Portfolio.vue'
+import Portfolio from '@/views/portfolio/PortfolioManagement.vue'
 import ProfessionalView from '@/views/Professional/ProfessionalView.vue'
+import ProfessionalLayout from '@/components/Professional/ProfessionalLayout.vue'
 import ProfessorView from '@/views/professor/ProfessorView.vue'
 import { useAuthStore } from '@/stores/authstore'
 import Parcours from '../views/Etudiant/Parcours.vue'
 import registerview from '@/views/registerview.vue'
 import VerifyEmailView from '@/views/VerifyEmailView.vue'
 import LettresRecommandation from '@/views/Etudiant/LettresRecommandation.vue'
+import PortfolioTemplate1 from '@/views/portfolio/PortfolioTemplate1.vue'
 
 // ── Roles autorisés ──────────────────────────────
 const ROLES = {
@@ -36,11 +39,7 @@ const router = createRouter({
       name: 'home',
       component: HomeView,
     },
-    {
-      path: '/about',
-      name: 'about',
-      component: () => import('../views/Etudiant/Parcours.vue'),
-    },
+   
     {
       path: '/register',
       name: 'register',
@@ -68,27 +67,27 @@ const router = createRouter({
         {
           path: 'dashboard',
           name: 'admin-dashboard',
-          component: () => import('../views/admin/AdminDashboard.vue'),
+          component: () => import('@/views/admin/AdminDashboard.vue'),
         },
         {
           path: 'utilisateurs',
           name: 'admin-users',
-          component: () => import('../views/admin/AdminUsers.vue'),
+          component: () => import('@/views/admin/AdminUsers.vue'),
         },
         {
           path: 'verifications',
           name: 'admin-verifications',
-          component: () => import('../views/admin/AdminVerifications.vue'),
+          component: () => import('@/views/admin/AdminVerifications.vue'),
         },
         {
           path: 'portfolios',
           name: 'admin-portfolios',
-          component: () => import('../views/admin/AdminPortfolios.vue'),
+          component: () => import('@/views/admin/AdminPortfolios.vue'),
         },
         {
           path: 'notifications',
           name: 'admin-notifications',
-          component: () => import('../views/admin/AdminNotifications.vue'),
+          component: () => import('@/views/admin/AdminNotifications.vue'),
         },
         {
           path: 'badges',
@@ -131,6 +130,14 @@ const router = createRouter({
       path: '/projets',
       name: 'projets',
       component: ProjectList,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/projets/:id',
+      name: 'project-detail',
+      component: ProjectDetail,
+      meta: { requiresAuth: true },
+      props: true,
       meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
@@ -165,6 +172,12 @@ const router = createRouter({
       path: '/portfolio',
       name: 'portfolio',
       component: Portfolio,
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
+    },
+    {
+      path: '/portfolio/:url_publique',
+      name: 'portfolio-template1',
+      component: PortfolioTemplate1,
     },
     {
       path: '/activites',
@@ -175,9 +188,74 @@ const router = createRouter({
     // ── Professional ─────────────────────────────────────
     {
       path: '/professional',
-      name: 'professional',
-      component: ProfessionalView,
+      component: ProfessionalLayout,
       meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
+      children: [
+        {
+          path: '',
+          redirect: '/professional/dashboard',
+        },
+        {
+          path: 'dashboard',
+          name: 'professional-dashboard',
+          component: ProfessionalView,
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
+        },
+        {
+          path: 'recommandations',
+          name: 'professional-recommandations',
+          component: () => import('@/views/Professional/ProfessionalRecommandations.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
+        },
+        {
+          path: 'commentaires',
+          name: 'professional-commentaires',
+          component: () => import('@/views/Professional/ProfessionalCommentaires.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
+        },
+        {
+          path: 'notifications',
+          name: 'professional-notifications',
+          component: () => import('@/views/Professional/ProfessionalNotifications.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
+        },
+        {
+          path: 'historique',
+          name: 'professional-historique',
+          component: () => import('@/views/Professional/ProfessionalHistorique.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
+        },
+        {
+          path: 'stages',
+          name: 'professional-stages',
+          component: () => import('@/views/Professional/ProfessionalInternships.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
+        },
+        {
+          path: 'projets',
+          name: 'professional-projets',
+          component: () => import('@/views/Professional/ProfessionalProjects.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
+        },
+        {
+          path: 'etudiants',
+          name: 'professional-etudiants',
+          component: () => import('@/views/Professional/ProfessionalStudents.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
+        },
+        {
+          path: 'portfolios',
+          name: 'professional-portfolios',
+          component: () => import('@/views/Professional/ProfessionalPortfolios.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
+        },
+        {
+          path: 'profile',
+          name: 'professional-profile',
+          component: () => import('@/views/Professional/ProfessionalProfile.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
+        },
+      ],
     },
 
     // ── Professor ────────────────────────────────────────
@@ -264,6 +342,7 @@ router.beforeEach(async (to) => {
     return true
   }
 
+  // Initialisation session
   if (!authStore.isInitialized) {
     try {
       await authStore.fetchUser()
@@ -276,6 +355,7 @@ router.beforeEach(async (to) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const allowedRoles = to.matched.flatMap(record => record.meta.roles ?? [])
 
+  // Redirection automatique selon rôle
   if (authStore.isAuthenticated) {
     if (authStore.isAdmin && !to.path.startsWith('/admin')) {
       return '/admin/dashboard'
@@ -286,7 +366,18 @@ router.beforeEach(async (to) => {
     }
   }
 
-  if (requiresAuth && !authStore.isAuthenticated) {
+  // Pages publiques (après la redirection par rôle)
+  if (['home', 'login', 'register', 'about', 'verify-email', 'portfolio-template1'].includes(to.name)) {
+    return true
+  }
+
+  // Pages invité uniquement
+  if (to.meta.guestOnly && authStore.isAuthenticated) {
+    return redirectByRole(authStore.user?.role)
+  }
+
+  // Routes protégées
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
 

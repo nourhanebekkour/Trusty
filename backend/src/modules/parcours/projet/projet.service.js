@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import * as notificationsService from '#Modules/systeme/notifications/notifications.service.js';
 import * as minioService from '#Services/minio.service.js';
+import { calculerEtMettreAJourScoreCredibilite } from '#Modules/identite/etudiant/etudiant.service.js';
 
 const prisma = new PrismaClient();
 
@@ -219,6 +220,45 @@ export const recupererProjetsAValider = async (id_professeur) => {
             fichiers: true
         },
         orderBy: { date_soumission: "asc" }
+    });
+
+    return await minioService.enrichEntitiesWithFileUrls(projets, "fichiers");
+};
+
+export const recupererProjetsParEtudiant = async (id_etudiant) => {
+    const projets = await prisma.projet.findMany({
+        where: {
+            participations: {
+                some: {
+                    id_etudiant: id_etudiant
+                }
+            }
+        },
+        include: {
+            participations: {
+                include: {
+                    etudiant: {
+                        include: {
+                            utilisateur: {
+                                select: {
+                                    nom: true,
+                                    prenom: true,
+                                    photo: true
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            technologies: {
+                include: {
+                    technologie: true
+                }
+            },
+            validateur: true,
+            fichiers: true
+        },
+        orderBy: { date_creation: "desc" }
     });
 
     return await minioService.enrichEntitiesWithFileUrls(projets, "fichiers");

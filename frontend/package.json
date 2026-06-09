@@ -8,7 +8,10 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview --host",
-    "test": "vitest"
+    "test": "vitest",
+    "test:ci": "vitest run --reporter=verbose --reporter=json --outputFile=test-results.json",
+    "report:generate": "node scripts/generate-html-report.js",
+    "report:send": "node scripts/send-report.js"
   },
   "dependencies": {
     "@vuelidate/core": "^2.0.3",
@@ -29,6 +32,7 @@
     "eslint-plugin-vue": "^10.9.1",
     "globals": "^17.6.0",
     "jsdom": "^29.1.0",
+    "nodemailer": "^6.10.1",
     "vite": "^6.3.0",
     "vite-plugin-vue-devtools": "^7.7.2",
     "vitest": "^4.1.5"

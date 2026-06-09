@@ -1,5 +1,6 @@
 import prisma from "#Config/prismaClient.js";
 import * as notificationsService from '#Modules/systeme/notifications/notifications.service.js';
+import { calculerEtMettreAJourScoreCredibilite } from '#Modules/identite/etudiant/etudiant.service.js';
 
 /**
  * Crée une nouvelle recommandation
@@ -102,6 +103,10 @@ export const validerRecommandation = async (id_recommandation, status) => {
         null
     );
 
+    if (status === 'VALIDE') {
+        await calculerEtMettreAJourScoreCredibilite(recommandation.id_etudiant);
+    }
+
     return recommandation;
 };
 
@@ -130,6 +135,15 @@ export const recupererRecommandationsValidees = async (id_etudiant) => {
 export const recupererRecommandationsRecus = async (id_etudiant) => {
     return await recupererRecommandations({ 
         id_etudiant: id_etudiant
+    });
+};
+
+/**
+ * Récupère toutes les recommandations émises par un utilisateur
+ */
+export const recupererRecommandationsEmises = async (id_recommandeur) => {
+    return await recupererRecommandations({ 
+        id_recommandeur: id_recommandeur
     });
 };
 
