@@ -285,3 +285,9 @@ export const getPortfolioStats = async (id_portfolio, id_etudiant) => {
         }
     });
 };
+
+export const deletePortfolio = async (id_portfolio) => {
+    return prisma.portfolio.delete({
+        where: { id_portfolio }
+    })
+}
