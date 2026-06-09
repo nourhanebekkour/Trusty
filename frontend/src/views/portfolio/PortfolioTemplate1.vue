@@ -1,5 +1,5 @@
 <template>
-    <div class="pf2" :style="fontStyle">
+    <div class="pf2" :class="{ 'pf2--panel-open': panelOpen }" :style="fontStyle">
 
         <div v-if="loading" style="min-height:100vh;background:#0F2040;display:flex;align-items:center;justify-content:center;">
             <div class="pf2-spinner"></div>
@@ -720,7 +720,7 @@
       <div class="pf2-ep-field">
         <label>Compétences affichées</label>
         <div class="pf2-ep-checks">
-          <div v-for="c in portfolioData?.etudiant?.competences" :key="c.id_competence" class="pf2-ep-check">
+          <div v-for="c in portfolioData?.etudiant?.competences?.filter(c => c.competence.type === 'TECHNIQUE')" :key="c.id_competence" class="pf2-ep-check">
             <input type="checkbox" :value="c.id_competence" v-model="editConfig.competences_selectionnees" :id="'cp-'+c.id_competence" />
             <label :for="'cp-'+c.id_competence">{{ c.competence.nom }}</label>
           </div>
@@ -2154,4 +2154,11 @@ function handleScroll() {
   padding: 16px 24px; border-top: 1px solid #E5E8ED; flex-shrink: 0;
 }
 
+.pf2-doc, .pf2-nav {
+  transition: margin-right 0.3s ease;
+}
+.pf2--panel-open .pf2-doc,
+.pf2--panel-open .pf2-nav {
+  margin-right: 360px;
+}
 </style>
