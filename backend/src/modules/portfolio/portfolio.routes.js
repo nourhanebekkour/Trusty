@@ -39,4 +39,8 @@ router.get('/:url_publique', optionalAuth, portfolioController.getPublicPortfoli
 
 
 router.delete('/me/:id_portfolio', authMiddleware, requireRole('ETUDIANT'), portfolioController.deletePortfolio);
+
+// Route IA Adaptative
+router.post('/generate-adaptative', authMiddleware, requireRole('ETUDIANT'), portfolioController.generateAdaptative);
+
 export default router;

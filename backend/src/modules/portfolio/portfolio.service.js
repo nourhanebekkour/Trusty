@@ -291,3 +291,89 @@ export const deletePortfolio = async (id_portfolio) => {
         where: { id_portfolio }
     })
 }
+
+// ==========================================
+// IA: PORTFOLIO ADAPTATIF
+// ==========================================
+
+export const genererSelectionAdaptative = async (id_etudiant, objectif) => {
+    const etudiant = await prisma.etudiant.findUnique({
+        where: { id_etudiant },
+        include: {
+            participations_projets: {
+                where: { projet: { status_validation: 'VALIDE' } },
+                include: { projet: true }
+            },
+            competences: {
+                include: { competence: true }
+            },
+            stages: {
+                where: { status_validation: 'VALIDE' }
+            }
+        }
+    });
+
+    if (!etudiant) throw new Error("Étudiant introuvable");
+
+    const dataForPrompt = {
+        projets: etudiant.participations_projets.map(p => ({
+            id: p.id_projet,
+            titre: p.projet.titre,
+            description: p.projet.description
+        })),
+        competences: etudiant.competences.map(c => ({
+            id: c.id_competence,
+            nom: c.competence.nom,
+            niveau: c.niveau
+        })),
+        stages: etudiant.stages.map(s => ({
+            id: s.id_stage,
+            titre: s.titre,
+            entreprise: s.entreprise,
+            description: s.description
+        }))
+    };
+
+    const promptText = `Voici les projets, compétences et stages de cet étudiant. 
+Son objectif professionnel est : ${objectif}. 
+Analyse et sélectionne uniquement les IDs des éléments les plus pertinents pour atteindre cet objectif. 
+Renvoie le résultat STRICTEMENT sous forme de JSON (sans markdown ni backticks).
+
+Données de l'étudiant:
+${JSON.stringify(dataForPrompt, null, 2)}
+
+Format JSON attendu:
+{
+  "projets_selectionnes": ["id_projet_1", "id_projet_2"],
+  "competences_selectionnees": ["id_competence_1"],
+  "stages_selectionnes": ["id_stage_1"]
+}`;
+
+    // Import dynamique
+    let GoogleGenAI;
+    try {
+        const genaiLib = await import('@google/genai');
+        GoogleGenAI = genaiLib.GoogleGenAI;
+    } catch (e) {
+        throw new Error("La librairie @google/genai n'est pas installée. Exécutez 'npm install @google/genai'");
+    }
+
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: promptText,
+        config: {
+            responseMimeType: "application/json",
+            temperature: 0.2
+        }
+    });
+
+    const resultText = response.text;
+    
+    try {
+        return JSON.parse(resultText);
+    } catch (e) {
+        throw new Error("L'IA n'a pas renvoyé un format JSON valide: " + resultText);
+    }
+};

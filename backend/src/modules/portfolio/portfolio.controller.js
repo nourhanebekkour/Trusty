@@ -227,3 +227,30 @@ export const deletePortfolio = async (req, res) => {
         return sendResponse(res, 500, false, "Erreur serveur", null, erreur.message)
     }
 }
+
+export const generateAdaptative = async (req, res) => {
+    // #swagger.tags = ['Portfolio']
+    // #swagger.summary = 'Générer une sélection adaptative par IA'
+    /* #swagger.parameters['body'] = {
+        in: 'body',
+        required: true,
+        schema: {
+            objectif: 'Développeur Fullstack',
+            id_etudiant: 'user_1234'
+        }
+    } */
+    try {
+        const { objectif, id_etudiant } = req.body;
+        
+        if (!objectif || !id_etudiant) {
+            return sendResponse(res, 400, false, "L'objectif et l'id_etudiant sont requis");
+        }
+
+        const selection = await portfolioService.genererSelectionAdaptative(id_etudiant, objectif);
+        
+        return res.json(selection);
+    } catch (erreur) {
+        console.error("Erreur lors de la génération IA:", erreur);
+        return sendResponse(res, 500, false, "Erreur de génération", null, erreur.message);
+    }
+};
