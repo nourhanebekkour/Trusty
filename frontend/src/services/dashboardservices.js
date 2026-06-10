@@ -93,124 +93,62 @@ function normalizeProject(p) {
   }
 }
 
-// ─── Mock data (fallback seulement si API inaccessible) ──────────────────────
-const MOCK_STATS = {
-  projetsCertifies: 4,
-  credibilite:      78,
-  vuesProfil:       123,
-  recommandations:  6,
+// ─── recalculerScore ──────────────────────────────────────────────────────────
+export async function recalculerScore(idEtudiant) {
+  try {
+    const res = await api.post(`/etudiants/${idEtudiant}/recalculer-score`)
+    const data = extractData(res)
+    console.info('[recalculerScore] score mis à jour:', data)
+    return data
+  } catch (err) {
+    console.error('[recalculerScore] erreur', err)
+    return null
+  }
 }
-
-const MOCK_PROJECTS = [
-  {
-    id_projet:             'proj1',
-    titre:                 'Application de gestion RH',
-    type_projet:           'MODULE',
-    status_validation:     'VALIDE',
-    date_debut:            '2024-09-01T00:00:00.000Z',
-    description:           "Développement d'une application full-stack de gestion des ressources humaines.",
-    est_visible_portfolio: true,
-    est_createur:          true,
-    role_joue:             'Développeur fullstack',
-    technologies: [
-      { technologie: { nom: 'React'   } },
-      { technologie: { nom: 'Node.js' } },
-    ],
-  },
-  {
-    id_projet:             'proj2',
-    titre:                 'Dashboard Analytics',
-    type_projet:           'PFA',
-    status_validation:     'EN_ATTENTE',
-    date_debut:            '2025-01-15T00:00:00.000Z',
-    description:           "Création d'un tableau de bord interactif pour visualiser des données.",
-    est_visible_portfolio: true,
-    est_createur:          true,
-    role_joue:             'Lead frontend',
-    technologies: [
-      { technologie: { nom: 'Python' } },
-      { technologie: { nom: 'Vue.js' } },
-    ],
-  },
-]
-
-const MOCK_RECOS = [
-  {
-    id_recommandation: 'rec1',
-    message:           'Étudiant sérieux et très impliqué dans ses projets. Je recommande vivement.',
-    status:            'VALIDE',
-    date_creation:     new Date().toISOString(),
-    auteur: { nom: 'Dupont', prenom: 'Marie', role: 'PROFESSIONNEL', poste: 'Responsable RH', entreprise: 'TechCorp', photo: null },
-  },
-  {
-    id_recommandation: 'rec2',
-    message:           'Excellent travail en équipe, très bon niveau technique.',
-    status:            'VALIDE',
-    date_creation:     new Date().toISOString(),
-    auteur: { nom: 'Martin', prenom: 'Jean', role: 'PROFESSEUR', specialite: 'Génie logiciel', departement: 'SIC', photo: null },
-  },
-]
 
 // ─── fetchStats ───────────────────────────────────────────────────────────────
 export async function fetchStats(idEtudiant) {
   try {
-    const res      = await api.get(`/etudiants/${idEtudiant}`)
-    const etudiant = extractData(res)
+    const [etudiantRes, portfolioRes] = await Promise.all([
+      api.get(`/etudiants/${idEtudiant}`),
+      api.get('/portfolio/me'),
+    ])
+
+    const etudiant  = extractData(etudiantRes)
+    const portfolios = extractData(portfolioRes)
+
+    const vuesProfil = Array.isArray(portfolios)
+      ? portfolios.reduce((sum, p) => sum + (p.nombre_vues || 0), 0)
+      : 0
 
     if (isEmpty(etudiant)) {
-      console.warn('[fetchStats] réponse vide → mock')
-      return MOCK_STATS
+      return { projetsCertifies: 0, credibilite: 0, vuesProfil, recommandations: 0 }
     }
 
     return {
-      projetsCertifies: etudiant._count?.participations_projets ?? MOCK_STATS.projetsCertifies,
-      credibilite:      etudiant.score_credibilite               ?? MOCK_STATS.credibilite,
-      vuesProfil:       etudiant.portfolio?.nombre_vues          ?? MOCK_STATS.vuesProfil,
-      recommandations:  etudiant._count?.recommendation          ?? MOCK_STATS.recommandations,
+      projetsCertifies: etudiant._count?.participations_projets ?? 0,
+      credibilite:      etudiant.score_credibilite               ?? 0,
+      vuesProfil,
+      recommandations:  etudiant._count?.recommandations         ?? 0,
     }
   } catch (err) {
-    console.error('[fetchStats] erreur API → mock', err)
-    return MOCK_STATS
+    console.error('[fetchStats] erreur API', err)
+    return { projetsCertifies: 0, credibilite: 0, vuesProfil: 0, recommandations: 0 }
   }
 }
 
 // ─── fetchProjects ────────────────────────────────────────────────────────────
 export async function fetchProjects(idEtudiant) {
   try {
-    const res  = await api.get('/projets/')
+    const res  = await api.get(`/projets/etudiant/${idEtudiant}`)
     const data = extractData(res)
 
-    if (!Array.isArray(data) || isEmpty(data)) {
-      console.warn('[fetchProjects] réponse vide → mock')
-      return MOCK_PROJECTS.map(normalizeProject)
-    }
+    if (!Array.isArray(data)) return []
 
-    const filtered = data.reduce((acc, projet) => {
-      const parts       = projet.participations ?? projet.participants ?? []
-      const participation = parts.find(
-        (p) => p.id_etudiant === idEtudiant || p.id_utilisateur === idEtudiant
-      )
-      if (!participation)                                return acc
-      if (participation.est_visible_portfolio === false) return acc
-
-      acc.push({
-        ...projet,
-        est_visible_portfolio: participation.est_visible_portfolio ?? true,
-        est_createur:          participation.est_createur          ?? false,
-        role_joue:             participation.role_joue             ?? '',
-      })
-      return acc
-    }, [])
-
-    if (isEmpty(filtered)) {
-      console.warn('[fetchProjects] aucun projet → mock')
-      return MOCK_PROJECTS.map(normalizeProject)
-    }
-
-    return filtered.map(normalizeProject)
+    return data.map(normalizeProject)
   } catch (err) {
-    console.error('[fetchProjects] erreur API → mock', err)
-    return MOCK_PROJECTS.map(normalizeProject)
+    console.error('[fetchProjects] erreur API', err)
+    return []
   }
 }
 
@@ -238,19 +176,15 @@ export async function fetchRecos(idEtudiant) {
 
     if (Array.isArray(data) && !isEmpty(data)) {
       const normalized = data.map(normalizeReco)
-      // Séparer : VALIDE en premier, puis EN_ATTENTE, puis le reste
       const sorted = [
         ...normalized.filter(r => r.status === 'VALIDE'),
         ...normalized.filter(r => r.status === 'EN_ATTENTE'),
         ...normalized.filter(r => r.status !== 'VALIDE' && r.status !== 'EN_ATTENTE'),
       ]
-      console.info(`[fetchRecos] ${sorted.length} reco(s) chargée(s) via /mes-recommandations-recus`)
       return sorted
     }
-
-    console.warn('[fetchRecos] /mes-recommandations-recus vide → fallback public')
   } catch (err) {
-    console.warn('[fetchRecos] /mes-recommandations-recus échoué → fallback public', err?.response?.status)
+    console.warn('[fetchRecos] /mes-recommandations-recus échoué', err?.response?.status)
   }
 
   // ── Tentative 2 : endpoint public (VALIDE uniquement) ──────────────────────
@@ -259,15 +193,11 @@ export async function fetchRecos(idEtudiant) {
     const data = extractData(res)
 
     if (Array.isArray(data) && !isEmpty(data)) {
-      const normalized = data.map(normalizeReco).filter(r => r.status === 'VALIDE')
-      console.info(`[fetchRecos] ${normalized.length} reco(s) publique(s) chargée(s)`)
-      return normalized
+      return data.map(normalizeReco).filter(r => r.status === 'VALIDE')
     }
-
-    console.warn('[fetchRecos] endpoint public vide → mock')
-    return MOCK_RECOS
   } catch (err) {
-    console.error('[fetchRecos] les deux endpoints ont échoué → mock', err)
-    return MOCK_RECOS
+    console.error('[fetchRecos] les deux endpoints ont échoué', err)
   }
+
+  return []
 }
