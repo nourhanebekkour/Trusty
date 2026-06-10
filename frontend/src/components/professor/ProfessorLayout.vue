@@ -13,7 +13,7 @@
 <script setup>
 import { ref, provide } from 'vue'
 import ProfessorTopbar from './ProfessorTopbar.vue'
-import ProfessorSidebar from './ProfessorSideBar.vue'
+import ProfessorSidebar from './ProfessorSideBar_ma.vue/index.js'
 
 const isCollapsed = ref(false)
 provide('sidebarCollapsed', isCollapsed)
