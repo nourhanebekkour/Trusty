@@ -81,25 +81,28 @@ variables:
 lint:backend:
   stage: lint
   image: node:20-alpine
-  <<: *cache_backend
-  <<: *rules_standard
-  defaults:
-    run:
-      working-directory: ./backend
+
+  <<:
+    - *cache_backend
+    - *rules_standard
+
   script:
     - cd backend
     - npm ci
     - npx eslint src/ --max-warnings=50 || true
+
   artifacts:
     when: always
-    paths: [backend/eslint-report.json]
+    paths:
+      - backend/eslint-report.json
     expire_in: 3 days
 
 lint:frontend:
   stage: lint
   image: node:20-alpine
-  <<: *cache_frontend
-  <<: *rules_standard
+  <<:
+  - *cache_frontend
+  - *rules_standard
   script:
     - cd frontend
     - npm ci
@@ -117,8 +120,9 @@ test:backend:
   stage: test
   image: node:20-alpine
   needs: [lint:backend]
-  <<: *cache_backend
-  <<: *rules_standard
+  <<:
+  - *cache_backend
+  - *rules_standard
 
   # ── Services ──────────────────────────────────────────────
   services:
@@ -159,8 +163,9 @@ test:frontend:
   stage: test
   image: node:20-alpine
   needs: [lint:frontend]
-  <<: *cache_frontend
-  <<: *rules_standard
+  <<:
+  - *cache_frontend
+  - *rules_standard
 
   script:
     - cd frontend
@@ -195,8 +200,9 @@ smoke:backend:
   stage: test
   image: node:20-alpine
   needs: [test:backend]
-  <<: *cache_backend
-  <<: *rules_standard
+  <<:
+  - *cache_backend
+  - *rules_standard
   script:
     - cd backend
     - npm ci
@@ -211,8 +217,9 @@ smoke:frontend:
   stage: test
   image: node:20-alpine
   needs: [test:frontend]
-  <<: *cache_frontend
-  <<: *rules_standard
+  <<:
+  - *cache_frontend
+  - *rules_standard
   script:
     - cd frontend
     - npm ci
