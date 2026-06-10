@@ -1,23 +1,61 @@
-ARG NODE_VERSION=22-alpine
+
+ARG NODE_VERSION=24-alpine     
+
+# ──────────────────────── STAGE 1 — BASE ───────────────────────────
+
 
 FROM node:${NODE_VERSION} AS base
-RUN apk add --no-cache openssl && apk upgrade --no-cache
-WORKDIR /app
+
+WORKDIR /app 
+
+RUN apk add --no-cache openssl
+
 COPY package*.json ./
+
 COPY prisma ./prisma
 
-FROM base AS production
-ENV NODE_ENV=production
 
-RUN npm ci --omit=dev && npm cache clean --force
+# ─────────────────────── STAGE 2 — DEVELOPMENT ────────────────────
+
+FROM base AS development
+
+ENV NODE_ENV=development
+
+RUN npm ci
+
 RUN npx prisma generate
 
 COPY . .
 
-RUN addgroup -S app && adduser -S app -G app
-USER app
+RUN chmod +x entrypoint.sh
+
+EXPOSE 3000
+
+ENTRYPOINT ["sh", "./entrypoint.sh"]
+CMD ["dev"]
+
+
+
+# ──────────────────────── STAGE 3 — PRODUCTION ────────────────────
+
+FROM base AS production
+
+ENV NODE_ENV=production
+
+RUN npm ci --omit=dev
+
+RUN npx prisma generate
+
+COPY . .
+
+RUN chmod +x entrypoint.sh
 
 EXPOSE 3000
 
 ENTRYPOINT ["sh", "./entrypoint.sh"]
 CMD ["start"]
+
+
+
+
+

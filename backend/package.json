@@ -32,12 +32,6 @@
   "prisma": {
     "seed": "node prisma/seed.js"
   },
-  "overrides": {
-    "minimatch": "^9.0.5",
-    "brace-expansion": "^2.0.1",
-    "glob": "^10.0.0",
-    "node-tar": "^7.0.0"
-  },
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",
