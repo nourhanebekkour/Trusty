@@ -1,0 +1,3656 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Projet d intergration",
+    "description": "Documentation automatique des APIs du projet",
+    "version": "1.0.0"
+  },
+  "host": "localhost:3000",
+  "basePath": "/",
+  "schemes": [
+    "http"
+  ],
+  "securityDefinitions": {
+    "bearerAuth": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "description": "Entrez votre token JWT sous la forme : Bearer <token>"
+    }
+  },
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "Authentification"
+        ],
+        "summary": "Inscription publique — crée un compte selon le rôle",
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/RegisterRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/auth/verify-email": {
+      "post": {
+        "tags": [
+          "Authentification"
+        ],
+        "summary": "Vérifier l\\'adresse email via le token reçu par email",
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "token": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Authentification"
+        ],
+        "summary": "Connexion d\\'un utilisateur",
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Identifiants de connexion",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/LoginRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/auth/refresh-token": {
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "tags": [
+          "Authentification"
+        ],
+        "summary": "Demande de réinitialisation de mot de passe",
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Email de l'utilisateur",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ForgotPasswordRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "tags": [
+          "Authentification"
+        ],
+        "summary": "Réinitialiser le mot de passe avec un token",
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Token de réinitialisation et nouveau mot de passe",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ResetPasswordRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/auth/request-account": {
+      "post": {
+        "tags": [
+          "Authentification"
+        ],
+        "summary": "Demander la création d\\'un compte à l\\'admin",
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/RequestAccountRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "Authentification"
+        ],
+        "summary": "Récupérer les informations de l\\'utilisateur connecté",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/auth/admin-only": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/admin/create-user": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Créer un compte utilisateur (admin uniquement)",
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateUserAdminRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/utilisateurs/": {
+      "get": {
+        "tags": [
+          "Utilisateurs"
+        ],
+        "summary": "Récupérer tous les utilisateurs (Admin uniquement)",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/utilisateurs/{id}": {
+      "get": {
+        "tags": [
+          "Utilisateurs"
+        ],
+        "summary": "Récupérer un utilisateur par ID avec ses profils",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Utilisateurs"
+        ],
+        "summary": "Supprimer un utilisateur (Admin uniquement)",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/utilisateurs/{id}/role": {
+      "patch": {
+        "tags": [
+          "Utilisateurs"
+        ],
+        "summary": "Modifier le rôle d\\'un utilisateur (Admin uniquement)",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string",
+                  "example": "PROFESSEUR"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/utilisateurs/{id}/statut": {
+      "patch": {
+        "tags": [
+          "Utilisateurs"
+        ],
+        "summary": "Modifier le statut d\\'un utilisateur (Admin uniquement)",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "ACTIF"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/files/upload": {
+      "post": {
+        "tags": [
+          "Fichiers"
+        ],
+        "summary": "Upload un fichier générique",
+        "description": "",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "parameters": [
+          {
+            "name": "fichier",
+            "in": "formData",
+            "type": "file",
+            "required": true,
+            "description": "Le fichier à uploader"
+          },
+          {
+            "name": "category",
+            "in": "formData",
+            "type": "string",
+            "description": "Catégorie du fichier (ex: GENERIC, AVATAR, RAPPORT)",
+            "default": "GENERIC"
+          },
+          {
+            "name": "id_projet",
+            "in": "formData",
+            "type": "string",
+            "description": "ID du projet associé (optionnel)"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "category": {
+                  "example": "any"
+                },
+                "id_projet": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/files/url/{fileName}": {
+      "get": {
+        "tags": [
+          "Fichiers"
+        ],
+        "summary": "Récupérer l URL d un fichier (redirection)",
+        "description": "",
+        "parameters": [
+          {
+            "name": "fileName",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Nom du fichier ou ID"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/files/view/{fileName}": {
+      "get": {
+        "tags": [
+          "Fichiers"
+        ],
+        "summary": "Visualiser un fichier (streaming)",
+        "description": "",
+        "produces": [
+          null
+        ],
+        "parameters": [
+          {
+            "name": "fileName",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Nom du fichier ou ID"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/files/{id}": {
+      "delete": {
+        "tags": [
+          "Fichiers"
+        ],
+        "summary": "Supprimer un fichier",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID du fichier à supprimer"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/formations/etudiant/{id_etudiant}": {
+      "get": {
+        "tags": [
+          "Etudiants - Formations"
+        ],
+        "summary": "Récupérer les formations d\\'un étudiant",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_etudiant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Etudiants - Formations"
+        ],
+        "summary": "Ajouter une formation à un étudiant",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_etudiant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Données de la formation",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FormationRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/formations/{id}": {
+      "put": {
+        "tags": [
+          "Etudiants - Formations"
+        ],
+        "summary": "Modifier une formation",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Données de la formation à modifier",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FormationRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Etudiants - Formations"
+        ],
+        "summary": "Supprimer une formation",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/competences/": {
+      "get": {
+        "tags": [
+          "Compétences"
+        ],
+        "summary": "Lister toutes les compétences du catalogue",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Compétences"
+        ],
+        "summary": "Ajouter une nouvelle compétence au catalogue",
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Données de la compétence",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CompetenceRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/competences/{id}": {
+      "get": {
+        "tags": [
+          "Compétences"
+        ],
+        "summary": "Récupérer une compétence par ID",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Compétences"
+        ],
+        "summary": "Modifier une compétence existante",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Données de la compétence à modifier",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CompetenceRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Compétences"
+        ],
+        "summary": "Supprimer une compétence du catalogue",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/competences/etudiant/{id_etudiant}": {
+      "get": {
+        "tags": [
+          "Etudiants - Compétences"
+        ],
+        "summary": "Lister les compétences d\\'un étudiant",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_etudiant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/competences/etudiant/{id_etudiant}/{id_competence}": {
+      "post": {
+        "tags": [
+          "Etudiants - Compétences"
+        ],
+        "summary": "Associer une compétence à un étudiant",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_etudiant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id_competence",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Niveau de maîtrise",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "niveau_maitrise": {
+                  "type": "number",
+                  "example": 3
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Etudiants - Compétences"
+        ],
+        "summary": "Retirer une compétence d\\'un étudiant",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_etudiant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id_competence",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/technologies/": {
+      "get": {
+        "tags": [
+          "Technologies"
+        ],
+        "summary": "Lister toutes les technologies",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Technologies"
+        ],
+        "summary": "Ajouter une nouvelle technologie",
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Informations de la technologie",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/TechnologieRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/technologies/{id}": {
+      "get": {
+        "tags": [
+          "Technologies"
+        ],
+        "summary": "Récupérer une technologie par ID",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Technologies"
+        ],
+        "summary": "Modifier une technologie existante",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Informations de la technologie à modifier",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/TechnologieRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Technologies"
+        ],
+        "summary": "Supprimer une technologie",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/projets/": {
+      "post": {
+        "tags": [
+          "Projets"
+        ],
+        "summary": "Créer un nouveau projet",
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Données du projet à créer",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProjetRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Projets"
+        ],
+        "summary": "Lister tous les projets",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/projets/a-valider": {
+      "get": {
+        "tags": [
+          "Tableaux de Bord - Professeurs"
+        ],
+        "summary": "Lister les projets en attente de ma validation",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/projets/{id}": {
+      "get": {
+        "tags": [
+          "Projets"
+        ],
+        "summary": "Obtenir un projet par ID",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID du projet à récupérer"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Projets"
+        ],
+        "summary": "Modifier un projet existant",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID du projet à modifier"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Données du projet à modifier",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProjetRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Projets"
+        ],
+        "summary": "Supprimer un projet",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID du projet à supprimer"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/projets/{id}/valider": {
+      "post": {
+        "tags": [
+          "Tableaux de Bord - Professeurs"
+        ],
+        "summary": "Valider ou rejeter un projet (Professeur uniquement)",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "decision": {
+                  "type": "string",
+                  "example": "VALIDE"
+                },
+                "commentaire": {
+                  "type": "string",
+                  "example": "Excellent travail"
+                },
+                "appreciation": {
+                  "type": "string",
+                  "example": "A+"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/projets/{id}/fichiers": {
+      "post": {
+        "tags": [
+          "Projets - Fichiers"
+        ],
+        "summary": "Ajouter un fichier à un projet",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID du projet auquel ajouter le fichier"
+          },
+          {
+            "name": "fichier",
+            "in": "formData",
+            "type": "file",
+            "required": true,
+            "description": "Fichier à ajouter au projet"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Projets - Fichiers"
+        ],
+        "summary": "Lister les fichiers d un projet",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID du projet dont lister les fichiers"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/projets/{id}/fichiers/{id_fichier}": {
+      "delete": {
+        "tags": [
+          "Projets - Fichiers"
+        ],
+        "summary": "Supprimer un fichier d un projet",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID du projet"
+          },
+          {
+            "name": "id_fichier",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID du fichier"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/projets/{id_projet}/participants/{id_etudiant}": {
+      "post": {
+        "tags": [
+          "Projets - Participants"
+        ],
+        "summary": "Ajouter un étudiant comme participant à un projet",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_projet",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID du projet auquel ajouter the participant"
+          },
+          {
+            "name": "id_etudiant",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID de l'étudiant à ajouter comme participant"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Données du participant (ex: rôle dans le projet)",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ParticipationProjetRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Projets - Participants"
+        ],
+        "summary": "Modifier le rôle d un participant dans un projet",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_projet",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID du projet du participant à modifier"
+          },
+          {
+            "name": "id_etudiant",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID de l'étudiant participant à modifier"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Données à modifier pour le participant (ex: rôle dans le projet)",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ParticipationProjetRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Projets - Participants"
+        ],
+        "summary": "Retirer un participant d un projet",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_projet",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID du projet du participant à retirer"
+          },
+          {
+            "name": "id_etudiant",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID de l'étudiant participant à retirer"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/projets/{id_projet}/technologies/{id_technologie}": {
+      "post": {
+        "tags": [
+          "Projets - Technologies"
+        ],
+        "summary": "Ajouter une technologie à un projet",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_projet",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID du projet auquel ajouter la technologie"
+          },
+          {
+            "name": "id_technologie",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID de la technologie à ajouter au projet"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Données de la technologie pour le projet (ex: niveau d'utilisation)",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProjetTechnologieRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Projets - Technologies"
+        ],
+        "summary": "Modifier l utilisation d une technologie dans un projet",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_projet",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID du projet de la technologie à modifier"
+          },
+          {
+            "name": "id_technologie",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID de la technologie à modifier dans le projet"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Données à modifier pour la technologie dans le projet (ex: niveau d'utilisation)",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProjetTechnologieRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Projets - Technologies"
+        ],
+        "summary": "Retirer une technologie d un projet",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_projet",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID du projet de la technologie à retirer"
+          },
+          {
+            "name": "id_technologie",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID de la technologie à retirer du projet"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/stages/etudiant/{id_etudiant}": {
+      "post": {
+        "tags": [
+          "Stages"
+        ],
+        "summary": "Créer un nouveau stage pour un étudiant",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_etudiant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Informations du stage",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StageRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Stages"
+        ],
+        "summary": "Lister les stages d un étudiant",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_etudiant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/stages/": {
+      "get": {
+        "tags": [
+          "Stages"
+        ],
+        "summary": "Lister tous les stages",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/stages/a-valider": {
+      "get": {
+        "tags": [
+          "Tableaux de Bord - Professeurs"
+        ],
+        "summary": "Lister les stages en attente de ma validation",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/stages/{id}": {
+      "get": {
+        "tags": [
+          "Stages"
+        ],
+        "summary": "Obtenir un stage par ID",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Stages"
+        ],
+        "summary": "Modifier un stage existant",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Informations du stage à modifier",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StageRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Stages"
+        ],
+        "summary": "Supprimer un stage",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/stages/{id}/valider": {
+      "post": {
+        "tags": [
+          "Tableaux de Bord - Professeurs"
+        ],
+        "summary": "Valider ou rejeter un stage (Professeur uniquement)",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "decision": {
+                  "example": "any"
+                },
+                "commentaire": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/stages/{id}/rapport": {
+      "post": {
+        "tags": [
+          "Stages-Rapports"
+        ],
+        "summary": "Uploader le rapport de stage",
+        "description": "",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "fichier",
+            "in": "formData",
+            "type": "file",
+            "required": true,
+            "description": "Rapport de stage (PDF, etc.)"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Stages-Rapports"
+        ],
+        "summary": "Supprimer le rapport de stage",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/stages/{id_stage}/technologies/{id_technologie}": {
+      "post": {
+        "tags": [
+          "Stages - Technologies"
+        ],
+        "summary": "Ajouter une technologie à un stage",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_stage",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id_technologie",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Informations de l'utilisation de la technologie",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StageTechnologieRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Stages - Technologies"
+        ],
+        "summary": "Modifier l utilisation d une technologie dans un stage",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_stage",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id_technologie",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Informations de l'utilisation de la technologie à modifier",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StageTechnologieRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Stages - Technologies"
+        ],
+        "summary": "Retirer une technologie d un stage",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_stage",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id_technologie",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/activites/etudiant/{id_etudiant}": {
+      "post": {
+        "tags": [
+          "Activités Parascolaires"
+        ],
+        "summary": "Créer une nouvelle activité pour un étudiant",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_etudiant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Informations de l'activité",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ActiviteRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Activités Parascolaires"
+        ],
+        "summary": "Lister les activités d un étudiant",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_etudiant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/activites/": {
+      "get": {
+        "tags": [
+          "Activités Parascolaires"
+        ],
+        "summary": "Lister toutes les activités",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/activites/a-valider": {
+      "get": {
+        "tags": [
+          "Tableaux de Bord - Admin"
+        ],
+        "summary": "Lister les activités en attente de ma validation",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/activites/{id}": {
+      "get": {
+        "tags": [
+          "Activités Parascolaires"
+        ],
+        "summary": "Obtenir une activité par ID",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Activités Parascolaires"
+        ],
+        "summary": "Modifier une activité existante",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Informations de l'activité à modifier",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ActiviteRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Activités Parascolaires"
+        ],
+        "summary": "Supprimer une activité",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/activites/{id}/valider": {
+      "post": {
+        "tags": [
+          "Tableaux de Bord - Admin"
+        ],
+        "summary": "Valider ou rejeter une activité (Admin uniquement)",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "decision": {
+                  "example": "any"
+                },
+                "commentaire": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/activites/{id}/attestation": {
+      "post": {
+        "tags": [
+          "Activités Parascolaires - Attestation"
+        ],
+        "summary": "Uploader l attestation d activité",
+        "description": "",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "fichier",
+            "in": "formData",
+            "type": "file",
+            "required": true,
+            "description": "Attestation d'activité (PDF, Image, etc.)"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Activités Parascolaires - Attestation"
+        ],
+        "summary": "Supprimer l attestation d activité",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/notifications/": {
+      "get": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Lister les notifications de l utilisateur connecté",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/notifications/{id}/lire": {
+      "put": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Marquer une notification comme lue",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/historique-actions/": {
+      "get": {
+        "tags": [
+          "Historique Actions"
+        ],
+        "summary": "Lister l historique des actions",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/historique-actions/utilisateur/{id_utilisateur}": {
+      "get": {
+        "tags": [
+          "Historique Actions"
+        ],
+        "summary": "Lister l historique d actions d un utilisateur",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_utilisateur",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/historique-actions/mes-actions": {
+      "get": {
+        "tags": [
+          "Historique Actions"
+        ],
+        "summary": "Lister mes propres actions",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/historique-actions/{id}": {
+      "get": {
+        "tags": [
+          "Historique Actions"
+        ],
+        "summary": "Obtenir une action par ID",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/badges/": {
+      "get": {
+        "tags": [
+          "Badges"
+        ],
+        "summary": "Lister tous les badges",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Badges"
+        ],
+        "summary": "Créer un nouveau badge",
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Informations du badge",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BadgeRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/badges/{id}": {
+      "get": {
+        "tags": [
+          "Badges"
+        ],
+        "summary": "Obtenir un badge par ID",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Badges"
+        ],
+        "summary": "Modifier un badge existant",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Informations du badge à modifier",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BadgeRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Badges"
+        ],
+        "summary": "Supprimer un badge",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/badges/{id}/icone": {
+      "post": {
+        "tags": [
+          "Badges"
+        ],
+        "summary": "Uploader l\\'icône du badge",
+        "description": "",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID du badge"
+          },
+          {
+            "name": "icone",
+            "in": "formData",
+            "type": "file",
+            "required": true,
+            "description": "Icône du badge"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/badges/{id}/attribuer": {
+      "post": {
+        "tags": [
+          "Badges"
+        ],
+        "summary": "Attribuer un badge à un étudiant",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "ID de l étudiant à qui attribuer le badge",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AttributionBadgeRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/badges/{id}/etudiants": {
+      "get": {
+        "tags": [
+          "Badges"
+        ],
+        "summary": "Lister les étudiants qui possèdent un badge",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/badges/{id}/retirer/{id_etudiant}": {
+      "delete": {
+        "tags": [
+          "Badges"
+        ],
+        "summary": "Retirer un badge d un étudiant",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id_etudiant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/badges/etudiant/{id_etudiant}": {
+      "get": {
+        "tags": [
+          "Badges"
+        ],
+        "summary": "Lister les badges d un étudiant",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_etudiant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/commentaires/public/projet/{id_projet}": {
+      "get": {
+        "tags": [
+          "Commentaires"
+        ],
+        "summary": "Récupérer les commentaires validés d\\'un projet",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_projet",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID du projet"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/commentaires/public/etudiant/{id_etudiant}": {
+      "get": {
+        "tags": [
+          "Commentaires"
+        ],
+        "summary": "Récupérer les commentaires validés d\\'un profil étudiant",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_etudiant",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID de l'étudiant"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/commentaires/mes-commentaires-recus": {
+      "get": {
+        "tags": [
+          "Commentaires"
+        ],
+        "summary": "Récupérer tous les commentaires reçus par l\\'utilisateur connecté",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/commentaires/": {
+      "post": {
+        "tags": [
+          "Commentaires"
+        ],
+        "summary": "Créer un nouveau commentaire",
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Données du commentaire à créer",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CommentaireRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Commentaires"
+        ],
+        "summary": "Récupérer tous les commentaires (Admin uniquement)",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/commentaires/{id}/valider": {
+      "patch": {
+        "tags": [
+          "Commentaires"
+        ],
+        "summary": "Valider ou rejeter un commentaire (Étudiant cible ou Admin)",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID du commentaire"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Status de validation",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "VALIDE"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/commentaires/{id}": {
+      "delete": {
+        "tags": [
+          "Commentaires"
+        ],
+        "summary": "Supprimer un commentaire (Auteur ou Admin)",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID du commentaire"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Commentaires"
+        ],
+        "summary": "Récupérer un commentaire par ID (Admin uniquement)",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID du commentaire"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/commentaires/projet/{id_projet}": {
+      "get": {
+        "tags": [
+          "Commentaires"
+        ],
+        "summary": "Récupérer les commentaires d\\'un projet",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_projet",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID du projet"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/commentaires/etudiant/{id_etudiant}": {
+      "get": {
+        "tags": [
+          "Commentaires"
+        ],
+        "summary": "Récupérer les commentaires d\\'un profil étudiant",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_etudiant",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID de l'étudiant"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/recommandations/public/etudiant/{id_etudiant}": {
+      "get": {
+        "tags": [
+          "Recommandations"
+        ],
+        "summary": "Récupérer les recommandations validées d\\'un étudiant (Public)",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id_etudiant",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID de l'étudiant"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/recommandations/mes-recommandations-recus": {
+      "get": {
+        "tags": [
+          "Recommandations"
+        ],
+        "summary": "Récupérer toutes les recommandations reçues par l\\'utilisateur connecté",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/recommandations/": {
+      "post": {
+        "tags": [
+          "Recommandations"
+        ],
+        "summary": "Créer une nouvelle recommandation",
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Données de la recommandation à créer",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/RecommandationRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Recommandations"
+        ],
+        "summary": "Récupérer toutes les recommandations (Admin uniquement)",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/recommandations/{id}/valider": {
+      "patch": {
+        "tags": [
+          "Recommandations"
+        ],
+        "summary": "Valider ou rejeter une recommandation (Étudiant cible ou Admin)",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID de la recommandation"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Status de validation",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "VALIDE"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/recommandations/{id}": {
+      "delete": {
+        "tags": [
+          "Recommandations"
+        ],
+        "summary": "Supprimer une recommandation (Auteur ou Admin)",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID de la recommandation"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Recommandations"
+        ],
+        "summary": "Récupérer une recommandation par ID",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID de la recommandation"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/etudiants/": {
+      "get": {
+        "tags": [
+          "Etudiants"
+        ],
+        "summary": "Récupérer tous les profils étudiants",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/etudiants/{id}": {
+      "get": {
+        "tags": [
+          "Etudiants"
+        ],
+        "summary": "Récupérer un profil étudiant par ID",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID de l'étudiant (id_utilisateur)"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Etudiants"
+        ],
+        "summary": "Créer ou mettre à jour un profil étudiant",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID de l'étudiant (id_utilisateur)"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Informations du profil étudiant",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/EtudiantProfileRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/etudiants/{id}/avatar": {
+      "post": {
+        "tags": [
+          "Etudiants"
+        ],
+        "summary": "Uploader la photo de profil",
+        "description": "",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "ID de l'étudiant (id_utilisateur)"
+          },
+          {
+            "name": "fichier",
+            "in": "formData",
+            "type": "file",
+            "required": true,
+            "description": "Photo de profil (Avatar)"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/professeurs/": {
+      "get": {
+        "tags": [
+          "Professeurs"
+        ],
+        "summary": "Récupérer tous les profils professeurs",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/professeurs/filiere/{filiere}": {
+      "get": {
+        "tags": [
+          "Professeurs"
+        ],
+        "summary": "Récupérer les professeurs par filière",
+        "description": "",
+        "parameters": [
+          {
+            "name": "filiere",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/professeurs/ecole/{ecole}": {
+      "get": {
+        "tags": [
+          "Professeurs"
+        ],
+        "summary": "Récupérer les professeurs par école",
+        "description": "",
+        "parameters": [
+          {
+            "name": "ecole",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/professeurs/{id}": {
+      "get": {
+        "tags": [
+          "Professeurs"
+        ],
+        "summary": "Récupérer un profil professeur par ID",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Professeurs"
+        ],
+        "summary": "Créer ou mettre à jour un profil professeur",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Informations du profil professeur",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProfesseurProfileRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/professeurs/{id}/avatar": {
+      "post": {
+        "tags": [
+          "Professeurs"
+        ],
+        "summary": "Uploader la photo de profil",
+        "description": "",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "fichier",
+            "in": "formData",
+            "type": "file",
+            "required": true,
+            "description": "Photo de profil (Avatar)"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/administrateurs/": {
+      "get": {
+        "tags": [
+          "Administrateurs"
+        ],
+        "summary": "Récupérer tous les profils administrateurs",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/administrateurs/{id}": {
+      "get": {
+        "tags": [
+          "Administrateurs"
+        ],
+        "summary": "Récupérer un profil administrateur par ID",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Administrateurs"
+        ],
+        "summary": "Créer ou mettre à jour un profil administrateur",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Informations du profil administrateur",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AdminProfileRequest"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/administrateurs/{id}/avatar": {
+      "post": {
+        "tags": [
+          "Administrateurs"
+        ],
+        "summary": "Uploader la photo de profil",
+        "description": "",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "fichier",
+            "in": "formData",
+            "type": "file",
+            "required": true,
+            "description": "Photo de profil (Avatar)"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/professionnels/en-attente": {
+      "get": {
+        "tags": [
+          "Tableaux de Bord - Admin"
+        ],
+        "summary": "Afficher les professionnels en attente de validation",
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/professionnels/{id}/valider": {
+      "patch": {
+        "tags": [
+          "Tableaux de Bord - Admin"
+        ],
+        "summary": "Valider ou rejeter un professionnel (Admin uniquement)",
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Action à effectuer sur le professionnel (VALIDE ou REJETE)",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string",
+                  "example": "VALIDE"
+                }
+              },
+              "required": [
+                "action"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "RegisterRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "nom.prenom@etu.uae.ac.ma"
+        },
+        "password": {
+          "type": "string",
+          "example": "password123"
+        },
+        "nom": {
+          "type": "string",
+          "example": "Nom"
+        },
+        "prenom": {
+          "type": "string",
+          "example": "Prenom"
+        },
+        "role": {
+          "type": "string",
+          "example": "ETUDIANT"
+        },
+        "ecole": {
+          "type": "string",
+          "example": "ENSATanger"
+        }
+      }
+    },
+    "CreateUserAdminRequest": {
+      "type": "object",
+      "properties": {
+        "nom": {
+          "type": "string",
+          "example": "NomAdmin"
+        },
+        "prenom": {
+          "type": "string",
+          "example": "PrenomAdmin"
+        },
+        "email": {
+          "type": "string",
+          "example": "admin@uae.ac.ma"
+        },
+        "niveau_acces": {
+          "type": "string",
+          "example": "ADMIN"
+        },
+        "ecole": {
+          "type": "string",
+          "example": "ENSATanger"
+        }
+      }
+    },
+    "RequestAccountRequest": {
+      "type": "object",
+      "properties": {
+        "nom": {
+          "type": "string",
+          "example": "Nom"
+        },
+        "prenom": {
+          "type": "string",
+          "example": "Prenom"
+        },
+        "email": {
+          "type": "string",
+          "example": "etudiant@etu.uae.ac.ma"
+        },
+        "role": {
+          "type": "string",
+          "example": "ETUDIANT"
+        },
+        "message": {
+          "type": "string",
+          "example": "Je souhaite créer un compte pour mon portfolio."
+        }
+      }
+    },
+    "LoginRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "etudiant@test.com"
+        },
+        "password": {
+          "type": "string",
+          "example": "password123"
+        }
+      }
+    },
+    "ForgotPasswordRequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "etudiant@test.com"
+        }
+      }
+    },
+    "ResetPasswordRequest": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string",
+          "example": "abc123def456..."
+        },
+        "nouveauMotDePasse": {
+          "type": "string",
+          "example": "nouveauMotDePasse123"
+        }
+      }
+    },
+    "EtudiantProfileRequest": {
+      "type": "object",
+      "properties": {
+        "numero_etudiant": {
+          "type": "string",
+          "example": "2026001"
+        },
+        "filiere": {
+          "type": "string",
+          "example": "GINF"
+        },
+        "annee": {
+          "type": "number",
+          "example": 3
+        },
+        "date_naissance": {
+          "type": "string",
+          "example": "2000-01-01"
+        },
+        "adresse": {
+          "type": "string",
+          "example": "123 Rue de la fac"
+        },
+        "ville": {
+          "type": "string",
+          "example": "Tanger"
+        },
+        "pays": {
+          "type": "string",
+          "example": "Maroc"
+        },
+        "biographie": {
+          "type": "string",
+          "example": "Etudiant passionné par le développement"
+        },
+        "linkedin_url": {
+          "type": "string",
+          "example": "https://linkedin.com/in/username"
+        },
+        "github_username": {
+          "type": "string",
+          "example": "username"
+        },
+        "site_web": {
+          "type": "string",
+          "example": "https://mywebsite.com"
+        },
+        "objectif_professionnel": {
+          "type": "string",
+          "example": "Développeur Fullstack"
+        },
+        "score_credibilite": {
+          "type": "number",
+          "example": 0
+        },
+        "niveau_credibilite": {
+          "type": "string",
+          "example": "DEBUTANT"
+        },
+        "visibilite_profil": {
+          "type": "string",
+          "example": "PUBLIC"
+        },
+        "id_validateur": {}
+      }
+    },
+    "AdminProfileRequest": {
+      "type": "object",
+      "properties": {
+        "niveau_acces": {
+          "type": "string",
+          "example": "ADMIN"
+        }
+      }
+    },
+    "ProfesseurProfileRequest": {
+      "type": "object",
+      "properties": {
+        "departement": {
+          "type": "string",
+          "example": "SIC"
+        },
+        "specialite": {
+          "type": "string",
+          "example": "Informatique"
+        },
+        "filieres": {
+          "type": "array",
+          "example": [
+            "GINF",
+            "GSR"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "date_naissance": {
+          "type": "string",
+          "example": "1980-01-01"
+        },
+        "adresse": {
+          "type": "string",
+          "example": "456 Rue des profs"
+        },
+        "ville": {
+          "type": "string",
+          "example": "Tanger"
+        },
+        "pays": {
+          "type": "string",
+          "example": "Maroc"
+        },
+        "biographie": {
+          "type": "string",
+          "example": "Professeur expérimenté"
+        }
+      }
+    },
+    "CompetenceRequest": {
+      "type": "object",
+      "properties": {
+        "nom": {
+          "type": "string",
+          "example": "Node.js"
+        },
+        "type": {
+          "type": "string",
+          "example": "TECHNIQUE"
+        },
+        "categorie": {
+          "type": "string",
+          "example": "Backend"
+        },
+        "description": {
+          "type": "string",
+          "example": "Développement serveur avec Node.js"
+        }
+      }
+    },
+    "FormationRequest": {
+      "type": "object",
+      "properties": {
+        "diplome": {
+          "type": "string",
+          "example": "Cycle d'ingénieur"
+        },
+        "etablissement": {
+          "type": "string",
+          "example": "ENSA Tanger"
+        },
+        "date_debut": {
+          "type": "string",
+          "example": "2023-09-01"
+        },
+        "date_fin": {
+          "type": "string",
+          "example": "2026-06-30"
+        },
+        "description": {
+          "type": "string",
+          "example": "Génie Informatique"
+        },
+        "mention": {
+          "type": "string",
+          "example": "Bien"
+        },
+        "est_actuelle": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "TechnologieRequest": {
+      "type": "object",
+      "properties": {
+        "nom": {
+          "type": "string",
+          "example": "React"
+        },
+        "categorie": {
+          "type": "string",
+          "example": "Frontend"
+        },
+        "sous_categorie": {
+          "type": "string",
+          "example": "Library"
+        },
+        "description": {
+          "type": "string",
+          "example": "Bibliothèque JavaScript pour interfaces utilisateur"
+        }
+      }
+    },
+    "ProjetRequest": {
+      "type": "object",
+      "properties": {
+        "titre": {
+          "type": "string",
+          "example": "Mon Projet"
+        },
+        "description": {
+          "type": "string",
+          "example": "Une description détaillée du projet..."
+        },
+        "type_projet": {
+          "type": "string",
+          "example": "PFA"
+        },
+        "date_debut": {
+          "type": "string",
+          "example": "2023-01-01"
+        },
+        "date_fin": {
+          "type": "string",
+          "example": "2023-06-01"
+        },
+        "lien_github": {
+          "type": "string",
+          "example": "https://github.com/user/repo"
+        },
+        "lien_youtube": {
+          "type": "string",
+          "example": "https://youtube.com/watch?v=..."
+        },
+        "lien_demo": {
+          "type": "string",
+          "example": "https://demo.com"
+        },
+        "resultats_obtenus": {
+          "type": "string",
+          "example": "Le projet a permis de..."
+        },
+        "nombre_collaborateurs": {
+          "type": "number",
+          "example": 3
+        },
+        "est_public": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "ParticipationProjetRequest": {
+      "type": "object",
+      "properties": {
+        "role_joue": {
+          "type": "string",
+          "example": "Développeur Backend"
+        },
+        "date_debut": {
+          "type": "string",
+          "example": "2023-01-01"
+        },
+        "date_fin": {
+          "type": "string",
+          "example": "2023-06-01"
+        },
+        "est_createur": {
+          "type": "boolean",
+          "example": true
+        },
+        "est_visible_portfolio": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "ProjetTechnologieRequest": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "example": "18.2.0"
+        },
+        "niveau_utilisation": {
+          "type": "string",
+          "example": "AVANCE"
+        }
+      }
+    },
+    "StageRequest": {
+      "type": "object",
+      "properties": {
+        "entreprise": {
+          "type": "string",
+          "example": "Google"
+        },
+        "adresse_entreprise": {
+          "type": "string",
+          "example": "123 Rue Tech"
+        },
+        "poste": {
+          "type": "string",
+          "example": "Développeur Backend"
+        },
+        "date_debut": {
+          "type": "string",
+          "example": "2024-06-01"
+        },
+        "date_fin": {
+          "type": "string",
+          "example": "2024-08-31"
+        },
+        "duree_semaines": {
+          "type": "number",
+          "example": 10
+        },
+        "missions": {
+          "type": "string",
+          "example": "Développement d'une API REST"
+        },
+        "encadrant_professionnel": {
+          "type": "string",
+          "example": "M. Ghailani"
+        },
+        "encadrant_academique": {
+          "type": "string",
+          "example": "Pr. Ghailani"
+        },
+        "est_public": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "StageTechnologieRequest": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "example": "18.2.0"
+        },
+        "niveau_utilisation": {
+          "type": "string",
+          "example": "AVANCE"
+        }
+      }
+    },
+    "ActiviteRequest": {
+      "type": "object",
+      "properties": {
+        "type_activite": {
+          "type": "string",
+          "example": "CLUB"
+        },
+        "nom_activite": {
+          "type": "string",
+          "example": "CSC"
+        },
+        "organisation": {
+          "type": "string",
+          "example": "ENSA Tanger"
+        },
+        "date_debut": {
+          "type": "string",
+          "example": "2024-01-01"
+        },
+        "date_fin": {
+          "type": "string",
+          "example": "2024-06-01"
+        },
+        "description": {
+          "type": "string",
+          "example": "Description de l activité"
+        },
+        "role": {
+          "type": "string",
+          "example": "Membre"
+        },
+        "est_public": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "BadgeRequest": {
+      "type": "object",
+      "properties": {
+        "nom": {
+          "type": "string",
+          "example": "Badge de Champion"
+        },
+        "description": {
+          "type": "string",
+          "example": "Attribué aux étudiants ayant complété tous les projets GINF"
+        },
+        "categorie": {
+          "type": "string",
+          "example": "ACADEMIQUE"
+        },
+        "icone": {
+          "type": "string",
+          "example": "badge-champion.png"
+        },
+        "condition_attribution": {
+          "type": "string",
+          "example": "Compléter 5 projets validés"
+        },
+        "est_actif": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "AttributionBadgeRequest": {
+      "type": "object",
+      "properties": {
+        "id_etudiant": {
+          "type": "string",
+          "example": "cl...id_etudiant"
+        }
+      }
+    },
+    "AssocierCompetenceRequest": {
+      "type": "object",
+      "properties": {
+        "niveau_maitrise": {
+          "type": "string",
+          "example": "INTERMEDIAIRE"
+        }
+      }
+    },
+    "CommentaireRequest": {
+      "type": "object",
+      "properties": {
+        "id_etudiant_cible": {
+          "type": "string",
+          "example": "cl...id_etudiant"
+        },
+        "id_projet_cible": {
+          "type": "string",
+          "example": "cl...id_projet"
+        },
+        "type_cible": {
+          "type": "string",
+          "example": "PROJET"
+        },
+        "contenu": {
+          "type": "string",
+          "example": "Très bon travail sur ce projet !"
+        }
+      }
+    },
+    "RecommandationRequest": {
+      "type": "object",
+      "properties": {
+        "id_etudiant": {
+          "type": "string",
+          "example": "cl...id_etudiant"
+        },
+        "message": {
+          "type": "string",
+          "example": "Je recommande vivement cet étudiant pour son sérieux."
+        }
+      }
+    },
+    "StandardResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean",
+          "example": true
+        },
+        "message": {
+          "type": "string",
+          "example": "Message de succès ou erreur"
+        },
+        "data": {
+          "type": "object",
+          "properties": {}
+        },
+        "error": {}
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ]
+}
