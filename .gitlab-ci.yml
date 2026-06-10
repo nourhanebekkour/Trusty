@@ -1,18 +1,5 @@
-# ============================================================
-#  GitLab CI/CD — Pipeline DevSecOps
-#  Plateforme Portfolios "Trusty" — ENSA Tanger 2025/2026
-#  Pr. M. GHAILANI
-# ============================================================
-#
-#  FLUX DES STAGES :
-#
-#  lint → test → build → trivy → sonar → zap → staging → production
-#
-#  Runners :
-#    - Jobs standards     → runner Docker partagé (VM2)
-#    - sonar + zap        → runner shell self-hosted (VM2 DevSecOps)
-#    - staging/production → runner shell self-hosted (VM2/Prod)
-#
+
+#  lint → test → build → trivy → sonar → staging → zap → production
 # ============================================================
 
 stages:
@@ -21,19 +8,16 @@ stages:
   - build
   - trivy
   - sonar
-  - zap
   - staging
+  - zap
   - production
 
-# ── Variables globales ───────────────────────────────────────
 variables:
   NODE_VERSION: "20"
-  # PostgreSQL de test
   POSTGRES_DB:       trusty_test
   POSTGRES_USER:     postgres
   POSTGRES_PASSWORD: postgres
   DATABASE_URL:      "postgresql://postgres:postgres@postgres:5432/trusty_test"
-  # JWT / MinIO de test
   JWT_SECRET:        secret_test_key
   MINIO_ENDPOINT:    minio
   MINIO_PORT:        "9000"
@@ -41,15 +25,12 @@ variables:
   MINIO_SECRET_KEY:  minioadmin
   MINIO_USE_SSL:     "false"
   NODE_ENV:          test
-  # Images Docker finales
-  IMAGE_BACKEND:  $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA
-  IMAGE_FRONTEND: $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA
-  # URLs internes
+  IMAGE_BACKEND:     $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA
+  IMAGE_FRONTEND:    $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA
   SONAR_HOST_URL:    http://192.168.20.10:9000
   ZAP_HOST:          http://192.168.20.10:8090
   STAGING_BACKEND:   http://192.168.20.10:3001
 
-# ── Cache npm partagé ────────────────────────────────────────
 .cache_backend: &cache_backend
   cache:
     key:
@@ -64,7 +45,6 @@ variables:
     paths: [frontend/node_modules/]
     policy: pull-push
 
-# ── Règles de déclenchement communes ────────────────────────
 .rules_standard: &rules_standard
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "mirroring"'
@@ -74,53 +54,39 @@ variables:
   rules:
     - if: '$CI_COMMIT_BRANCH == "mirroring"'
 
-# ============================================================
-#  STAGE 1 — LINT
-# ============================================================
+# ── STAGE 1 — LINT ──────────────────────────────────────────
 
 lint:backend:
   stage: lint
   image: node:20-alpine
-  <<: *cache_backend
-  <<: *rules_standard
-  defaults:
-    run:
-      working-directory: ./backend
+  <<:
+    - *cache_backend
+    - *rules_standard
   script:
     - cd backend
     - npm ci
     - npx eslint src/ --max-warnings=50 || true
-  artifacts:
-    when: always
-    paths: [backend/eslint-report.json]
-    expire_in: 3 days
 
 lint:frontend:
   stage: lint
   image: node:20-alpine
-  <<: *cache_frontend
-  <<: *rules_standard
+  <<:
+    - *cache_frontend
+    - *rules_standard
   script:
     - cd frontend
     - npm ci
     - npx eslint src/ --max-warnings=50 || true
-    - npm run build
-  artifacts:
-    paths: [frontend/dist/]
-    expire_in: 1 hour
 
-# ============================================================
-#  STAGE 2 — TESTS
-# ============================================================
+# ── STAGE 2 — TEST ──────────────────────────────────────────
 
 test:backend:
   stage: test
   image: node:20-alpine
   needs: [lint:backend]
-  <<: *cache_backend
-  <<: *rules_standard
-
-  # ── Services ──────────────────────────────────────────────
+  <<:
+    - *cache_backend
+    - *rules_standard
   services:
     - name: postgres:15-alpine
       alias: postgres
@@ -130,22 +96,17 @@ test:backend:
       variables:
         MINIO_ROOT_USER:     minioadmin
         MINIO_ROOT_PASSWORD: minioadmin
-
   script:
     - cd backend
     - npm ci
-    # Attendre que MinIO soit prêt
     - |
-      echo "En attente de MinIO..."
       for i in $(seq 1 15); do
         wget -q --spider http://minio:9000/minio/health/live && break
         sleep 3
       done
-      echo "MinIO prêt ✓"
     - npx prisma migrate deploy
     - npm run swagger
     - npm test
-
   artifacts:
     when: always
     reports:
@@ -159,18 +120,9 @@ test:frontend:
   stage: test
   image: node:20-alpine
   needs: [lint:frontend]
-  <<: *cache_frontend
-  <<: *rules_standard
-
-  script:
-    - cd frontend
-    - npm ci
-    # Vitest en mode CI → sortie JSON pour le rapport
-    - npm run test:ci || true
-    - npm run report:generate
-    - npm run report:send
-  environment:
-    name: test-report
+  <<:
+    - *cache_frontend
+    - *rules_standard
   variables:
     SMTP_USER:        $SMTP_USER
     SMTP_PASS:        $SMTP_PASS
@@ -179,7 +131,14 @@ test:frontend:
     JIRA_PROJECT_KEY: $JIRA_PROJECT_KEY
     JIRA_USER_EMAIL:  $JIRA_USER_EMAIL
     JIRA_API_TOKEN:   $JIRA_API_TOKEN
-
+  script:
+    - cd frontend
+    - npm ci
+    - npm run test:ci || true
+    - npm run report:generate
+    - npm run report:send
+  environment:
+    name: test-report
   artifacts:
     when: always
     reports:
@@ -189,17 +148,31 @@ test:frontend:
       - frontend/coverage/
     expire_in: 7 days
 
-# ── Smoke tests ───────────────────────────────────────────────
-
 smoke:backend:
   stage: test
   image: node:20-alpine
   needs: [test:backend]
-  <<: *cache_backend
-  <<: *rules_standard
+  <<:
+    - *cache_backend
+    - *rules_standard
+  services:
+    - name: postgres:15-alpine
+      alias: postgres
+    - name: minio/minio:latest
+      alias: minio
+      command: ["server", "/data"]
+      variables:
+        MINIO_ROOT_USER:     minioadmin
+        MINIO_ROOT_PASSWORD: minioadmin
   script:
     - cd backend
     - npm ci
+    - |
+      for i in $(seq 1 15); do
+        wget -q --spider http://minio:9000/minio/health/live && break
+        sleep 3
+      done
+    - npx prisma migrate deploy
     - |
       npm start &
       PID=$!
@@ -211,8 +184,9 @@ smoke:frontend:
   stage: test
   image: node:20-alpine
   needs: [test:frontend]
-  <<: *cache_frontend
-  <<: *rules_standard
+  <<:
+    - *cache_frontend
+    - *rules_standard
   script:
     - cd frontend
     - npm ci
@@ -223,9 +197,7 @@ smoke:frontend:
       wget -q --spider http://localhost:5173 || echo "Vite démarré, OK"
       kill $PID || true
 
-# ============================================================
-#  STAGE 3 — BUILD IMAGES DOCKER
-# ============================================================
+# ── STAGE 3 — BUILD ─────────────────────────────────────────
 
 build:backend:
   stage: build
@@ -238,6 +210,9 @@ build:backend:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
+    - docker pull $CI_REGISTRY_IMAGE/backend:latest || true
+    - docker tag  $CI_REGISTRY_IMAGE/backend:latest $CI_REGISTRY_IMAGE/backend:previous || true
+    - docker push $CI_REGISTRY_IMAGE/backend:previous || true
     - docker build -t $IMAGE_BACKEND -t trusty-backend:ci ./backend
     - docker push $IMAGE_BACKEND
     - docker save trusty-backend:ci -o backend-image.tar
@@ -256,6 +231,9 @@ build:frontend:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
+    - docker pull $CI_REGISTRY_IMAGE/frontend:latest || true
+    - docker tag  $CI_REGISTRY_IMAGE/frontend:latest $CI_REGISTRY_IMAGE/frontend:previous || true
+    - docker push $CI_REGISTRY_IMAGE/frontend:previous || true
     - docker build -t $IMAGE_FRONTEND -t trusty-frontend:ci ./frontend
     - docker push $IMAGE_FRONTEND
     - docker save trusty-frontend:ci -o frontend-image.tar
@@ -263,9 +241,7 @@ build:frontend:
     paths: [frontend-image.tar]
     expire_in: 1 hour
 
-# ============================================================
-#  STAGE 4 — TRIVY  (dépendances + Dockerfiles + images)
-# ============================================================
+# ── STAGE 4 — TRIVY ─────────────────────────────────────────
 
 trivy:deps:
   stage: trivy
@@ -275,13 +251,10 @@ trivy:deps:
   needs: [build:backend, build:frontend]
   <<: *rules_standard
   script:
-    # Scan dépendances npm backend
     - trivy fs --severity CRITICAL,HIGH --format sarif
         --output trivy-deps-backend.sarif ./backend
-    # Scan dépendances npm frontend
     - trivy fs --severity CRITICAL,HIGH --format sarif
         --output trivy-deps-frontend.sarif ./frontend
-    # Scan misconfigurations Dockerfiles
     - trivy config --format sarif
         --output trivy-config-backend.sarif ./backend
     - trivy config --format sarif
@@ -294,7 +267,7 @@ trivy:deps:
       - trivy-config-backend.sarif
       - trivy-config-frontend.sarif
     expire_in: 14 days
-  allow_failure: true   # info seulement — ne bloque pas
+  allow_failure: true
 
 trivy:images:
   stage: trivy
@@ -308,11 +281,9 @@ trivy:images:
     - apk add --no-cache curl
     - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh
         | sh -s -- -b /usr/local/bin
-    # Charger les images depuis les artifacts
     - docker load -i backend-image.tar
     - docker load -i frontend-image.tar
   script:
-    # BLOQUE si CVE CRITICAL dans nos images
     - trivy image --exit-code 1 --severity CRITICAL
         --ignore-unfixed --format sarif
         --output trivy-image-backend.sarif trusty-backend:ci
@@ -320,7 +291,6 @@ trivy:images:
         --ignore-unfixed --format sarif
         --output trivy-image-frontend.sarif trusty-frontend:ci
   after_script:
-    # Résumé lisible dans les logs même en cas d'échec
     - trivy image --exit-code 0 --severity CRITICAL,HIGH
         --format table trusty-backend:ci  || true
     - trivy image --exit-code 0 --severity CRITICAL,HIGH
@@ -332,18 +302,16 @@ trivy:images:
       - trivy-image-frontend.sarif
     expire_in: 14 days
 
-# ============================================================
-#  STAGE 5 — SONARQUBE  (runner self-hosted VM2)
-# ============================================================
+# ── STAGE 5 — SONAR ─────────────────────────────────────────
 
 sonar:analysis:
   stage: sonar
-  tags: [self-hosted]           # ← runner shell sur VM2 DevSecOps
+  tags: [self-hosted]
   needs: [trivy:deps, trivy:images]
   <<: *rules_standard
   image: sonarsource/sonar-scanner-cli:latest
   variables:
-    GIT_DEPTH: 0                # historique complet nécessaire pour SonarQube
+    GIT_DEPTH: 0
   script:
     - sonar-scanner
         -Dsonar.projectKey=trusty-portfolio
@@ -353,67 +321,15 @@ sonar:analysis:
         -Dsonar.login=$SONAR_TOKEN
         -Dsonar.javascript.lcov.reportPaths=backend/coverage/lcov.info,frontend/coverage/lcov.info
         -Dsonar.testExecutionReportPaths=backend/reports/junit.xml,frontend/reports/junit.xml
-        -Dsonar.qualitygate.wait=true   # bloque si Quality Gate KO
+        -Dsonar.qualitygate.wait=true
   allow_failure: false
 
-# ============================================================
-#  STAGE 6 — OWASP ZAP  (runner self-hosted VM2)
-# ============================================================
-
-zap:scan:
-  stage: zap
-  tags: [self-hosted]           # ← ZAP tourne déjà sur VM2 (port 8090)
-  needs: [sonar:analysis]
-  <<: *rules_standard
-  script:
-    - |
-      echo "=== Démarrage scan ZAP actif sur $STAGING_BACKEND ==="
-
-      # Lancer le scan actif
-      SCAN_ID=$(curl -s \
-        "$ZAP_HOST/JSON/ascan/action/scan/?url=$STAGING_BACKEND&recurse=true" \
-        | grep -o '"scan":"[0-9]*"' | grep -o '[0-9]*')
-      echo "Scan ID : $SCAN_ID"
-
-      # Attendre la fin — poll toutes les 10s, max 5 min
-      for i in $(seq 1 30); do
-        STATUS=$(curl -s \
-          "$ZAP_HOST/JSON/ascan/view/status/?scanId=$SCAN_ID" \
-          | grep -o '"status":"[0-9]*"' | grep -o '[0-9]*')
-        echo "Avancement : $STATUS%"
-        [ "$STATUS" = "100" ] && echo "Scan terminé ✓" && break
-        sleep 10
-      done
-
-      # Récupérer le rapport JSON
-      curl -s "$ZAP_HOST/JSON/core/view/alerts/" -o zap-report.json
-      TOTAL=$(grep -c '"alert"' zap-report.json || echo "0")
-      echo "Total alertes : $TOTAL"
-
-      # Bloquer si HIGH ou CRITICAL
-      HIGH=$(grep -c '"risk":"High"'     zap-report.json || true)
-      CRIT=$(grep -c '"risk":"Critical"' zap-report.json || true)
-      echo "HIGH=$HIGH  CRITICAL=$CRIT"
-
-      if [ "$HIGH" -gt "0" ] || [ "$CRIT" -gt "0" ]; then
-        echo "❌ Vulnérabilités HIGH/CRITICAL détectées — pipeline bloqué"
-        exit 1
-      fi
-      echo "✓ Aucune alerte critique ZAP"
-
-  artifacts:
-    when: always
-    paths: [zap-report.json]
-    expire_in: 14 days
-
-# ============================================================
-#  STAGE 7 — DÉPLOIEMENT STAGING
-# ============================================================
+# ── STAGE 6 — STAGING ───────────────────────────────────────
 
 staging:deploy:
   stage: staging
   tags: [self-hosted]
-  needs: [zap:scan]
+  needs: [sonar:analysis]
   <<: *rules_standard
   environment:
     name: staging
@@ -425,7 +341,6 @@ staging:deploy:
     - docker-compose pull
     - docker-compose up -d --remove-orphans
     - docker-compose ps
-    - echo "✓ Staging déployé — $IMAGE_BACKEND / $IMAGE_FRONTEND"
 
 staging:e2e:
   stage: staging
@@ -441,16 +356,49 @@ staging:e2e:
     paths: [frontend/playwright-report/]
     expire_in: 7 days
 
-# ============================================================
-#  STAGE 8 — PRODUCTION  (déclenchement MANUEL — Chef / Adj)
-# ============================================================
+# ── STAGE 7 — ZAP ───────────────────────────────────────────
+
+zap:scan:
+  stage: zap
+  tags: [self-hosted]
+  needs: [staging:deploy]
+  <<: *rules_standard
+  script:
+    - |
+      SCAN_ID=$(curl -s \
+        "$ZAP_HOST/JSON/ascan/action/scan/?url=$STAGING_BACKEND&recurse=true" \
+        | grep -o '"scan":"[0-9]*"' | grep -o '[0-9]*')
+
+      for i in $(seq 1 30); do
+        STATUS=$(curl -s \
+          "$ZAP_HOST/JSON/ascan/view/status/?scanId=$SCAN_ID" \
+          | grep -o '"status":"[0-9]*"' | grep -o '[0-9]*')
+        [ "$STATUS" = "100" ] && break
+        sleep 10
+      done
+
+      curl -s "$ZAP_HOST/JSON/core/view/alerts/" -o zap-report.json
+
+      HIGH=$(grep -c '"risk":"High"'     zap-report.json || true)
+      CRIT=$(grep -c '"risk":"Critical"' zap-report.json || true)
+
+      if [ "$HIGH" -gt "0" ] || [ "$CRIT" -gt "0" ]; then
+        echo "❌ Vulnérabilités HIGH/CRITICAL — pipeline bloqué"
+        exit 1
+      fi
+  artifacts:
+    when: always
+    paths: [zap-report.json]
+    expire_in: 14 days
+
+# ── STAGE 8 — PRODUCTION ────────────────────────────────────
 
 production:deploy:
   stage: production
   tags: [self-hosted]
-  needs: [staging:e2e]
+  needs: [staging:e2e, zap:scan]
   <<: *rules_main_only
-  when: manual                  # ← Gate manuelle : Chef ou Adjoint
+  when: manual
   environment:
     name: production
     url: https://portfolio.ensa-tanger.ac.ma
@@ -459,13 +407,12 @@ production:deploy:
         -i infra/ansible/inventory/production.ini
         infra/ansible/playbooks/deploy.yml
         --extra-vars "image_backend=$IMAGE_BACKEND image_frontend=$IMAGE_FRONTEND"
-    - echo "✓ Production déployée — commit $CI_COMMIT_SHORT_SHA"
 
 production:rollback:
   stage: production
   tags: [self-hosted]
   <<: *rules_main_only
-  when: manual                  # ← Rollback d'urgence
+  when: manual
   environment:
     name: production
   script:
@@ -474,33 +421,3 @@ production:rollback:
     - docker tag $CI_REGISTRY_IMAGE/backend:previous  $CI_REGISTRY_IMAGE/backend:latest
     - docker tag $CI_REGISTRY_IMAGE/frontend:previous $CI_REGISTRY_IMAGE/frontend:latest
     - docker-compose up -d
-    - echo "↩ Rollback effectué"
-
-# ============================================================
-#  VARIABLES CI/CD À CONFIGURER dans GitLab
-#  Settings → CI/CD → Variables
-# ============================================================
-#
-#  ── Registre Docker ─────────────────────────────────────────
-#  CI_REGISTRY_USER     → auto (GitLab)
-#  CI_REGISTRY_PASSWORD → auto (GitLab)
-#
-#  ── Base de données & sécurité ──────────────────────────────
-#  DB_PASSWORD          → mot de passe PostgreSQL production
-#  JWT_SECRET           → clé secrète JWT production
-#  SONAR_TOKEN          → token SonarQube
-#
-#  ── Rapports QA ─────────────────────────────────────────────
-#  SMTP_USER            → email expéditeur rapports
-#  SMTP_PASS            → mot de passe SMTP
-#  SMTP_TO              → destinataires (Chef, Adj, QA)
-#  JIRA_BASE_URL        → https://votre-projet.atlassian.net
-#  JIRA_PROJECT_KEY     → ex: PORT
-#  JIRA_USER_EMAIL      → email compte Jira
-#  JIRA_API_TOKEN       → token API Jira
-#
-#  ── Déploiement ─────────────────────────────────────────────
-#  SSH_PRIVATE_KEY      → clé SSH pour staging/prod
-#  SSH_KNOWN_HOSTS      → known_hosts serveurs
-#
-# ============================================================
