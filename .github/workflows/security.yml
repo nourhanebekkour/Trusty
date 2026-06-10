@@ -123,8 +123,6 @@ jobs:
 
     - name: Run backend tests
       run: npm test
-      continue-on-error: true
-
 
   # FIX ✅ — renommé "backend-run" → "backend-smoke" (supprime le doublon avec Phase 3)
   # FIX ✅ — timeout-minutes: 10 ajouté
@@ -227,17 +225,20 @@ jobs:
   # ════════════════════════════════════════════════════════
 
   trivy-scan:
-    name: Security — Trivy Scan
+    name: Security — Trivy (deps + images Docker)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # FIX ✅ — backend-run → backend-smoke
+    needs: [backend-smoke, frontend-run]
     permissions:
       security-events: write
       actions: read
       contents: read
     steps:
       - uses: actions/checkout@v4
-      # ───────── DEPENDENCIES SCAN (INFO ONLY) ─────────
-      - name: Trivy — Scan dépendances backend
+
+      # --- Scan des dépendances npm ---
+      - name: Trivy — dépendances backend
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
@@ -246,7 +247,8 @@ jobs:
           output: trivy-deps-backend.sarif
           severity: CRITICAL,HIGH
           exit-code: '0'
-      - name: Trivy — Scan dépendances frontend
+
+      - name: Trivy — dépendances frontend
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
@@ -255,81 +257,91 @@ jobs:
           output: trivy-deps-frontend.sarif
           severity: CRITICAL,HIGH
           exit-code: '0'
-      # ───────── CONFIG SCAN (Dockerfiles only) ─────────
+
+      # --- Scan des Dockerfiles ---
       - name: Trivy — Dockerfile backend
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
-          scan-ref: ./backend/Dockerfile
+          scan-ref: ./backend
           format: sarif
           output: trivy-config-backend.sarif
           exit-code: '0'
+
       - name: Trivy — Dockerfile frontend
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
-          scan-ref: ./frontend/Dockerfile
+          scan-ref: ./frontend
           format: sarif
           output: trivy-config-frontend.sarif
           exit-code: '0'
-      # ───────── BUILD IMAGES ─────────
+
+      # --- Build + scan des images Docker ---
       - name: Build image backend
         run: docker build -t trusty-backend:ci ./backend
+
       - name: Build image frontend
         run: docker build -t trusty-frontend:ci ./frontend
-      # ───────── IMAGE SCAN (SECURITY GATE) ─────────
-      - name: Trivy — Scan image backend
+
+      - name: Trivy — image backend (bloquant si CRITICAL)
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: trusty-backend:ci
           format: sarif
           output: trivy-image-backend.sarif
           severity: CRITICAL,HIGH
-          ignore-unfixed: true
           exit-code: '1'
-      - name: Trivy — Scan image frontend
+
+      - name: Trivy — image frontend (bloquant si CRITICAL)
         uses: aquasecurity/trivy-action@v0.36.0
+        if: always()
         with:
           image-ref: trusty-frontend:ci
           format: sarif
           output: trivy-image-frontend.sarif
           severity: CRITICAL,HIGH
-          ignore-unfixed: true
           exit-code: '1'
-      # ───────── UPLOAD SARIF ─────────
-      - name: Upload backend deps
+
+      # --- Upload résultats vers GitHub Security tab ---
+      - name: Upload — deps backend
         uses: github/codeql-action/upload-sarif@v4
-        if: success() || failure()
+        if: always()
         with:
           sarif_file: trivy-deps-backend.sarif
           category: trivy-deps-backend
-      - name: Upload frontend deps
+
+      - name: Upload — deps frontend
         uses: github/codeql-action/upload-sarif@v4
-        if: success() || failure()
+        if: always()
         with:
           sarif_file: trivy-deps-frontend.sarif
           category: trivy-deps-frontend
-      - name: Upload backend config
+
+      - name: Upload — config backend
         uses: github/codeql-action/upload-sarif@v4
-        if: success() || failure()
+        if: always()
         with:
           sarif_file: trivy-config-backend.sarif
           category: trivy-config-backend
-      - name: Upload frontend config
+
+      - name: Upload — config frontend
         uses: github/codeql-action/upload-sarif@v4
-        if: success() || failure()
+        if: always()
         with:
           sarif_file: trivy-config-frontend.sarif
           category: trivy-config-frontend
-      - name: Upload backend image
+
+      - name: Upload — image backend
         uses: github/codeql-action/upload-sarif@v4
-        if: success() || failure()
+        if: always()
         with:
           sarif_file: trivy-image-backend.sarif
           category: trivy-image-backend
-      - name: Upload frontend image
+
+      - name: Upload — image frontend
         uses: github/codeql-action/upload-sarif@v4
-        if: success() || failure()
+        if: always()
         with:
           sarif_file: trivy-image-frontend.sarif
           category: trivy-image-frontend
