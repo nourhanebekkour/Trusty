@@ -156,7 +156,7 @@
                 <select v-model="form.id_professeur" class="form-input">
                   <option value="">-- Choisir un professeur --</option>
                   <option v-for="p in professeurs" :key="p.id_professeur" :value="p.id_professeur">
-                    {{ p.prenom }} {{ p.nom }}
+                    {{ p.utilisateur?.prenom }} {{ p.utilisateur?.nom }}
                   </option>
                 </select>
               </div>
@@ -376,7 +376,7 @@ function formatDate(d) {
 .form-group label { font-size: 0.75rem; font-weight: 600; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
 .form-input { background: var(--color-surface-alt); border: 1px solid var(--color-border); border-radius: 9px; padding: 0.6rem 0.85rem; color: var(--color-text-primary); font-size: 0.875rem; outline: none; transition: border-color 0.18s; width: 100%; font-family: 'Inter', sans-serif; box-sizing: border-box; }
 .form-input:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-light); }
-.form-input option { background: var(--color-surface); }
+.form-input option { background: var(--color-surface); color: black; }
 .form-textarea { resize: vertical; min-height: 100px; }
 .modal-footer { display: flex; justify-content: flex-end; gap: 0.65rem; margin-top: 0.25rem; }
 .btn-cancel { background: transparent; border: 1px solid var(--color-border); color: var(--color-text-secondary); padding: 0.55rem 1.1rem; border-radius: 8px; font-size: 0.84rem; font-weight: 500; cursor: pointer; }
