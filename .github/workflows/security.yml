@@ -124,9 +124,12 @@ jobs:
     - name: Run backend tests
       run: npm test
 
-  backend-run:
+  # FIX ✅ — renommé "backend-run" → "backend-smoke" (supprime le doublon avec Phase 3)
+  # FIX ✅ — timeout-minutes: 10 ajouté
+  backend-smoke:
     name: Backend — Run
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: backend-test
     defaults:
       run:
@@ -146,6 +149,7 @@ jobs:
           sleep 5
           kill $SERVER_PID || true
 
+      
   frontend-test:
     name: Frontend — Tests & Rapport (Vitest + Jira)
     runs-on: ubuntu-latest
@@ -191,28 +195,7 @@ jobs:
   # PHASE 3 — SMOKE TESTS (parallèle backend / frontend)
   # ════════════════════════════════════════════════════════
 
-  backend-run:
-    name: Backend — Smoke test
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: backend-test
-    defaults:
-      run:
-        working-directory: ./backend
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-          cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
-      - run: npm ci
-      - name: Démarrer le backend (smoke test)
-        run: |
-          npm start &
-          SERVER_PID=$!
-          sleep 5
-          kill $SERVER_PID || true
+  # NOTE: backend-smoke ci-dessus (Phase 2) remplace le doublon qui était ici
 
   frontend-run:
     name: Frontend — Smoke test
@@ -245,7 +228,8 @@ jobs:
     name: Security — Trivy (deps + images Docker)
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [backend-run, frontend-run]
+    # FIX ✅ — backend-run → backend-smoke
+    needs: [backend-smoke, frontend-run]
     permissions:
       security-events: write
       actions: read
