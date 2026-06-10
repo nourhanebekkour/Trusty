@@ -1,14 +1,13 @@
 
-ARG NODE_VERSION=24-alpine     
+ARG NODE_VERSION=24-alpine3.21
 
 # ──────────────────────── STAGE 1 — BASE ───────────────────────────
 
-
 FROM node:${NODE_VERSION} AS base
 
-WORKDIR /app 
+RUN apk add --no-cache openssl && apk upgrade --no-cache
 
-RUN apk add --no-cache openssl
+WORKDIR /app
 
 COPY package*.json ./
 
