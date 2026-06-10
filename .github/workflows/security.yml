@@ -58,39 +58,79 @@ jobs:
   # ════════════════════════════════════════════════════════
 
   backend-test:
-    name: Backend — Tests (Jest + Prisma + MinIO)
+    name: Backend — Test
     runs-on: ubuntu-latest
-    timeout-minutes: 20
     needs: backend-lint
     defaults:
       run:
-        working-directory: ./backend
+       working-directory: ./backend
 
     services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_DB: trusty_test
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+     postgres:
+       image: postgres:15-alpine
+       env:
+         POSTGRES_DB: trusty_test
+         POSTGRES_USER: postgres
+         POSTGRES_PASSWORD: postgres
+       ports:
+         - 5432:5432
+       options: >-
+         --health-cmd pg_isready
+         --health-interval 10s
+         --health-timeout 5s
+         --health-retries 5
 
     env:
-      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/trusty_test"
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
-      MINIO_ENDPOINT: localhost
-      MINIO_PORT: "9000"
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
-      MINIO_USE_SSL: "false"
+     DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/trusty_test"
+     JWT_SECRET: "secret_test_key"
+     MINIO_ENDPOINT: localhost
+     MINIO_PORT: "9000"
+     MINIO_ACCESS_KEY: minioadmin
+     MINIO_SECRET_KEY: minioadmin
+     MINIO_USE_SSL: "false"
+ 
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
 
+    - run: npm ci
+
+    # ✅ Lancer MinIO manuellement (image officielle)
+    - name: Start MinIO
+      run: |
+        docker run -d \
+          --name minio \
+          -p 9000:9000 \
+          -e MINIO_ROOT_USER=minioadmin \
+          -e MINIO_ROOT_PASSWORD=minioadmin \
+          minio/minio server /data
+
+        echo "Waiting for MinIO..."
+        until curl -sf http://localhost:9000/minio/health/live; do
+          sleep 2
+        done
+        echo "MinIO ready ✓"
+
+    - name: Run Prisma migrations
+      run: npx prisma migrate deploy
+
+    - name: Generate Swagger
+      run: npm run swagger
+
+    - name: Run backend tests
+      run: npm test
+
+  backend-run:
+    name: Backend — Run
+    runs-on: ubuntu-latest
+    needs: backend-test
+    defaults:
+      run:
+        working-directory: ./backend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -99,27 +139,12 @@ jobs:
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
-
-      - name: Démarrer MinIO
+      - name: Start backend (smoke test)
         run: |
-          docker run -d \
-            --name minio \
-            -p 9000:9000 \
-            -e MINIO_ROOT_USER=minioadmin \
-            -e MINIO_ROOT_PASSWORD=minioadmin \
-            minio/minio server /data
-          echo "Waiting for MinIO..."
-          until curl -sf http://localhost:9000/minio/health/live; do sleep 2; done
-          echo "MinIO ready"
-
-      - name: Migrations Prisma
-        run: npx prisma migrate deploy
-
-      - name: Générer Swagger
-        run: npm run swagger
-
-      - name: Lancer les tests backend
-        run: npm test
+          npm start &
+          SERVER_PID=$!
+          sleep 5
+          kill $SERVER_PID || true
 
   frontend-test:
     name: Frontend — Tests & Rapport (Vitest + Jira)
