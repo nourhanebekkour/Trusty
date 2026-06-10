@@ -380,3 +380,15 @@ export async function getStudentDetails(studentId) {
     badges: badges.status === 'fulfilled' ? (Array.isArray(badges.value) ? badges.value : []) : [],
   }
 }
+
+export async function getStudentsByEcole(ecole) {
+  const res = await api.get(`/etudiants/ecole/${ecole}`)
+  const data = getData(res)
+  return Array.isArray(data) ? data.map(mapEtudiant) : []
+}
+
+export async function getProfessorMyRecommendations() {
+  const res = await api.get('/recommandations/mes-recommandations-emises')
+  const data = getData(res)
+  return Array.isArray(data) ? data : []
+}

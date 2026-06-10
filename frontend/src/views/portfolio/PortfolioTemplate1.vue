@@ -636,7 +636,7 @@
         </div>
         </template>
 <!-- ── EDIT PANEL ─────────────────────────────────────────────────── -->
-<template v-if="isEditMode">
+<template v-if="canEdit">
 
   <!-- FAB -->
   <button class="pf2-edit-fab" @click="panelOpen = !panelOpen">
@@ -745,14 +745,17 @@
 import { ref, computed, onMounted, onUnmounted, watch, reactive } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/api'
+import { useAuthStore } from '@/stores/authstore'
 
 const route = useRoute()
+const authStore = useAuthStore()
 const portfolioData = ref(null)
 const loading = ref(true)
 const error = ref(null)
 
 const accentColor = computed(() => portfolioData.value?.couleur_accent || '#5A89D8')
 const isEditMode = computed(() => route.query.edit === 'true')
+const canEdit = computed(() => isEditMode.value && authStore.isEtudiant)
 const panelOpen = ref(false)
 const saving = ref(false)
 const portfolioId = computed(() => portfolioData.value?.id_portfolio)

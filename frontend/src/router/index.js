@@ -102,6 +102,12 @@ const router = createRouter({
           name: 'admin-profile',
           component: () => import('../views/admin/AdminProfile.vue'),
         },
+        {
+          path: 'settings',
+          name: 'admin-settings',
+          component: () => import('../views/admin/AdminSettings.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.ADMIN] },
+        },
       ],
     },
 
@@ -218,13 +224,19 @@ const router = createRouter({
           meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
         },
         {
-          path: 'settings',
-          name: 'professional-settings',
-          component: () => import('@/views/Professional/ProfessionalSettings.vue'),
-          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
-        },
-      ],
+      path: 'settings',
+      name: 'professional-settings',
+      component: () => import('@/views/Professional/ProfessionalSettings.vue'),
+      meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
     },
+  ],
+},
+{
+  path: '/professional/students/:id/portfolio',
+  name: 'professional-portfolio-consultation',
+  component: () => import('@/views/Professional/ProfessionalPortfolioConsultation.vue'),
+  meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
+},
 
     // ── Professor ────────────────────────────────────────
     {
@@ -258,27 +270,21 @@ const router = createRouter({
            meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
         },
         {
-          path: 'commentaires',
-          name: 'professor-commentaires',
-          component: () => import('../views/professor/ProfessorMessages.vue'),
-          meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
-        },
-        {
           path: 'recommandations',
           name: 'professor-recommandations',
           component: () => import('../views/professor/ProfessorRecommendations.vue'),
            meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
         },
         {
-          path: 'historique',
-          name: 'professor-historique',
-          component: () => import('../views/professor/ProfessorHistorique.vue'),
-          meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
-        },
-        {
           path: 'profile',
           name: 'professor-profile',
           component: () => import('../views/professor/ProfessorProfile.vue'),
+           meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
+        },
+        {
+          path: 'settings',
+          name: 'professor-settings',
+          component: () => import('../views/professor/ProfessorSettings.vue'),
           meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
         },
       ],

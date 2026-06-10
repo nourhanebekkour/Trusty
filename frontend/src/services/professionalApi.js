@@ -81,9 +81,10 @@ export async function getProfessionalActionHistory() {
 }
 
 function mapRecommendation(r) {
+  const u = r.cible?.utilisateur
   return {
     id: r.id_recommandation ?? r.id,
-    studentName: r.etudiant ? `${r.etudiant.prenom ?? ''} ${r.etudiant.nom ?? ''}`.trim() : (r.nom_etudiant ?? ''),
+    studentName: u ? `${u.prenom ?? ''} ${u.nom ?? ''}`.trim() : (r.nom_etudiant ?? ''),
     message: r.message ?? r.contenu ?? '',
     status: r.statut ?? r.status ?? 'EN_ATTENTE',
     createdAt: r.date_creation ?? r.createdAt ?? '',
