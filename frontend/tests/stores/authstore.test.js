@@ -1,9 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-<<<<<<< HEAD
-import { useAuthStore } from '../../src/stores/authstore'
-=======
->>>>>>> 9a228362e91466924d2b2fd34d9fa9cb2d0df88a
 
 // ─── Mock du service auth ─────────────────────────────────────────────────────
 vi.mock('@/services/auth.service', () => ({
@@ -14,14 +10,10 @@ vi.mock('@/services/auth.service', () => ({
   },
 }))
 
-<<<<<<< HEAD
-import { login, getProfile } from '../../src/services/authservices'
-=======
 // ─── Mock de l'api (pour logout) ─────────────────────────────────────────────
 vi.mock('@/api', () => ({
   default: { post: vi.fn() },
 }))
->>>>>>> 9a228362e91466924d2b2fd34d9fa9cb2d0df88a
 
 import { authService } from '@/services/auth.service'
 import api from '@/api'
