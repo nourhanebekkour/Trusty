@@ -38,16 +38,20 @@ export const useAdminStore = defineStore('admin', () => {
 
   async function fetchDashboardStats() {
     if (!isAdmin()) { error.value = 'Accès refusé'; return }
+    const ecole = auth.user?.ecole
+    if (!ecole) { stats.value = { studentsActive: 0, professors: 0, partners: 0 }; return }
     try {
       loading.value = true
-      const res = await api.get('/utilisateurs/')
-      const data = extractData(res)
-      if (Array.isArray(data)) {
-        stats.value = {
-          studentsActive: data.filter(u => u.role === 'ETUDIANT').length,
-          professors:     data.filter(u => u.role === 'PROFESSEUR').length,
-          partners:       data.filter(u => u.role === 'PROFESSIONNEL').length,
-        }
+      const [etudiantsRes, professeursRes] = await Promise.all([
+        api.get('/etudiants/ecole/' + ecole),
+        api.get('/professeurs/ecole/' + ecole),
+      ])
+      const etudiants = extractData(etudiantsRes) ?? []
+      const professeurs = extractData(professeursRes) ?? []
+      stats.value = {
+        studentsActive: (Array.isArray(etudiants) ? etudiants : []).filter(e => e.utilisateur?.status_compte === 'ACTIF').length,
+        professors:     (Array.isArray(professeurs) ? professeurs : []).length,
+        partners:       0,
       }
     } catch (e) {
       error.value = getErrorMessage(e)
@@ -56,12 +60,37 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
+  function normaliserUser(item, role) {
+    return {
+      id_utilisateur: item.id_etudiant || item.id_professeur,
+      email:          item.utilisateur?.email,
+      nom:            item.utilisateur?.nom,
+      prenom:         item.utilisateur?.prenom,
+      telephone:      item.utilisateur?.telephone,
+      photo:          item.utilisateur?.photo,
+      role,
+      status_compte:  item.utilisateur?.status_compte,
+      date_creation:  item.utilisateur?.date_creation,
+      email_verifie:  item.utilisateur?.email_verifie,
+    }
+  }
+
   async function fetchUsers() {
     if (!isAdmin()) { error.value = 'Accès refusé'; return }
+    const ecole = auth.user?.ecole
+    if (!ecole) { users.value = []; return }
     try {
       loading.value = true
-      const res = await api.get('/utilisateurs/')
-      users.value = extractData(res)
+      const [etudiantsRes, professeursRes] = await Promise.all([
+        api.get('/etudiants/ecole/' + ecole),
+        api.get('/professeurs/ecole/' + ecole),
+      ])
+      const etudiants = extractData(etudiantsRes) ?? []
+      const professeurs = extractData(professeursRes) ?? []
+      users.value = [
+        ...(Array.isArray(etudiants) ? etudiants : []).map(e => normaliserUser(e, 'ETUDIANT')),
+        ...(Array.isArray(professeurs) ? professeurs : []).map(p => normaliserUser(p, 'PROFESSEUR')),
+      ]
     } catch (e) {
       error.value = getErrorMessage(e)
     } finally {
@@ -141,15 +170,10 @@ export const useAdminStore = defineStore('admin', () => {
     if (!isAdmin()) { error.value = 'Accès refusé'; return }
     try {
       loading.value = true
-      const [activitesRes, prosRes] = await Promise.allSettled([
-        api.get('/activites/a-valider'),
-        api.get('/professionnels/en-attente'),
-      ])
+      const activitesRes = await api.get('/activites/a-valider')
+      const activites = extractData(activitesRes) ?? []
 
-      const activites = activitesRes.status === 'fulfilled' ? (extractData(activitesRes.value) ?? []) : []
-      const pros      = prosRes.status      === 'fulfilled' ? (extractData(prosRes.value)      ?? []) : []
-
-      const mappedActivites = (Array.isArray(activites) ? activites : []).map(a => ({
+      verificationQueue.value = (Array.isArray(activites) ? activites : []).map(a => ({
         id:          a.id_activite || a.id,
         type:        'ACTIVITE',
         title:       a.nom_activite || a.type_activite || 'Activité',
@@ -158,18 +182,6 @@ export const useAdminStore = defineStore('admin', () => {
         date:        a.date_demande || a.date_creation || a.date_debut || '',
         entity:      a,
       }))
-
-      const mappedPros = (Array.isArray(pros) ? pros : []).map(p => ({
-        id:          p.id_professionnel || p.id,
-        type:        'PROFESSIONNEL',
-        title:       p.entreprise || 'Professionnel',
-        author:      p.utilisateur?.nom ? `${p.utilisateur.prenom || ''} ${p.utilisateur.nom || ''}`.trim() : p.nom || 'Professionnel',
-        description: p.poste || p.missions || '',
-        date:        p.date_demande || p.date_creation || '',
-        entity:      p,
-      }))
-
-      verificationQueue.value = [...mappedActivites, ...mappedPros]
     } catch (e) {
       error.value = getErrorMessage(e)
     } finally {
@@ -183,8 +195,6 @@ export const useAdminStore = defineStore('admin', () => {
     try {
       if (type === 'ACTIVITE') {
         await api.post(`/activites/${id}/valider`, { decision, ...(comment && { commentaire: comment }) })
-      } else if (type === 'PROFESSIONNEL') {
-        await api.patch(`/professionnels/${id}/valider`, { action: decision })
       }
       verificationQueue.value = verificationQueue.value.filter(v => !(v.id === id && v.type === type))
       return { success: true }
@@ -210,9 +220,11 @@ export const useAdminStore = defineStore('admin', () => {
 
   async function fetchStudents() {
     if (!isAdmin()) { error.value = 'Accès refusé'; return }
+    const ecole = auth.user?.ecole
+    if (!ecole) { students.value = []; return }
     try {
       loading.value = true
-      const res = await api.get('/etudiants/')
+      const res = await api.get('/etudiants/ecole/' + ecole)
       students.value = extractData(res)
     } catch (e) {
       error.value = getErrorMessage(e)

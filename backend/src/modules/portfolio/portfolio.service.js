@@ -229,8 +229,7 @@ export const createPortfolio = async (id_etudiant, data) => {
 };
 
 export const updatePortfolio = async (id_portfolio, id_etudiant, data) => {
-    const { titre_personnalise, sous_titre, url_publique, id_modele, est_publie } = data;
-
+    const { titre_personnalise, sous_titre, url_publique, id_modele, est_publie, sections_config, projets_selectionnes, competences_selectionnees, stages_selectionnes, couleur_accent } = data;
     // First, verify the portfolio belongs to the student
     const existing = await prisma.portfolio.findFirst({
         where: { id_portfolio, id_etudiant }
@@ -246,8 +245,12 @@ export const updatePortfolio = async (id_portfolio, id_etudiant, data) => {
             url_publique,
             id_modele,
             est_publie,
+            sections_config,
+            projets_selectionnes,
+            competences_selectionnees,
+            stages_selectionnes,
+            couleur_accent,
             date_derniere_maj: new Date(),
-            // Only update date_publication if est_publie is transitioning to true
             ...(est_publie !== undefined && est_publie !== existing.est_publie ? { date_publication: est_publie ? new Date() : null } : {})
         }
     });
@@ -282,3 +285,9 @@ export const getPortfolioStats = async (id_portfolio, id_etudiant) => {
         }
     });
 };
+
+export const deletePortfolio = async (id_portfolio) => {
+    return prisma.portfolio.delete({
+        where: { id_portfolio }
+    })
+}
