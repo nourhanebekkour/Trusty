@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import * as portfolioController from './portfolio.controller.js';
-import { authMiddleware } from '#Middlewares/auth.middleware.js';
+import { authMiddleware, optionalAuth } from '#Middlewares/auth.middleware.js';
 import { requireRole } from '#Middlewares/roles.middleware.js';
 import upload from '#Middlewares/upload.middleware.js';
 
@@ -35,6 +35,8 @@ router.post('/templates/:id_modele/apercu', authMiddleware, requireRole('ADMINIS
 
 
 // Route pour récupérer un portfolio public par URL (sans authentification)
-router.get('/:url_publique', portfolioController.getPublicPortfolio);
+router.get('/:url_publique', optionalAuth, portfolioController.getPublicPortfolio);
 
+
+router.delete('/me/:id_portfolio', authMiddleware, requireRole('ETUDIANT'), portfolioController.deletePortfolio);
 export default router;
