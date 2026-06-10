@@ -82,14 +82,14 @@ jobs:
           --health-retries 5
 
     env:
-  DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/trusty_test"
-  JWT_SECRET: ${{ secrets.JWT_SECRET }}
-  JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
-  MINIO_ENDPOINT: localhost
-  MINIO_PORT: "9000"
-  MINIO_ACCESS_KEY: minioadmin
-  MINIO_SECRET_KEY: minioadmin
-  MINIO_USE_SSL: "false"
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/trusty_test"
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+      MINIO_ENDPOINT: localhost
+      MINIO_PORT: "9000"
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_USE_SSL: "false"
 
     steps:
       - uses: actions/checkout@v4
