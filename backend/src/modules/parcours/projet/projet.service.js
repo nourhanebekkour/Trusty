@@ -150,7 +150,10 @@ export const recupererTousLesProjets = async (filtres = {}) => {
         include: {
             participations: {
                 include: {
-                    etudiant: true
+                    // [FRONTEND] include utilisateur pour récupérer nom/prénom (génération URL portfolio)
+                    etudiant: {
+                        include: { utilisateur: true }
+                    }
                 }
             },
             technologies: {
@@ -172,7 +175,10 @@ export const recupererProjetParId = async (id_projet) => {
         include: {
             participations: {
                 include: {
-                    etudiant: true
+                    // [FRONTEND] include utilisateur pour récupérer nom/prénom (génération URL portfolio)
+                    etudiant: {
+                        include: { utilisateur: true }
+                    }
                 }
             },
             technologies: {

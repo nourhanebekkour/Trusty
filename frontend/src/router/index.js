@@ -23,7 +23,6 @@ import VerifyEmailView from '@/views/VerifyEmailView.vue'
 import LettresRecommandation from '@/views/Etudiant/LettresRecommandation.vue'
 import PortfolioTemplate1 from '@/views/portfolio/PortfolioTemplate1.vue'
 
-// ── Roles autorisés ──────────────────────────────
 const ROLES = {
   ADMIN:        'ADMINISTRATEUR',
   STUDENT:      'ETUDIANT',
@@ -39,7 +38,6 @@ const router = createRouter({
       name: 'home',
       component: HomeView,
     },
-   
     {
       path: '/register',
       name: 'register',
@@ -136,7 +134,6 @@ const router = createRouter({
       path: '/projets/:id',
       name: 'project-detail',
       component: ProjectDetail,
-      meta: { requiresAuth: true },
       props: true,
       meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
@@ -194,12 +191,12 @@ const router = createRouter({
       children: [
         {
           path: '',
-          redirect: '/professional/dashboard',
+          redirect: '/professional/profile',
         },
         {
-          path: 'dashboard',
-          name: 'professional-dashboard',
-          component: ProfessionalView,
+          path: 'profile',
+          name: 'professional-profile',
+          component: () => import('@/views/Professional/ProfessionalProfile.vue'),
           meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
         },
         {
@@ -209,9 +206,9 @@ const router = createRouter({
           meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
         },
         {
-          path: 'commentaires',
-          name: 'professional-commentaires',
-          component: () => import('@/views/Professional/ProfessionalCommentaires.vue'),
+          path: 'portfolios',
+          name: 'professional-portfolios',
+          component: () => import('@/views/Professional/ProfessionalPortfolios.vue'),
           meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
         },
         {
@@ -221,39 +218,9 @@ const router = createRouter({
           meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
         },
         {
-          path: 'historique',
-          name: 'professional-historique',
-          component: () => import('@/views/Professional/ProfessionalHistorique.vue'),
-          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
-        },
-        {
-          path: 'stages',
-          name: 'professional-stages',
-          component: () => import('@/views/Professional/ProfessionalInternships.vue'),
-          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
-        },
-        {
-          path: 'projets',
-          name: 'professional-projets',
-          component: () => import('@/views/Professional/ProfessionalProjects.vue'),
-          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
-        },
-        {
-          path: 'etudiants',
-          name: 'professional-etudiants',
-          component: () => import('@/views/Professional/ProfessionalStudents.vue'),
-          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
-        },
-        {
-          path: 'portfolios',
-          name: 'professional-portfolios',
-          component: () => import('@/views/Professional/ProfessionalPortfolios.vue'),
-          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
-        },
-        {
-          path: 'profile',
-          name: 'professional-profile',
-          component: () => import('@/views/Professional/ProfessionalProfile.vue'),
+          path: 'settings',
+          name: 'professional-settings',
+          component: () => import('@/views/Professional/ProfessionalSettings.vue'),
           meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
         },
       ],
@@ -293,7 +260,7 @@ const router = createRouter({
         {
           path: 'commentaires',
           name: 'professor-commentaires',
-          component: () => import('../views/professor/ProfessorMessages.vue'), 
+          component: () => import('../views/professor/ProfessorMessages.vue'),
           meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
         },
         {
@@ -316,22 +283,9 @@ const router = createRouter({
         },
       ],
     },
-
-    // ── Pages d'erreur ────────────────────────────────────
-    //{
-    //   path: '/403',
-    //   name: 'forbidden',
-    //   component: () => import('../views/ForbiddenView.vue'),
-    // },
-    // {
-    //   path: '/:pathMatch(.*)*',
-    //   name: 'not-found',
-    //   component: () => import('../views/NotFoundView.vue'),
-    // },
   ],
 })
 
-// ── Guard principal ────────────────────────────────────────────
 router.beforeEach(async (to) => {
   const authStore = useAuthStore()
   const PUBLIC_ROUTES = ['home', 'login', 'register', 'about', 'verify-email']
@@ -343,7 +297,6 @@ router.beforeEach(async (to) => {
     return true
   }
 
-  // Initialisation session
   if (!authStore.isInitialized) {
     try {
       await authStore.fetchUser()
@@ -352,11 +305,9 @@ router.beforeEach(async (to) => {
     }
   }
 
-  // ── Utilise to.matched pour hériter du meta des parents ──
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const allowedRoles = to.matched.flatMap(record => record.meta.roles ?? [])
 
-  // Redirection automatique selon rôle
   if (authStore.isAuthenticated) {
     if (authStore.isAdmin && !to.path.startsWith('/admin')) {
       return '/admin/dashboard'
@@ -367,17 +318,14 @@ router.beforeEach(async (to) => {
     }
   }
 
-  // Pages publiques (après la redirection par rôle)
   if (['home', 'login', 'register', 'about', 'verify-email', 'portfolio-template1'].includes(to.name)) {
     return true
   }
 
-  // Pages invité uniquement
   if (to.meta.guestOnly && authStore.isAuthenticated) {
     return redirectByRole(authStore.user?.role)
   }
 
-  // Routes protégées
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
@@ -392,7 +340,6 @@ router.beforeEach(async (to) => {
   return true
 })
 
-// ── Redirection selon rôle après login ────────────────────────
 function redirectByRole(role) {
   switch (role?.toUpperCase()) {
     case ROLES.ADMIN:        return '/admin/dashboard'

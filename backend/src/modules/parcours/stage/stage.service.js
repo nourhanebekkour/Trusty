@@ -129,7 +129,10 @@ export const recupererTousLesStages = async (filtres = {}) => {
     const stages = await prisma.stage.findMany({
         where: filtres,
         include: {
-            etudiant: true,
+            // [FRONTEND] include utilisateur pour récupérer nom/prénom (génération URL portfolio)
+            etudiant: {
+                include: { utilisateur: true }
+            },
             technologies: {
                 include: {
                     technologie: true
