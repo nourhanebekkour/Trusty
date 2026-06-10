@@ -1,10 +1,10 @@
 <template>
-  <div class="projets-page">
+  <div class="projets-page" @keydown.esc="handleEscape">
 
     <!-- Header -->
     <div class="page-header">
       <div class="header-left">
-        <div class="header-icon">
+        <div class="header-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
           </svg>
@@ -14,8 +14,8 @@
           <p class="page-subtitle">Suivez l'état de validation de vos réalisations et soumettez-en de nouvelles.</p>
         </div>
       </div>
-      <button class="add-btn" @click="openNewModal">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+      <button class="add-btn" @click="openNewModal" :disabled="submitting">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true">
           <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
         Nouveau projet
@@ -33,13 +33,27 @@
       </div>
       <div class="section-actions">
         <div class="search-wrapper">
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
           </svg>
-          <input v-model="searchQuery" type="text" placeholder="Rechercher un projet…" class="search-input" />
+          <input
+            v-model="searchQuery"
+            type="search"
+            placeholder="Rechercher un projet…"
+            class="search-input"
+            maxlength="100"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Rechercher un projet"
+          />
         </div>
-        <button class="filter-btn" @click="showFilters = !showFilters">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+        <button
+          class="filter-btn"
+          @click="showFilters = !showFilters"
+          :aria-expanded="showFilters"
+          aria-controls="filter-bar"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" aria-hidden="true">
             <line x1="4" y1="6" x2="11" y2="6"/><line x1="4" y1="12" x2="17" y2="12"/><line x1="4" y1="18" x2="23" y2="18"/>
           </svg>
           Filtres
@@ -48,14 +62,14 @@
     </div>
 
     <!-- Filter bar -->
-    <div v-if="showFilters" class="filter-bar">
-      <select v-model="filterStatus" class="filter-select">
+    <div v-if="showFilters" id="filter-bar" class="filter-bar" role="group" aria-label="Filtres actifs">
+      <select v-model="filterStatus" class="filter-select" aria-label="Filtrer par statut">
         <option value="">Tous les statuts</option>
         <option value="VALIDE">Validé</option>
         <option value="EN_ATTENTE">En attente</option>
         <option value="REJETE">Refusé</option>
       </select>
-      <select v-model="filterType" class="filter-select">
+      <select v-model="filterType" class="filter-select" aria-label="Filtrer par type">
         <option value="">Tous les types</option>
         <option value="MODULE">Module</option>
         <option value="INTEGRATION">Intégration</option>
@@ -85,7 +99,7 @@
     <!-- Bottom Grid (info cards) -->
     <div class="bottom-grid">
       <div class="info-card">
-        <div class="info-card-icon">
+        <div class="info-card-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="22" height="22">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
             <polyline points="14,2 14,8 20,8"/>
@@ -101,7 +115,7 @@
         </div>
       </div>
       <div class="info-card">
-        <div class="info-card-icon accent">
+        <div class="info-card-icon accent" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="22" height="22">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           </svg>
@@ -137,7 +151,7 @@
     <ConfirmModal
       v-model="showConfirm"
       title="Supprimer ce projet ?"
-      :message="`Le projet « ${projetToDelete?.titre || ''} » sera définitivement supprimé. Cette action est irréversible.`"
+      :message="deleteMessage"
       confirm-text="Oui, supprimer"
       @confirm="handleDeleteConfirmed"
     />
@@ -152,7 +166,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useProjetStore } from '@/stores/projetStore'
 import {
   nomComplet, formatType, formatStatut, formatDate, emptyForm,
@@ -167,7 +181,6 @@ import ConfirmModal       from '@/components/stages/ConfirmModal.vue'
 
 const store = useProjetStore()
 
-// Modal state
 const showModal   = ref(false)
 const editMode    = ref(false)
 const editId      = ref(null)
@@ -175,19 +188,15 @@ const submitting  = ref(false)
 const modalError  = ref(null)
 const form        = ref(emptyForm())
 
-// Detail modal
 const showDetail     = ref(false)
 const selectedProjet = ref({})
 
-// Delete confirm
 const showConfirm    = ref(false)
 const projetToDelete = ref(null)
 
-// Rapport modal
 const showRapportModal = ref(false)
 const rapportTarget    = ref(null)
 
-// Filter / sort / pagination state
 const searchQuery  = ref('')
 const showFilters  = ref(false)
 const filterStatus = ref('')
@@ -195,8 +204,40 @@ const filterType   = ref('')
 const currentPage  = ref(1)
 const pageSize     = 8
 
+/**
+ * Supprime les balises HTML d'une valeur avant affichage ou envoi API.
+ */
+function sanitizeText(value, maxLen = 500) {
+  if (!value) return ''
+  return String(value).replace(/<[^>]*>/g, '').trim().slice(0, maxLen)
+}
+
+/**
+ * Message de confirmation de suppression construit via computed
+ * pour éviter toute interpolation directe de données API brutes dans le template.
+ */
+const deleteMessage = computed(() => {
+  const titre = sanitizeText(projetToDelete.value?.titre || '')
+  return `Le projet « ${titre} » sera définitivement supprimé. Cette action est irréversible.`
+})
+
+/**
+ * Ferme la modal ou le dialogue ouvert lors d'un appui sur Escape.
+ */
+function handleEscape() {
+  if (showConfirm.value) {
+    showConfirm.value = false
+  } else if (showRapportModal.value) {
+    showRapportModal.value = false
+  } else if (showDetail.value) {
+    showDetail.value = false
+  } else if (showModal.value) {
+    showModal.value = false
+  }
+}
+
 const filteredProjets = computed(() => {
-  const q = searchQuery.value.toLowerCase()
+  const q = searchQuery.value.trim().toLowerCase().slice(0, 100)
   let list = store.projets.filter(p => {
     const matchSearch = !q
       || p.titre.toLowerCase().includes(q)
@@ -223,10 +264,10 @@ const paginatedProjets = computed(() => {
   return filteredProjets.value.slice(start, start + pageSize)
 })
 
-// Reset page on filter change
 watch([searchQuery, filterStatus, filterType], () => { currentPage.value = 1 })
 
 function openNewModal() {
+  if (submitting.value) return
   editMode.value   = false
   editId.value     = null
   form.value       = emptyForm()
@@ -235,39 +276,45 @@ function openNewModal() {
 }
 
 function openEditModal(projet) {
+  if (submitting.value) return
   editMode.value   = true
   editId.value     = projet.id_projet
   modalError.value = null
   form.value = {
-    titre:                 projet.titre,
+    titre:                 sanitizeText(projet.titre, 200),
     type_projet:           projet.type_projet,
-    description:           projet.description,
+    description:           sanitizeText(projet.description, 2000),
     date_debut:            projet.date_debut  ? projet.date_debut.split('T')[0]  : '',
     date_fin:              projet.date_fin    ? projet.date_fin.split('T')[0]    : '',
-    lien_github:           projet.lien_github    ?? '',
-    lien_youtube:          projet.lien_youtube   ?? '',
-    lien_demo:             projet.lien_demo      ?? '',
-    resultats_obtenus:     projet.resultats_obtenus ?? '',
+    lien_github:           sanitizeText(projet.lien_github    ?? '', 500),
+    lien_youtube:          sanitizeText(projet.lien_youtube   ?? '', 500),
+    lien_demo:             sanitizeText(projet.lien_demo      ?? '', 500),
+    resultats_obtenus:     sanitizeText(projet.resultats_obtenus ?? '', 2000),
     nombre_collaborateurs: projet.nombre_collaborateurs ?? 1,
     est_public:            projet.est_public,
   }
   showModal.value = true
 }
 
+/**
+ * Filtre les champs autorisés avant envoi à l'API (whitelist explicite)
+ * et retire les champs vides optionnels.
+ */
 async function handleFormSubmit(formData) {
+  if (submitting.value) return
   submitting.value = true
   modalError.value = null
   try {
-    const apiFields = [
-      'titre','type_projet','description','date_debut','date_fin',
-      'lien_github','lien_youtube','lien_demo',
-      'resultats_obtenus','nombre_collaborateurs','est_public',
+    const allowedFields = [
+      'titre', 'type_projet', 'description', 'date_debut', 'date_fin',
+      'lien_github', 'lien_youtube', 'lien_demo',
+      'resultats_obtenus', 'nombre_collaborateurs', 'est_public',
     ]
     const payload = {}
-    for (const k of apiFields) {
+    for (const k of allowedFields) {
       if (formData[k] !== undefined) payload[k] = formData[k]
     }
-    ;['date_fin','lien_github','lien_youtube','lien_demo','resultats_obtenus'].forEach(k => {
+    ;['date_fin', 'lien_github', 'lien_youtube', 'lien_demo', 'resultats_obtenus'].forEach(k => {
       if (!payload[k]) delete payload[k]
     })
     if (editMode.value) await store.updateProjet(editId.value, payload)
@@ -285,37 +332,41 @@ function handleCreated() {
 }
 
 function viewProjet(projet) {
+  if (submitting.value) return
   selectedProjet.value = projet
   showDetail.value     = true
 }
 
 function confirmDelete(projet) {
+  if (submitting.value) return
   projetToDelete.value = projet
   showConfirm.value    = true
 }
 
 function openRapportModal(projet) {
-  rapportTarget.value = projet
+  if (submitting.value) return
+  rapportTarget.value    = projet
   showRapportModal.value = true
 }
 
 function handleRapportSave(data) {
   const p = rapportTarget.value
   if (!p) return
-  p.rapport = data.url || data.nom
+  p.rapport = sanitizeText(data.url || data.nom, 500)
   rapportTarget.value = null
 }
 
 async function handleDeleteConfirmed() {
   const p = projetToDelete.value
   if (!p) return
+  if (submitting.value) return
   submitting.value = true
   try {
     await store.deleteProjet(p.id_projet)
     showConfirm.value    = false
     projetToDelete.value = null
   } catch (e) {
-    store.error = e.response?.data?.message ?? e.message ?? 'Suppression échouée'
+    store.error = sanitizeText(e.response?.data?.message ?? e.message ?? 'Suppression échouée', 200)
     showConfirm.value = false
   } finally {
     submitting.value = false
@@ -323,6 +374,10 @@ async function handleDeleteConfirmed() {
 }
 
 onMounted(() => store.fetchProjets())
+
+onUnmounted(() => {
+  submitting.value = false
+})
 </script>
 
 <style scoped>
@@ -389,13 +444,18 @@ onMounted(() => store.fetchProjets())
   flex-shrink: 0;
 }
 
-.add-btn:hover {
+.add-btn:hover:not(:disabled) {
   background: var(--color-accent-hover);
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(61, 107, 94, 0.3);
 }
 
-/* ── Section header ── */
+.add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .section-header {
   display: flex;
   align-items: center;
@@ -482,7 +542,6 @@ onMounted(() => store.fetchProjets())
   background: var(--color-surface-hover);
 }
 
-/* ── Filter bar ── */
 .filter-bar {
   display: flex;
   gap: 0.75rem;
@@ -511,7 +570,6 @@ onMounted(() => store.fetchProjets())
 
 .filter-select option { background: var(--color-surface); }
 
-/* ── Bottom Grid ── */
 .bottom-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

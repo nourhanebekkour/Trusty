@@ -80,7 +80,7 @@
     <!-- ── Error ── -->
     <div v-else-if="error" class="state-box state-error">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <span>{{ error }}</span>
+      <span>{{ sanitizedError }}</span>
       <button class="btn-ghost" @click="fetchNotifications">Réessayer</button>
     </div>
 
@@ -104,18 +104,15 @@
         :style="{ animationDelay: i * 45 + 'ms' }"
         @click="handleClick(notif)"
       >
-        <!-- Unread dot -->
         <div class="unread-dot" v-if="!notif.est_lue"></div>
 
-        <!-- Icon -->
         <div class="notif-icon" :class="iconClass(notif.type_notification)">
           <component :is="'svg'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" v-html="iconPath(notif.type_notification)"></component>
         </div>
 
-        <!-- Content -->
         <div class="notif-content">
           <div class="notif-header">
-            <span class="notif-title">{{ notif.titre }}</span>
+            <span class="notif-title">{{ sanitizeText(notif.titre) }}</span>
             <div class="notif-meta">
               <span class="notif-type-badge" :class="typeBadgeClass(notif.type_notification)">
                 {{ typeLabel(notif.type_notification) }}
@@ -123,7 +120,7 @@
               <span class="notif-date">{{ formatDate(notif.date_creation) }}</span>
             </div>
           </div>
-          <p class="notif-message">{{ notif.message }}</p>
+          <p class="notif-message">{{ sanitizeText(notif.message) }}</p>
           <div class="notif-footer">
             <span class="notif-read-status">
               <template v-if="notif.est_lue">
@@ -162,7 +159,6 @@ import { useRouter } from 'vue-router'
 const authStore = useAuthStore()
 const router    = useRouter()
 
-// ── State ──────────────────────────────────────────────────────────────────
 const notifications = ref([])
 const loading       = ref(false)
 const error         = ref(null)
@@ -170,36 +166,92 @@ const activeTab     = ref('all')
 const markingId     = ref(null)
 const markingAll    = ref(false)
 
-// ── Tabs ───────────────────────────────────────────────────────────────────
+let markingAllInProgress = false
+
+const ALLOWED_TYPES = new Set([
+  'VALIDATION', 'COMMENTAIRE', 'RECOMMANDATION', 'ATTESTATION', 'SUGGESTION',
+])
+
+const ALLOWED_TAB_KEYS = new Set([
+  'all', 'unread', 'VALIDATION', 'RECOMMANDATION', 'COMMENTAIRE',
+])
+
 const tabs = [
-  { key: 'all',    label: 'Toutes' },
-  { key: 'unread', label: 'Non lues' },
-  { key: 'VALIDATION',   label: 'Validations' },
+  { key: 'all',            label: 'Toutes' },
+  { key: 'unread',         label: 'Non lues' },
+  { key: 'VALIDATION',     label: 'Validations' },
   { key: 'RECOMMANDATION', label: 'Recommandations' },
-  { key: 'COMMENTAIRE',  label: 'Commentaires' },
+  { key: 'COMMENTAIRE',    label: 'Commentaires' },
 ]
 
-// ── Computed ───────────────────────────────────────────────────────────────
+function sanitizeText(value) {
+  if (!value || typeof value !== 'string') return ''
+  if (value.length > 2000) return value.slice(0, 2000) + '…'
+  const div = document.createElement('div')
+  div.appendChild(document.createTextNode(value))
+  return div.innerHTML
+}
+
+function isValidId(id) {
+  if (id === null || id === undefined) return false
+  const n = Number(id)
+  return Number.isInteger(n) && n > 0
+}
+
+function isValidInternalPath(path) {
+  if (!path || typeof path !== 'string') return false
+  if (path.length > 200) return false
+  return /^\/[a-zA-Z0-9/_\-?=&#%]*$/.test(path)
+}
+
+function normalizeNotification(raw) {
+  if (!raw || typeof raw !== 'object') return null
+  if (!isValidId(raw.id_notification)) return null
+  return {
+    id_notification: raw.id_notification,
+    titre:           typeof raw.titre   === 'string' ? raw.titre.slice(0, 200)   : '',
+    message:         typeof raw.message === 'string' ? raw.message.slice(0, 2000): '',
+    type_notification: ALLOWED_TYPES.has(raw.type_notification)
+                         ? raw.type_notification : '',
+    est_lue:         Boolean(raw.est_lue),
+    date_creation:   raw.date_creation  ?? null,
+    date_lecture:    raw.date_lecture   ?? null,
+    lien_action:     isValidInternalPath(raw.lien_action) ? raw.lien_action : null,
+  }
+}
+
+const sanitizedError = computed(() => {
+  if (!error.value) return ''
+  if (typeof error.value !== 'string') return 'Une erreur inattendue est survenue.'
+  if (error.value.length > 120)        return 'Une erreur inattendue est survenue.'
+  return error.value
+})
+
 const filteredNotifications = computed(() => {
+  const tab = ALLOWED_TAB_KEYS.has(activeTab.value) ? activeTab.value : 'all'
   const all = notifications.value
-  if (activeTab.value === 'all')    return all
-  if (activeTab.value === 'unread') return all.filter(n => !n.est_lue)
-  return all.filter(n => n.type_notification === activeTab.value)
+  if (tab === 'all')    return all
+  if (tab === 'unread') return all.filter(n => !n.est_lue)
+  return all.filter(n => n.type_notification === tab)
 })
 
 const unreadCount = computed(() => notifications.value.filter(n => !n.est_lue).length)
 
 const todayCount = computed(() => {
   const today = new Date().toDateString()
-  return notifications.value.filter(n => new Date(n.date_creation).toDateString() === today).length
+  return notifications.value.filter(n => {
+    const d = new Date(n.date_creation)
+    return !isNaN(d.getTime()) && d.toDateString() === today
+  }).length
 })
 
-// ── Helpers ────────────────────────────────────────────────────────────────
 function formatDate(d) {
   if (!d) return '—'
   const date = new Date(d)
+  if (isNaN(date.getTime())) return '—'
   const now  = new Date()
   const diff = now - date
+  if (diff < 0)   return 'À l\'instant'
   const mins  = Math.floor(diff / 60000)
   const hours = Math.floor(diff / 3600000)
   const days  = Math.floor(diff / 86400000)
@@ -218,7 +270,7 @@ function typeLabel(type) {
     RECOMMANDATION: 'Recommandation',
     ATTESTATION:    'Attestation',
     SUGGESTION:     'Suggestion',
-  }[type] || type
+  }[type] || ''
 }
 
 function typeBadgeClass(type) {
@@ -253,68 +305,95 @@ function iconPath(type) {
 }
 
 function tabCount(key) {
+  if (!ALLOWED_TAB_KEYS.has(key)) return 0
   if (key === 'all')    return notifications.value.length
   if (key === 'unread') return unreadCount.value
   return notifications.value.filter(n => n.type_notification === key).length
 }
 
-// ── API ────────────────────────────────────────────────────────────────────
-
-// GET /api/notifications/
 async function fetchNotifications() {
+  if (!authStore.isAuthenticated) {
+    await router.replace('/login')
+    return
+  }
   if (!authStore.user) await authStore.fetchUser()
-  loading.value = true; error.value = null
+  loading.value = true
+  error.value = null
   try {
     const res = await api.get('/notifications/')
-    // Trier : non lues en premier, puis par date décroissante
-    const data = res.data?.data ?? res.data ?? []
-    notifications.value = data.sort((a, b) => {
-      if (a.est_lue !== b.est_lue) return a.est_lue ? 1 : -1
-      return new Date(b.date_creation) - new Date(a.date_creation)
-    })
+    const raw = Array.isArray(res.data?.data)
+      ? res.data.data
+      : Array.isArray(res.data) ? res.data : []
+    notifications.value = raw
+      .map(normalizeNotification)
+      .filter(Boolean)
+      .sort((a, b) => {
+        if (a.est_lue !== b.est_lue) return a.est_lue ? 1 : -1
+        return new Date(b.date_creation) - new Date(a.date_creation)
+      })
   } catch (e) {
-    error.value = e.response?.data?.message || 'Erreur de chargement.'
-  } finally { loading.value = false }
+    if (import.meta.env.DEV) console.error('[Notification] fetchNotifications:', e)
+    const status = e.response?.status
+    if (status === 401 || status === 403) { await router.replace('/login'); return }
+    error.value = 'Erreur de chargement.'
+  } finally {
+    loading.value = false
+  }
 }
 
-// PUT /api/notifications/{id}/lire
 async function markAsRead(notif) {
-  if (notif.est_lue) return
+  if (!notif || notif.est_lue) return
+  if (!isValidId(notif.id_notification)) return
+  if (markingId.value === notif.id_notification) return
+
   markingId.value = notif.id_notification
   try {
-    await api.put(`/notifications/${notif.id_notification}/lire`)
-    // Mise à jour locale immédiate sans re-fetch
+    await api.put(`/notifications/${encodeURIComponent(notif.id_notification)}/lire`)
     const idx = notifications.value.findIndex(n => n.id_notification === notif.id_notification)
     if (idx !== -1) {
       notifications.value[idx] = {
         ...notifications.value[idx],
         est_lue: true,
-        date_lecture: new Date().toISOString()
+        date_lecture: new Date().toISOString(),
       }
     }
   } catch (e) {
-    error.value = e.response?.data?.message || 'Erreur lors de la mise à jour.'
-  } finally { markingId.value = null }
+    if (import.meta.env.DEV) console.error('[Notification] markAsRead:', e)
+    const status = e.response?.status
+    if (status === 401 || status === 403) { await router.replace('/login'); return }
+    error.value = 'Erreur lors de la mise à jour.'
+  } finally {
+    markingId.value = null
+  }
 }
 
-// Marquer toutes les non lues une par une
 async function markAllAsRead() {
+  if (markingAllInProgress) return
+  markingAllInProgress = true
   markingAll.value = true
   try {
-    const unread = notifications.value.filter(n => !n.est_lue)
-    await Promise.all(unread.map(n => api.put(`/notifications/${n.id_notification}/lire`)))
+    const unread = notifications.value.filter(n => !n.est_lue && isValidId(n.id_notification))
+    await Promise.all(
+      unread.map(n => api.put(`/notifications/${encodeURIComponent(n.id_notification)}/lire`))
+    )
     notifications.value = notifications.value.map(n => ({
       ...n,
       est_lue: true,
-      date_lecture: n.date_lecture ?? new Date().toISOString()
+      date_lecture: n.date_lecture ?? new Date().toISOString(),
     }))
   } catch (e) {
-    error.value = e.response?.data?.message || 'Erreur lors de la mise à jour.'
-  } finally { markingAll.value = false }
+    if (import.meta.env.DEV) console.error('[Notification] markAllAsRead:', e)
+    const status = e.response?.status
+    if (status === 401 || status === 403) { await router.replace('/login'); return }
+    error.value = 'Erreur lors de la mise à jour.'
+  } finally {
+    markingAll.value = false
+    markingAllInProgress = false
+  }
 }
 
-// Clic sur une carte : marque comme lu + suit le lien si présent
 function handleClick(notif) {
+  if (!notif) return
   if (!notif.est_lue) markAsRead(notif)
   if (notif.lien_action) router.push(notif.lien_action)
 }
@@ -335,7 +414,6 @@ onMounted(fetchNotifications)
   color: var(--color-text-primary);
 }
 
-/* ── Header ── */
 .page-header {
   display: flex; align-items: flex-start;
   justify-content: space-between; margin-bottom: 1.75rem;
@@ -349,7 +427,6 @@ onMounted(fetchNotifications)
 .title-icon { color: var(--color-accent); opacity: 0.85; flex-shrink: 0; }
 .page-subtitle { font-size: 0.875rem; color: var(--color-text-secondary); margin: 0; }
 
-/* ── Buttons ── */
 .btn-primary {
   display: inline-flex; align-items: center; gap: 0.4rem;
   background: var(--color-accent); color: var(--color-page-bg); border: none;
@@ -369,7 +446,6 @@ onMounted(fetchNotifications)
 }
 .btn-ghost:hover { border-color: var(--color-accent); color: var(--color-text-primary); }
 
-/* ── Stats ── */
 .stats-row {
   display: grid; grid-template-columns: repeat(4, 1fr);
   gap: 0.9rem; margin-bottom: 1.75rem;
@@ -389,7 +465,6 @@ onMounted(fetchNotifications)
   line-height: 1; letter-spacing: -0.02em;
 }
 
-/* ── Tabs ── */
 .tabs-row {
   display: flex; gap: 0.4rem; margin-bottom: 1.25rem;
   background: var(--color-surface); border: 1px solid var(--color-border-light);
@@ -412,7 +487,6 @@ onMounted(fetchNotifications)
 }
 .tab-active .tab-count { background: var(--color-accent-light); color: var(--color-accent); }
 
-/* ── State boxes ── */
 .state-box {
   display: flex; align-items: center; justify-content: center; gap: 0.75rem;
   background: var(--color-surface); border: 1px solid var(--color-border-light);
@@ -438,7 +512,6 @@ onMounted(fetchNotifications)
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Empty ── */
 .empty-card {
   background: var(--color-surface); border: 1px dashed var(--color-border);
   border-radius: 14px; padding: 3rem 2rem; text-align: center;
@@ -448,7 +521,6 @@ onMounted(fetchNotifications)
 .empty-title { font-size: 1rem; font-weight: 600; color: var(--color-text-primary); margin: 0; }
 .empty-sub   { font-size: 0.84rem; color: var(--color-text-secondary); margin: 0; }
 
-/* ── Notif List ── */
 .notif-list { display: flex; flex-direction: column; gap: 0.75rem; }
 
 .notif-card {
@@ -479,7 +551,6 @@ onMounted(fetchNotifications)
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Unread dot (top right) */
 .unread-dot {
   position: absolute; top: 14px; right: 14px;
   width: 8px; height: 8px; border-radius: 50%;
@@ -489,7 +560,6 @@ onMounted(fetchNotifications)
 }
 @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
 
-/* Icon */
 .notif-icon {
   width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
@@ -501,7 +571,6 @@ onMounted(fetchNotifications)
 .icon-suggest { background: rgba(140,92,58,0.15);   color: #d49a7a; }
 .icon-default { background: var(--color-surface-hover); color: var(--color-text-secondary); }
 
-/* Content */
 .notif-content { flex: 1; min-width: 0; }
 
 .notif-header {
@@ -534,7 +603,6 @@ onMounted(fetchNotifications)
   line-height: 1.6; margin: 0 0 0.65rem;
 }
 
-/* Footer */
 .notif-footer {
   display: flex; align-items: center;
   justify-content: space-between; gap: 0.75rem;
@@ -563,7 +631,6 @@ onMounted(fetchNotifications)
 .btn-mark-read:hover { background: var(--color-valid-bg); }
 .btn-mark-read:disabled { opacity: 0.45; cursor: not-allowed; }
 
-/* ── Responsive ── */
 @media (max-width: 768px) {
   .notifications-page { padding: 1.25rem 1rem 3rem; }
   .stats-row { grid-template-columns: repeat(2, 1fr); }

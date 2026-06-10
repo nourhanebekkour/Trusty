@@ -1,17 +1,17 @@
 <template>
-  <div class="parcours-page">
+  <div class="parcours-page" @keydown.esc="handleEscape">
 
     <!-- ── Page Header ── -->
     <div class="page-header">
       <div class="header-left">
         <h1 class="page-title">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="title-icon"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="title-icon" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
           Parcours Académique
         </h1>
         <p class="page-subtitle">Gérez votre historique de formations et diplômes.</p>
       </div>
       <button class="btn-primary" @click="openModal()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Ajouter une formation
       </button>
     </div>
@@ -19,28 +19,28 @@
     <!-- ── Stats Row ── -->
     <div class="stats-row">
       <div class="stat-card">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
         <div>
           <div class="stat-label">FORMATIONS</div>
           <div class="stat-value">{{ formations.length }}</div>
         </div>
       </div>
       <div class="stat-card">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         <div>
           <div class="stat-label">EN COURS</div>
           <div class="stat-value">{{ formations.filter(f => f.est_actuelle).length }}</div>
         </div>
       </div>
       <div class="stat-card">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="20 6 9 17 4 12"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
         <div>
           <div class="stat-label">VALIDÉES</div>
           <div class="stat-value">{{ formations.filter(f => !f.est_actuelle && f.date_fin).length }}</div>
         </div>
       </div>
       <div class="stat-card">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
         <div>
           <div class="stat-label">MENTIONS</div>
           <div class="stat-value">{{ formations.filter(f => f.mention).length }}</div>
@@ -59,25 +59,25 @@
     </div>
 
     <!-- ── Loading ── -->
-    <div v-if="loading" class="state-box">
-      <div class="spinner"></div>
+    <div v-if="loading" class="state-box" role="status" aria-live="polite">
+      <div class="spinner" aria-hidden="true"></div>
       <span>Chargement...</span>
     </div>
 
     <!-- ── Error ── -->
-    <div v-else-if="error" class="state-box state-error">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <div v-else-if="error" class="state-box state-error" role="alert">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       <span>{{ error }}</span>
       <button class="btn-ghost" @click="fetchFormations">Réessayer</button>
     </div>
 
     <!-- ── Empty ── -->
     <div v-else-if="formations.length === 0" class="empty-card">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="empty-icon"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="empty-icon" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
       <p class="empty-title">Aucune formation enregistrée</p>
       <p class="empty-sub">Commencez à documenter votre parcours académique</p>
       <button class="btn-primary" @click="openModal()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Ajouter ma première formation
       </button>
     </div>
@@ -90,38 +90,46 @@
         class="formation-card"
         :style="{ animationDelay: i * 60 + 'ms' }"
       >
-        <!-- Card Top Bar -->
         <div class="card-topbar">
           <span class="card-type-badge">{{ f.filiere || getDiplomeType(f.diplome) }}</span>
           <span class="status-badge" :class="f.est_actuelle ? 'status-active' : 'status-done'">
-            <span class="status-dot"></span>
+            <span class="status-dot" aria-hidden="true"></span>
             {{ f.est_actuelle ? 'En cours' : 'Terminé' }}
           </span>
         </div>
 
-        <!-- Card Body -->
         <div class="card-body">
           <h3 class="card-title">{{ f.diplome }}</h3>
           <p class="card-etab">{{ f.etablissement }}</p>
           <p v-if="f.description" class="card-desc">{{ f.description }}</p>
         </div>
 
-        <!-- Card Meta -->
         <div class="card-meta-row">
           <span class="meta-date">{{ formatDate(f.date_debut) }}{{ f.date_fin || f.est_actuelle ? ' – ' + (f.est_actuelle ? 'présent' : formatDate(f.date_fin)) : '' }}</span>
           <span v-if="f.mention" class="mention-tag">{{ f.mention }}</span>
         </div>
 
-        <!-- Card Footer -->
         <div class="card-footer">
           <span class="duration-text">{{ getDuration(f) }}</span>
           <div class="card-actions">
-            <button class="action-btn" @click="openModal(f)" title="Modifier">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <button
+              class="action-btn"
+              @click="openModal(f)"
+              :aria-label="`Modifier ${f.diplome}`"
+              title="Modifier"
+              :disabled="rateLimited"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               Modifier
             </button>
-            <button class="action-btn action-btn-danger" @click="confirmDelete(f)" title="Supprimer">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            <button
+              class="action-btn action-btn-danger"
+              @click="confirmDelete(f)"
+              :aria-label="`Supprimer ${f.diplome}`"
+              title="Supprimer"
+              :disabled="rateLimited"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
             </button>
           </div>
         </div>
@@ -130,41 +138,98 @@
 
     <!-- ── Add/Edit Modal ── -->
     <Transition name="fade">
-      <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-        <div class="modal-box">
+      <div
+        v-if="showModal"
+        class="modal-overlay"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="editingFormation ? 'modal-title-edit' : 'modal-title-add'"
+        @click.self="closeModal"
+      >
+        <div class="modal-box" ref="formModalRef" tabindex="-1" @keydown="trapFocusForm">
           <div class="modal-header">
-            <h2 class="modal-title">{{ editingFormation ? 'Modifier la formation' : 'Nouvelle formation' }}</h2>
-            <button class="modal-close" @click="closeModal">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <h2
+              class="modal-title"
+              :id="editingFormation ? 'modal-title-edit' : 'modal-title-add'"
+            >
+              {{ editingFormation ? 'Modifier la formation' : 'Nouvelle formation' }}
+            </h2>
+            <button class="modal-close" @click="closeModal" aria-label="Fermer">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
 
-          <form @submit.prevent="submitForm" class="modal-form">
+          <form @submit.prevent="submitForm" class="modal-form" novalidate>
             <div class="field">
-              <label>Diplôme / Titre <span class="req">*</span></label>
-              <input v-model="form.diplome" type="text" placeholder="ex: Licence Informatique, Master MIAGE…" required />
+              <label for="field-diplome">Diplôme / Titre <span class="req" aria-hidden="true">*</span></label>
+              <input
+                id="field-diplome"
+                v-model="form.diplome"
+                type="text"
+                placeholder="ex: Licence Informatique, Master MIAGE…"
+                required
+                maxlength="200"
+                autocomplete="off"
+                spellcheck="true"
+                :aria-invalid="formSubmitted && !form.diplome.trim() ? 'true' : 'false'"
+              />
             </div>
 
             <div class="field">
-              <label>Établissement <span class="req">*</span></label>
-              <input v-model="form.etablissement" type="text" placeholder="ex: Université Moulay Ismaïl, ENSAM…" required />
+              <label for="field-etablissement">Établissement <span class="req" aria-hidden="true">*</span></label>
+              <input
+                id="field-etablissement"
+                v-model="form.etablissement"
+                type="text"
+                placeholder="ex: Université Moulay Ismaïl, ENSAM…"
+                required
+                maxlength="200"
+                autocomplete="organization"
+                spellcheck="true"
+                :aria-invalid="formSubmitted && !form.etablissement.trim() ? 'true' : 'false'"
+              />
             </div>
 
             <div class="field-row">
               <div class="field">
-                <label>Date de début <span class="req">*</span></label>
-                <input v-model="form.date_debut" type="date" required />
+                <label for="field-date-debut">Date de début <span class="req" aria-hidden="true">*</span></label>
+                <input
+                  id="field-date-debut"
+                  v-model="form.date_debut"
+                  type="date"
+                  required
+                  :max="todayISO"
+                  :aria-invalid="formSubmitted && !form.date_debut ? 'true' : 'false'"
+                />
               </div>
               <div class="field">
-                <label>Date de fin</label>
-                <input v-model="form.date_fin" type="date" :disabled="form.est_actuelle" />
+                <label for="field-date-fin">Date de fin</label>
+                <input
+                  id="field-date-fin"
+                  v-model="form.date_fin"
+                  type="date"
+                  :disabled="form.est_actuelle"
+                  :min="form.date_debut || undefined"
+                  :max="todayISO"
+                  :aria-describedby="dateRangeError ? 'date-range-error' : undefined"
+                />
               </div>
             </div>
 
+            <p
+              v-if="dateRangeError"
+              id="date-range-error"
+              class="form-error"
+              role="alert"
+              style="margin-top: -0.5rem;"
+            >
+              {{ dateRangeError }}
+            </p>
+
             <div class="field-row">
               <div class="field">
-                <label>Mention</label>
-                <select v-model="form.mention">
+                <label for="field-mention">Mention</label>
+                <select id="field-mention" v-model="form.mention">
                   <option value="">Aucune</option>
                   <option>Passable</option>
                   <option>Assez Bien</option>
@@ -174,25 +239,46 @@
                 </select>
               </div>
               <div class="field field-check">
-                <label class="check-label">
-                  <input v-model="form.est_actuelle" type="checkbox" />
-                  <span class="check-box"></span>
+                <label class="check-label" for="field-est-actuelle">
+                  <input id="field-est-actuelle" v-model="form.est_actuelle" type="checkbox" />
+                  <span class="check-box" aria-hidden="true"></span>
                   Formation en cours
                 </label>
               </div>
             </div>
 
             <div class="field">
-              <label>Description</label>
-              <textarea v-model="form.description" rows="3" placeholder="Spécialisations, projets réalisés, activités…"></textarea>
+              <label for="field-description">Description</label>
+              <textarea
+                id="field-description"
+                v-model="form.description"
+                rows="3"
+                placeholder="Spécialisations, projets réalisés, activités…"
+                maxlength="1000"
+                autocomplete="off"
+                spellcheck="true"
+                aria-describedby="description-counter"
+              ></textarea>
+              <span
+                id="description-counter"
+                class="field-hint"
+                :style="{ color: form.description.length > 900 ? 'var(--color-danger)' : 'inherit' }"
+              >
+                {{ form.description.length }} / 1000
+              </span>
             </div>
 
-            <div v-if="formError" class="form-error">{{ formError }}</div>
+            <div v-if="formError" class="form-error" role="alert">{{ formError }}</div>
 
             <div class="modal-footer">
               <button type="button" class="btn-ghost" @click="closeModal">Annuler</button>
-              <button type="submit" class="btn-primary" :disabled="submitting">
-                <span v-if="submitting" class="spinner-sm"></span>
+              <button
+                type="submit"
+                class="btn-primary"
+                :disabled="submitting || !!dateRangeError || !isFormValid"
+                :aria-busy="submitting"
+              >
+                <span v-if="submitting" class="spinner-sm" aria-hidden="true"></span>
                 {{ editingFormation ? 'Enregistrer' : 'Ajouter' }}
               </button>
             </div>
@@ -203,17 +289,29 @@
 
     <!-- ── Delete Confirm ── -->
     <Transition name="fade">
-      <div v-if="showDeleteConfirm" class="modal-overlay" @click.self="showDeleteConfirm = false">
-        <div class="modal-box modal-box-sm">
-          <div class="delete-icon-wrap">
+      <div
+        v-if="showDeleteConfirm"
+        class="modal-overlay"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-confirm-title"
+        @click.self="showDeleteConfirm = false"
+      >
+        <div class="modal-box modal-box-sm" ref="deleteModalRef" tabindex="-1" @keydown="trapFocusDelete">
+          <div class="delete-icon-wrap" aria-hidden="true">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
           </div>
-          <h3 class="modal-title" style="text-align:center">Supprimer la formation ?</h3>
+          <h3 class="modal-title" id="delete-confirm-title" style="text-align:center">Supprimer la formation ?</h3>
           <p class="delete-sub">« {{ formationToDelete?.diplome }} » sera définitivement supprimée.</p>
           <div class="modal-footer" style="justify-content:center">
             <button class="btn-ghost" @click="showDeleteConfirm = false">Annuler</button>
-            <button class="btn-danger" @click="deleteFormation" :disabled="submitting">
-              <span v-if="submitting" class="spinner-sm"></span>
+            <button
+              class="btn-danger"
+              @click="deleteFormation"
+              :disabled="submitting"
+              :aria-busy="submitting"
+            >
+              <span v-if="submitting" class="spinner-sm" aria-hidden="true"></span>
               Supprimer
             </button>
           </div>
@@ -225,23 +323,44 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import api from '@/api.js'
 import { useAuthStore } from '@/stores/authstore.js'
 
 const authStore = useAuthStore()
 
-// ── State ──────────────────────────────────────────────────────────────────
-const formations       = ref([])
-const loading          = ref(false)
-const error            = ref(null)
-const showModal        = ref(false)
+const formations        = ref([])
+const loading           = ref(false)
+const error             = ref(null)
+const showModal         = ref(false)
 const showDeleteConfirm = ref(false)
 const editingFormation  = ref(null)
 const formationToDelete = ref(null)
 const submitting        = ref(false)
 const formError         = ref(null)
 const sortByDate        = ref(true)
+const formSubmitted     = ref(false)
+
+const formModalRef  = ref(null)
+const deleteModalRef = ref(null)
+
+/**
+ * Cooldown côté client après chaque mutation (ajout, modification, suppression).
+ */
+const rateLimited = ref(false)
+const RATE_LIMIT_MS = 1500
+let rateLimitTimer = null
+
+function startRateLimit() {
+  rateLimited.value = true
+  clearTimeout(rateLimitTimer)
+  rateLimitTimer = setTimeout(() => { rateLimited.value = false }, RATE_LIMIT_MS)
+}
+
+/**
+ * Date du jour au format ISO (YYYY-MM-DD), utilisée pour borner les champs date.
+ */
+const todayISO = new Date().toISOString().split('T')[0]
 
 const defaultForm = () => ({
   diplome: '', etablissement: '',
@@ -250,7 +369,6 @@ const defaultForm = () => ({
 })
 const form = ref(defaultForm())
 
-// ── Computed ───────────────────────────────────────────────────────────────
 const formationsSorted = computed(() =>
   [...formations.value].sort((a, b) => {
     if (a.est_actuelle && !b.est_actuelle) return -1
@@ -260,7 +378,25 @@ const formationsSorted = computed(() =>
   })
 )
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+/**
+ * Détecte une incohérence entre date_debut et date_fin.
+ */
+const dateRangeError = computed(() => {
+  if (!form.value.date_debut || !form.value.date_fin || form.value.est_actuelle) return null
+  return new Date(form.value.date_fin) < new Date(form.value.date_debut)
+    ? 'La date de fin doit être postérieure à la date de début.'
+    : null
+})
+
+/**
+ * Vérifie que les champs obligatoires sont remplis avant d'activer le bouton de soumission.
+ */
+const isFormValid = computed(() =>
+  form.value.diplome.trim().length > 0 &&
+  form.value.etablissement.trim().length > 0 &&
+  form.value.date_debut.length > 0
+)
+
 function getStudentId() {
   const user = authStore.user
   return user?.etudiant?.id_etudiant ?? user?.id_utilisateur ?? user?.id ?? null
@@ -296,7 +432,14 @@ function toInputDate(d) {
   return new Date(d).toISOString().split('T')[0]
 }
 
-// ── API ────────────────────────────────────────────────────────────────────
+/**
+ * Nettoie et tronque une valeur texte avant envoi à l'API.
+ */
+function sanitizeField(value, maxLen = 200) {
+  if (!value) return null
+  return String(value).replace(/<[^>]*>/g, '').trim().slice(0, maxLen) || null
+}
+
 async function fetchFormations() {
   if (!authStore.user) await authStore.fetchUser()
   const sid = getStudentId()
@@ -311,18 +454,21 @@ async function fetchFormations() {
 }
 
 async function submitForm() {
+  formSubmitted.value = true
+  if (!isFormValid.value || dateRangeError.value) return
   formError.value = null; submitting.value = true
   const sid = getStudentId()
   if (!sid) { formError.value = 'Identifiant introuvable.'; submitting.value = false; return }
+  startRateLimit()
   try {
     const payload = {
-      diplome:        form.value.diplome,
-      etablissement:  form.value.etablissement,
-      date_debut:     form.value.date_debut,
-      date_fin:       form.value.est_actuelle ? null : (form.value.date_fin || null),
-      description:    form.value.description || null,
-      mention:        form.value.mention || null,
-      est_actuelle:   form.value.est_actuelle
+      diplome:       sanitizeField(form.value.diplome),
+      etablissement: sanitizeField(form.value.etablissement),
+      date_debut:    form.value.date_debut,
+      date_fin:      form.value.est_actuelle ? null : (form.value.date_fin || null),
+      description:   sanitizeField(form.value.description, 1000),
+      mention:       form.value.mention || null,
+      est_actuelle:  form.value.est_actuelle,
     }
     if (editingFormation.value) {
       await api.put(`/formations/${editingFormation.value.id_formation}`, payload)
@@ -339,6 +485,7 @@ async function submitForm() {
 async function deleteFormation() {
   if (!formationToDelete.value) return
   submitting.value = true
+  startRateLimit()
   try {
     await api.delete(`/formations/${formationToDelete.value.id_formation}`)
     await fetchFormations()
@@ -349,35 +496,86 @@ async function deleteFormation() {
   } finally { submitting.value = false }
 }
 
-// ── Modal helpers ──────────────────────────────────────────────────────────
+/**
+ * Ferme la modal ouverte lors d'un appui sur Escape.
+ */
+function handleEscape() {
+  if (showDeleteConfirm.value) {
+    showDeleteConfirm.value = false
+  } else if (showModal.value) {
+    closeModal()
+  }
+}
+
+/**
+ * Piège le focus dans la modal de formulaire.
+ */
+function trapFocusForm(event) {
+  trapFocusInRef(event, formModalRef)
+}
+
+/**
+ * Piège le focus dans le dialogue de confirmation de suppression.
+ */
+function trapFocusDelete(event) {
+  trapFocusInRef(event, deleteModalRef)
+}
+
+function trapFocusInRef(event, containerRef) {
+  if (event.key !== 'Tab' || !containerRef.value) return
+  const focusable = containerRef.value.querySelectorAll(
+    'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )
+  if (!focusable.length) return
+  const first = focusable[0]
+  const last  = focusable[focusable.length - 1]
+  if (event.shiftKey) {
+    if (document.activeElement === first) { event.preventDefault(); last.focus() }
+  } else {
+    if (document.activeElement === last) { event.preventDefault(); first.focus() }
+  }
+}
+
 function openModal(f = null) {
   editingFormation.value = f
+  formSubmitted.value = false
   form.value = f ? {
-    diplome: f.diplome, etablissement: f.etablissement,
-    date_debut: toInputDate(f.date_debut), date_fin: toInputDate(f.date_fin),
-    description: f.description || '', mention: f.mention || '',
-    est_actuelle: f.est_actuelle
+    diplome:       f.diplome,
+    etablissement: f.etablissement,
+    date_debut:    toInputDate(f.date_debut),
+    date_fin:      toInputDate(f.date_fin),
+    description:   f.description || '',
+    mention:       f.mention || '',
+    est_actuelle:  f.est_actuelle,
   } : defaultForm()
   formError.value = null
   showModal.value = true
+  nextTick(() => formModalRef.value?.focus())
 }
+
 function closeModal() {
   showModal.value = false
   editingFormation.value = null
+  formSubmitted.value = false
   form.value = defaultForm()
 }
+
 function confirmDelete(f) {
   formationToDelete.value = f
   showDeleteConfirm.value = true
+  nextTick(() => deleteModalRef.value?.focus())
 }
 
 onMounted(fetchFormations)
+
+onUnmounted(() => {
+  clearTimeout(rateLimitTimer)
+})
 </script>
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* ── Variables ─────────────────────────────────────────────────────────── */
 * { box-sizing: border-box; }
 
 .parcours-page {
@@ -388,7 +586,6 @@ onMounted(fetchFormations)
   color: var(--color-text-primary);
 }
 
-/* ── Page Header ─────────────────────────────────────────────────────────── */
 .page-header {
   display: flex;
   align-items: flex-start;
@@ -418,7 +615,6 @@ onMounted(fetchFormations)
   font-weight: 400;
 }
 
-/* ── Buttons ─────────────────────────────────────────────────────────────── */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -473,7 +669,6 @@ onMounted(fetchFormations)
 .btn-danger:hover { background: #dc2626; }
 .btn-danger:disabled { opacity: 0.55; cursor: not-allowed; }
 
-/* ── Stats Row ───────────────────────────────────────────────────────────── */
 .stats-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -511,7 +706,6 @@ onMounted(fetchFormations)
   letter-spacing: -0.02em;
 }
 
-/* ── Section Header ──────────────────────────────────────────────────────── */
 .section-header {
   display: flex;
   align-items: center;
@@ -528,7 +722,6 @@ onMounted(fetchFormations)
 
 .section-actions { display: flex; gap: 0.6rem; }
 
-/* ── State Boxes ─────────────────────────────────────────────────────────── */
 .state-box {
   display: flex;
   align-items: center;
@@ -562,7 +755,6 @@ onMounted(fetchFormations)
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Empty Card ──────────────────────────────────────────────────────────── */
 .empty-card {
   background: var(--color-surface);
   border: 1px dashed var(--color-border);
@@ -578,7 +770,6 @@ onMounted(fetchFormations)
 .empty-title { font-size: 1rem; font-weight: 600; color: var(--color-text-primary); margin: 0; }
 .empty-sub { font-size: 0.84rem; color: var(--color-text-secondary); margin: 0 0 0.5rem; }
 
-/* ── Cards Grid ──────────────────────────────────────────────────────────── */
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -609,7 +800,6 @@ onMounted(fetchFormations)
   box-shadow: var(--shadow-panel);
 }
 
-/* Top bar */
 .card-topbar {
   display: flex;
   align-items: center;
@@ -666,7 +856,6 @@ onMounted(fetchFormations)
   50%      { opacity: 0.4; }
 }
 
-/* Body */
 .card-body { flex: 1; }
 .card-title {
   font-size: 1.05rem;
@@ -692,7 +881,6 @@ onMounted(fetchFormations)
   overflow: hidden;
 }
 
-/* Meta row */
 .card-meta-row {
   display: flex;
   align-items: center;
@@ -713,7 +901,6 @@ onMounted(fetchFormations)
   border-radius: 20px;
 }
 
-/* Footer */
 .card-footer {
   display: flex;
   align-items: center;
@@ -750,18 +937,18 @@ onMounted(fetchFormations)
   cursor: pointer;
   transition: all 0.18s;
 }
-.action-btn:hover {
+.action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.action-btn:hover:not(:disabled) {
   border-color: var(--color-accent);
   color: var(--color-text-primary);
   background: var(--color-accent-light);
 }
-.action-btn-danger:hover {
+.action-btn-danger:hover:not(:disabled) {
   border-color: var(--color-danger);
   color: var(--color-danger);
   background: rgba(239,68,68,0.1);
 }
 
-/* ── Modal ───────────────────────────────────────────────────────────────── */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -828,6 +1015,13 @@ onMounted(fetchFormations)
 }
 .req { color: var(--color-accent); }
 
+.field-hint {
+  font-size: 0.72rem;
+  color: var(--color-text-tertiary);
+  text-align: right;
+  margin-top: 2px;
+}
+
 .field input,
 .field select,
 .field textarea {
@@ -847,6 +1041,10 @@ onMounted(fetchFormations)
 .field textarea:focus {
   border-color: var(--color-accent);
   box-shadow: 0 0 0 3px var(--color-accent-light);
+}
+.field input[aria-invalid="true"] {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
 }
 .field input::placeholder,
 .field textarea::placeholder { color: var(--color-text-tertiary); }
@@ -904,7 +1102,6 @@ onMounted(fetchFormations)
   margin-top: 0.25rem;
 }
 
-/* Delete modal */
 .delete-icon-wrap {
   width: 54px; height: 54px;
   background: rgba(239,68,68,0.12);
@@ -922,7 +1119,6 @@ onMounted(fetchFormations)
   line-height: 1.55;
 }
 
-/* ── Transition ─────────────────────────────────────────────────────────── */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-active .modal-box, .fade-leave-active .modal-box {
   transition: transform 0.2s, opacity 0.2s;
@@ -931,7 +1127,6 @@ onMounted(fetchFormations)
 .fade-enter-from .modal-box { transform: translateY(-12px); opacity: 0; }
 .fade-leave-to .modal-box { transform: translateY(6px); opacity: 0; }
 
-/* ── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .parcours-page { padding: 1.25rem 1rem 3rem; }
   .stats-row { grid-template-columns: repeat(2, 1fr); }

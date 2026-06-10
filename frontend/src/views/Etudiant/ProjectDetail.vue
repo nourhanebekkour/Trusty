@@ -6,21 +6,21 @@
 
     <section class="detail-panel">
       <div class="detail-panel__header">
-        <span class="detail-panel__eyebrow">Projet {{ id }}</span>
-        <h1>{{ project?.titre || 'Détail du projet' }}</h1>
+        <span class="detail-panel__eyebrow">Projet {{ sanitizedId }}</span>
+        <h1>{{ sanitizeText(project?.titre) || 'Détail du projet' }}</h1>
         <p>
-          {{ project?.description || 'Sélectionnez un projet depuis la liste pour consulter ses informations.' }}
+          {{ sanitizeText(project?.description) || 'Sélectionnez un projet depuis la liste pour consulter ses informations.' }}
         </p>
       </div>
 
       <dl class="detail-grid">
         <div>
           <dt>Type</dt>
-          <dd>{{ project?.type || project?.type_projet || 'Non renseigné' }}</dd>
+          <dd>{{ sanitizeText(project?.type || project?.type_projet) || 'Non renseigné' }}</dd>
         </div>
         <div>
           <dt>Statut</dt>
-          <dd>{{ project?.statut || project?.status_validation || 'Non renseigné' }}</dd>
+          <dd>{{ sanitizeText(project?.statut || project?.status_validation) || 'Non renseigné' }}</dd>
         </div>
         <div>
           <dt>Date</dt>
@@ -32,25 +32,70 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/authstore'
 
-defineProps({
+const props = defineProps({
   id: {
     type: String,
     required: true,
   },
 })
 
-const route = useRoute()
-const router = useRouter()
-const project = computed(() => route.state?.project ?? null)
+const route     = useRoute()
+const router    = useRouter()
+const authStore = useAuthStore()
+
+onMounted(async () => {
+  if (!authStore.isAuthenticated) {
+    await router.replace('/login')
+    return
+  }
+  if (!isValidId(props.id)) {
+    await router.replace('/projets')
+  }
+})
+
+function isValidId(value) {
+  if (!value || typeof value !== 'string') return false
+  if (value.length > 100) return false
+  return /^[a-zA-Z0-9_-]+$/.test(value)
+}
+
+function sanitizeText(value) {
+  if (!value || typeof value !== 'string') return ''
+  if (value.length > 2000) return value.slice(0, 2000) + '…'
+  const div = document.createElement('div')
+  div.appendChild(document.createTextNode(value))
+  return div.innerHTML
+}
+
+const sanitizedId = computed(() => {
+  return isValidId(props.id) ? props.id : '—'
+})
+
+const project = computed(() => {
+  const raw = route.state?.project ?? null
+  if (!raw || typeof raw !== 'object') return null
+  return {
+    titre:             typeof raw.titre            === 'string' ? raw.titre.slice(0, 200)            : '',
+    description:       typeof raw.description      === 'string' ? raw.description.slice(0, 2000)      : '',
+    type:              typeof raw.type             === 'string' ? raw.type.slice(0, 100)             : '',
+    type_projet:       typeof raw.type_projet      === 'string' ? raw.type_projet.slice(0, 100)      : '',
+    statut:            typeof raw.statut           === 'string' ? raw.statut.slice(0, 100)           : '',
+    status_validation: typeof raw.status_validation=== 'string' ? raw.status_validation.slice(0, 100): '',
+    dateDebut:         raw.dateDebut  ?? null,
+    date_debut:        raw.date_debut ?? null,
+  }
+})
 
 const formattedDate = computed(() => {
   const date = project.value?.dateDebut ?? project.value?.date_debut
   if (!date) return 'Non renseignée'
-
-  return new Date(date).toLocaleDateString('fr-FR', {
+  const d = new Date(date)
+  if (isNaN(d.getTime())) return 'Non renseignée'
+  return d.toLocaleDateString('fr-FR', {
     month: 'long',
     year: 'numeric',
   })

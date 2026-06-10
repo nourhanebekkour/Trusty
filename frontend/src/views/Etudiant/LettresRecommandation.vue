@@ -20,7 +20,7 @@
             {{ v.label }}
           </button>
         </div>
-        <button v-if="activeView === 'demandes'" class="btn-new" @click="showModal = true">
+        <button v-if="activeView === 'demandes'" class="btn-new" @click="openModal">
           <span>＋</span> Nouvelle demande
         </button>
       </div>
@@ -65,19 +65,25 @@
           <div class="card-top">
             <div class="card-left">
               <span class="type-badge">{{ formatType(lettre.type) }}</span>
-              <span class="prof-name">{{ lettre.professeur }}</span>
+              <span class="prof-name">{{ sanitizeText(lettre.professeur) }}</span>
             </div>
             <span class="status-badge" :class="statusClass(lettre.statut)">
               {{ statusLabel(lettre.statut) }}
             </span>
           </div>
-          <p class="card-motif">{{ lettre.motif }}</p>
+          <p class="card-motif">{{ sanitizeText(lettre.motif) }}</p>
           <div class="card-bottom">
             <span class="card-date">{{ formatDate(lettre.date_demande) }}</span>
             <span class="card-visibilite">{{ formatVisibilite(lettre.visibilite) }}</span>
           </div>
           <div class="card-actions" v-if="lettre.statut === 'EN_ATTENTE'">
-            <button class="btn-delete" @click="supprimerDemande(lettre.id)">Annuler la demande</button>
+            <button
+              class="btn-delete"
+              @click="confirmSuppression(lettre.id)"
+              :disabled="actionLoading"
+            >
+              Annuler la demande
+            </button>
           </div>
         </div>
       </div>
@@ -96,11 +102,11 @@
           <div class="card-top">
             <div class="card-left">
               <span class="type-badge">{{ formatType(lettre.type) }}</span>
-              <span class="prof-name">{{ lettre.professeur }}</span>
+              <span class="prof-name">{{ sanitizeText(lettre.professeur) }}</span>
             </div>
             <span class="status-badge status-valid">Validée</span>
           </div>
-          <p class="card-motif">{{ lettre.motif }}</p>
+          <p class="card-motif">{{ sanitizeText(lettre.motif) }}</p>
           <div class="card-bottom">
             <span class="card-date">{{ formatDate(lettre.date_validation) }}</span>
             <span class="card-visibilite">{{ formatVisibilite(lettre.visibilite) }}</span>
@@ -157,7 +163,7 @@
             <div class="timeline-dot" :class="statusClass(lettre.statut)"></div>
             <div class="timeline-content">
               <span class="timeline-type">{{ formatType(lettre.type) }}</span>
-              <span class="timeline-prof">{{ lettre.professeur }}</span>
+              <span class="timeline-prof">{{ sanitizeText(lettre.professeur) }}</span>
             </div>
             <span class="timeline-date">{{ formatDate(lettre.date_demande) }}</span>
             <span class="status-badge" :class="statusClass(lettre.statut)" style="font-size:0.68rem">{{ statusLabel(lettre.statut) }}</span>
@@ -170,13 +176,16 @@
 
     <!-- Modal nouvelle demande -->
     <Transition name="fade">
-      <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
+      <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
         <div class="modal-box">
           <div class="modal-header">
             <h2>Nouvelle demande de lettre</h2>
-            <button class="modal-close" @click="showModal = false">✕</button>
+            <button class="modal-close" @click="closeModal">✕</button>
           </div>
           <div class="modal-body">
+            <div class="form-errors" v-if="formErrors.length">
+              <p v-for="err in formErrors" :key="err" class="form-error-msg">{{ err }}</p>
+            </div>
             <div class="form-grid">
               <div class="form-group form-group--full">
                 <label>Type de candidature *</label>
@@ -190,11 +199,24 @@
               </div>
               <div class="form-group form-group--full">
                 <label>Professeur destinataire *</label>
-                <input v-model="form.professeur" class="form-input" placeholder="ex: Prof. Ahmed Alami" />
+                <input
+                  v-model="form.professeur"
+                  class="form-input"
+                  placeholder="ex: Prof. Ahmed Alami"
+                  maxlength="100"
+                  autocomplete="off"
+                />
               </div>
               <div class="form-group form-group--full">
                 <label>Motif / Description *</label>
-                <textarea v-model="form.motif" class="form-input form-textarea" placeholder="Décrivez l'objectif de votre demande..." rows="4"></textarea>
+                <textarea
+                  v-model="form.motif"
+                  class="form-input form-textarea"
+                  placeholder="Décrivez l'objectif de votre demande..."
+                  rows="4"
+                  maxlength="1000"
+                ></textarea>
+                <span class="char-counter">{{ form.motif.length }} / 1000</span>
               </div>
               <div class="form-group form-group--full">
                 <label>Visibilité</label>
@@ -207,8 +229,39 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button class="btn-cancel" @click="showModal = false">Annuler</button>
-            <button class="btn-new" @click="submitDemande">Envoyer la demande</button>
+            <button class="btn-cancel" @click="closeModal">Annuler</button>
+            <button
+              class="btn-new"
+              @click="submitDemande"
+              :disabled="actionLoading"
+            >
+              Envoyer la demande
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Dialogue de confirmation suppression -->
+    <Transition name="fade">
+      <div v-if="confirmDialog.show" class="modal-overlay" @click.self="cancelConfirm">
+        <div class="modal-box" style="max-width: 420px;">
+          <div class="modal-header">
+            <h2>{{ confirmDialog.title }}</h2>
+            <button class="modal-close" @click="cancelConfirm">✕</button>
+          </div>
+          <p style="color: var(--color-text-secondary); font-size: 0.875rem; margin: 0 0 1.25rem;">
+            {{ confirmDialog.message }}
+          </p>
+          <div class="modal-footer">
+            <button class="btn-cancel" @click="cancelConfirm">Annuler</button>
+            <button
+              class="btn-delete"
+              @click="confirmDialog.onConfirm"
+              :disabled="actionLoading"
+            >
+              Confirmer
+            </button>
           </div>
         </div>
       </div>
@@ -223,6 +276,15 @@ import { ref, computed } from 'vue'
 const activeView = ref('demandes')
 const activeTab  = ref('all')
 const showModal  = ref(false)
+const actionLoading = ref(false)
+const formErrors = ref([])
+
+const confirmDialog = ref({
+  show: false,
+  title: '',
+  message: '',
+  onConfirm: null,
+})
 
 const views = [
   {
@@ -248,6 +310,10 @@ const tabs = [
   { key: 'VALIDEE',    label: 'Validées' },
   { key: 'REFUSEE',    label: 'Refusées' },
 ]
+
+const ALLOWED_TYPES = ['MASTER_DOCTORAT', 'STAGE_EMPLOI', 'DOUBLE_DIPLOMATION', 'PROGRAMME_INTERNATIONAL']
+const ALLOWED_VISIBILITES = ['PUBLIQUE', 'PRIVEE', 'TELECHARGEABLE']
+const ALLOWED_STATUTS = ['EN_ATTENTE', 'VALIDEE', 'REFUSEE']
 
 const lettres = ref([
   { id: 1, type: 'MASTER_DOCTORAT',    professeur: 'Prof. Ahmed Alami',  motif: 'Candidature master IA à Paris Saclay.', visibilite: 'PRIVEE',         statut: 'EN_ATTENTE', date_demande: '2026-05-20' },
@@ -286,22 +352,97 @@ const chartData = computed(() => {
 
 const form = ref({ type: '', professeur: '', motif: '', visibilite: 'PRIVEE' })
 
-function submitDemande() {
-  if (!form.value.type || !form.value.professeur || !form.value.motif) {
-    alert('Merci de remplir tous les champs obligatoires.')
-    return
+function sanitizeText(value) {
+  if (!value) return ''
+  return String(value)
+    .replace(/<[^>]*>/g, '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .trim()
+    .slice(0, 500)
+}
+
+function validateForm() {
+  const errors = []
+  if (!form.value.type || !ALLOWED_TYPES.includes(form.value.type)) {
+    errors.push('Veuillez choisir un type de candidature valide.')
   }
-  lettres.value.unshift({
-    id: Date.now(),
-    type: form.value.type,
-    professeur: form.value.professeur,
-    motif: form.value.motif,
-    visibilite: form.value.visibilite,
-    statut: 'EN_ATTENTE',
-    date_demande: new Date().toISOString().split('T')[0]
-  })
-  form.value = { type: '', professeur: '', motif: '', visibilite: 'PRIVEE' }
+  const prof = form.value.professeur.trim()
+  if (!prof) {
+    errors.push('Le nom du professeur est obligatoire.')
+  } else if (prof.length < 3) {
+    errors.push('Le nom du professeur doit comporter au moins 3 caractères.')
+  } else if (prof.length > 100) {
+    errors.push('Le nom du professeur ne peut pas dépasser 100 caractères.')
+  }
+  const motif = form.value.motif.trim()
+  if (!motif) {
+    errors.push('Le motif est obligatoire.')
+  } else if (motif.length < 10) {
+    errors.push('Le motif doit comporter au moins 10 caractères.')
+  } else if (motif.length > 1000) {
+    errors.push('Le motif ne peut pas dépasser 1 000 caractères.')
+  }
+  if (!ALLOWED_VISIBILITES.includes(form.value.visibilite)) {
+    errors.push('Visibilité invalide.')
+  }
+  return errors
+}
+
+function openModal() {
+  formErrors.value = []
+  showModal.value = true
+}
+
+function closeModal() {
   showModal.value = false
+  formErrors.value = []
+  form.value = { type: '', professeur: '', motif: '', visibilite: 'PRIVEE' }
+}
+
+function showConfirmDialog(title, message, onConfirm) {
+  confirmDialog.value = { show: true, title, message, onConfirm }
+}
+
+function cancelConfirm() {
+  confirmDialog.value = { show: false, title: '', message: '', onConfirm: null }
+}
+
+function submitDemande() {
+  formErrors.value = validateForm()
+  if (formErrors.value.length) return
+
+  if (actionLoading.value) return
+  actionLoading.value = true
+
+  try {
+    lettres.value.unshift({
+      id: Date.now(),
+      type: form.value.type,
+      professeur: sanitizeText(form.value.professeur),
+      motif: sanitizeText(form.value.motif),
+      visibilite: form.value.visibilite,
+      statut: 'EN_ATTENTE',
+      date_demande: new Date().toISOString().split('T')[0]
+    })
+    closeModal()
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+function confirmSuppression(id) {
+  const lettre = lettres.value.find(l => l.id === id)
+  if (!lettre) return
+  showConfirmDialog(
+    'Annuler la demande',
+    `Voulez-vous vraiment annuler la demande adressée à ${sanitizeText(lettre.professeur)} ?`,
+    () => {
+      cancelConfirm()
+      supprimerDemande(id)
+    }
+  )
 }
 
 function supprimerDemande(id) {
@@ -335,6 +476,7 @@ function formatDate(d) { return new Date(d).toLocaleDateString('fr-FR', { day: '
 
 .btn-new { display: inline-flex; align-items: center; gap: 0.4rem; background: var(--color-accent); color: #fff; border: none; padding: 0.55rem 1.1rem; border-radius: 8px; font-size: 0.84rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
 .btn-new:hover { background: var(--color-accent-hover); }
+.btn-new:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
 .stat-card { background: var(--color-surface); border: 1px solid var(--color-border-light); border-radius: 12px; padding: 1.2rem 1.4rem; }
@@ -368,6 +510,7 @@ function formatDate(d) { return new Date(d).toLocaleDateString('fr-FR', { day: '
 .card-actions { display: flex; justify-content: flex-end; gap: 0.5rem; padding-top: 0.5rem; }
 .btn-delete { background: transparent; border: 1px solid var(--color-danger); color: var(--color-danger); padding: 0.35rem 0.85rem; border-radius: 7px; font-size: 0.78rem; font-weight: 500; cursor: pointer; transition: all 0.18s; }
 .btn-delete:hover { background: rgba(239,68,68,0.1); }
+.btn-delete:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn-download { background: var(--color-accent-light); border: 1px solid var(--color-accent-border); color: var(--color-accent); padding: 0.35rem 0.85rem; border-radius: 7px; font-size: 0.78rem; font-weight: 500; cursor: pointer; transition: all 0.18s; }
 .btn-download:hover { background: var(--color-accent-light); opacity: 0.8; }
 
@@ -418,7 +561,10 @@ function formatDate(d) { return new Date(d).toLocaleDateString('fr-FR', { day: '
 .form-input:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-light); }
 .form-input option { background: var(--color-surface); }
 .form-textarea { resize: vertical; min-height: 100px; }
-.modal-footer { display: flex; justify-content: flex-end; gap: 0.65rem; margin-top: 0.25rem; }
+.char-counter { font-size: 0.72rem; color: var(--color-text-tertiary); text-align: right; }
+.form-errors { margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.3rem; }
+.form-error-msg { font-size: 0.8rem; color: var(--color-danger); background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 6px; padding: 0.35rem 0.7rem; margin: 0; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 0.65rem; margin-top: 1.25rem; }
 .btn-cancel { background: transparent; border: 1px solid var(--color-border); color: var(--color-text-secondary); padding: 0.55rem 1.1rem; border-radius: 8px; font-size: 0.84rem; font-weight: 500; cursor: pointer; }
 .btn-cancel:hover { border-color: var(--color-accent); color: var(--color-text-primary); }
 

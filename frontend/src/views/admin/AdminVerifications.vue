@@ -6,11 +6,20 @@
         <p class="page__subtitle">Activités étudiantes et professionnels en attente de validation.</p>
       </div>
       <div class="page__actions">
-        <button class="btn btn--secondary" @click="load">🔄 Rafraîchir</button>
+        <button
+          class="btn btn--secondary"
+          @click="load"
+          :disabled="isRefreshLimited"
+          :title="isRefreshLimited ? `Attendez ${refreshCountdown}s` : ''"
+        >
+          {{ isRefreshLimited ? `🔄 (${refreshCountdown}s)` : '🔄 Rafraîchir' }}
+        </button>
       </div>
     </div>
 
-    <div v-if="admin.error" class="error-banner">{{ admin.error }}</div>
+    <div v-if="admin.error" class="error-banner" role="alert">
+      Une erreur est survenue. Veuillez réessayer.
+    </div>
 
     <div class="stats-row">
       <StatCard label="En attente" :value="admin.loading ? '…' : String(admin.verificationQueue.length)">
@@ -39,13 +48,25 @@
 
           <div class="verif-card__body">
             <div class="verif-card__header">
-              <h3 class="verif-card__title">{{ item.title }}</h3>
-              <span class="text-muted">{{ item.author }}</span>
+              <h3 class="verif-card__title">{{ sanitizeText(item.title) }}</h3>
+              <span class="text-muted">{{ sanitizeText(item.author) }}</span>
             </div>
-            <p class="verif-card__desc">{{ item.description || 'Aucune description' }}</p>
+            <p class="verif-card__desc">{{ sanitizeText(item.description) || 'Aucune description' }}</p>
             <div class="verif-card__actions">
-              <button class="btn btn--primary btn--sm" :disabled="admin.validatingId === item.id" @click="approve(item)">✓ Approuver</button>
-              <button class="btn btn--ghost btn--sm" :disabled="admin.validatingId === item.id" @click="reject(item)">✕ Rejeter</button>
+              <button
+                class="btn btn--primary btn--sm"
+                :disabled="admin.validatingId === item.id || isActionLimited"
+                @click="approve(item)"
+              >
+                ✓ Approuver
+              </button>
+              <button
+                class="btn btn--ghost btn--sm"
+                :disabled="admin.validatingId === item.id || isActionLimited"
+                @click="reject(item)"
+              >
+                ✕ Rejeter
+              </button>
             </div>
           </div>
         </div>
@@ -55,15 +76,78 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import StatCard from '../../components/ui/StatCard.vue'
 import { useAdminStore } from '../../stores/adminStore'
 import { useAuthStore } from '../../stores/authstore'
 
-const admin = useAdminStore()
+const admin     = useAdminStore()
 const authStore = useAuthStore()
-const router = useRouter()
+const router    = useRouter()
+
+// --- XSS : encodage des données affichées depuis l'API ---
+const sanitizeText = (value) => {
+  if (value === null || value === undefined) return ''
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+}
+
+// --- Rate limiting : bouton Rafraîchir (cooldown 5s) ---
+const REFRESH_COOLDOWN_MS = 5_000
+const lastRefreshAt       = ref(0)
+const refreshCountdown    = ref(0)
+let   refreshInterval     = null
+
+const isRefreshLimited = computed(() =>
+  Date.now() - lastRefreshAt.value < REFRESH_COOLDOWN_MS
+)
+
+const startRefreshCountdown = () => {
+  if (refreshInterval) clearInterval(refreshInterval)
+  refreshInterval = setInterval(() => {
+    const remaining = Math.ceil((lastRefreshAt.value + REFRESH_COOLDOWN_MS - Date.now()) / 1000)
+    refreshCountdown.value = remaining > 0 ? remaining : 0
+    if (refreshCountdown.value === 0) clearInterval(refreshInterval)
+  }, 200)
+}
+
+// --- Rate limiting : actions Approuver / Rejeter (max 20 / 60s) ---
+const ACTION_LIMIT     = 20
+const ACTION_WINDOW_MS = 60_000
+const actionTimestamps = ref([])
+
+const isActionLimited = computed(() => {
+  const now = Date.now()
+  return actionTimestamps.value.filter(ts => now - ts < ACTION_WINDOW_MS).length >= ACTION_LIMIT
+})
+
+const recordAction = () => {
+  const now = Date.now()
+  actionTimestamps.value = [
+    ...actionTimestamps.value.filter(ts => now - ts < ACTION_WINDOW_MS),
+    now,
+  ]
+}
+
+onUnmounted(() => {
+  if (refreshInterval) clearInterval(refreshInterval)
+})
+
+// --- Validation de l'id et du type avant tout appel API ---
+const ALLOWED_TYPES    = ['ACTIVITE', 'PROFESSIONNEL']
+const ALLOWED_STATUSES = ['APPROUVE', 'REJETE']
+
+const isValidItem = (item) => {
+  if (!item || typeof item !== 'object') return false
+  const idOk   = item.id !== null && item.id !== undefined
+  const typeOk = ALLOWED_TYPES.includes(item.type)
+  return idOk && typeOk
+}
 
 const activitiesCount = computed(() =>
   admin.verificationQueue.filter(v => v.type === 'ACTIVITE').length
@@ -74,14 +158,21 @@ const prosCount = computed(() =>
 )
 
 async function approve(item) {
+  if (!isValidItem(item) || isActionLimited.value) return
+  recordAction()
   await admin.validateEntity(item.type, item.id, 'APPROUVE')
 }
 
 async function reject(item) {
+  if (!isValidItem(item) || isActionLimited.value) return
+  recordAction()
   await admin.validateEntity(item.type, item.id, 'REJETE')
 }
 
 async function load() {
+  if (isRefreshLimited.value) return
+  lastRefreshAt.value = Date.now()
+  startRefreshCountdown()
   await admin.fetchVerificationQueue()
 }
 

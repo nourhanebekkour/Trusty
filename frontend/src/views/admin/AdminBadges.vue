@@ -6,12 +6,12 @@
         <p class="page__subtitle">Gérez les badges attribués aux étudiants et l'historique des certifications.</p>
       </div>
       <div class="page__actions">
-        <button class="btn btn--primary" @click="showModal = true">+ Créer un badge</button>
+        <button class="btn btn--primary" @click="openModal">+ Créer un badge</button>
       </div>
     </div>
 
-    <div v-if="admin.error" class="error-banner">{{ admin.error }}</div>
-    <div v-if="successMsg" class="msg msg--ok">{{ successMsg }}</div>
+    <div v-if="admin.error" class="error-banner">{{ sanitizeText(admin.error) }}</div>
+    <div v-if="successMsg" class="msg msg--ok">{{ sanitizeText(successMsg) }}</div>
 
     <div class="stats-row">
       <StatCard label="Certifications" :value="admin.loading ? '…' : String(admin.certHistory.length)">
@@ -41,10 +41,10 @@
         </thead>
         <tbody>
           <tr v-for="c in admin.certHistory" :key="c.id_historique || c.id">
-            <td class="text-muted">{{ c.action || c.type_action || '—' }}</td>
-            <td>{{ c.utilisateur?.prenom || c.prenom || '' }} {{ c.utilisateur?.nom || c.nom || '' }}</td>
+            <td class="text-muted">{{ sanitizeText(c.action || c.type_action || '—') }}</td>
+            <td>{{ sanitizeText(c.utilisateur?.prenom || c.prenom || '') }} {{ sanitizeText(c.utilisateur?.nom || c.nom || '') }}</td>
             <td class="text-muted">{{ formatDate(c.date_action || c.date_creation) }}</td>
-            <td class="text-muted">{{ c.description || c.detail || '—' }}</td>
+            <td class="text-muted">{{ sanitizeText(c.description || c.detail || '—') }}</td>
           </tr>
           <tr v-if="!admin.loading && admin.certHistory.length === 0">
             <td colspan="4" class="state-msg">Aucun historique disponible</td>
@@ -53,24 +53,33 @@
       </table>
     </div>
 
-    <AppModal :show="showModal" title="Créer un badge" @close="showModal = false" @confirm="handleCreate">
+    <AppModal :show="showModal" title="Créer un badge" @close="closeModal" @confirm="handleCreate">
       <div class="form-grid">
+        <div v-if="formErrors.length" class="field" style="grid-column: span 2;">
+          <p v-for="err in formErrors" :key="err" class="form-error-msg">{{ err }}</p>
+        </div>
         <div class="field">
           <label>Étudiant <span class="required">*</span></label>
           <select v-model="form.id_etudiant">
             <option value="" disabled>Sélectionner un étudiant</option>
-            <option v-for="s in students" :key="s.id_etudiant || s.id_utilisateur" :value="s.id_etudiant || s.id_utilisateur">
-              {{ s.prenom || s.utilisateur?.prenom }} {{ s.nom || s.utilisateur?.nom }}
+            <option
+              v-for="s in students"
+              :key="s.id_etudiant || s.id_utilisateur"
+              :value="s.id_etudiant || s.id_utilisateur"
+            >
+              {{ sanitizeText(s.prenom || s.utilisateur?.prenom) }} {{ sanitizeText(s.nom || s.utilisateur?.nom) }}
             </option>
           </select>
         </div>
         <div class="field">
           <label>Nom du badge <span class="required">*</span></label>
-          <input v-model="form.nom" type="text" placeholder="Ex: Portfolio Certifié" maxlength="100" />
+          <input v-model="form.nom" type="text" placeholder="Ex: Portfolio Certifié" maxlength="100" autocomplete="off" />
+          <span class="char-counter">{{ form.nom.length }} / 100</span>
         </div>
         <div class="field" style="grid-column: span 2;">
           <label>Description</label>
           <textarea v-model="form.description" placeholder="Description optionnelle du badge" maxlength="500" rows="3"></textarea>
+          <span class="char-counter">{{ form.description.length }} / 500</span>
         </div>
       </div>
     </AppModal>
@@ -90,11 +99,58 @@ const admin = useAdminStore()
 const authStore = useAuthStore()
 const router = useRouter()
 
-const showModal = ref(false)
-const successMsg = ref('')
-const students = ref([])
+const showModal   = ref(false)
+const successMsg  = ref('')
+const students    = ref([])
+const formErrors  = ref([])
+const actionLoading = ref(false)
 
 const form = ref({ id_etudiant: '', nom: '', description: '' })
+
+const ALLOWED_STUDENT_ID_PATTERN = /^[a-zA-Z0-9\-_]+$/
+
+function sanitizeText(value) {
+  if (!value) return ''
+  return String(value)
+    .replace(/<[^>]*>/g, '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .trim()
+    .slice(0, 500)
+}
+
+function validateForm() {
+  const errors = []
+  if (!form.value.id_etudiant) {
+    errors.push('Veuillez sélectionner un étudiant.')
+  } else if (!ALLOWED_STUDENT_ID_PATTERN.test(String(form.value.id_etudiant))) {
+    errors.push('Identifiant étudiant invalide.')
+  }
+  const nom = form.value.nom.trim()
+  if (!nom) {
+    errors.push('Le nom du badge est obligatoire.')
+  } else if (nom.length < 2) {
+    errors.push('Le nom du badge doit comporter au moins 2 caractères.')
+  } else if (nom.length > 100) {
+    errors.push('Le nom du badge ne peut pas dépasser 100 caractères.')
+  }
+  if (form.value.description.length > 500) {
+    errors.push('La description ne peut pas dépasser 500 caractères.')
+  }
+  return errors
+}
+
+function openModal() {
+  formErrors.value = []
+  showModal.value = true
+}
+
+function closeModal() {
+  showModal.value = false
+  formErrors.value = []
+  form.value = { id_etudiant: '', nom: '', description: '' }
+}
 
 const certifiedStudents = computed(() =>
   (admin.certHistory || []).filter(c =>
@@ -104,24 +160,32 @@ const certifiedStudents = computed(() =>
 
 function formatDate(dateStr) {
   if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return '—'
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
 async function handleCreate() {
-  if (!form.value.id_etudiant || !form.value.nom) return
+  formErrors.value = validateForm()
+  if (formErrors.value.length) return
+
+  if (actionLoading.value) return
+  actionLoading.value = true
+
   try {
     await api.post('/badges', {
-      id_etudiant: form.value.id_etudiant,
-      nom: form.value.nom,
-      description: form.value.description,
+      id_etudiant:  form.value.id_etudiant,
+      nom:          sanitizeText(form.value.nom),
+      description:  sanitizeText(form.value.description),
     })
-    showModal.value = false
+    closeModal()
     successMsg.value = 'Badge créé avec succès'
-    form.value = { id_etudiant: '', nom: '', description: '' }
     await admin.fetchCertHistory()
     setTimeout(() => { successMsg.value = '' }, 3000)
   } catch (e) {
     admin.error = e?.response?.data?.message || 'Erreur lors de la création'
+  } finally {
+    actionLoading.value = false
   }
 }
 
@@ -189,5 +253,11 @@ onMounted(async () => {
 }
 .field input:focus, .field select:focus, .field textarea:focus {
   border-color: var(--color-accent);
+}
+.char-counter { font-size: 11px; color: var(--color-text-tertiary); text-align: right; }
+.form-error-msg {
+  font-size: 12px; color: var(--color-danger);
+  background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 6px; padding: 6px 10px; margin: 0;
 }
 </style>
