@@ -12,47 +12,29 @@
     </div>
 
     <nav class="sidebar-nav">
-      <router-link to="/professor/dashboard" class="nav-item">
-        <img :src="iconDashboard" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">Dashboard</span>
+      <router-link to="/professor" class="nav-item">
+        <img :src="iconProjets" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Projets à valider</span>
       </router-link>
 
-      <router-link to="/professor/validations" class="nav-item">
-        <img :src="iconCertifie" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">Validations</span>
+      <router-link to="/professor" class="nav-item">
+        <img :src="iconStages" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Stages à valider</span>
       </router-link>
 
-      <router-link to="/professor/portfolios" class="nav-item">
-        <img :src="iconPortfolio" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">Portfolios</span>
+      <router-link to="/professor" class="nav-item">
+        <img :src="iconProfile" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Mes étudiants</span>
       </router-link>
 
-      <router-link to="/professor/notifications" class="nav-item">
+      <router-link to="/professor" class="nav-item">
+        <img :src="iconRecommandations" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Recommandations</span>
+      </router-link>
+
+      <router-link to="/professor" class="nav-item">
         <img :src="iconNotifications" class="nav-icon" />
         <span class="nav-label" v-show="!isCollapsed">Notifications</span>
-      </router-link>
-
-      <router-link to="/professor/recommandations" class="nav-item">
-        <img :src="iconRecommandations" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">Recommandation</span>
-      </router-link>
-
-      <router-link to="/professor/commentaires" class="nav-item">
-        <img :src="iconShare" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">Commentaires</span>
-      </router-link>
-
-      <router-link to="/professor/historique" class="nav-item">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="nav-icon">
-          <circle cx="12" cy="12" r="10"/>
-          <polyline points="12 6 12 12 16 14"/>
-        </svg>
-        <span class="nav-label" v-show="!isCollapsed">Historique</span>
-      </router-link>
-
-      <router-link to="/professor/profile" class="nav-item">
-        <img :src="iconProfile" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">Mon Profil</span>
       </router-link>
     </nav>
 
@@ -72,21 +54,19 @@
 </template>
 
 <script setup>
-import { ref, inject } from 'vue'
+import { ref } from 'vue'
 import { useAuthStore } from '@/stores/authstore'
 import { useRouter } from 'vue-router'
 
-import iconDashboard       from '@/assets/icons/dashboard.svg'
-import iconCertifie        from '@/assets/icons/certifie.svg'
-import iconPortfolio       from '@/assets/icons/portfoliocomplet.svg'
-import iconNotifications   from '@/assets/icons/notifications.svg'
-import iconRecommandations from '@/assets/icons/recommandations.svg'
-import iconShare           from '@/assets/icons/share.svg'
+import iconProjets         from '@/assets/icons/projets.svg'
+import iconStages          from '@/assets/icons/stages.svg'
 import iconProfile         from '@/assets/icons/profile.svg'
+import iconRecommandations from '@/assets/icons/recommandations.svg'
+import iconNotifications   from '@/assets/icons/notifications.svg'
 import iconSettings        from '@/assets/icons/settings.svg'
 import iconLogout          from '@/assets/icons/logout.svg'
 
-const isCollapsed = inject('sidebarCollapsed')
+const isCollapsed = ref(false)
 const authStore   = useAuthStore()
 const router      = useRouter()
 
@@ -103,8 +83,7 @@ async function handleLogout() {
 <style scoped>
 .sidebar {
   width: 235px;
-  background: var(--color-surface, #FFFFFF);
-  border-right: 1px solid var(--color-border, #D6D0C4);
+  background-color: #3D3D3D;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -128,10 +107,10 @@ async function handleLogout() {
 }
 
 .toggle-btn {
-  background: var(--color-surface-hover, #F0EDE6);
+  background: #0D2B2B;
   border: none;
   cursor: pointer;
-  color: var(--color-text-secondary, #6B7280);
+  color: #D6EDE8;
   padding: 8px 14px;
   border-radius: 8px;
   display: flex;
@@ -140,7 +119,7 @@ async function handleLogout() {
 }
 
 .toggle-btn:hover {
-  background: var(--color-surface-alt, #FAFAF8);
+  background-color: #EDEADE;
 }
 
 .sidebar-nav {
@@ -159,9 +138,9 @@ async function handleLogout() {
   box-sizing: border-box;
   height: 40px;
   padding: 0 12px;
-  color: var(--color-text-secondary, #6B7280);
-  background: transparent;
-  font-family: 'Inter', sans-serif;
+  color: #D6EDE8;
+  background-color: #0D2B2B;
+  font-family: Inter, sans-serif;
   font-size: 14px;
   font-weight: 400;
   border: none;
@@ -177,18 +156,16 @@ async function handleLogout() {
 }
 
 .nav-item:hover {
-  background: var(--color-surface-hover, #F0EDE6);
-  color: var(--color-text-primary, #0F1B2D);
+  background: #E5E1D5;
 }
 
 .router-link-active {
-  background: var(--color-accent-light, #E8F2EF);
-  color: var(--color-accent, #3D6B5E);
-  font-weight: 600;
+  background-color: #5C8C6A;
+  color: white;
 }
 
 .router-link-active .nav-icon {
-  filter: none;
+  filter: brightness(0) invert(1);
 }
 
 .nav-icon {
@@ -200,7 +177,7 @@ async function handleLogout() {
 
 .sidebar-bottom {
   padding: 10px 8px;
-  border-top: 1px solid var(--color-border, #D6D0C4);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -216,6 +193,6 @@ async function handleLogout() {
 }
 
 .logout-btn:hover {
-  color: var(--color-danger, #ef4444);
+  color: red;
 }
 </style>

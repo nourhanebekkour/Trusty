@@ -4,7 +4,7 @@ import { RouterView, useRoute, useRouter } from 'vue-router'
 import SideBar from './components/laayout/SideBar.vue'
 import NavBar from './components/laayout/NavBar.vue'
 import Footer from './components/laayout/Footer.vue'
-import ProfessionalSideBar from './components/professional/ProfessionalSideBar.vue'
+import ProfessionalSideBar from './components/professional/ProfessionalSidebar.vue'
 import { useAuthStore } from './stores/authstore'
 import { useThemeStore } from './stores/themeStore'
 
