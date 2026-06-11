@@ -161,6 +161,29 @@ describe('DashboardRecos.vue', () => {
       // Les cartes secondaires utilisent .reco-card (sans suffixe __repost)
       expect(wrapper.findAll('.reco-card').length).toBeGreaterThan(0)
     })
+
+    it('harmonise le conteneur et conserve les actions en attente', async () => {
+      const pending = {
+        ...RECO_2,
+        status: 'EN_ATTENTE',
+        date_creation: '2026-06-12T10:00:00Z',
+      }
+      const wrapper = mountComponent({ recos: [RECO_1, pending] })
+      const card = wrapper.find('.reco-card')
+
+      expect(card.classes()).toContain('reco-featured')
+      expect(card.classes()).toContain('reco-card--pending')
+      expect(card.find('.reco-featured__bar').exists()).toBe(true)
+      expect(card.find('.reco-featured__body').exists()).toBe(true)
+      expect(card.find('.author__date').exists()).toBe(true)
+
+      await card.find('.btn-accept').trigger('click')
+      await card.find('.btn-reject').trigger('click')
+      expect(wrapper.emitted('valider')).toEqual([
+        ['2', 'VALIDE'],
+        ['2', 'REJETE'],
+      ])
+    })
   })
 
   // ── getInitials ────────────────────────────────────────────────────────────

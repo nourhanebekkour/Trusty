@@ -109,7 +109,7 @@
 
         <!-- Icon -->
         <div class="notif-icon" :class="iconClass(notif.type_notification)">
-          <component :is="'svg'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" v-html="iconPath(notif.type_notification)"></component>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" v-html="iconPath(notif.type_notification)"></svg>
         </div>
 
         <!-- Content -->
@@ -155,9 +155,14 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import api from '@/api.js'
 import { useAuthStore } from '@/stores/authstore.js'
 import { useRouter } from 'vue-router'
+import {
+  getStudentNotifications,
+  markAllStudentNotificationsAsRead,
+  markStudentNotificationAsRead,
+  resolveStudentNotificationTarget,
+} from '@/services/studentNotificationService'
 
 const authStore = useAuthStore()
 const router    = useRouter()
@@ -169,6 +174,7 @@ const error         = ref(null)
 const activeTab     = ref('all')
 const markingId     = ref(null)
 const markingAll    = ref(false)
+const openingId     = ref(null)
 
 // ── Tabs ───────────────────────────────────────────────────────────────────
 const tabs = [
@@ -265,13 +271,9 @@ async function fetchNotifications() {
   if (!authStore.user) await authStore.fetchUser()
   loading.value = true; error.value = null
   try {
-    const res = await api.get('/notifications/')
+    const data = await getStudentNotifications()
     // Trier : non lues en premier, puis par date décroissante
-    const data = res.data?.data ?? res.data ?? []
-    notifications.value = data.sort((a, b) => {
-      if (a.est_lue !== b.est_lue) return a.est_lue ? 1 : -1
-      return new Date(b.date_creation) - new Date(a.date_creation)
-    })
+    notifications.value = data
   } catch (e) {
     error.value = e.response?.data?.message || 'Erreur de chargement.'
   } finally { loading.value = false }
@@ -282,7 +284,7 @@ async function markAsRead(notif) {
   if (notif.est_lue) return
   markingId.value = notif.id_notification
   try {
-    await api.put(`/notifications/${notif.id_notification}/lire`)
+    await markStudentNotificationAsRead(notif.id_notification)
     // Mise à jour locale immédiate sans re-fetch
     const idx = notifications.value.findIndex(n => n.id_notification === notif.id_notification)
     if (idx !== -1) {
@@ -301,8 +303,7 @@ async function markAsRead(notif) {
 async function markAllAsRead() {
   markingAll.value = true
   try {
-    const unread = notifications.value.filter(n => !n.est_lue)
-    await Promise.all(unread.map(n => api.put(`/notifications/${n.id_notification}/lire`)))
+    await markAllStudentNotificationsAsRead(notifications.value)
     notifications.value = notifications.value.map(n => ({
       ...n,
       est_lue: true,
@@ -314,9 +315,25 @@ async function markAllAsRead() {
 }
 
 // Clic sur une carte : marque comme lu + suit le lien si présent
-function handleClick(notif) {
-  if (!notif.est_lue) markAsRead(notif)
-  if (notif.lien_action) router.push(notif.lien_action)
+async function handleClick(notif) {
+  if (openingId.value) return
+
+  openingId.value = notif.id_notification
+  error.value = null
+  try {
+    if (!notif.est_lue) await markAsRead(notif)
+    const target = await resolveStudentNotificationTarget(notif)
+
+    if (target) {
+      await router.push(target)
+    } else if (notif.type_notification === 'COMMENTAIRE') {
+      error.value = 'Le portfolio associé à ce commentaire est introuvable.'
+    }
+  } catch (e) {
+    error.value = e.response?.data?.message || 'Impossible d’ouvrir cette notification.'
+  } finally {
+    openingId.value = null
+  }
 }
 
 onMounted(fetchNotifications)

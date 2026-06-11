@@ -313,8 +313,9 @@ router.beforeEach(async (to) => {
 
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const allowedRoles = to.matched.flatMap(record => record.meta.roles ?? [])
+  const isPublicPortfolio = to.name === 'portfolio-template1'
 
-  if (authStore.isAuthenticated) {
+  if (authStore.isAuthenticated && !isPublicPortfolio) {
     if (authStore.isAdmin && !to.path.startsWith('/admin')) {
       return '/admin/dashboard'
     } else if (authStore.isProfesseur && !to.path.startsWith('/professor')) {

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // profileservices.js importe '@/api' (src/api.js)
-vi.mock('@/api', () => ({
+vi.mock('@/services/api', () => ({
   default: {
     get:  vi.fn(),
     put:  vi.fn(),
@@ -9,13 +9,13 @@ vi.mock('@/api', () => ({
   },
 }))
 
+import api from '@/services/api'
+
 // fetchGithubRepos utilise fetch global — on stub pour éviter les appels réseau
 vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
   ok:   true,
   json: vi.fn().mockResolvedValue([]),
 }))
-
-import api from '@/api'
 import { getProfile, saveProfile, addSkill } from '@/services/profileservices'
 
 const EXPECTED_ID    = 'clx123456789abcdefghijk'
@@ -55,9 +55,9 @@ const MOCK_PROJETS = [
 ]
 
 // ── Helper : setup des mocks api.get pour getProfile() ───────────────────
-// getProfile() fait 6 appels api.get dans l'ordre :
+// getProfile() fait 5 appels api.get dans l'ordre :
 // 1. /auth/me, 2. /etudiants/:id, 3. /competences/etudiant/:id,
-// 4. /badges/etudiant/:id, 5. /projets/ (allSettled), 6. /projets/ (inner try)
+// 4. /badges/etudiant/:id, 5. /projets/etudiant/:id
 const setupGetProfileMocks = () => {
   api.get
     .mockResolvedValueOnce({ data: { data: MOCK_ME } })
@@ -65,8 +65,9 @@ const setupGetProfileMocks = () => {
     .mockResolvedValueOnce({ data: { data: MOCK_COMPETENCES } })
     .mockResolvedValueOnce({ data: { data: MOCK_BADGES } })
     .mockResolvedValueOnce({ data: { data: MOCK_PROJETS } })
-    .mockResolvedValueOnce({ data: { data: MOCK_PROJETS } })
 }
+
+
 
 // ═════════════════════════════════════════════════════════════════════════════
 // TESTS UNITAIRES — profileservices

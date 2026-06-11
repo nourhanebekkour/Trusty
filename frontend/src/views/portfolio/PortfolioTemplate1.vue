@@ -543,6 +543,63 @@
                 </div>
             </section>
 
+            <!-- ── COMMENTAIRES ───────────────────────────────────────── -->
+            <section id="comments" class="pf2-section pf2-section--comments">
+                <div class="pf2-section__header">
+                    <p class="pf2-section__label">Échanges</p>
+                    <h2 class="pf2-section__title">Commentaires</h2>
+                </div>
+
+                <div class="pf2-comments">
+                    <p v-if="commentsLoading" class="pf2-comments__state">Chargement des commentaires...</p>
+                    <p v-else-if="commentsError" class="pf2-comments__error">{{ commentsError }}</p>
+                    <p v-else-if="comments.length === 0" class="pf2-comments__state">
+                        Aucun commentaire pour le moment.
+                    </p>
+
+                    <div v-else class="pf2-comments__list">
+                        <article v-for="comment in comments" :key="comment.id" class="pf2-comment">
+                            <div class="pf2-comment__avatar">{{ commentInitials(comment.authorName) }}</div>
+                            <div class="pf2-comment__body">
+                                <div class="pf2-comment__meta">
+                                    <strong>{{ comment.authorName }}</strong>
+                                    <time :datetime="comment.createdAt">{{ formatCommentDate(comment.createdAt) }}</time>
+                                </div>
+                                <p>{{ comment.content }}</p>
+                                <span v-if="comment.status === 'EN_ATTENTE'" class="pf2-comment__pending">
+                                    En attente de validation
+                                </span>
+                            </div>
+                        </article>
+                    </div>
+
+                    <form v-if="authStore.isAuthenticated" class="pf2-comment-form" @submit.prevent="submitComment">
+                        <label for="portfolio-comment">Ajouter un commentaire</label>
+                        <textarea
+                            id="portfolio-comment"
+                            v-model="newComment"
+                            rows="4"
+                            maxlength="2000"
+                            placeholder="Écrivez votre commentaire..."
+                            :disabled="commentSending"
+                            @input="commentSubmitError = ''"
+                        ></textarea>
+                        <p v-if="commentSubmitError" class="pf2-comments__error">{{ commentSubmitError }}</p>
+                        <button
+                            type="submit"
+                            class="pf2-btn-accent pf2-comment-form__submit"
+                            :disabled="commentSending"
+                        >
+                            {{ commentSending ? 'Envoi en cours...' : 'Publier le commentaire' }}
+                        </button>
+                    </form>
+
+                    <p v-else class="pf2-comments__login">
+                        Connectez-vous pour ajouter un commentaire.
+                    </p>
+                </div>
+            </section>
+
             <!-- ── FOOTER ─────────────────────────────────────────────── -->
             <footer class="pf2-footer">
                 <div class="pf2-footer__cert">
@@ -742,16 +799,26 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, reactive } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted, watch, reactive } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/api'
 import { useAuthStore } from '@/stores/authstore'
+import {
+    createPortfolioComment,
+    getPortfolioComments,
+} from '@/services/portfolioComments'
 
 const route = useRoute()
 const authStore = useAuthStore()
 const portfolioData = ref(null)
 const loading = ref(true)
 const error = ref(null)
+const comments = ref([])
+const commentsLoading = ref(false)
+const commentsError = ref('')
+const newComment = ref('')
+const commentSending = ref(false)
+const commentSubmitError = ref('')
 
 const accentColor = computed(() => portfolioData.value?.couleur_accent || '#5A89D8')
 const isEditMode = computed(() => route.query.edit === 'true')
@@ -835,8 +902,24 @@ const tabs = computed(() => [
     { id: 'recommandations', label: 'Recommandations' },
     { id: 'lettres',         label: 'Lettres' },
     ...(student.value.github ? [{ id: 'github', label: 'GitHub' }] : []),
+    { id: 'comments',        label: 'Commentaires' },
 ])
 
+async function loadComments() {
+    const studentId = portfolioData.value?.id_etudiant
+    if (!studentId) return
+
+    commentsLoading.value = true
+    commentsError.value = ''
+    try {
+        comments.value = await getPortfolioComments(studentId)
+    } catch {
+        comments.value = []
+        commentsError.value = 'Impossible de charger les commentaires.'
+    } finally {
+        commentsLoading.value = false
+    }
+}
 
 onMounted(async () => {
     window.addEventListener('scroll', handleScroll)
@@ -849,6 +932,11 @@ onMounted(async () => {
             return
         }
         portfolioData.value = json.data
+        await loadComments()
+        await nextTick()
+        if (route.hash === '#comments') {
+            document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' })
+        }
     } catch (e) {
         error.value = 'Erreur de connexion'
     } finally {
@@ -861,6 +949,56 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 function formatDate(dateStr) {
     if (!dateStr) return ''
     return new Date(dateStr).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })
+}
+
+function formatCommentDate(dateStr) {
+    if (!dateStr) return ''
+    const date = new Date(dateStr)
+    if (Number.isNaN(date.getTime())) return ''
+
+    return date.toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    })
+}
+
+function commentInitials(name) {
+    return String(name || '')
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(part => part[0])
+        .join('')
+        .toUpperCase() || '?'
+}
+
+async function submitComment() {
+    const content = newComment.value.trim()
+    commentSubmitError.value = ''
+
+    if (!authStore.isAuthenticated) {
+        commentSubmitError.value = 'Vous devez être connecté pour commenter.'
+        return
+    }
+    if (!content) {
+        commentSubmitError.value = 'Le commentaire ne peut pas être vide.'
+        return
+    }
+
+    commentSending.value = true
+    try {
+        const comment = await createPortfolioComment(portfolioData.value.id_etudiant, content)
+        comments.value = [comment, ...comments.value]
+        newComment.value = ''
+    } catch (err) {
+        commentSubmitError.value =
+            err.response?.data?.message || 'Impossible d’ajouter le commentaire.'
+    } finally {
+        commentSending.value = false
+    }
 }
 
 function calcDuration(start, end) {
@@ -1846,6 +1984,88 @@ function handleScroll() {
 .pf2-repo__lang { display: flex; align-items: center; gap: 5px; }
 .pf2-repo__dot { width: 10px; height: 10px; border-radius: 50%; }
 .pf2-repo__activity { font-size: 12px; color: #9CA3AF; white-space: nowrap; }
+
+/* ── COMMENTAIRES ────────────────────────────────────────────────────── */
+.pf2-section--comments { background: #F8FAFC; }
+.pf2-comments { max-width: 820px; }
+.pf2-comments__list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
+.pf2-comments__state,
+.pf2-comments__login {
+    color: #6B7280;
+    font-size: 14px;
+    padding: 18px;
+    background: #FFFFFF;
+    border: 1px solid #E5E8ED;
+    border-radius: 10px;
+}
+.pf2-comments__error {
+    color: #B42318;
+    font-size: 13px;
+    margin: 0;
+}
+.pf2-comment {
+    display: flex;
+    gap: 12px;
+    padding: 18px;
+    background: #FFFFFF;
+    border: 1px solid #E5E8ED;
+    border-radius: 12px;
+}
+.pf2-comment__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #E8EFFA;
+    color: #2B5090;
+    font-size: 13px;
+    font-weight: 700;
+}
+.pf2-comment__body { flex: 1; min-width: 0; }
+.pf2-comment__meta { display: flex; align-items: baseline; gap: 12px; margin-bottom: 7px; }
+.pf2-comment__meta strong { color: #0F2040; font-size: 14px; }
+.pf2-comment__meta time { color: #9CA3AF; font-size: 11px; margin-left: auto; }
+.pf2-comment__body > p { color: #4B5563; font-size: 14px; line-height: 1.65; white-space: pre-wrap; }
+.pf2-comment__pending {
+    display: inline-block;
+    margin-top: 8px;
+    color: #946200;
+    background: #FFF4D8;
+    border-radius: 20px;
+    padding: 3px 9px;
+    font-size: 10.5px;
+    font-weight: 600;
+}
+.pf2-comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 24px;
+    padding: 20px;
+    background: #FFFFFF;
+    border: 1px solid #E5E8ED;
+    border-radius: 12px;
+}
+.pf2-comment-form label { color: #0F2040; font-size: 13px; font-weight: 700; }
+.pf2-comment-form textarea {
+    width: 100%;
+    border: 1px solid #D1D5DB;
+    border-radius: 9px;
+    padding: 12px;
+    color: #1F2937;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+    box-sizing: border-box;
+}
+.pf2-comment-form textarea:focus { border-color: #5A89D8; box-shadow: 0 0 0 3px rgba(90,137,216,0.12); }
+.pf2-comment-form textarea:disabled { background: #F3F4F6; cursor: wait; }
+.pf2-comment-form__submit { align-self: flex-end; }
 
 /* ── FOOTER ──────────────────────────────────────────────────────────── */
 .pf2-footer {

@@ -97,14 +97,18 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { Github } from 'lucide-vue-next'
+import { extractGithubUsername } from '@/services/profileservices'
 
 async function fetchGithubRepos(username) {
-  if (!username) return []
+  const sanitized = extractGithubUsername(username)
+  if (!sanitized) return []
   try {
     const res = await fetch(
-      `https://api.github.com/users/${username}/repos?per_page=100&sort=updated&type=public`,
+      `https://api.github.com/users/${encodeURIComponent(sanitized)}/repos?per_page=100&sort=updated&type=public`,
       { headers: { Accept: 'application/vnd.github+json' } }
     )
+    if (res.status === 404) throw new Error('Profil GitHub introuvable')
+    if (res.status === 403) throw new Error('Limite de requêtes GitHub dépassée. Réessayez plus tard.')
     if (!res.ok) throw new Error(`GitHub API: ${res.status}`)
     const repos = await res.json()
     return repos.map((r) => ({
@@ -131,7 +135,7 @@ const allRepos       = ref([])
 const loading        = ref(false)
 const error          = ref(null)
 const showAll        = ref(false)
-const githubUsername = ref(props.user?.etudiant?.github_username ?? null)
+const githubUsername = ref(extractGithubUsername(props.user?.etudiant?.github_username))
 
 const visibleRepos = computed(() =>
   showAll.value ? allRepos.value : allRepos.value.slice(0, 5)
@@ -142,13 +146,14 @@ const hasMore = computed(() => allRepos.value.length > 5)
 watch(
   () => props.user?.etudiant?.github_username,
   (newUsername) => {
-    githubUsername.value = newUsername
+    githubUsername.value = extractGithubUsername(newUsername)
     loadRepos()
   }
 )
 
 async function loadRepos() {
-  if (!githubUsername.value) {
+  const username = extractGithubUsername(githubUsername.value)
+  if (!username) {
     allRepos.value = []
     return
   }
@@ -159,9 +164,11 @@ async function loadRepos() {
   loading.value = true
   error.value   = null
   try {
-    allRepos.value = await fetchGithubRepos(githubUsername.value)
+    allRepos.value = await fetchGithubRepos(username)
   } catch (e) {
-    error.value = 'Impossible de charger les dépôts GitHub.'
+    error.value = e.message === 'Profil GitHub introuvable'
+      ? 'Profil GitHub introuvable'
+      : 'Impossible de charger les dépôts GitHub.'
     if (dbRepos.length) allRepos.value = dbRepos
   } finally {
     loading.value = false
