@@ -39,7 +39,7 @@ describe('ProjetFormModal.vue — titre', () => {
 describe('ProjetFormModal.vue — champs du formulaire', () => {
   it('affiche le champ titre', () => {
     const wrapper = mountModal()
-    expect(wrapper.find('input[placeholder="Ex: Système de gestion…"]').exists()).toBe(true)
+    expect(wrapper.find('input[placeholder="Ex: Système de gestion des étudiants…"]').exists()).toBe(true)
   })
 
   it('affiche le select type de projet', () => {
@@ -70,14 +70,14 @@ describe('ProjetFormModal.vue — boutons', () => {
     expect(wrapper.find('.btn-cancel').exists()).toBe(true)
   })
 
-  it('affiche le bouton Soumettre en mode création', () => {
+  it('affiche le bouton Suivant en mode création (étape 0)', () => {
     const wrapper = mountModal({ editMode: false })
-    expect(wrapper.find('.btn-submit').text()).toContain('Soumettre')
+    expect(wrapper.find('.btn-submit').text()).toContain('Suivant')
   })
 
-  it('affiche le bouton Enregistrer en mode édition', () => {
+  it('affiche le bouton Suivant en mode édition (étape 0)', () => {
     const wrapper = mountModal({ editMode: true })
-    expect(wrapper.find('.btn-submit').text()).toContain('Enregistrer')
+    expect(wrapper.find('.btn-submit').text()).toContain('Suivant')
   })
 })
 
@@ -94,16 +94,13 @@ describe('ProjetFormModal.vue — événements', () => {
     expect(wrapper.emitted('update:modelValue')[0][0]).toBe(false)
   })
 
-  it('émet "submit" avec les données au clic sur Soumettre quand le formulaire est valide', async () => {
+  it('le bouton Suivant est activé quand le formulaire est valide', async () => {
     const wrapper = mountModal()
-    await wrapper.find('input[placeholder="Ex: Système de gestion…"]').setValue('Mon projet')
+    await wrapper.find('input[placeholder="Ex: Système de gestion des étudiants…"]').setValue('Mon projet')
     await wrapper.find('select.form-input').setValue('MODULE')
     await wrapper.find('input[type="date"]').setValue('2024-01-01')
     await wrapper.find('textarea[placeholder="Décrivez votre projet…"]').setValue('Description')
     const submitBtn = wrapper.find('.btn-submit')
-    if (!submitBtn.attributes('disabled')) {
-      await submitBtn.trigger('click')
-      expect(wrapper.emitted('submit')).toBeTruthy()
-    }
+    expect(submitBtn.attributes('disabled')).toBeUndefined()
   })
 })

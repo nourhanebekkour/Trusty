@@ -23,9 +23,9 @@ beforeEach(() => vi.clearAllMocks())
 describe('professionalServices — fetchCandidats', () => {
   it('retourne des étudiants uniques depuis les stages', async () => {
     api.get.mockResolvedValue({ data: { data: [
-      { etudiant: { id_etudiant: 'e1', nom: 'Alice' } },
-      { etudiant: { id_etudiant: 'e2', nom: 'Bob'   } },
-      { etudiant: { id_etudiant: 'e1', nom: 'Alice' } }, // doublon
+      { etudiant: { id_etudiant: 1, nom: 'Alice' } },
+      { etudiant: { id_etudiant: 2, nom: 'Bob'   } },
+      { etudiant: { id_etudiant: 1, nom: 'Alice' } }, // doublon
     ]}})
     const result = await fetchCandidats()
     expect(api.get).toHaveBeenCalledWith('/stages')
@@ -41,7 +41,7 @@ describe('professionalServices — fetchCandidats', () => {
   it('ignore les entrées sans etudiant valide', async () => {
     api.get.mockResolvedValue({ data: { data: [
       { etudiant: null },
-      { etudiant: { id_etudiant: 'e1' } },
+      { etudiant: { id_etudiant: 1 } },
     ]}})
     const result = await fetchCandidats()
     expect(result).toHaveLength(1)
@@ -52,16 +52,16 @@ describe('professionalServices — fetchCandidats', () => {
 describe('professionalServices — envoyerRecommandation', () => {
   it('appelle POST /recommandations avec les bons paramètres', async () => {
     api.post.mockResolvedValue({ data: { data: { id: 1 } } })
-    await envoyerRecommandation('e1', 'Excellent candidat')
+    await envoyerRecommandation(1, 'Excellent candidat')
     expect(api.post).toHaveBeenCalledWith('/recommandations', {
-      id_etudiant: 'e1',
+      id_etudiant: 1,
       message: 'Excellent candidat',
     })
   })
 
   it('retourne data.data de la réponse', async () => {
     api.post.mockResolvedValue({ data: { data: { id: 42 } } })
-    const result = await envoyerRecommandation('e1', 'message')
+    const result = await envoyerRecommandation(1, 'message')
     expect(result).toEqual({ id: 42 })
   })
 })

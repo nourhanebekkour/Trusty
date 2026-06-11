@@ -110,7 +110,7 @@ describe('ProjetStore — getter stats', () => {
 
   it('retourne des zéros si liste vide', () => {
     const store = useProjetStore()
-    expect(store.stats).toEqual({ total: 0, valides: 0, enAttente: 0 })
+    expect(store.stats).toEqual({ total: 0, valides: 0, enAttente: 0, avecRapport: 0 })
   })
 })
 

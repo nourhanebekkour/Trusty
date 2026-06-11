@@ -44,11 +44,11 @@ describe('AppSidebar.vue', () => {
   // ── Rendu des liens ───────────────────────────────────────────────────────
 
   describe('Navigation items', () => {
-    it('affiche les 5 éléments de navigation', () => {
+    it('affiche les 7 éléments de navigation', () => {
       const wrapper = mountSidebar()
-      // 5 items nav + Paramètres + Déconnexion = 7 sidebar__item
+      // 7 items nav + Paramètres + Déconnexion = 9 sidebar__item total
       const navItems = wrapper.findAll('.sidebar__nav .sidebar__item')
-      expect(navItems.length).toBe(5)
+      expect(navItems.length).toBe(7)
     })
 
     it('affiche "Dashboard" dans les liens', () => {
