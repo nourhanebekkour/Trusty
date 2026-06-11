@@ -128,7 +128,7 @@ async function handleLogout() {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  transition: width 0.3s ease;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
   
   /* MODIFIEZ CETTE LIGNE */
   min-height: 100%; /* Au lieu de 100vh fixe */
@@ -181,7 +181,6 @@ async function handleLogout() {
   display: flex;
   align-items: center;
   gap: 12px;
-  /* J'ai supprimé les top/left bizarres et mis une largeur flexible */
   width: 100%; 
   box-sizing: border-box;
   height: 40px; 
@@ -195,25 +194,34 @@ async function handleLogout() {
   border: none; 
   border-radius: 10px; 
   text-decoration: none;
-  white-space: nowrap; /* Empêche le texte de passer à la ligne */
-  transition: all 0.2s ease;
+  white-space: nowrap;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Style des items quand la sidebar est réduite */
 .sidebar.collapsed .nav-item {
-  justify-content: center; /* Centre l'icône */
+  justify-content: center;
   padding: 0;
 }
 
 .nav-item:hover {
   background: var(--color-surface-hover);
   color: var(--color-text-primary);
+  transform: translateX(3px);
+}
+
+.sidebar.collapsed .nav-item:hover {
+  transform: none;
 }
 
 .router-link-active {
   background-color: var(--color-accent-light);
   color: var(--color-accent);
   font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+.sidebar.collapsed .router-link-active {
+  box-shadow: inset 0 -3px 0 var(--color-accent);
 }
 
 .nav-icon {
