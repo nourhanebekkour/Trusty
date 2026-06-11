@@ -1,0 +1,137 @@
+---
+- name: Create app directory
+  file:
+    path: /home/ubuntu/projet/Trusty
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+
+- name: Copy docker-compose file (staging)
+  copy:
+    src: docker-compose.dockerhub.yml
+    dest: /home/ubuntu/projet/Trusty/docker-compose.dockerhub.yml
+    owner: ubuntu
+    group: ubuntu
+  when: inventory_hostname in groups['staging']
+
+- name: Copy docker-compose file (prod)
+  copy:
+    src: docker-compose.dockerhub.yml
+    dest: /home/ubuntu/projet/Trusty/docker-compose.dockerhub.yml
+    owner: ubuntu
+    group: ubuntu
+  when: inventory_hostname in groups['prod']
+
+- name: Copy .env file (staging)
+  copy:
+    src: .env.staging
+    dest: /home/ubuntu/projet/Trusty/.env.staging
+    owner: ubuntu
+    group: ubuntu
+    mode: '0600'
+  when: inventory_hostname in groups['staging']
+
+- name: Copy .env file (prod)
+  copy:
+    src: .env.prod
+    dest: /home/ubuntu/projet/Trusty/.env.prod
+    owner: ubuntu
+    group: ubuntu
+    mode: '0600'
+  when: inventory_hostname in groups['prod']
+
+- name: Create nginx config (staging)
+  copy:
+    dest: /home/ubuntu/nginx-ssl.conf
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+    content: |
+      server {
+          listen 80;
+          server_name _;
+          resolver 127.0.0.11 valid=30s ipv6=off;
+          set $frontend frontend;
+          set $backend backend;
+          location / {
+              proxy_pass http://$frontend:80;
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          }
+          location /api {
+              proxy_pass http://$backend:3000;
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          }
+      }
+  when: inventory_hostname in groups['staging']
+
+- name: Create nginx SSL config (prod)
+  copy:
+    dest: /home/ubuntu/nginx-ssl.conf
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+    content: |
+      server {
+          listen 80;
+          server_name trustyy.duckdns.org;
+          return 301 https://$host$request_uri;
+      }
+      server {
+          listen 443 ssl;
+          server_name trustyy.duckdns.org;
+          ssl_certificate /etc/letsencrypt/live/trustyy.duckdns.org/fullchain.pem;
+          ssl_certificate_key /etc/letsencrypt/live/trustyy.duckdns.org/privkey.pem;
+          resolver 127.0.0.11 valid=30s ipv6=off;
+          set $frontend frontend;
+          set $backend backend;
+          location / {
+              proxy_pass http://$frontend:80;
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto $scheme;
+          }
+          location /api {
+              proxy_pass http://$backend:3000;
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto $scheme;
+          }
+      }
+  when: inventory_hostname in groups['prod']
+
+- name: Stop and disable system nginx (prod)
+  systemd:
+    name: nginx
+    state: stopped
+    enabled: false
+  when: inventory_hostname in groups['prod']
+
+- name: Pull Docker images (staging)
+  shell: docker compose -f docker-compose.dockerhub.yml --env-file .env.staging pull
+  args:
+    chdir: /home/ubuntu/projet/Trusty
+  when: inventory_hostname in groups['staging']
+
+- name: Start application (staging)
+  shell: docker compose -f docker-compose.dockerhub.yml --env-file .env.staging up -d
+  args:
+    chdir: /home/ubuntu/projet/Trusty
+  when: inventory_hostname in groups['staging']
+
+- name: Pull Docker images (prod)
+  shell: docker compose -f docker-compose.dockerhub.yml --env-file .env.prod pull
+  args:
+    chdir: /home/ubuntu/projet/Trusty
+  when: inventory_hostname in groups['prod']
+
+- name: Start application (prod)
+  shell: docker compose -f docker-compose.dockerhub.yml --env-file .env.prod up -d
+  args:
+    chdir: /home/ubuntu/projet/Trusty
+  when: inventory_hostname in groups['prod']

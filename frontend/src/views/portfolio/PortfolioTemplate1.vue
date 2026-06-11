@@ -1703,7 +1703,7 @@ function handleScroll() {
     color: #9CA3AF;
 }
 .pf2-activity-attachments { display: flex; align-items: center; gap: 5px; }
-.pf2-activity-date {}
+
 
 /* ── BADGES ──────────────────────────────────────────────────────────── */
 .pf2-badges-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }

@@ -1,0 +1,26 @@
+---
+- name: Create monitoring directory
+  file:
+    path: /home/ubuntu/monitoring
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+
+- name: Copy docker-compose monitoring file
+  copy:
+    src: docker-compose.monitoring.yml
+    dest: /home/ubuntu/monitoring/docker-compose.monitoring.yml
+    owner: ubuntu
+    group: ubuntu
+
+- name: Copy Prometheus config
+  copy:
+    src: prometheus.yml
+    dest: /home/ubuntu/monitoring/prometheus.yml
+    owner: ubuntu
+    group: ubuntu
+
+- name: Start monitoring stack
+  shell: docker compose -f docker-compose.monitoring.yml up -d
+  args:
+    chdir: /home/ubuntu/monitoring
