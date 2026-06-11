@@ -24,3 +24,13 @@ npm-debug.log*
 .env
 
 .env.test
+
+cloud/
+
+cloud/terraform/.terraform/
+cloud/terraform/terraform.tfstate
+cloud/terraform/terraform.tfstate.backup
+cloud/terraform/.terraform.lock.hcl
+
+cloud/ansible/roles/app/files/.env.prod
+cloud/ansible/roles/app/files/.env.staging
