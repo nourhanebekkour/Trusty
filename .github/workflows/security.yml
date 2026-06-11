@@ -1,11 +1,9 @@
 name: Security Checks — Self-Hosted
 
-# Se déclenche automatiquement APRÈS la fin complète du pipeline CI
-# (y compris trivy-scan, qui est le dernier job de ci.yml)
 on:
-  workflow_run:
-    workflows: ["CI — Pipeline complet DevSecOps"]
-    types: [completed]
+  push:
+    branches: [mirroring]
+  pull_request:
     branches: [mirroring]
 
 permissions:
@@ -14,13 +12,11 @@ permissions:
   security-events: write
 
 jobs:
-
   # ─── JOB 1 : SonarQube ─────────────────────────────────────────────────
   sonarqube:
     name: SonarQube — Qualité & sécurité code
     runs-on: self-hosted
     timeout-minutes: 20
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout du code
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
@@ -43,7 +39,6 @@ jobs:
     name: OWASP ZAP — Scan API backend staging
     runs-on: self-hosted
     timeout-minutes: 20
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout du code
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
