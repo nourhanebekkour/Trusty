@@ -2,9 +2,9 @@ name: Pipeline — CI + Security
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main, dev, mirroring]
   pull_request:
-    branches: [main, dev]
+    branches: [main, dev, mirroring]
 
 permissions:
   contents: read
