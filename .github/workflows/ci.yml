@@ -214,31 +214,16 @@ jobs:
           sleep 10
           kill $SERVER_PID || true
 
-  # ════════════════════════════════════════════════════════
-  # PHASE 4 — BUILD IMAGES DOCKER
-  # ════════════════════════════════════════════════════════
-
-  build-images:
-    name: Build — Images Docker
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: [backend-smoke, frontend-run]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build image backend
-        run: docker build -t trusty-backend:ci ./backend
-      - name: Build image frontend
-        run: docker build -t trusty-frontend:ci ./frontend
 
   # ════════════════════════════════════════════════════════
-  # PHASE 5 — SÉCURITÉ TRIVY (dernier job du pipeline)
+  # PHASE 4 — SÉCURITÉ TRIVY (dernier job du pipeline)
   # ════════════════════════════════════════════════════════
 
   trivy-scan:
     name: Security — Trivy (deps + images Docker)
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [backend-smoke, build-images]
+    needs: [backend-smoke, frontend-run]
     permissions:
       security-events: write
       actions: read
