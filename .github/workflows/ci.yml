@@ -252,11 +252,7 @@ jobs:
           name: frontend-test-report
           path: frontend/test-report.html
 
-  trivy-scan:
-    name: Security — Trivy Scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+  
 #   trivy-scan:
 #     name: Security — Trivy Scan
 #     runs-on: ubuntu-latest
