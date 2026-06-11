@@ -1,0 +1,66 @@
+name: Security — SonarQube + OWASP ZAP
+
+on:
+  workflow_call:
+    secrets:
+      SONAR_TOKEN:
+        required: true
+
+  workflow_dispatch:
+
+jobs:
+
+  sonarqube:
+    name: SonarQube — Qualité & sécurité code
+    runs-on: self-hosted
+    timeout-minutes: 20
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+        with:
+          fetch-depth: 0
+
+      - name: Analyse SonarQube
+        uses: sonarsource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: http://192.168.20.10:9000
+
+  owasp-zap:
+    name: OWASP ZAP — Scan API backend staging
+    runs-on: self-hosted
+    timeout-minutes: 20
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+
+      - name: Scan actif ZAP sur le backend staging
+        run: |
+          SCAN_ID=$(curl -s "http://192.168.20.10:8090/JSON/ascan/action/scan/?url=http://192.168.20.10:3001&recurse=true" \
+            | grep -o '"scan":"[0-9]*"' | grep -o '[0-9]*')
+          echo "Scan ID : $SCAN_ID"
+          for i in $(seq 1 30); do
+            STATUS=$(curl -s "http://192.168.20.10:8090/JSON/ascan/view/status/?scanId=$SCAN_ID" \
+              | grep -o '"status":"[0-9]*"' | grep -o '[0-9]*')
+            echo "Avancement : $STATUS%"
+            if [ "$STATUS" = "100" ]; then break; fi
+            sleep 10
+          done
+          curl -s "http://192.168.20.10:8090/JSON/core/view/alerts/" -o zap-report.json
+          echo "Alertes trouvées : $(cat zap-report.json | grep -c '"alert"' || echo 0)"
+
+      - name: Sauvegarder le rapport ZAP
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-report-${{ github.sha }}
+          path: zap-report.json
+
+      - name: Vérifier les alertes HIGH / CRITICAL
+        run: |
+          HIGH=$(cat zap-report.json | grep -c '"risk":"High"' || true)
+          if [ "$HIGH" -gt "0" ]; then
+            echo "$HIGH alerte(s) HIGH — pipeline bloqué"
+            exit 1
+          fi
+          echo "Aucune alerte critique ZAP"
