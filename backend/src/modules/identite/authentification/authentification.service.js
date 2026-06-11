@@ -9,6 +9,15 @@ import {
   envoyerEmailDemandeCompte,
   envoyerEmailVerification,
 } from '#Modules/systeme/emails/emails.service.js';
+import * as minioService from '#Services/minio.service.js';
+
+const enrichirProfil = async (user) => {
+    if (user && user.photo) {
+        user.photo_url = await minioService.getFileUrl(user.photo);
+    }
+    return user;
+};
+
 
 const enrichirProfil = async (user) => {
     if (user && user.photo) {
@@ -208,6 +217,8 @@ async function login(email, password) {
       date_expiration_refresh: new Date(Date.now() + 7 * 24 * 3600000)
     }
   });
+
+  await enrichirProfil(user);
 
   const { mot_de_passe, ...userSafe } = user;
   return { accessToken, refreshToken, user: userSafe };
