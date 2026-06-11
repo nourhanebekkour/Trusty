@@ -1,0 +1,27 @@
+name: Pipeline — CI + Security
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
+jobs:
+
+  # ─── PHASE 1 : Qualité & Tests ──────────────────────────────────────────
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
+  # ─── PHASE 2 : Sécurité (après CI) ─────────────────────────────────────
+  security:
+    name: Security
+    uses: ./.github/workflows/security.yml
+    needs: ci          # ← attend que CI soit vert
+    secrets: inherit
