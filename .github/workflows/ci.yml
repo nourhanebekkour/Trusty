@@ -1,4 +1,4 @@
-ame: CI
+name: CI
 
 # Permissions globales minimales — Least Privilege
 # Par défaut GitHub donne write-all, on restreint à read uniquement
@@ -6,10 +6,11 @@ permissions:
   contents: read
 
 on:
+  workflow_call: {}   
   push:
-    branches: [main, dev]
+    branches: [main, dev,mirroring]
   pull_request:
-    branches: [main, dev]
+    branches: [main, dev,mirroring]
 
 jobs:
   # ─── QUALITÉ CODE ───────────────────────────────────────────────────────────
