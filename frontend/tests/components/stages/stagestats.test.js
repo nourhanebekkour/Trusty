@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import StageStats from '@/components/stages/StageStats.vue'
 
-const STATS = { total: 5, valides: 3, enAttente: 2 }
+const STATS = { total: 5, valides: 3, enAttente: 2, avecRapport: 1 }
 
 function mountStats(stats = STATS) {
   return mount(StageStats, { props: { stats } })
@@ -29,28 +29,28 @@ describe('StageStats.vue — Tests Unitaires', () => {
     expect(wrapper.text()).toContain('2')
   })
 
-  it('4 — affiche 3 cartes stat', () => {
+  it('4 — affiche 4 cartes stat', () => {
     const wrapper = mountStats()
-    expect(wrapper.findAll('.stat-card').length).toBe(3)
+    expect(wrapper.findAll('.stat-card').length).toBe(4)
   })
 
-  it('5 — affiche le label "Total des Stages"', () => {
+  it('5 — affiche le label "TOTAL DES STAGES"', () => {
     const wrapper = mountStats()
-    expect(wrapper.text()).toContain('Total des Stages')
+    expect(wrapper.text()).toContain('TOTAL DES STAGES')
   })
 
-  it('6 — affiche le label "Stages Validés"', () => {
+  it('6 — affiche le label "STAGES VALIDÉS"', () => {
     const wrapper = mountStats()
-    expect(wrapper.text()).toContain('Stages Validés')
+    expect(wrapper.text()).toContain('STAGES VALIDÉS')
   })
 
-  it('7 — affiche le label "En attente"', () => {
+  it('7 — affiche le label "EN ATTENTE"', () => {
     const wrapper = mountStats()
-    expect(wrapper.text()).toContain('En attente')
+    expect(wrapper.text()).toContain('EN ATTENTE')
   })
 
   it('8 — affiche 0 si stats sont à zéro', () => {
-    const wrapper = mountStats({ total: 0, valides: 0, enAttente: 0 })
+    const wrapper = mountStats({ total: 0, valides: 0, enAttente: 0, avecRapport: 0 })
     const values = wrapper.findAll('.stat-value')
     values.forEach(v => expect(v.text()).toBe('0'))
   })

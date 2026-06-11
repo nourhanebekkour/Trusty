@@ -128,22 +128,23 @@ describe("stageStore + stageService — Tests d'intégration", () => {
   // ── modifier un stage ──────────────────────────────────────────────────────
 
   it('7 — sauvegarder (edit) : store → service → api.put /stages/:id → stage mis à jour', async () => {
-    const initial = [{ id_stage: 5, entreprise: 'OldCorp', poste: 'Dev', status_validation: 'VALIDE' }]
+    const stageId = 'stage-5'
+    const initial = [{ id_stage: stageId, entreprise: 'OldCorp', poste: 'Dev', status_validation: 'VALIDE' }]
     api.get.mockResolvedValue({ data: { data: initial } })
-    api.put.mockResolvedValue({ data: { data: { id_stage: 5, entreprise: 'NewCorp', poste: 'Lead', status_validation: 'VALIDE' } } })
+    api.put.mockResolvedValue({ data: { data: { id_stage: stageId, entreprise: 'NewCorp', poste: 'Lead', status_validation: 'VALIDE' } } })
 
     const store = useStageStore()
     await store.chargerStages()
 
     store.modal.mode      = 'edit'
-    store.modal.stageId   = 5
+    store.modal.stageId   = stageId
     store.form.entreprise = 'NewCorp'
     store.form.poste      = 'Lead'
     store.form.date_debut = '2024-01-01'
     store.form.missions   = 'tasks'
     await store.sauvegarder()
 
-    expect(api.put).toHaveBeenCalledWith('/stages/5', expect.objectContaining({
+    expect(api.put).toHaveBeenCalledWith(`/stages/${stageId}`, expect.objectContaining({
       entreprise: 'NewCorp',
       poste: 'Lead',
     }))

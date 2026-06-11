@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-vi.mock('@/api', () => ({
+vi.mock('@/services/api', () => ({
   default: {
     get:  vi.fn(),
     post: vi.fn(),
@@ -8,7 +8,7 @@ vi.mock('@/api', () => ({
   }
 }))
 
-import api from '@/api'
+import api from '@/services/api'
 import {
   fetchStats,
   fetchProjects,
