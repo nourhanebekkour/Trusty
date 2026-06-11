@@ -21,6 +21,6 @@ describe('ProfessionalRecommendations.vue — rendu', () => {
     const wrapper = mount(ProfessionalRecommendations, {
       global: { stubs: { RouterLink: RouterLinkStub } }
     })
-    expect(wrapper.text().toLowerCase()).toMatch(/recommand/)
+    expect(wrapper.text().toLowerCase()).toMatch(/recommend/)
   })
 })

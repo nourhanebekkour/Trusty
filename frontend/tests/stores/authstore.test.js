@@ -11,12 +11,12 @@ vi.mock('@/services/auth.service', () => ({
 }))
 
 // ─── Mock de l'api (pour logout) ─────────────────────────────────────────────
-vi.mock('@/api', () => ({
+vi.mock('@/services/api', () => ({
   default: { post: vi.fn() },
 }))
 
 import { authService } from '@/services/auth.service'
-import api from '@/api'
+import api from '@/services/api'
 import { useAuthStore } from '@/stores/authstore'
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -47,17 +47,17 @@ describe('authStore — Tests Unitaires', () => {
 
     await store.login('alice@test.com', '1234')
 
-    expect(authService.login).toHaveBeenCalledWith({ email: 'alice@test.com', password: '1234', remember: false })
+    expect(authService.login).toHaveBeenCalledWith({ email: 'alice@test.com', password: '1234' })
   })
 
   it('3 — login : user mis à jour via fetchUser après succès', async () => {
     authService.login.mockResolvedValue({})
-    authService.getMe.mockResolvedValue({ data: { nom: 'Alice', email: 'alice@test.com' } })
+    authService.getMe.mockResolvedValue({ data: { nom: 'Alice', email: 'alice@test.com', role: 'ETUDIANT' } })
     const store = useAuthStore()
 
     await store.login('alice@test.com', '1234')
 
-    expect(store.user).toEqual({ nom: 'Alice', email: 'alice@test.com' })
+    expect(store.user).toEqual({ nom: 'Alice', email: 'alice@test.com', role: 'ETUDIANT' })
   })
 
   it('4 — login : retourne true après succès', async () => {
@@ -92,7 +92,7 @@ describe('authStore — Tests Unitaires', () => {
 
   // ── login (échec) ───────────────────────────────────────────────────────────
 
-  it('7 — login : error set avec message du serveur si échec', async () => {
+  it('7 — login : error set si échec', async () => {
     authService.login.mockRejectedValue({
       response: { data: { message: 'Identifiants invalides' } },
     })
@@ -100,16 +100,16 @@ describe('authStore — Tests Unitaires', () => {
 
     await store.login('wrong@test.com', 'wrong')
 
-    expect(store.error).toBe('Identifiants invalides')
+    expect(store.error).toBe('Email ou mot de passe invalide')
   })
 
-  it('8 — login : error fallback générique si pas de message serveur', async () => {
+  it('8 — login : error générique si pas de message serveur', async () => {
     authService.login.mockRejectedValue({})
     const store = useAuthStore()
 
     await store.login('wrong@test.com', 'wrong')
 
-    expect(store.error).toBe('Erreur connexion')
+    expect(store.error).toBe('Email ou mot de passe invalide')
   })
 
   it('9 — login : retourne false après échec', async () => {
@@ -152,7 +152,7 @@ describe('authStore — Tests Unitaires', () => {
 
   it('13 — logout : remet user à null', async () => {
     authService.login.mockResolvedValue({})
-    authService.getMe.mockResolvedValue({ data: { nom: 'Alice' } })
+    authService.getMe.mockResolvedValue({ data: { nom: 'Alice', role: 'ETUDIANT' } })
     api.post.mockResolvedValue({})
     const store = useAuthStore()
 
@@ -175,12 +175,12 @@ describe('authStore — Tests Unitaires', () => {
   // ── fetchUser ───────────────────────────────────────────────────────────────
 
   it('15 — fetchUser : met à jour user avec les données reçues', async () => {
-    authService.getMe.mockResolvedValue({ data: { nom: 'Alice', email: 'alice@test.com' } })
+    authService.getMe.mockResolvedValue({ data: { nom: 'Alice', email: 'alice@test.com', role: 'ETUDIANT' } })
     const store = useAuthStore()
 
     await store.fetchUser()
 
-    expect(store.user).toEqual({ nom: 'Alice', email: 'alice@test.com' })
+    expect(store.user).toEqual({ nom: 'Alice', email: 'alice@test.com', role: 'ETUDIANT' })
   })
 
   it('16 — fetchUser : user mis à null si getMe échoue', async () => {
@@ -215,7 +215,7 @@ describe('authStore — Scénarios (enchaînements)', () => {
 
   it('18 — login puis logout : user réinitialisé à null', async () => {
     authService.login.mockResolvedValue({})
-    authService.getMe.mockResolvedValue({ data: { nom: 'Alice' } })
+    authService.getMe.mockResolvedValue({ data: { nom: 'Alice', role: 'ETUDIANT' } })
     api.post.mockResolvedValue({})
     const store = useAuthStore()
 
@@ -229,7 +229,7 @@ describe('authStore — Scénarios (enchaînements)', () => {
   it('19 — login puis fetchUser : user mis à jour avec données complètes', async () => {
     authService.login.mockResolvedValue({})
     authService.getMe
-      .mockResolvedValueOnce({ data: { nom: 'Alice' } })
+      .mockResolvedValueOnce({ data: { nom: 'Alice', role: 'ETUDIANT' } })
       .mockResolvedValueOnce({ data: { nom: 'Alice', email: 'alice@test.com', role: 'ETUDIANT' } })
     const store = useAuthStore()
 
@@ -242,8 +242,8 @@ describe('authStore — Scénarios (enchaînements)', () => {
   it('20 — deux tentatives login : la deuxième écrase la première', async () => {
     authService.login.mockResolvedValue({})
     authService.getMe
-      .mockResolvedValueOnce({ data: { nom: 'Alice' } })
-      .mockResolvedValueOnce({ data: { nom: 'Bob' } })
+      .mockResolvedValueOnce({ data: { nom: 'Alice', role: 'ETUDIANT' } })
+      .mockResolvedValueOnce({ data: { nom: 'Bob', role: 'ETUDIANT' } })
     const store = useAuthStore()
 
     await store.login('alice@test.com', '1234')
@@ -256,11 +256,11 @@ describe('authStore — Scénarios (enchaînements)', () => {
     authService.login
       .mockRejectedValueOnce({ response: { data: { message: 'Identifiants invalides' } } })
       .mockResolvedValueOnce({})
-    authService.getMe.mockResolvedValue({ data: { nom: 'Alice' } })
+    authService.getMe.mockResolvedValue({ data: { nom: 'Alice', role: 'ETUDIANT' } })
     const store = useAuthStore()
 
     await store.login('wrong@test.com', 'wrong')
-    expect(store.error).toBe('Identifiants invalides')
+    expect(store.error).toBe('Email ou mot de passe invalide')
 
     await store.login('alice@test.com', '1234')
     expect(store.error).toBeNull()

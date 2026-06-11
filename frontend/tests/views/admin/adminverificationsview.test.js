@@ -2,23 +2,53 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { createRouter, createMemoryHistory } from 'vue-router'
+import { reactive } from 'vue'
 import AdminVerifications from '@/views/admin/AdminVerifications.vue'
 
 // ── Stubs ─────────────────────────────────────────────────
-const StatCard = { template: '<div class="stat-card">{{ label }}</div>', props: ['label','value','trend','trendColor'] }
+const { StatCard } = vi.hoisted(() => ({
+  StatCard: { template: '<div class="stat-card">{{ label }}</div>', props: ['label','value','trend','trendColor'] },
+}))
 vi.mock('../../../src/components/ui/StatCard.vue', () => ({ default: StatCard }))
+vi.mock('@/stores/adminStore', () => ({ useAdminStore: vi.fn() }))
+vi.mock('@/stores/authstore',  () => ({ useAuthStore:  vi.fn() }))
 vi.mock('../../../src/services/api', () => ({
   default: { get: vi.fn(), post: vi.fn(), delete: vi.fn() },
 }))
 
-function buildWrapper() {
+import { useAdminStore } from '@/stores/adminStore'
+import { useAuthStore }  from '@/stores/authstore'
+
+function makeMockStore(overrides = {}) {
+  return reactive({
+    loading:         false,
+    error:           null,
+    verificationQueue: [],
+    validatingId:    null,
+    fetchVerificationQueue: vi.fn().mockResolvedValue(undefined),
+    validateEntity:  vi.fn().mockResolvedValue({ success: true }),
+    ...overrides,
+  })
+}
+
+function buildWrapper(storeOverrides = {}) {
   const pinia = createPinia()
   setActivePinia(pinia)
+
+  const store = makeMockStore(storeOverrides)
+  useAdminStore.mockReturnValue(store)
+
+  const authStore = { user: { role: 'ADMINISTRATEUR' }, isAdmin: () => true }
+  useAuthStore.mockReturnValue(authStore)
+
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', component: AdminVerifications }] })
 
-  return mount(AdminVerifications, {
-    global: { plugins: [pinia, router], stubs: { StatCard } },
-  })
+  return {
+    wrapper: mount(AdminVerifications, {
+      global: { plugins: [pinia, router], stubs: { StatCard } },
+    }),
+    store,
+  }
 }
 
 // ─────────────────────────────────────────────────────────
@@ -31,204 +61,152 @@ describe('AdminVerifications.vue', () => {
   // ══════════════════════════════════════════════════════
   describe('rendu de base', () => {
     it('affiche le titre "Vérifications"', () => {
-      const wrapper = buildWrapper()
+      const { wrapper } = buildWrapper()
       expect(wrapper.text()).toContain('Vérifications')
     })
 
+    it('affiche le sous-titre descriptif', () => {
+      const { wrapper } = buildWrapper()
+      expect(wrapper.text()).toContain('en attente de validation')
+    })
+
     it('affiche les 3 StatCards', () => {
-      const wrapper = buildWrapper()
+      const { wrapper } = buildWrapper()
       expect(wrapper.findAll('.stat-card')).toHaveLength(3)
     })
 
-    it('affiche les onglets de filtre', () => {
-      const wrapper = buildWrapper()
-      expect(wrapper.text()).toContain('Tout')
-      expect(wrapper.text()).toContain('Priorité')
-      expect(wrapper.text()).toContain('Urgent')
-    })
-
-    it('affiche "Tout" comme onglet actif par défaut', () => {
-      const wrapper = buildWrapper()
-      const activeTab = wrapper.find('.tab--active')
-      expect(activeTab.text()).toBe('Tout')
+    it('affiche le bouton Rafraîchir', () => {
+      const { wrapper } = buildWrapper()
+      expect(wrapper.text()).toContain('Rafraîchir')
     })
   })
 
   // ══════════════════════════════════════════════════════
-  // 2. LISTE DES PORTFOLIOS
+  // 2. LISTE VIDE
   // ══════════════════════════════════════════════════════
-  describe('liste des portfolios', () => {
-    it('affiche tous les 4 portfolios mock par défaut', async () => {
-      const wrapper = buildWrapper()
+  describe('file vide', () => {
+    it('affiche "Aucun élément en attente" si la file est vide', async () => {
+      const { wrapper } = buildWrapper({ verificationQueue: [] })
       await flushPromises()
-      const cards = wrapper.findAll('.portfolio-card')
-      expect(cards).toHaveLength(4)
-    })
-
-    it('affiche les titres des portfolios', async () => {
-      const wrapper = buildWrapper()
-      await flushPromises()
-      expect(wrapper.text()).toContain('Portfolio Master Architecture Cloud')
-      expect(wrapper.text()).toContain('Showcase Design UI/UX - Mobile First')
-    })
-
-    it('affiche les auteurs des portfolios', async () => {
-      const wrapper = buildWrapper()
-      await flushPromises()
-      expect(wrapper.text()).toContain('Lucas Bernard')
-      expect(wrapper.text()).toContain('Emma Lefebvre')
-    })
-
-    it('affiche les descriptions', async () => {
-      const wrapper = buildWrapper()
-      await flushPromises()
-      expect(wrapper.text()).toContain('infrastructure scalables')
-    })
-
-    it('affiche le statut "En attente" sur chaque carte', async () => {
-      const wrapper = buildWrapper()
-      await flushPromises()
-      const pills = wrapper.findAll('.status-pill')
-      expect(pills.length).toBeGreaterThan(0)
-      pills.forEach(p => expect(p.text()).toBe('En attente'))
+      expect(wrapper.text()).toContain('Aucun élément en attente de vérification')
     })
   })
 
   // ══════════════════════════════════════════════════════
-  // 3. ONGLETS DE FILTRE
+  // 3. ITEMS EN FILE
   // ══════════════════════════════════════════════════════
-  describe('onglets de filtre', () => {
-    it('filtre sur "Priorité" n\'affiche que les prioritaires', async () => {
-      const wrapper = buildWrapper()
+  describe('items en file', () => {
+    it('affiche les items de la file', async () => {
+      const { wrapper } = buildWrapper({
+        verificationQueue: [
+          { id: 'a1', type: 'ACTIVITE',     title: 'Projet IA', author: 'Alice Dupont',  description: 'desc1' },
+          { id: 'p1', type: 'PROFESSIONNEL', title: 'Profil TechCorp', author: 'Bob Martin', description: 'desc2' },
+        ],
+      })
       await flushPromises()
-
-      const tabs = wrapper.findAll('.tab')
-      const prioriteTab = tabs.find(t => t.text() === 'Priorité')
-      await prioriteTab.trigger('click')
-      await flushPromises()
-
-      const cards = wrapper.findAll('.portfolio-card')
-      expect(cards).toHaveLength(1)
-      expect(wrapper.text()).toContain('Emma Lefebvre') // priority: 'Priorité'
+      expect(wrapper.text()).toContain('Projet IA')
+      expect(wrapper.text()).toContain('Profil TechCorp')
     })
 
-    it('filtre sur "Urgent" n\'affiche que les urgents', async () => {
-      const wrapper = buildWrapper()
+    it('affiche le badge "Activité" pour les items de type ACTIVITE', async () => {
+      const { wrapper } = buildWrapper({
+        verificationQueue: [
+          { id: 'a1', type: 'ACTIVITE', title: 'Activité test', author: 'Alice', description: '' },
+        ],
+      })
       await flushPromises()
-
-      const tabs = wrapper.findAll('.tab')
-      const urgentTab = tabs.find(t => t.text() === 'Urgent')
-      await urgentTab.trigger('click')
-      await flushPromises()
-
-      const cards = wrapper.findAll('.portfolio-card')
-      expect(cards).toHaveLength(1)
-      expect(wrapper.text()).toContain('Julie Dubois') // priority: 'Urgent'
+      expect(wrapper.text()).toContain('Activité')
     })
 
-    it('retour sur "Tout" affiche tous les portfolios', async () => {
-      const wrapper = buildWrapper()
+    it('affiche le badge "Professionnel" pour les items de type PROFESSIONNEL', async () => {
+      const { wrapper } = buildWrapper({
+        verificationQueue: [
+          { id: 'p1', type: 'PROFESSIONNEL', title: 'Profil pro', author: 'Bob', description: '' },
+        ],
+      })
       await flushPromises()
-
-      // Passer sur Urgent puis revenir sur Tout
-      const tabs = wrapper.findAll('.tab')
-      await tabs.find(t => t.text() === 'Urgent').trigger('click')
-      await tabs.find(t => t.text() === 'Tout').trigger('click')
-      await flushPromises()
-
-      expect(wrapper.findAll('.portfolio-card')).toHaveLength(4)
+      expect(wrapper.text()).toContain('Professionnel')
     })
 
-    it('met à jour l\'onglet actif au clic', async () => {
-      const wrapper = buildWrapper()
-      const tabs = wrapper.findAll('.tab')
-      await tabs.find(t => t.text() === 'Priorité').trigger('click')
+    it('affiche les boutons Approuver et Rejeter', async () => {
+      const { wrapper } = buildWrapper({
+        verificationQueue: [
+          { id: 'a1', type: 'ACTIVITE', title: 'Test', author: 'Alice', description: '' },
+        ],
+      })
       await flushPromises()
-
-      const activeTab = wrapper.find('.tab--active')
-      expect(activeTab.text()).toBe('Priorité')
+      expect(wrapper.text()).toContain('Approuver')
+      expect(wrapper.text()).toContain('Rejeter')
     })
   })
 
   // ══════════════════════════════════════════════════════
-  // 4. CERTIFICATION
+  // 4. ACTIONS
   // ══════════════════════════════════════════════════════
-  describe('certification d\'un portfolio', () => {
-    it('retire le portfolio de la liste après certification', async () => {
-      const wrapper = buildWrapper()
+  describe('actions', () => {
+    it('clic Approuver appelle validateEntity avec APPROUVE', async () => {
+      const { wrapper, store } = buildWrapper({
+        verificationQueue: [
+          { id: 'a1', type: 'ACTIVITE', title: 'Test', author: 'Alice', description: '' },
+        ],
+      })
       await flushPromises()
 
-      expect(wrapper.findAll('.portfolio-card')).toHaveLength(4)
-
-      const certifyBtn = wrapper.find('button.btn--primary.btn--sm')
-      await certifyBtn.trigger('click')
+      const approuverBtn = wrapper.find('button.btn--primary.btn--sm')
+      await approuverBtn.trigger('click')
       await flushPromises()
 
-      expect(wrapper.findAll('.portfolio-card')).toHaveLength(3)
+      expect(store.validateEntity).toHaveBeenCalledWith('ACTIVITE', 'a1', 'APPROUVE')
     })
 
-    it('affiche le compteur correct après certification', async () => {
-      const wrapper = buildWrapper()
+    it('clic Rejeter appelle validateEntity avec REJETE', async () => {
+      const { wrapper, store } = buildWrapper({
+        verificationQueue: [
+          { id: 'a1', type: 'ACTIVITE', title: 'Test', author: 'Alice', description: '' },
+        ],
+      })
       await flushPromises()
 
-      expect(wrapper.text()).toContain('4 sur 4')
-
-      const certifyBtn = wrapper.find('button.btn--primary.btn--sm')
-      await certifyBtn.trigger('click')
+      const rejeterBtn = wrapper.find('button.btn--ghost.btn--sm')
+      await rejeterBtn.trigger('click')
       await flushPromises()
 
-      expect(wrapper.text()).toContain('3 sur 3')
-    })
-  })
-
-  // ══════════════════════════════════════════════════════
-  // 5. NOTES INTERNES
-  // ══════════════════════════════════════════════════════
-  describe('notes internes', () => {
-    it('affiche un textarea de notes par portfolio', async () => {
-      const wrapper = buildWrapper()
-      await flushPromises()
-      const textareas = wrapper.findAll('textarea')
-      expect(textareas).toHaveLength(4)
+      expect(store.validateEntity).toHaveBeenCalledWith('ACTIVITE', 'a1', 'REJETE')
     })
 
-    it('met à jour la note interne d\'un portfolio', async () => {
-      const wrapper = buildWrapper()
+    it('clic Rafraîchir appelle fetchVerificationQueue', async () => {
+      const { wrapper, store } = buildWrapper()
+      await wrapper.find('button.btn--secondary').trigger('click')
       await flushPromises()
-
-      const textarea = wrapper.find('textarea')
-      await textarea.setValue('Vérifier les liens GitHub')
-      expect(textarea.element.value).toBe('Vérifier les liens GitHub')
+      expect(store.fetchVerificationQueue).toHaveBeenCalled()
     })
   })
 
   // ══════════════════════════════════════════════════════
-  // 6. SECTION INFORMATIONS BAS DE PAGE
+  // 5. BANNIÈRE D'ERREUR
   // ══════════════════════════════════════════════════════
-  describe('informations bas de page', () => {
-    it('affiche les critères de certification', () => {
-      const wrapper = buildWrapper()
-      expect(wrapper.text()).toContain('Critères de Certification')
-      expect(wrapper.text()).toContain('Minimum de 3 projets')
+  describe('bannière d\'erreur', () => {
+    it('affiche la bannière si store.error est défini', async () => {
+      const { wrapper } = buildWrapper({ error: 'Erreur de chargement' })
+      await flushPromises()
+      expect(wrapper.find('.error-banner').exists()).toBe(true)
     })
 
-    it('affiche l\'impact du sceau admin', () => {
-      const wrapper = buildWrapper()
-      expect(wrapper.text()).toContain('Impact du Sceau Admin')
+    it('n\'affiche pas la bannière si store.error est null', async () => {
+      const { wrapper } = buildWrapper({ error: null })
+      await flushPromises()
+      expect(wrapper.find('.error-banner').exists()).toBe(false)
     })
   })
 
   // ══════════════════════════════════════════════════════
-  // 7. INITIALES DE L'AVATAR
+  // 6. CHARGEMENT INITIAL
   // ══════════════════════════════════════════════════════
-  describe('initiales avatar', () => {
-    it('affiche les initiales correctes pour chaque auteur', async () => {
-      const wrapper = buildWrapper()
+  describe('chargement initial', () => {
+    it('appelle fetchVerificationQueue au montage', async () => {
+      const { store } = buildWrapper()
       await flushPromises()
-      // Lucas Bernard → LB, Emma Lefebvre → EL, etc.
-      const avatars = wrapper.findAll('.avatar-sm')
-      expect(avatars[0].text()).toBe('LB')
-      expect(avatars[1].text()).toBe('EL')
+      expect(store.fetchVerificationQueue).toHaveBeenCalledOnce()
     })
   })
 })

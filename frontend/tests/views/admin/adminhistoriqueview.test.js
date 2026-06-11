@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import { reactive } from 'vue'
 
 vi.mock('@/stores/adminStore', () => ({ useAdminStore: vi.fn() }))
 vi.mock('@/stores/authstore',  () => ({ useAuthStore:  vi.fn() }))
@@ -42,13 +43,13 @@ let mockReplace
 
 function makeMockAdminStore(overrides = {}) {
   mockFetchCertHistory = vi.fn().mockResolvedValue(undefined)
-  return {
+  return reactive({
     loading:          false,
     error:            null,
     certHistory:      [],
     fetchCertHistory: mockFetchCertHistory,
     ...overrides,
-  }
+  })
 }
 
 beforeEach(() => {

@@ -15,8 +15,8 @@ const MOCK_ACTIVITE = {
 
 beforeEach(() => vi.clearAllMocks())
 
-const mountModal    = (activite = null) => mount(ActiviteModal, { props: { activite }, attachTo: document.body })
-const mountModalEdit = ()               => mount(ActiviteModal, { props: { activite: MOCK_ACTIVITE }, attachTo: document.body })
+const mountModal     = (activite = null) => mount(ActiviteModal, { props: { activite }, global: { stubs: { Teleport: true } } })
+const mountModalEdit = ()               => mount(ActiviteModal, { props: { activite: MOCK_ACTIVITE }, global: { stubs: { Teleport: true } } })
 
 // ═══════════════════════════════════════════════════════
 // TESTS UNITAIRES — ActiviteModal (création)

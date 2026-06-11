@@ -4,7 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { RouterLinkStub } from '@vue/test-utils'
 import PortfolioManagement from '@/views/portfolio/PortfolioManagement.vue'
 
-vi.mock('@/api', () => ({ default: { get: vi.fn().mockResolvedValue({ data: { data: {} } }), put: vi.fn(), post: vi.fn() } }))
+vi.mock('@/api', () => ({ default: { get: vi.fn().mockResolvedValue({ data: { data: [] } }), put: vi.fn(), post: vi.fn() } }))
 
 beforeEach(() => setActivePinia(createPinia()))
 

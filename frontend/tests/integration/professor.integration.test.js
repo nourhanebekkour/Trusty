@@ -22,31 +22,33 @@ vi.mock('@/services/api', () => ({
 
 import api from '@/api'
 import { useProfessorStore } from '@/stores/professorStore'
+import { useAuthStore } from '@/stores/authstore'
 
 // Données de test — structure attendue par l'API backend
+// Note : professorservices.js utilise assertPositiveInt → IDs doivent être des entiers positifs
 const MOCK_PROJETS = [
   {
-    id_projet:         'pj1',
+    id_projet:         1,
     titre:             'Projet IA',
     type_projet:       'PFA',
     status_validation: 'EN_ATTENTE',
     date_soumission:   '2024-05-01T10:00:00Z',
     description:       'Projet de fin d\'année',
     participations: [
-      { etudiant: { id_etudiant: 'e1', utilisateur: { prenom: 'Alice', nom: 'Dupont' }, filiere: 'GINF', score_credibilite: 80 } },
+      { etudiant: { id_etudiant: 10, utilisateur: { prenom: 'Alice', nom: 'Dupont' }, filiere: 'GINF', score_credibilite: 80 } },
     ],
   },
 ]
 
 const MOCK_STAGES = [
   {
-    id_stage:          's1',
+    id_stage:          2,
     entreprise:        'TechCorp',
     poste:             'Dev Backend',
     status_validation: 'EN_ATTENTE',
     date_debut:        '2024-06-01',
     date_fin:          '2024-08-31',
-    etudiant: { id_etudiant: 'e2', utilisateur: { prenom: 'Bob', nom: 'Martin' }, filiere: 'GIND', score_credibilite: 75 },
+    etudiant: { id_etudiant: 20, utilisateur: { prenom: 'Bob', nom: 'Martin' }, filiere: 'GIND', score_credibilite: 75 },
   },
 ]
 
@@ -63,6 +65,9 @@ describe("professorStore + professorservices — Tests d'intégration", () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    // Définit un user PROFESSEUR pour passer le guard isProfessor()
+    const auth = useAuthStore()
+    auth.user = { id_utilisateur: 'prof1', role: 'PROFESSEUR' }
   })
 
   // ── chargerProjets ─────────────────────────────────────────────────────────
@@ -117,7 +122,7 @@ describe("professorStore + professorservices — Tests d'intégration", () => {
     const projet = store.projets[0]
     await store.validerProjet(projet, 'VALIDE', 'Bon travail')
 
-    expect(api.post).toHaveBeenCalledWith('/projets/pj1/valider', {
+    expect(api.post).toHaveBeenCalledWith('/projets/1/valider', {
       decision:    'VALIDE',
       commentaire: 'Bon travail',
       appreciation: '',
@@ -152,7 +157,7 @@ describe("professorStore + professorservices — Tests d'intégration", () => {
     const stage = store.stages[0]
     await store.validerStage(stage, 'VALIDE', 'Stage validé')
 
-    expect(api.post).toHaveBeenCalledWith('/stages/s1/valider', {
+    expect(api.post).toHaveBeenCalledWith('/stages/2/valider', {
       decision:    'VALIDE',
       commentaire: 'Stage validé',
     })

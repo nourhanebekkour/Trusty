@@ -2,15 +2,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // ── Mock api ─────────────────────────────────────────────────────────────────
 // api est la frontière HTTP : toujours mockée en tests unitaires.
-// auth.service.js importe '../api.js' → src/api.js (@/api)
-vi.mock('@/api', () => ({
+// auth.service.js importe './api.js' → src/services/api.js (@/services/api)
+vi.mock('@/services/api', () => ({
   default: {
     post: vi.fn(),
     get:  vi.fn(),
   },
 }))
 
-import api from '@/api'
+import api from '@/services/api'
 import { authService } from '@/services/auth.service'
 
 // ═════════════════════════════════════════════════════════════════════════════

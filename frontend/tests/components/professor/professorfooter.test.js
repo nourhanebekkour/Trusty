@@ -45,7 +45,7 @@ describe('ProfessorFooter.vue — Tests Unitaires', () => {
 
   it('8 — affiche "Centre d\'aide" sous Support', () => {
     const wrapper = mount(ProfessorFooter)
-    expect(wrapper.text()).toContain("Centre d'aide")
+    expect(wrapper.text()).toContain("Centre d’aide")
   })
 
   it('9 — affiche "Contact"', () => {

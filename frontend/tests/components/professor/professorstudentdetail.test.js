@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import { nextTick } from 'vue'
 import ProfessorStudentDetail from '@/components/professor/ProfessorStudentDetail.vue'
 
 vi.mock('@/services/professorApi', () => ({
@@ -39,10 +40,14 @@ describe('ProfessorStudentDetail.vue — Tests Unitaires', () => {
     expect(mountDetail().exists()).toBe(true)
   })
 
-  it('2 — affiche l\'état de chargement "Chargement..." au montage', () => {
+  it('2 — affiche l\'état de chargement "Chargement..." au montage', async () => {
+    let resolveLoad
+    getStudentDetails.mockReturnValueOnce(new Promise(r => { resolveLoad = r }))
     const wrapper = mountDetail()
+    await nextTick()
     expect(wrapper.find('.prof-state').exists()).toBe(true)
     expect(wrapper.text()).toContain('Chargement')
+    resolveLoad(MOCK_DATA)
   })
 
   it('3 — affiche le nom de l\'étudiant dans le header', () => {

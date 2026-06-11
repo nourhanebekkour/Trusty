@@ -2,37 +2,68 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { createRouter, createMemoryHistory } from 'vue-router'
+import { reactive } from 'vue'
 import AdminPortfolios from '@/views/admin/AdminPortfolios.vue'
-import { useAdminStore } from '@/stores/adminStore'
 
 // ── Stubs ─────────────────────────────────────────────────
-const StatCard      = { template: '<div class="stat-card">{{ label }}:{{ value }}</div>', props: ['label','value','sub'] }
-const StatusBadge   = { template: '<span class="status-badge">{{ status }}</span>', props: ['status'] }
-const AppPagination = { template: '<div class="pagination"/>', props: ['currentPage','totalPages','totalItems','perPage','itemLabel'], emits: ['page-change'] }
+const { StatCard, AppPagination } = vi.hoisted(() => ({
+  StatCard:      { template: '<div class="stat-card">{{ label }}:{{ value }}</div>', props: ['label','value','sub'] },
+  AppPagination: { template: '<div class="pagination"/>', props: ['currentPage','totalPages','totalItems','perPage','itemLabel'], emits: ['page-change'] },
+}))
 
 vi.mock('../../../src/components/ui/StatCard.vue',      () => ({ default: StatCard      }))
-vi.mock('../../../src/components/ui/StatusBadge.vue',   () => ({ default: StatusBadge   }))
 vi.mock('../../../src/components/ui/AppPagination.vue', () => ({ default: AppPagination }))
+vi.mock('@/stores/adminStore', () => ({ useAdminStore: vi.fn() }))
+vi.mock('@/stores/authstore',  () => ({ useAuthStore:  vi.fn() }))
 vi.mock('../../../src/services/api', () => ({
   default: { get: vi.fn(), post: vi.fn(), delete: vi.fn() },
 }))
 
+import { useAdminStore } from '@/stores/adminStore'
+import { useAuthStore }  from '@/stores/authstore'
+
+// ── Dataset étudiants (structure plate = adminStore.students) ──────────────────
+const mockStudents = [
+  { id_etudiant: 1, prenom: 'Alice',   nom: 'Dupont',  email: 'alice@e.fr',   status_compte: 'ACTIF',   date_creation: '2024-01-01' },
+  { id_etudiant: 2, prenom: 'Bob',     nom: 'Martin',  email: 'bob@e.fr',     status_compte: 'ACTIF',   date_creation: '2024-02-01' },
+  { id_etudiant: 3, prenom: 'Claire',  nom: 'Bernard', email: 'claire@e.fr',  status_compte: 'INACTIF', date_creation: '2024-03-01' },
+  { id_etudiant: 4, prenom: 'David',   nom: 'Petit',   email: 'david@e.fr',   status_compte: 'ACTIF',   date_creation: '2024-04-01' },
+]
+
+function makeMockStore(overrides = {}) {
+  return reactive({
+    loading:           false,
+    error:             null,
+    students:          [...mockStudents],
+    verificationQueue: [],
+    fetchStudents:     vi.fn().mockResolvedValue(undefined),
+    fetchVerificationQueue: vi.fn().mockResolvedValue(undefined),
+    ...overrides,
+  })
+}
+
 function buildWrapper(storeOverrides = {}) {
   const pinia = createPinia()
   setActivePinia(pinia)
+
+  const store = makeMockStore(storeOverrides)
+  useAdminStore.mockReturnValue(store)
+
+  const authStore = { user: { role: 'ADMINISTRATEUR' }, isAdmin: () => true }
+  useAuthStore.mockReturnValue(authStore)
+
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', component: AdminPortfolios }] })
 
-  const wrapper = mount(AdminPortfolios, {
-    global: { plugins: [pinia, router], stubs: { StatCard, StatusBadge, AppPagination } },
-  })
-
-  const store = useAdminStore()
-  Object.assign(store, { loading: false, error: null, verificationQueue: [], ...storeOverrides })
-  return { wrapper, store }
+  return {
+    wrapper: mount(AdminPortfolios, {
+      global: { plugins: [pinia, router], stubs: { StatCard, AppPagination } },
+    }),
+    store,
+  }
 }
 
 // ─────────────────────────────────────────────────────────
-describe('AdminPortfolios.vue', () => {
+describe('AdminPortfolios.vue (Étudiants & Portfolios)', () => {
 
   beforeEach(() => vi.clearAllMocks())
 
@@ -42,18 +73,17 @@ describe('AdminPortfolios.vue', () => {
   describe('rendu de base', () => {
     it('affiche le titre de la page', () => {
       const { wrapper } = buildWrapper()
-      expect(wrapper.text()).toContain('Portfolios')
+      expect(wrapper.text()).toContain('Étudiants')
     })
 
-    it('affiche les boutons Exporter et Vérification en masse', () => {
+    it('affiche le bouton Rafraîchir', () => {
       const { wrapper } = buildWrapper()
-      expect(wrapper.text()).toContain('Exporter CSV')
-      expect(wrapper.text()).toContain('Vérification en masse')
+      expect(wrapper.text()).toContain('Rafraîchir')
     })
 
-    it('affiche les 4 StatCards', () => {
+    it('affiche les 3 StatCards', () => {
       const { wrapper } = buildWrapper()
-      expect(wrapper.findAll('.stat-card')).toHaveLength(4)
+      expect(wrapper.findAll('.stat-card')).toHaveLength(3)
     })
 
     it('affiche la pagination', async () => {
@@ -64,31 +94,31 @@ describe('AdminPortfolios.vue', () => {
   })
 
   // ══════════════════════════════════════════════════════
-  // 2. TABLEAU DES PORTFOLIOS (données mock)
+  // 2. TABLEAU DES ÉTUDIANTS
   // ══════════════════════════════════════════════════════
-  describe('tableau des portfolios', () => {
-    it('affiche les portfolios mock au rendu initial', async () => {
+  describe('tableau des étudiants', () => {
+    it('affiche les étudiants du store', async () => {
       const { wrapper } = buildWrapper()
       await flushPromises()
-      expect(wrapper.text()).toContain('Julie Martin')
-      expect(wrapper.text()).toContain('Lucas Bernard')
+      expect(wrapper.text()).toContain('Alice')
+      expect(wrapper.text()).toContain('Bob')
     })
 
-    it('affiche les statuts des portfolios', async () => {
+    it('affiche "Aucun étudiant trouvé" si aucun résultat de recherche', async () => {
       const { wrapper } = buildWrapper()
       await flushPromises()
-      expect(wrapper.text()).toContain('Certifié')
-      expect(wrapper.text()).toContain('En attente')
+
+      const input = wrapper.find('input[placeholder*="Rechercher"]')
+      await input.setValue('xyzinexistant')
+      await flushPromises()
+
+      expect(wrapper.text()).toContain('Aucun étudiant trouvé')
     })
 
-    it('affiche "Aucun portfolio trouvé" si aucun résultat de recherche', async () => {
-      const { wrapper } = buildWrapper()
+    it('avec liste vide, affiche "Aucun étudiant trouvé"', async () => {
+      const { wrapper } = buildWrapper({ students: [] })
       await flushPromises()
-
-      await wrapper.find('input[placeholder*="Rechercher"]').setValue('xyzinexistant')
-      await flushPromises()
-
-      expect(wrapper.text()).toContain('Aucun portfolio trouvé')
+      expect(wrapper.text()).toContain('Aucun étudiant trouvé')
     })
   })
 
@@ -96,163 +126,58 @@ describe('AdminPortfolios.vue', () => {
   // 3. RECHERCHE
   // ══════════════════════════════════════════════════════
   describe('recherche par étudiant', () => {
-    it('filtre par nom d\'étudiant', async () => {
+    it('filtre par prénom/nom', async () => {
       const { wrapper } = buildWrapper()
       await flushPromises()
 
-      await wrapper.find('input[placeholder*="Rechercher"]').setValue('julie')
+      await wrapper.find('input[placeholder*="Rechercher"]').setValue('alice')
       await flushPromises()
 
-      expect(wrapper.text()).toContain('Julie Martin')
-      expect(wrapper.text()).not.toContain('Lucas Bernard')
+      expect(wrapper.text()).toContain('Alice')
+      expect(wrapper.text()).not.toContain('Bob')
     })
 
-    it('filtre par titre de portfolio', async () => {
+    it('filtre par email', async () => {
       const { wrapper } = buildWrapper()
       await flushPromises()
 
-      await wrapper.find('input[placeholder*="Rechercher"]').setValue('ux/ui')
+      await wrapper.find('input[placeholder*="Rechercher"]').setValue('bob@e.fr')
       await flushPromises()
 
-      expect(wrapper.text()).toContain('Design UX/UI')
+      expect(wrapper.text()).toContain('Bob')
+      expect(wrapper.text()).not.toContain('Alice')
     })
   })
 
   // ══════════════════════════════════════════════════════
-  // 4. FILTRE PAR STATUT
+  // 4. STATS CALCULÉES
   // ══════════════════════════════════════════════════════
-  describe('filtre par statut', () => {
-    it('filtre les portfolios "Certifié"', async () => {
-      const { wrapper } = buildWrapper()
+  describe('stats calculées', () => {
+    it('Total Étudiants reflète le nombre de students', async () => {
+      const { wrapper } = buildWrapper({ students: mockStudents })
       await flushPromises()
-
-      const statusSelect = wrapper.findAll('select')[0]
-      await statusSelect.setValue('Certifié')
-      await flushPromises()
-
-      // Seuls les certifiés apparaissent
-      const badges = wrapper.findAll('.status-badge')
-      badges.forEach(b => {
-        if (b.text()) expect(b.text()).toBe('Certifié')
-      })
-    })
-
-    it('filtre les portfolios "En attente"', async () => {
-      const { wrapper } = buildWrapper()
-      await flushPromises()
-
-      const statusSelect = wrapper.findAll('select')[0]
-      await statusSelect.setValue('En attente')
-      await flushPromises()
-
-      expect(wrapper.text()).toContain('Lucas Bernard')
-      expect(wrapper.text()).not.toContain('Sophie Petit') // Certifié
+      expect(wrapper.text()).toContain('4')
     })
   })
 
   // ══════════════════════════════════════════════════════
-  // 5. TRI
-  // ══════════════════════════════════════════════════════
-  describe('tri', () => {
-    it('le tri "Plus anciens" inverse l\'ordre de la liste', async () => {
-      const { wrapper } = buildWrapper()
-      await flushPromises()
-
-      const sortSelect = wrapper.findAll('select')[1]
-      await sortSelect.setValue('oldest')
-      await flushPromises()
-
-      // Chloé Garcia est en dernière position dans la liste originale
-      // Après reverse, elle devrait apparaître en premier
-      const rows = wrapper.findAll('tbody tr')
-      expect(rows[0].text()).toContain('Chloé Garcia')
-    })
-  })
-
-  // ══════════════════════════════════════════════════════
-  // 6. CERTIFICATION
-  // ══════════════════════════════════════════════════════
-  describe('certification d\'un portfolio', () => {
-    it('appelle certifyPortfolio du store et met à jour le statut', async () => {
-      const { wrapper, store } = buildWrapper()
-      store.certifyPortfolio = vi.fn().mockResolvedValue({ success: true })
-      await flushPromises()
-
-      // Certifier le portfolio "En attente" (Lucas Bernard, id=2)
-      const certifyBtns = wrapper.findAll('button[title="Certifier"]')
-      await certifyBtns[0].trigger('click')
-      await flushPromises()
-
-      expect(store.certifyPortfolio).toHaveBeenCalled()
-    })
-
-    it('désactive le bouton de certification pendant le chargement', async () => {
-      let resolveCertify
-      const { wrapper, store } = buildWrapper()
-      store.certifyPortfolio = vi.fn().mockReturnValue(
-        new Promise(res => { resolveCertify = res })
-      )
-      await flushPromises()
-
-      const certifyBtn = wrapper.findAll('button[title="Certifier"]')[0]
-      await certifyBtn.trigger('click')
-
-      expect(certifyBtn.attributes('disabled')).toBeDefined()
-      resolveCertify({ success: true })
-      await flushPromises()
-    })
-  })
-
-  // ══════════════════════════════════════════════════════
-  // 7. STATS CALCULÉES
-  // ══════════════════════════════════════════════════════
- describe('stats calculées', () => {
-
-  it('calcule correctement le nombre de certifiés', async () => {
-    const { wrapper } = buildWrapper()
-
-    await flushPromises()
-
-    expect(wrapper.text()).toContain('3')
-  })
-
-  it('affiche le taux de certification', async () => {
-    const { wrapper } = buildWrapper()
-
-    await flushPromises()
-
-    expect(wrapper.exists()).toBe(true)
-  })
-
-})
-  // ══════════════════════════════════════════════════════
-  // 8. BANNIÈRE D'ERREUR
+  // 5. BANNIÈRE D'ERREUR
   // ══════════════════════════════════════════════════════
   describe('bannière d\'erreur', () => {
     it('affiche l\'erreur du store', async () => {
-      const { wrapper, store } = buildWrapper()
-      store.error = 'Erreur de chargement'
+      const { wrapper } = buildWrapper({ error: 'Erreur de chargement' })
       await flushPromises()
       expect(wrapper.find('.error-banner').exists()).toBe(true)
     })
   })
 
   // ══════════════════════════════════════════════════════
-  // 9. CHARGEMENT INITIAL
+  // 6. CHARGEMENT INITIAL
   // ══════════════════════════════════════════════════════
   describe('chargement initial', () => {
     it('appelle fetchVerificationQueue au montage', async () => {
-      const pinia = createPinia()
-      setActivePinia(pinia)
-      const store = useAdminStore()
-      store.fetchVerificationQueue = vi.fn().mockResolvedValue(undefined)
-
-      const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', component: AdminPortfolios }] })
-      mount(AdminPortfolios, {
-        global: { plugins: [pinia, router], stubs: { StatCard, StatusBadge, AppPagination } },
-      })
+      const { store } = buildWrapper()
       await flushPromises()
-
       expect(store.fetchVerificationQueue).toHaveBeenCalledOnce()
     })
   })

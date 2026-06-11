@@ -2,13 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, shallowMount } from '@vue/test-utils'
 import HomeView from '@/views/HomeView.vue'
 
-import Navbar   from '@/components/HomePage/Navbar-HP.vue'
-import Hero     from '@/components/HomePage/Hero-HP.vue'
-import Stats    from '@/components/HomePage/Stats-HP.vue'
-import Features from '@/components/HomePage/Features-HP.vue'
-import CTA      from '@/components/HomePage/CTA-HP.vue'
-import Footer   from '@/components/HomePage/Footer-HP.vue'
-
 // ── Mock IntersectionObserver avec une vraie classe ES6 ──────────────────────
 // Vitest interdit mockReturnValue avec `new` — seule une classe fonctionne.
 
@@ -43,45 +36,50 @@ describe('HomeView — intégration complète', () => {
     expect(wrapper.exists()).toBe(true)
   })
 
-  // ── Présence des composants (par référence d'import — seule méthode fiable) ─
+  // ── Présence des sections (HomeView est un composant monolithique) ──────────
 
   it('intègre le composant Navbar', () => {
     const wrapper = shallowMount(HomeView)
-    expect(wrapper.findComponent(Navbar).exists()).toBe(true)
+    // HomeView est monolithique — la navbar est une balise <nav> inline
+    expect(wrapper.find('nav.navbar').exists()).toBe(true)
   })
 
   it('intègre le composant Hero', () => {
     const wrapper = shallowMount(HomeView)
-    expect(wrapper.findComponent(Hero).exists()).toBe(true)
+    // Section hero inline
+    expect(wrapper.find('section.hero').exists()).toBe(true)
   })
 
   it('intègre le composant Stats', () => {
     const wrapper = shallowMount(HomeView)
-    expect(wrapper.findComponent(Stats).exists()).toBe(true)
+    // Section stats inline
+    expect(wrapper.find('section.stats').exists()).toBe(true)
   })
 
   it('intègre le composant Features', () => {
     const wrapper = shallowMount(HomeView)
-    expect(wrapper.findComponent(Features).exists()).toBe(true)
+    // Section features inline
+    expect(wrapper.find('section.features').exists()).toBe(true)
   })
 
   it('intègre le composant CTA', () => {
     const wrapper = shallowMount(HomeView)
-    expect(wrapper.findComponent(CTA).exists()).toBe(true)
+    // Section CTA inline
+    expect(wrapper.find('section.cta-banner').exists()).toBe(true)
   })
 
   it('intègre le composant Footer', () => {
     const wrapper = shallowMount(HomeView)
-    expect(wrapper.findComponent(Footer).exists()).toBe(true)
+    // Footer inline
+    expect(wrapper.find('footer.footer').exists()).toBe(true)
   })
 
   // ── Ordre des sections ─────────────────────────────────────────────────────
-  // compareDocumentPosition est fiable quel que soit le nom du stub généré.
 
   it('respecte l\'ordre Navbar > Hero > Stats > Features > CTA > Footer', () => {
     const wrapper = shallowMount(HomeView)
-    const components = [Navbar, Hero, Stats, Features, CTA, Footer]
-    const elements = components.map(c => wrapper.findComponent(c).element)
+    const selectors = ['nav.navbar', 'section.hero', 'section.stats', 'section.features', 'section.cta-banner', 'footer.footer']
+    const elements = selectors.map(s => wrapper.find(s).element)
 
     elements.forEach(el => expect(el).toBeTruthy())
 
@@ -94,28 +92,28 @@ describe('HomeView — intégration complète', () => {
 
   // ── Structure du DOM ───────────────────────────────────────────────────────
 
-  it('enveloppe les sections dans une balise <main>', () => {
+  it('enveloppe les sections dans une div.home', () => {
     const wrapper = shallowMount(HomeView)
-    expect(wrapper.find('main').exists()).toBe(true)
+    expect(wrapper.find('div.home').exists()).toBe(true)
   })
 
-  it('la Navbar est en dehors du <main>', () => {
+  it('la Navbar est dans div.home', () => {
     const wrapper = shallowMount(HomeView)
-    expect(wrapper.find('main').findComponent(Navbar).exists()).toBe(false)
+    expect(wrapper.find('div.home nav.navbar').exists()).toBe(true)
   })
 
-  it('le Footer est en dehors du <main>', () => {
+  it('le Footer est dans div.home', () => {
     const wrapper = shallowMount(HomeView)
-    expect(wrapper.find('main').findComponent(Footer).exists()).toBe(false)
+    expect(wrapper.find('div.home footer.footer').exists()).toBe(true)
   })
 
-  it('Hero, Stats, Features et CTA sont dans le <main>', () => {
+  it('Hero, Stats, Features et CTA sont dans div.home', () => {
     const wrapper = shallowMount(HomeView)
-    const main = wrapper.find('main')
-    expect(main.findComponent(Hero).exists()).toBe(true)
-    expect(main.findComponent(Stats).exists()).toBe(true)
-    expect(main.findComponent(Features).exists()).toBe(true)
-    expect(main.findComponent(CTA).exists()).toBe(true)
+    const home = wrapper.find('div.home')
+    expect(home.find('section.hero').exists()).toBe(true)
+    expect(home.find('section.stats').exists()).toBe(true)
+    expect(home.find('section.features').exists()).toBe(true)
+    expect(home.find('section.cta-banner').exists()).toBe(true)
   })
 
   // ── Rendu complet (mount) ──────────────────────────────────────────────────
@@ -127,12 +125,13 @@ describe('HomeView — intégration complète', () => {
 
   it('affiche le titre Hero dans le rendu complet', () => {
     const wrapper = mount(HomeView)
-    expect(wrapper.text()).toContain('Portfolios Numériques')
+    expect(wrapper.text()).toContain('Portfolios')
   })
 
   it('affiche les statistiques dans le rendu complet', () => {
     const wrapper = mount(HomeView)
-    expect(wrapper.text()).toContain('Étudiants Actifs')
+    // Les labels stats sont en majuscules dans le composant
+    expect(wrapper.text()).toContain('ÉTUDIANTS ACTIFS')
   })
 
   it('affiche les fonctionnalités dans le rendu complet', () => {
@@ -147,10 +146,10 @@ describe('HomeView — intégration complète', () => {
 
   it('affiche le copyright dans le rendu complet', () => {
     const wrapper = mount(HomeView)
-    expect(wrapper.text()).toContain('© 2026 TRUSTY')
+    expect(wrapper.text()).toContain('© 2026 Trusty')
   })
 
   it('possède le bon nom de composant', () => {
-    expect(HomeView.name).toBe('HomeView')
+    expect(HomeView.name).toBe('HomePage')
   })
 })

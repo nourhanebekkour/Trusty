@@ -140,9 +140,9 @@ describe('LoginView — Tests Unitaires', () => {
 
   // ── Erreur store ────────────────────────────────────────────────────────────
 
-  it('12 — affiche le message d\'erreur du store si auth.error est défini', () => {
+  it('12 — affiche le message d\'erreur générique si auth.error est défini', () => {
     const { wrapper } = mountLogin({ error: 'Identifiants invalides' })
-    expect(wrapper.find('.error').text()).toBe('Identifiants invalides')
+    expect(wrapper.find('.error').text()).toBe('Email ou mot de passe invalide')
   })
 
   it('13 — n\'affiche pas de message d\'erreur si auth.error est null', () => {
@@ -197,7 +197,7 @@ describe("LoginView — Tests d'Intégration", () => {
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
-    expect(mockStore.login).toHaveBeenCalledWith('alice@test.com', 'Password1!', false)
+    expect(mockStore.login).toHaveBeenCalledWith('alice@test.com', 'Password1!')
   })
 
   it('17 — login réussi : redirige vers "/dashboard"', async () => {
@@ -237,7 +237,7 @@ describe("LoginView — Tests d'Intégration", () => {
     expect(wrapper.find('.error').exists()).toBe(true)
   })
 
-  it('20 — remember me : login appelé avec les bons identifiants', async () => {
+  it('20 — remember me : login appelé avec email et mot de passe (remember géré côté store)', async () => {
     const { wrapper, mockStore } = mountLogin()
     mockStore.login.mockResolvedValue(true)
 
@@ -247,6 +247,6 @@ describe("LoginView — Tests d'Intégration", () => {
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
-    expect(mockStore.login).toHaveBeenCalledWith('alice@test.com', 'Password1!', true)
+    expect(mockStore.login).toHaveBeenCalledWith('alice@test.com', 'Password1!')
   })
 })

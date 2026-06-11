@@ -122,7 +122,7 @@ describe('ProfessionalCandidates.vue — Tests d\'Intégration', () => {
   it('13 — clic sur "Détails" (.btn-ghost.btn-sm) émet "select"', async () => {
     const wrapper = mountCandidates()
     const detailBtns = wrapper.findAll('.btn-ghost.btn-sm')
-    await detailBtns[detailBtns.length - 1].trigger('click')
+    await detailBtns[0].trigger('click')
     expect(wrapper.emitted('select')).toBeTruthy()
   })
 

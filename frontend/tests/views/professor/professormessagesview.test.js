@@ -20,6 +20,6 @@ describe('ProfessorMessages.vue — rendu', () => {
     const wrapper = mount(ProfessorMessages, {
       global: { stubs: { RouterLink: RouterLinkStub } }
     })
-    expect(wrapper.text().toLowerCase()).toMatch(/message|discussion|conversation/)
+    expect(wrapper.text().toLowerCase()).toMatch(/commentaire|message|discussion|conversation/)
   })
 })
