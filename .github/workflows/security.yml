@@ -242,7 +242,7 @@ jobs:
     name: Security — Trivy (deps + images Docker)
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [backend-smoke, frontend-run, build-images]
+    needs: [backend-smoke, build-images]
     permissions:
       security-events: write
       actions: read
@@ -420,3 +420,36 @@ jobs:
             exit 1
           fi
           echo "Aucune alerte critique ZAP"
+
+  # ════════════════════════════════════════════════════════
+  # PHASE 7 — PUSH IMAGES DOCKER HUB (après tous les scans)
+  # ════════════════════════════════════════════════════════
+
+  # push-dockerhub:
+  #   name: Push — Docker Hub
+  #   if: github.ref == 'refs/heads/mirroring' || github.ref == 'refs/heads/main'
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 15
+  #   needs: [sonarqube, owasp-zap]
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v3
+  #       with:
+  #         username: ${{ secrets.DOCKER_USERNAME }}
+  #         password: ${{ secrets.DOCKER_TOKEN }}
+
+  #     - name: Push backend
+  #       run: |
+  #         docker build -t ${{ secrets.DOCKER_USERNAME }}/trusty-backend:latest \
+  #                      -t ${{ secrets.DOCKER_USERNAME }}/trusty-backend:${{ github.sha }} \
+  #                      ./backend
+  #         docker push --all-tags ${{ secrets.DOCKER_USERNAME }}/trusty-backend
+
+  #     - name: Push frontend
+  #       run: |
+  #         docker build -t ${{ secrets.DOCKER_USERNAME }}/trusty-frontend:latest \
+  #                      -t ${{ secrets.DOCKER_USERNAME }}/trusty-frontend:${{ github.sha }} \
+  #                      ./frontend
+  #         docker push --all-tags ${{ secrets.DOCKER_USERNAME }}/trusty-frontend
