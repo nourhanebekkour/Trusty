@@ -11,10 +11,11 @@ import StageList from '@/views/Etudiant/StageList.vue'
 import Recommendations from '@/views/Etudiant/Recommendations.vue'
 import Notification from '@/views/Etudiant/Notification.vue'
 import Profile from '@/views/Etudiant/Profile.vue'
+import Suggestions from '@/views/Etudiant/Suggestions.vue'
 import activites from '@/views/Etudiant/activites.vue'
 import Portfolio from '@/views/portfolio/PortfolioManagement.vue'
 import ProfessionalView from '@/views/Professional/ProfessionalView.vue'
-import ProfessionalLayout from '@/components/professional/ProfessionalLayout.vue'
+import ProfessionalLayout from '@/components/Professional/ProfessionalLayout.vue'
 import ProfessorView from '@/views/professor/ProfessorView.vue'
 import { useAuthStore } from '@/stores/authstore'
 import Parcours from '../views/Etudiant/Parcours.vue'
@@ -147,6 +148,12 @@ const router = createRouter({
       path: '/recommendations',
       name: 'recommendations',
       component: Recommendations,
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
+    },
+    {
+      path: '/suggestions',
+      name: 'suggestions',
+      component: Suggestions,
       meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
