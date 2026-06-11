@@ -80,7 +80,25 @@ export async function getProfessionalActionHistory() {
   return { actions: list.map(mapAction) }
 }
 
+function mapRecommendation(r) {
+  const u = r.cible?.utilisateur
+  return {
+    id: r.id_recommandation ?? r.id,
+    studentName: u ? `${u.prenom ?? ''} ${u.nom ?? ''}`.trim() : (r.nom_etudiant ?? ''),
+    message: r.message ?? r.contenu ?? '',
+    status: r.statut ?? r.status ?? 'EN_ATTENTE',
+    createdAt: r.date_creation ?? r.createdAt ?? '',
+  }
+}
+
 // ── Recommandations ──
+
+export async function getMyIssuedRecommendations() {
+  const res = await api.get('/recommandations/mes-recommandations-emises')
+  const data = getData(res)
+  const list = Array.isArray(data) ? data : []
+  return { recommendations: list.map(mapRecommendation) }
+}
 
 export async function createProfessionalRecommendation(payload) {
   const res = await api.post('/recommandations/', {
@@ -128,6 +146,14 @@ export async function getProfessionalInternships() {
 
 export async function getProfessionalProjects() {
   const res = await api.get('/projets/')
+  const data = getData(res)
+  return Array.isArray(data) ? data : []
+}
+
+// ── Portfolio ──
+
+export async function getPortfolioTemplates() {
+  const res = await api.get('/portfolio/templates')
   const data = getData(res)
   return Array.isArray(data) ? data : []
 }

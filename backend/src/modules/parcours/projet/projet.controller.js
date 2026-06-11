@@ -65,6 +65,22 @@ export const listerProjetsAValider = async (req, res) => {
     }
 };
 
+export const listerProjetsParEtudiant = async (req, res) => {
+    // #swagger.tags = ['Projets']
+    // #swagger.summary = 'Lister tous les projets d un étudiant spécifique'
+    /* #swagger.parameters['id_etudiant'] = {
+        in: 'path',
+        description: 'ID de l\'étudiant dont on veut récupérer les projets'
+    } */
+    try {
+        const { id_etudiant } = req.params;
+        const projets = await projetService.recupererProjetsParEtudiant(id_etudiant);
+        sendResponse(res, 200, true, "Projets de l'étudiant récupérés avec succès", projets);
+    } catch (erreur) {
+        sendResponse(res, 500, false, "Erreur lors de la récupération des projets de l'étudiant", null, erreur.message);
+    }
+};
+
 export const modifierProjet = async (req, res) => {
     // #swagger.tags = ['Projets']
     // #swagger.summary = 'Modifier un projet existant'

@@ -1,10 +1,11 @@
 <script setup>
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import SideBar from './components/laayout/SideBar.vue'
 import NavBar from './components/laayout/NavBar.vue'
 import Footer from './components/laayout/Footer.vue'
 import ProfessionalSideBar from './components/Professional/ProfessionalSidebar.vue'
+
 import { useAuthStore } from './stores/authstore'
 import { useThemeStore } from './stores/themeStore'
 
@@ -63,7 +64,7 @@ const isPublicPage = computed(() =>
   PUBLIC_ROUTES.includes(route.name)
 )
 
-const isProfessionalPage = computed(() => route.name === 'professional')
+const isProfessionalPage = computed(() => route.path.startsWith('/professional'))
 const isProfessorPage = computed(() => route.path.startsWith('/professor'))
 const isAdminPage = computed(() => route.path.startsWith('/admin'))
 
@@ -79,45 +80,58 @@ const isStudentPage = computed(() => {
 <template>
   <!-- ── Pages publiques : home, login, about ── -->
   <div v-if="isPublicPage">
-    <RouterView />
+    <RouterView v-slot="{ Component }">
+      <transition name="page" mode="out-in">
+        <component :is="Component" />
+      </transition>
+    </RouterView>
   </div>
 
   <!-- ── Pages Admin : layout géré par AdminLayout ── -->
   <div v-else-if="isAdminPage">
-    <RouterView />
+    <RouterView v-slot="{ Component }">
+      <transition name="page" mode="out-in">
+        <component :is="Component" />
+      </transition>
+    </RouterView>
   </div>
 
-  <!-- ── Pages Professeur : layout géré par ProfessorLayout ── -->
-  
-  <RouterView v-else-if="isProfessorPage"/>
-  
+  <!-- ── Pages Professeur ── -->
+  <RouterView v-else-if="isProfessorPage" v-slot="{ Component }">
+    <transition name="page" mode="out-in">
+      <component :is="Component" />
+    </transition>
+  </RouterView>
 
-  <!-- ── Pages Étudiant : navbar + sidebar + footer ── -->
+  <!-- ── Pages Étudiant ── -->
   <div v-else-if="isStudentPage" class="app">
     <NavBar />
     <div class="layout">
       <SideBar />
       <main class="content">
-        <RouterView />
+        <RouterView v-slot="{ Component }">
+          <transition name="page" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </RouterView>
       </main>
     </div>
     <Footer />
   </div>
 
-  <!-- ── Pages Professionnel ── -->
-  <div v-else-if="isProfessionalPage" class="app">
-    <NavBar />
-    <div class="layout">
-      <ProfessionalSideBar />
-      <main class="content">
-        <RouterView />
-      </main>
-    </div>
-  </div>
+  <RouterView v-else-if="isProfessionalPage" v-slot="{ Component }">
+    <transition name="page" mode="out-in">
+      <component :is="Component" />
+    </transition>
+  </RouterView>
 
   <!-- ── Fallback ── -->
   <div v-else>
-    <RouterView />
+    <RouterView v-slot="{ Component }">
+      <transition name="page" mode="out-in">
+        <component :is="Component" />
+      </transition>
+    </RouterView>
   </div>
 </template>
 
@@ -167,5 +181,28 @@ html, body {
   overflow-x: hidden;
   min-height: 0;
   min-width: 0; /* ← important pour flex */
+}
+
+/* ─── Page transitions ───────────────────────────── */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter-active,
+  .page-leave-active {
+    transition: none;
+  }
 }
 </style>

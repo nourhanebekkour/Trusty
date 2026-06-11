@@ -129,3 +129,15 @@ export const recupererMesRecommandationsRecus = async (req, res) => {
         return sendResponse(res, 500, false, "Erreur lors de la récupération des recommandations reçues", null, error.message);
     }
 };
+
+export const recupererMesRecommandationsEmises = async (req, res) => {
+    // #swagger.tags = ['Recommandations']
+    // #swagger.summary = 'Récupérer toutes les recommandations émises par l\'utilisateur connecté'
+    try {
+        const id_recommandeur = req.user.id;
+        const recommandations = await recommandationService.recupererRecommandationsEmises(id_recommandeur);
+        return sendResponse(res, 200, true, "Recommandations émises récupérées", recommandations);
+    } catch (error) {
+        return sendResponse(res, 500, false, "Erreur lors de la récupération des recommandations émises", null, error.message);
+    }
+};

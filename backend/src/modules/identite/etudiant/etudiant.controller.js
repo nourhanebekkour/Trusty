@@ -12,6 +12,22 @@ export const obtenirTousLesProfils = async (req, res) => {
     }
 };
 
+export const obtenirEtudiantsParEcole = async (req, res) => {
+    // #swagger.tags = ['Etudiants']
+    // #swagger.summary = 'Récupérer les étudiants appartenant à une école spécifique'
+    /* #swagger.parameters['ecole'] = {
+        in: 'path',
+        description: 'Nom de l\'école'
+    } */
+    try {
+        const { ecole } = req.params;
+        const etudiants = await etudiantService.recupererEtudiantsParEcole(ecole);
+        return sendResponse(res, 200, true, `Étudiants de l'école ${ecole} récupérés avec succès`, etudiants);
+    } catch (erreur) {
+        return sendResponse(res, 500, false, "Erreur lors de la récupération des étudiants", null, erreur.message);
+    }
+};
+
 export const obtenirProfilParId = async (req, res) => {
     // #swagger.tags = ['Etudiants']
     // #swagger.summary = 'Récupérer un profil étudiant par ID'
@@ -82,5 +98,22 @@ export const uploadAvatar = async (req, res) => {
     } catch (error) {
         const status = error.message === "Étudiant non trouvé" ? 404 : 500;
         return sendResponse(res, status, false, error.message || "Erreur lors de l'upload de l'avatar", null, error.message);
+    }
+};
+
+export const recalculerScoreCredibilite = async (req, res) => {
+    // #swagger.tags = ['Etudiants']
+    // #swagger.summary = 'Recalculer le score et le niveau de crédibilité de l\'étudiant'
+    /* #swagger.parameters['id'] = {
+        in: 'path',
+        description: 'ID de l\'étudiant (id_utilisateur)'
+    } */
+    try {
+        const { id } = req.params;
+        const resultat = await etudiantService.calculerEtMettreAJourScoreCredibilite(id);
+        return sendResponse(res, 200, true, "Score de crédibilité recalculé avec succès", resultat);
+    } catch (erreur) {
+        const status = erreur.message === "Étudiant non trouvé" ? 404 : 500;
+        return sendResponse(res, status, false, "Erreur lors du calcul du score", null, erreur.message);
     }
 };

@@ -585,6 +585,11 @@ model Portfolio {
   date_creation             DateTime  @default(now())
   date_derniere_maj         DateTime? @updatedAt
   date_publication          DateTime?
+  sections_config           Json?
+  projets_selectionnes      String[]
+  competences_selectionnees String[]
+  stages_selectionnes       String[]
+  couleur_accent            String?
 
   // Relations
   etudiant                  Etudiant          @relation(fields: [id_etudiant], references: [id_etudiant], onDelete: Cascade)

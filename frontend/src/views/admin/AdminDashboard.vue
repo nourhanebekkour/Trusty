@@ -5,7 +5,11 @@
     <div class="page__header">
       <div>
         <h1 class="page__title">Tableau de Bord Administrateur</h1>
-        <p class="page__subtitle">Gérez les certifications et surveillez l'activité de la plateforme.</p>
+        <p class="page__subtitle">
+          <template v-if="authStore.isSuperAdmin">Vue globale — Tous les établissements.</template>
+          <template v-else>Établissement : {{ authStore.user?.ecole || 'Non défini' }}.</template>
+          Gérez les certifications et surveillez l'activité de la plateforme.
+        </p>
       </div>
       <div class="page__actions">
         <button class="btn btn--secondary" @click="$router.push('/admin/portfolios')"> Rapports</button>
@@ -26,8 +30,8 @@
         <template #icon></template>
       </StatCard>
       <StatCard label="Professionnels"
-                :value="admin.loading ? '…' : formatNumber(admin.stats.partners)"
-                sub="Partenaires certifiés">
+                :value="admin.loading ? '…' : formatNumber(authStore.isSuperAdmin ? admin.stats.partners + admin.professionalQueue.length : admin.stats.partners)"
+                :sub="authStore.isSuperAdmin ? 'Dont ' + admin.professionalQueue.length + ' en attente' : 'Partenaires certifiés'">
         <template #icon></template>
       </StatCard>
       <StatCard label="Total Utilisateurs"
@@ -76,7 +80,7 @@
                     <span>{{ item.author }}</span>
                   </div>
                 </td>
-                <td><span class="type-badge">{{ item.type === 'ACTIVITE' ? 'Activité' : 'Professionnel' }}</span></td>
+                <td><span class="type-badge">Activité</span></td>
                 <td>{{ item.title }}</td>
                 <td class="text-muted">{{ formatRelativeDate(item.date) }}</td>
                 <td>
@@ -173,6 +177,34 @@
 
           <div class="card__footer">
             <a href="/admin/historique" class="link">Voir l'audit complet →</a>
+          </div>
+        </div>
+
+        <!-- ── Professionnels en attente (Super Admin) ── -->
+        <div v-if="authStore.isSuperAdmin" class="card" style="margin-top: 20px;">
+          <h2 class="card__title">Professionnels en attente</h2>
+          <p class="card__subtitle">Comptes professionnels à valider</p>
+
+          <div v-if="admin.loading" class="state-msg">Chargement…</div>
+
+          <div v-else class="cert-list">
+            <div v-for="pro in admin.professionalQueue.slice(0, 5)" :key="pro.id" class="cert-item">
+              <div class="cert-item__icon" style="background:var(--color-waiting-bg);color:var(--color-waiting-text);">!</div>
+              <div class="cert-item__body">
+                <p class="cert-item__text">
+                  <strong>{{ pro.prenom }} {{ pro.nom }}</strong>
+                  <span v-if="pro.entreprise"> — {{ pro.entreprise }}</span>
+                </p>
+                <span class="cert-item__time">{{ pro.email }}</span>
+              </div>
+            </div>
+            <div v-if="admin.professionalQueue.length === 0" class="state-msg">
+              Aucun professionnel en attente
+            </div>
+          </div>
+
+          <div class="card__footer">
+            <a href="/admin/verifications" class="link">Voir la file d'attente →</a>
           </div>
         </div>
       </div>
@@ -431,6 +463,7 @@ onMounted(async () => {
     admin.fetchUsers(),
     admin.fetchVerificationQueue(),
     admin.fetchCertHistory(),
+    ...(authStore.isSuperAdmin ? [admin.fetchProfessionalQueue()] : []),
   ])
 })
 </script>

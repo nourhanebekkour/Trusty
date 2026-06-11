@@ -3,7 +3,7 @@
     <div class="prof-page-head">
       <div>
         <h1>Portfolios étudiants</h1>
-        <p>Consultez les portfolios des étudiants que vous suivez.</p>
+        <p>Consultez les portfolios des étudiants de votre établissement.</p>
       </div>
 
       <div class="prof-actions">
@@ -77,7 +77,7 @@
                 </span>
               </td>
               <td>
-                <a v-if="portfolio.portfolioUrl" :href="portfolio.portfolioUrl" target="_blank" class="prof-link">
+                <a v-if="portfolio.portfolioUrl" :href="'/portfolio/' + portfolio.portfolioUrl" target="_blank" class="prof-link">
                   Voir le portfolio
                 </a>
                 <span v-else class="prof-muted">Non publié</span>
@@ -87,9 +87,6 @@
                   <button class="prof-btn prof-btn-secondary prof-btn-small" @click="openDetails(portfolio)">
                     Détails
                   </button>
-                  <button class="prof-btn prof-btn-primary prof-btn-small" @click="downloadPdf(portfolio)">
-                    PDF
-                  </button>
                 </div>
               </td>
             </tr>
@@ -98,42 +95,21 @@
       </section>
     </template>
 
-    <div v-if="selectedPortfolio" class="prof-modal-backdrop">
-      <div class="prof-modal">
-        <div class="prof-modal-head">
-          <div>
-            <h2>{{ selectedPortfolio.title }}</h2>
-            <p>{{ selectedPortfolio.studentName }}</p>
-          </div>
-          <button class="prof-modal-close" @click="selectedPortfolio = null">×</button>
-        </div>
-
-        <p class="prof-muted">{{ selectedPortfolio.description || 'Aucune description disponible.' }}</p>
-
-        <p v-if="selectedPortfolio.portfolioUrl" class="prof-muted">
-          URL : <a :href="selectedPortfolio.portfolioUrl" target="_blank">{{ selectedPortfolio.portfolioUrl }}</a>
-        </p>
-
-        <div class="prof-actions" style="margin-top: 16px;">
-          <button class="prof-btn prof-btn-secondary" @click="selectedPortfolio = null">
-            Fermer
-          </button>
-        </div>
-      </div>
-    </div>
-
     <div v-if="toast.show" class="prof-toast">{{ toast.message }}</div>
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/authstore'
 import '@/assets/professor-pages.css'
 import {
-  getProfessorPortfolios,
-  getProfessorPortfolioDetails,
-  exportProfessorPortfolioPdf,
+  getStudentsByEcole,
 } from '@/services/professorApi'
+
+const auth = useAuthStore()
+const router = useRouter()
 
 const loading = ref(false)
 const error = ref(null)
@@ -147,7 +123,6 @@ const stats = ref({
 
 const search = ref('')
 const statusFilter = ref('')
-const selectedPortfolio = ref(null)
 const toast = ref({ show: false, message: '' })
 
 const filteredPortfolios = computed(() => {
@@ -156,8 +131,8 @@ const filteredPortfolios = computed(() => {
   return portfolios.value.filter(item => {
     const matchesSearch =
       !query ||
-      item.title?.toLowerCase().includes(query) ||
-      item.studentName?.toLowerCase().includes(query)
+      item.studentName?.toLowerCase().includes(query) ||
+      item.field?.toLowerCase().includes(query)
 
     const matchesStatus = !statusFilter.value || item.status === statusFilter.value
 
@@ -170,9 +145,27 @@ async function loadPortfolios() {
   error.value = null
 
   try {
-    const data = await getProfessorPortfolios()
-    portfolios.value = Array.isArray(data.portfolios) ? data.portfolios : []
-    stats.value = data.stats || stats.value
+    const ecole = auth.user?.ecole
+    if (!ecole) {
+      error.value = 'Aucun établissement associé à votre compte.'
+      return
+    }
+    const students = await getStudentsByEcole(ecole)
+    portfolios.value = Array.isArray(students) ? students.map(s => ({
+      id: s.id,
+      studentName: s.fullName || 'Étudiant',
+      field: s.field || '',
+      bio: s.bio || '',
+      status: s.portfolioUrl ? 'PUBLIE' : 'BROUILLON',
+      portfolioUrl: s.portfolioUrl || null,
+      lastUpdate: null,
+      submittedAt: null,
+    })) : []
+    stats.value = {
+      totalPortfolios: portfolios.value.length,
+      pendingPortfolios: portfolios.value.filter(p => p.status === 'BROUILLON').length,
+      certifiedPortfolios: portfolios.value.filter(p => p.status === 'PUBLIE').length,
+    }
   } catch (err) {
     error.value = err.response?.data?.message || 'Impossible de charger les portfolios.'
   } finally {
@@ -180,16 +173,12 @@ async function loadPortfolios() {
   }
 }
 
-async function openDetails(portfolio) {
-  try {
-    selectedPortfolio.value = await getProfessorPortfolioDetails(portfolio.id)
-  } catch {
-    selectedPortfolio.value = portfolio
+function openDetails(portfolio) {
+  if (portfolio.portfolioUrl) {
+    router.push(`/portfolio/${portfolio.portfolioUrl}`)
+  } else {
+    showToast('Ce portfolio n\'est pas encore publié.')
   }
-}
-
-async function downloadPdf(portfolio) {
-  showToast('Export PDF bientôt disponible.')
 }
 
 function exportCsv() {
@@ -225,11 +214,6 @@ function statusLabel(status) {
     PUBLIE: 'Publié',
   }
   return labels[status] || status || 'Brouillon'
-}
-
-function formatDate(date) {
-  if (!date) return '—'
-  return new Date(date).toLocaleDateString('fr-FR')
 }
 
 function showToast(message) {

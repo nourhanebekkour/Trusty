@@ -1,133 +1,274 @@
 <template>
-  <div class="login-page">
+  <div class="login-landing" data-theme="landing">
+    <AnimatedBackground />
 
-    <!-- LEFT SIDE -->
-    <div class="left">
-      <div class="logo">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5C8C6A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        </svg>
-        <strong>TRUSTY</strong>
+    <div class="login-wrapper">
+      <!-- Colonne gauche : formulaire -->
+      <div class="login-form-col">
+        <div class="login-card glass-card">
+          <div class="login-header">
+            <div class="login-header-top">
+              <router-link to="/" class="login-logo">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="rgba(92,140,106,0.3)" stroke="#5C8C6A" />
+                </svg>
+                <span>TRUSTY</span>
+              </router-link>
+              <button class="login-theme-toggle" @click="toggleTheme" :title="landingMode === 'dark' ? 'Mode clair' : 'Mode sombre'" type="button">
+                <svg v-if="landingMode === 'dark'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="5"/>
+                  <line x1="12" y1="1" x2="12" y2="3"/>
+                  <line x1="12" y1="21" x2="12" y2="23"/>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                  <line x1="1" y1="12" x2="3" y2="12"/>
+                  <line x1="21" y1="12" x2="23" y2="12"/>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>
+                <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+              </button>
+            </div>
+            <h1 class="login-title">Bienvenue</h1>
+            <p class="login-subtitle">Connectez-vous pour accéder à votre espace.</p>
+          </div>
+
+          <form @submit.prevent="handleLogin" autocomplete="on" novalidate>
+            <div class="field">
+              <label>Email</label>
+              <input
+                v-model.trim="email"
+                type="email"
+                placeholder="nom@ecole.fr"
+                required
+                autocomplete="username"
+                :aria-invalid="!!fieldErrors.email"
+                aria-describedby="email-error"
+                maxlength="254"
+              />
+              <p v-if="fieldErrors.email" id="email-error" class="field-error" role="alert">
+                {{ fieldErrors.email }}
+              </p>
+            </div>
+
+            <div class="field">
+              <label>Mot de passe</label>
+              <div class="password-wrapper">
+                <input
+                  v-model="password"
+                  :type="showPassword ? 'text' : 'password'"
+                  placeholder="••••••••"
+                  required
+                  autocomplete="current-password"
+                  :aria-invalid="!!fieldErrors.password"
+                  aria-describedby="password-error"
+                  maxlength="128"
+                />
+                <button type="button" class="toggle-password" @click="showPassword = !showPassword" :aria-label="showPassword ? 'Cacher' : 'Afficher'" tabindex="-1">
+                  <svg v-if="!showPassword" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                </button>
+              </div>
+              <p v-if="fieldErrors.password" id="password-error" class="field-error" role="alert">
+                {{ fieldErrors.password }}
+              </p>
+            </div>
+
+            <div class="remember-row">
+              <label class="remember-label">
+                <input type="checkbox" v-model="remember" class="remember-checkbox" />
+                <span class="remember-text">Se souvenir de moi</span>
+              </label>
+            </div>
+
+            <p v-if="isLocked" class="form-message form-message--error" role="alert">
+              Trop de tentatives. Réessayez dans {{ lockCountdown }}s.
+            </p>
+
+            <p v-else-if="authStore.error || error" class="form-message form-message--error" role="alert">
+              {{ safeError }}
+            </p>
+
+            <button type="button" class="btn-forgot" @click="openForgotModal">
+              Mot de passe oublié ?
+            </button>
+
+            <button type="submit" class="btn-submit" :disabled="isDisabled">
+              <span v-if="isSubmitting || authStore.loading" class="btn-loading">
+                <span class="btn-dot"></span>
+                <span class="btn-dot"></span>
+                <span class="btn-dot"></span>
+              </span>
+              <span v-else>Se connecter →</span>
+            </button>
+
+            <div class="login-footer-links">
+              Vous n'avez pas encore de compte ?
+              <router-link to="/register">Inscrivez-vous</router-link>
+            </div>
+          </form>
+        </div>
       </div>
-      <h1>Certifiez votre excellence <span class="accent">académique.</span></h1>
-      <p class="subtitle">
-        La première plateforme de portfolios numériques qui transforme vos projets en preuves irréfutables de compétences.
-      </p>
+
+      <!-- Colonne droite : scène 3D -->
+      <div class="login-illustration-col">
+        <div class="illustration-content">
+          <LoginScene />
+          <div class="illustration-text">
+            <h3>Développez votre réseau</h3>
+            <p>Portfolios certifiés, recommandations et opportunités</p>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- RIGHT SIDE -->
-    <div class="right">
-      <h2>Bon retour parmi nous</h2>
-      <p class="welcome-sub">Veuillez entrer vos identifiants pour accéder à votre espace.</p>
+    <!-- Forgot Password Modal (restylée) -->
+    <Teleport to="body">
+      <div v-if="showForgotModal" class="modal-overlay" @click.self="closeForgotModal">
+        <div class="modal glass-card">
+          <button class="modal-close" @click="closeForgotModal" type="button" aria-label="Fermer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+          <h3 class="modal-title">Mot de passe oublié</h3>
+          <p class="modal-sub">Saisissez votre email pour recevoir un lien de réinitialisation.</p>
 
-      <form @submit.prevent="handleLogin" autocomplete="on" novalidate>
+          <form @submit.prevent="submitForgotPassword">
+            <div class="field">
+              <label>Email</label>
+              <input
+                v-model.trim="forgotEmail"
+                type="email"
+                placeholder="nom@ecole.fr"
+                required
+                maxlength="254"
+              />
+            </div>
 
-        <div class="field">
-          <label>Email</label>
-          <input
-            v-model.trim="email"
-            type="email"
-            placeholder="nom@ecole.fr"
-            required
-            autocomplete="username"
-            :aria-invalid="!!fieldErrors.email"
-            aria-describedby="email-error"
-            maxlength="254"
-          />
-          <p v-if="fieldErrors.email" id="email-error" class="error" role="alert">
-            {{ fieldErrors.email }}
-          </p>
+            <p v-if="forgotError" class="form-message form-message--error">{{ forgotError }}</p>
+            <p v-if="forgotSuccess" class="form-message form-message--success">{{ forgotSuccess }}</p>
+
+            <button type="submit" class="btn-submit" :disabled="forgotSending || !forgotEmail.trim()">
+              {{ forgotSending ? 'Envoi...' : 'Envoyer' }}
+            </button>
+          </form>
         </div>
-
-        <div class="field">
-          <label>Mot de passe</label>
-          <input
-            v-model="password"
-            type="password"
-            placeholder="••••••••"
-            required
-            autocomplete="current-password"
-            :aria-invalid="!!fieldErrors.password"
-            aria-describedby="password-error"
-            maxlength="128"
-          />
-          <p v-if="fieldErrors.password" id="password-error" class="error" role="alert">
-            {{ fieldErrors.password }}
-          </p>
-        </div>
-
-        <div class="remember">
-          <input type="checkbox" v-model="remember" id="remember" />
-          <label for="remember">Se souvenir de moi</label>
-        </div>
-
-        <p v-if="isLocked" class="error" role="alert">
-          Trop de tentatives. Réessayez dans {{ lockCountdown }}s.
-        </p>
-
-        <p v-else-if="authStore.error || error" class="error" role="alert">
-          {{ safeError }}
-        </p>
-
-        <button
-          type="submit"
-          class="btn-login"
-          :disabled="isDisabled"
-        >
-          {{ (isSubmitting || authStore.loading) ? 'Connexion...' : 'Se connecter →' }}
-        </button>
-
-        <div class="divider">OU CONTINUER EN TANT QU'INVITÉ</div>
-
-        <button
-          type="button"
-          class="btn-guest"
-          :disabled="isSubmitting || authStore.loading"
-        >
-          Consulter les portfolios publics
-        </button>
-
-        <div class="footer-links">
-          Vous n'avez pas encore de compte ? <router-link to="/register">Inscrivez-vous</router-link>
-        </div>
-
-      </form>
-    </div>
-
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '../stores/authstore'
 import { useRouter } from 'vue-router'
+import { authService } from '@/services/auth.service'
+import AnimatedBackground from '@/components/landing/AnimatedBackground.vue'
+import LoginScene from '@/components/landing/LoginScene.vue'
+import { useLandingTheme } from '@/composables/useLandingTheme'
 
-/* STATE */
+const { landingMode, toggle: toggleTheme } = useLandingTheme()
+
+/* ─── 3D PARALLAX ─── */
+const mouseX = ref(0)
+const mouseY = ref(0)
+const targetX = ref(0)
+const targetY = ref(0)
+let rafId = null
+
+/* ─── PARTICLES ─── */
+const particleList = ref([])
+
+onMounted(() => {
+  for (let i = 0; i < 20; i++) {
+    particleList.value.push({
+      id: i,
+      style: {
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        width: `${2 + Math.random() * 3}px`,
+        height: `${2 + Math.random() * 3}px`,
+        animationDuration: `${15 + Math.random() * 20}s`,
+        animationDelay: `${-(Math.random() * 10)}s`,
+        opacity: 0.05 + Math.random() * 0.1,
+      }
+    })
+  }
+  const animate = () => {
+    mouseX.value += (targetX.value - mouseX.value) * 0.06
+    mouseY.value += (targetY.value - mouseY.value) * 0.06
+    const left = document.querySelector('.login-page .left')
+    if (left) {
+      left.style.transform = `perspective(800px) rotateY(${mouseX.value * 0.5}deg) rotateX(${-mouseY.value * 0.3}deg)`
+    }
+    rafId = requestAnimationFrame(animate)
+  }
+  rafId = requestAnimationFrame(animate)
+})
+
+onUnmounted(() => {
+  clearInterval(lockTimer)
+  if (rafId) cancelAnimationFrame(rafId)
+})
+
+function handleMouseMove(e) {
+  const page = document.querySelector('.login-page')
+  if (!page) return
+  const rect = page.getBoundingClientRect()
+  const centerX = rect.left + rect.width / 2
+  const centerY = rect.top + rect.height / 2
+  targetX.value = (e.clientX - centerX) / 40
+  targetY.value = (e.clientY - centerY) / 40
+}
+
+function handleMouseLeave() {
+  targetX.value = 0
+  targetY.value = 0
+}
+
+/* ─── STATE ─── */
 const email    = ref('')
 const password = ref('')
 const remember = ref(false)
 
 const isSubmitting = ref(false)
+const showPassword = ref(false)
 
-/* ERRORS */
+/* ─── FORGOT PASSWORD ─── */
+const showForgotModal = ref(false)
+const forgotEmail = ref('')
+const forgotSending = ref(false)
+const forgotError = ref('')
+const forgotSuccess = ref('')
+
+/* ─── ERRORS ─── */
 const error       = ref('')
 const fieldErrors = ref({ email: '', password: '' })
 
-/* SECURITY — rate limiting côté client */
+/* ─── RATE LIMITING ─── */
 const loginAttempts = ref(0)
 const lockUntil     = ref(null)
 const lockCountdown = ref(0)
 let lockTimer = null
 
-/* store + router */
+/* ─── STORE + ROUTER ─── */
 const authStore = useAuthStore()
 const router    = useRouter()
 
-/* CONFIG */
+/* ─── CONFIG ─── */
 const MAX_ATTEMPTS  = 3
-const BASE_LOCK_TIME = 10 * 1000 // 10 secondes, double à chaque dépassement
+const BASE_LOCK_TIME = 10 * 1000
 
-/* HELPERS */
+/* ─── HELPERS ─── */
 const normalizeEmail = (v) => v.trim().toLowerCase()
 const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
 const isStrongPassword = (v) => {
@@ -141,7 +282,7 @@ const isStrongPassword = (v) => {
   )
 }
 
-/* LOCK LOGIC */
+/* ─── LOCK LOGIC ─── */
 const isLocked = computed(() => lockUntil.value && Date.now() < lockUntil.value)
 const applyLock = () => {
   const delay = BASE_LOCK_TIME * Math.pow(2, Math.max(0, loginAttempts.value - MAX_ATTEMPTS))
@@ -158,14 +299,13 @@ const applyLock = () => {
   }, 1000)
 }
 
-/* ERROR HANDLING */
+/* ─── ERROR HANDLING ─── */
 const clearErrors = () => {
   error.value      = ''
   authStore.error  = null
   fieldErrors.value = { email: '', password: '' }
 }
 
-// Message générique — évite l'énumération email/password
 const safeError = computed(() => {
   const raw = authStore.error || error.value
   return raw ? 'Email ou mot de passe invalide' : ''
@@ -196,7 +336,7 @@ const validateFields = () => {
   return ok
 }
 
-/* COMPUTED */
+/* ─── COMPUTED ─── */
 const isDisabled = computed(() =>
   isSubmitting.value ||
   authStore.loading  ||
@@ -205,7 +345,7 @@ const isDisabled = computed(() =>
   !password.value
 )
 
-/* SUBMIT */
+/* ─── SUBMIT ─── */
 const handleLogin = async () => {
   if (isSubmitting.value || isLocked.value) return
   clearErrors()
@@ -228,7 +368,6 @@ const handleLogin = async () => {
       return
     }
 
-    /* ÉCHEC */
     loginAttempts.value++
     if (loginAttempts.value >= MAX_ATTEMPTS) applyLock()
     setGenericError()
@@ -240,162 +379,468 @@ const handleLogin = async () => {
     setGenericError()
   } finally {
     isSubmitting.value = false
-    // Efface le mot de passe du state après chaque tentative
     password.value = ''
   }
 }
 
-// Nettoyage du timer si le composant est démonté
-onUnmounted(() => clearInterval(lockTimer))
+/* ─── FORGOT PASSWORD ─── */
+function openForgotModal() {
+  forgotEmail.value = ''
+  forgotError.value = ''
+  forgotSuccess.value = ''
+  showForgotModal.value = true
+}
+function closeForgotModal() {
+  showForgotModal.value = false
+}
+async function submitForgotPassword() {
+  if (!forgotEmail.value.trim()) return
+  forgotSending.value = true
+  forgotError.value = ''
+  forgotSuccess.value = ''
+  try {
+    await authService.forgotPassword(forgotEmail.value)
+    forgotSuccess.value = 'Un email de réinitialisation a été envoyé.'
+  } catch (err) {
+    forgotError.value = err?.response?.data?.message || "Impossible d'envoyer l'email. Vérifiez votre adresse."
+  } finally {
+    forgotSending.value = false
+  }
+}
 </script>
 
 <style scoped>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-.login-page {
-  display: flex;
+.login-landing {
+  font-family: var(--landing-font);
   min-height: 100vh;
-  font-family: 'Segoe UI', sans-serif;
-  background: #1a2e2a;
-}
-
-.left {
-  width: 45%;
-  background: #2a3d38;
-  padding: 60px 50px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  border-right: 1px solid #3a5048;
-}
-
-.logo {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 18px;
-  color: #5C8C6A;
-}
-
-h1 {
-  font-size: 32px;
-  font-weight: 800;
-  color: #e8f0ee;
-}
-
-.accent { color: #5C8C6A; }
-
-.subtitle {
-  color: #a8bdb8;
-  font-size: 15px;
-}
-
-.right {
-  width: 55%;
-  padding: 80px;
-  display: flex;
-  flex-direction: column;
   justify-content: center;
-  background: #1a2e2a;
 }
 
-h2 {
-  font-size: 26px;
-  font-weight: 700;
-  color: #e8f0ee;
+.login-wrapper {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  max-width: 1100px;
+  width: 100%;
+  min-height: 100vh;
 }
 
-.welcome-sub {
-  color: #a8bdb8;
-  font-size: 14px;
-  margin-bottom: 36px;
+/* ─── Formulaire ──────────────────────────── */
+.login-form-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
 }
 
-.field { margin-bottom: 20px; }
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  background: var(--landing-surface);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--landing-border);
+  border-radius: 24px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+}
+
+.login-header {
+  margin-bottom: 32px;
+}
+
+.login-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--landing-text);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-decoration: none;
+}
+
+.login-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--landing-text);
+  margin-bottom: 8px;
+}
+
+.login-subtitle {
+  font-size: 0.9rem;
+  color: var(--landing-text-secondary);
+}
+
+.field {
+  margin-bottom: 20px;
+}
 
 .field label {
-  font-size: 13px;
-  color: #e8f0ee;
   display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--landing-text-secondary);
   margin-bottom: 8px;
+  letter-spacing: 0.02em;
 }
 
 .field input {
   width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #3a5048;
-  background: #2a3d38;
-  color: #e8f0ee;
+  padding: 12px 16px;
+  background: var(--landing-surface);
+  border: 1px solid var(--landing-border);
+  border-radius: 12px;
+  color: var(--landing-text);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
 }
 
-.remember {
+.field input::placeholder {
+  color: var(--landing-text-secondary);
+  opacity: 0.5;
+}
+
+.field input:focus {
+  border-color: var(--landing-accent-border);
+  box-shadow: 0 0 0 3px var(--landing-glow);
+  background: var(--landing-surface-hover);
+}
+
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper input {
+  padding-right: 44px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--landing-text-secondary);
+  cursor: pointer;
+  padding: 4px;
   display: flex;
+  transition: color 0.2s;
+}
+
+.toggle-password:hover {
+  color: var(--landing-text);
+}
+
+.field-error {
+  color: #f87171;
+  font-size: 0.78rem;
+  margin-top: 6px;
+}
+
+.remember-row {
+  margin-bottom: 16px;
+}
+
+.remember-label {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #a8bdb8;
-  font-size: 13px;
-  margin-bottom: 20px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--landing-text-secondary);
 }
 
-.error {
-  color: #ff6b6b;
-  font-size: 13px;
+.remember-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: #5C8C6A;
+  border-radius: 4px;
+}
+
+.form-message {
+  font-size: 0.85rem;
   text-align: center;
-  margin-bottom: 10px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  margin-bottom: 16px;
 }
 
-.btn-login {
+.form-message--error {
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  color: #fca5a5;
+}
+
+.form-message--success {
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  color: #6ee7b7;
+}
+
+.btn-forgot {
+  display: block;
+  margin: 0 auto 20px;
+  background: none;
+  border: none;
+  color: var(--landing-accent);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-family: inherit;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.btn-forgot:hover {
+  color: var(--landing-accent-hover);
+}
+
+.btn-submit {
   width: 100%;
   padding: 14px;
-  background: #5C8C6A;
   border: none;
-  border-radius: 8px;
+  border-radius: 999px;
+  background: var(--landing-gradient-btn);
   color: white;
-  font-weight: 600;
+  font-size: 0.95rem;
+  font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 12px 32px var(--landing-glow);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
 }
 
-.btn-login:disabled {
-  background: #3a5048;
+.btn-submit:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 40px var(--landing-glow-strong);
+}
+
+.btn-submit:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
+  transform: none !important;
 }
 
-.divider {
-  text-align: center;
-  font-size: 11px;
-  color: #6a8880;
-  margin: 16px 0;
+.btn-loading {
+  display: flex;
+  gap: 5px;
+  align-items: center;
 }
 
-.btn-guest {
-  width: 100%;
-  padding: 13px;
-  border: 1px solid #3a5048;
-  background: transparent;
-  color: #e8f0ee;
-  border-radius: 8px;
-  cursor: pointer;
+.btn-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: white;
+  animation: btn-dot-bounce 1.2s ease-in-out infinite;
 }
 
-.footer-links {
+.btn-dot:nth-child(2) { animation-delay: 0.2s; }
+.btn-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes btn-dot-bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.login-footer-links {
   text-align: center;
   margin-top: 24px;
-  font-size: 13px;
-  color: #a8bdb8;
+  font-size: 0.85rem;
+  color: var(--landing-text-secondary);
 }
 
-.footer-links a {
-  color: #5C8C6A;
+.login-footer-links a {
+  color: var(--landing-accent);
   text-decoration: none;
   font-weight: 600;
+  transition: color 0.2s;
 }
 
-.footer-links a:hover {
+.login-footer-links a:hover {
+  color: var(--landing-accent-hover);
   text-decoration: underline;
+}
+
+/* ─── Colonne illustration ───────────────── */
+.login-illustration-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.illustration-content {
+  text-align: center;
+  max-width: 400px;
+}
+
+.illustration-text {
+  margin-top: 24px;
+}
+
+.illustration-text h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--landing-text);
+  margin-bottom: 8px;
+}
+
+.illustration-text p {
+  font-size: 0.88rem;
+  color: var(--landing-text-secondary);
+  line-height: 1.6;
+}
+
+/* ─── Modal ──────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.modal {
+  background: color-mix(in srgb, var(--landing-bg) 95%, transparent);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--landing-border);
+  border-radius: 24px;
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  animation: modalIn 0.3s ease-out;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: var(--landing-surface);
+  border: 1px solid var(--landing-border);
+  color: var(--landing-text-secondary);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+
+.modal-close:hover {
+  background: var(--landing-surface-hover);
+  color: var(--landing-text);
+}
+
+.modal-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--landing-text);
+  margin: 0 0 8px;
+}
+
+.modal-sub {
+  font-size: 0.88rem;
+  color: var(--landing-text-secondary);
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ─── Responsive ─────────────────────────── */
+@media (max-width: 768px) {
+  .login-wrapper {
+    grid-template-columns: 1fr;
+    min-height: 100vh;
+  }
+
+  .login-form-col {
+    padding: 24px;
+  }
+
+  .login-illustration-col {
+    display: none;
+  }
+
+  .login-card {
+    padding: 32px 24px;
+    box-shadow: none;
+    background: transparent;
+    backdrop-filter: none;
+  }
+
+  .modal {
+    padding: 28px 24px;
+  }
+}
+
+.login-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.login-theme-toggle {
+  background: var(--landing-surface);
+  border: 1px solid var(--landing-border);
+  color: var(--landing-text-secondary);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+}
+
+.login-theme-toggle:hover {
+  background: var(--landing-surface-hover);
+  color: var(--landing-text);
+  border-color: var(--landing-border-hover);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 </style>

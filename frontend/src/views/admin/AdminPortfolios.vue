@@ -37,6 +37,7 @@
         <thead>
           <tr>
             <th>Étudiant</th>
+            <th v-if="authStore.isSuperAdmin">Établissement</th>
             <th>Email</th>
             <th>Statut</th>
             <th>Inscription</th>
@@ -54,6 +55,7 @@
                 </div>
               </div>
             </td>
+            <td v-if="authStore.isSuperAdmin" class="text-muted">{{ s.utilisateur?.ecole || s.ecole || '—' }}</td>
             <td class="text-muted">{{ s.email || s.utilisateur?.email }}</td>
             <td>
               <span :class="['statut', (s.status_compte || s.utilisateur?.status_compte) === 'ACTIF' ? 'statut--ok' : 'statut--pending']">
@@ -69,7 +71,7 @@
             </td>
           </tr>
           <tr v-if="!admin.loading && paginated.length === 0">
-            <td colspan="5" class="state-msg">Aucun étudiant trouvé</td>
+            <td :colspan="authStore.isSuperAdmin ? 6 : 5" class="state-msg">Aucun étudiant trouvé</td>
           </tr>
         </tbody>
       </table>
@@ -97,6 +99,10 @@ import { useAuthStore }  from '../../stores/authstore'
 const admin = useAdminStore()
 const authStore = useAuthStore()
 const router = useRouter()
+
+const scope = computed(() =>
+  authStore.isSuperAdmin ? 'global' : (authStore.user?.ecole || '')
+)
 
 const activeCount = computed(() =>
   (admin.students || []).filter(s =>
