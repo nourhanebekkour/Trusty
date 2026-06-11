@@ -61,7 +61,7 @@ function assembleUser(me, etudiant, competences = [], badges = [], projets = [],
     nom:            me.nom,
     prenom:         me.prenom,
     telephone:      me.telephone ?? null,
-    photo:          me.photo     ?? null,
+    photo:          me.photo_url    ?? null,
     role:           me.role,
     date_creation:  me.date_creation ?? null,
     etudiant: {
@@ -166,10 +166,8 @@ export async function saveProfile(id, formData) {
 
 export async function uploadAvatar(id, file) {
   const form = new FormData()
-  form.append('file', file)
-  const res = await api.post(`/etudiants/${id}/avatar`, form, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
+  form.append('fichier', file)
+  const res = await api.post(`/etudiants/${id}/avatar`, form)
   return { data: extractData(res) }
 }
 
