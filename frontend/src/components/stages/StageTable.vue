@@ -162,13 +162,23 @@
 
         <!-- Card footer -->
         <div class="card-footer">
-          <label class="footer-btn upload-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            Joindre une attestation
-            <input type="file" hidden accept=".pdf,image/*" />
-          </label>
+          <template v-if="stage.rapport_url || stage.rapport?.url">
+            <a :href="stage.rapport_url || stage.rapport?.url" target="_blank" class="footer-link footer-link--has">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+              Voir le rapport
+            </a>
+          </template>
+          <template v-else>
+            <label class="footer-btn upload-btn" :class="{ 'is-uploading': uploadingStageId === stage.id_stage }">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              {{ uploadingStageId === stage.id_stage ? 'Upload en cours...' : 'Joindre un rapport' }}
+              <input type="file" hidden accept=".pdf,image/*" @change="(e) => onAttestationChange(stage, e)" />
+            </label>
+          </template>
         </div>
       </div>
 
@@ -200,12 +210,44 @@
 <script setup>
 import { ref } from 'vue'
 import { useStageStore, initiales, logoColor, formatDate, badgeClass, labelStatut } from '@/stores/stageStore'
+import { uploadRapport } from '@/services/stageService'
 
 const store = useStageStore()
 
 defineEmits(['voir', 'edit', 'delete'])
 
 const expandedMissions = ref(new Set())
+const uploadingStageId = ref(null)
+
+async function onAttestationChange(stage, e) {
+  const file = e.target.files?.[0]
+  if (!file) return
+
+  const maxSize = 10 * 1024 * 1024
+  if (file.size > maxSize) {
+    store.showToast('Le fichier ne doit pas dépasser 10 Mo.', 'error')
+    e.target.value = ''
+    return
+  }
+
+  uploadingStageId.value = stage.id_stage
+  try {
+    const result = await uploadRapport(stage.id_stage, file)
+    const fileData = result?.data ?? result
+    if (fileData?.url) {
+      stage.rapport_url = fileData.url
+    }
+    store.showToast('Rapport uploadé avec succès.')
+  } catch (err) {
+    store.showToast(
+      err.response?.data?.message || "Erreur lors de l'upload du rapport.",
+      'error'
+    )
+  } finally {
+    uploadingStageId.value = null
+    e.target.value = ''
+  }
+}
 
 function toggleMissions(id) {
   const s = new Set(expandedMissions.value)
@@ -682,6 +724,38 @@ function techNiveauLabel(n) {
 }
 
 .upload-btn { cursor: pointer; }
+
+.footer-btn.is-uploading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: none;
+  transition: all 0.2s;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.footer-link:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.footer-link--has {
+  border-color: var(--color-accent-border);
+  color: var(--color-accent);
+}
 
 /* ── Empty card ── */
 .empty-card {

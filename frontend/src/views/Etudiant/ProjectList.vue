@@ -145,6 +145,7 @@
     <!-- Modal joindre un rapport -->
     <ProjetRapportModal
       v-model="showRapportModal"
+      :projet-id="rapportTarget?.id_projet"
       @save="handleRapportSave"
     />
 
