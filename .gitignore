@@ -25,7 +25,13 @@ npm-debug.log*
 
 .env.test
 
+.terraform/
+
 cloud/
+
+cloud/.terraform/
+
+
 
 cloud/terraform/.terraform/
 cloud/terraform/terraform.tfstate
