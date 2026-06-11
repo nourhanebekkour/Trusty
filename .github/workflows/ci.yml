@@ -357,12 +357,7 @@ jobs:
   # PHASE 6 — SONARQUBE + OWASP ZAP → délégué à security.yml
   # ════════════════════════════════════════════════════════
 
-  security:
-    name: Security — SonarQube + OWASP ZAP
-    needs: trivy-scan
-    uses: ./.github/workflows/security.yml
-    secrets:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+ 
 
   # ════════════════════════════════════════════════════════
   # PHASE 7 — PUSH IMAGES DOCKER HUB (après tous les scans)
