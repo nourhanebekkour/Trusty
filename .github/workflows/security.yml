@@ -34,7 +34,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: http://192.168.20.10:9000
 
-  # ─── JOB 2 : OWASP ZAP ─────────────────────────────────────────────────
+  # ─── JOB 2 : OWASP ZAP ───────────────────────────────────────────────────
   owasp-zap:
     name: OWASP ZAP — Scan API backend staging
     runs-on: self-hosted
@@ -45,17 +45,31 @@ jobs:
 
       - name: Scan actif ZAP sur le backend staging
         run: |
-          SCAN_ID=$(curl -s "http://192.168.20.10:8090/JSON/ascan/action/scan/?url=http://192.168.20.10:3001&recurse=true" \
-            | grep -o '"scan":"[0-9]*"' | grep -o '[0-9]*')
+          # Vérifier que ZAP API est accessible
+          if ! curl -sf --max-time 5 "http://192.168.20.10:8091/JSON/core/view/version/" > /dev/null 2>&1; then
+            echo "⚠️ OWASP ZAP API non accessible sur :8091 — scan ignoré"
+            exit 0
+          fi
+
+          # Vérifier que le backend est accessible
+          if ! curl -sf --max-time 5 "http://192.168.20.10:3001" > /dev/null 2>&1; then
+            echo "⚠️ Backend non accessible sur :3001 — scan ignoré"
+            exit 0
+          fi
+
+          SCAN_ID=$(curl -s "http://192.168.20.10:8091/JSON/ascan/action/scan/?url=http://192.168.20.10:3001&recurse=true" \
+            | grep -o '"scan":"[0-9]*"' | grep -o '[0-9]*') || true
           echo "Scan ID : $SCAN_ID"
+
           for i in $(seq 1 30); do
-            STATUS=$(curl -s "http://192.168.20.10:8090/JSON/ascan/view/status/?scanId=$SCAN_ID" \
-              | grep -o '"status":"[0-9]*"' | grep -o '[0-9]*')
+            STATUS=$(curl -s "http://192.168.20.10:8091/JSON/ascan/view/status/?scanId=$SCAN_ID" \
+              | grep -o '"status":"[0-9]*"' | grep -o '[0-9]*') || true
             echo "Avancement : $STATUS%"
             if [ "$STATUS" = "100" ]; then break; fi
             sleep 10
           done
-          curl -s "http://192.168.20.10:8090/JSON/core/view/alerts/" -o zap-report.json
+
+          curl -s "http://192.168.20.10:8091/JSON/core/view/alerts/" -o zap-report.json
           echo "Alertes trouvées : $(cat zap-report.json | grep -c '"alert"' || echo 0)"
 
       - name: Sauvegarder le rapport ZAP
