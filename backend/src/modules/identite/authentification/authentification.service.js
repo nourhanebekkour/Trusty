@@ -9,7 +9,6 @@ import {
   envoyerEmailDemandeCompte,
   envoyerEmailVerification,
 } from '#Modules/systeme/emails/emails.service.js';
-import * as minioService from '#Services/minio.service.js';
 
 const enrichirProfil = async (user) => {
     if (user && user.photo) {
@@ -18,13 +17,6 @@ const enrichirProfil = async (user) => {
     return user;
 };
 
-
-const enrichirProfil = async (user) => {
-    if (user && user.photo) {
-        user.photo_url = await minioService.getFileUrl(user.photo);
-    }
-    return user;
-};
 
 async function register(email, password, nom, prenom, role, ecole) {
   const existingUser = await prisma.utilisateur.findUnique({ where: { email } });
