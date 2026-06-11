@@ -1,0 +1,61 @@
+name: CD — Deploy to Staging
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          target: production
+          push: true
+          tags: aymenbazga/trusty-frontend:latest
+          build-args: |
+            VITE_API_URL=http://63.183.184.130
+
+      - name: Build and push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          target: production
+          push: true
+          tags: aymenbazga/trusty-backend:latest
+
+      - name: Build and push Nginx
+        uses: docker/build-push-action@v5
+        with:
+          context: ./nginx
+          push: true
+          tags: aymenbazga/trusty-nginx:latest
+
+      - name: Deploy to staging via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ubuntu
+          key: ${{ secrets.STAGING_DEPLOY_KEY }}
+          script: |
+            cd /home/ubuntu/projet/Trusty
+            docker pull aymenbazga/trusty-frontend:latest
+            docker pull aymenbazga/trusty-backend:latest
+            docker pull aymenbazga/trusty-nginx:latest
+            docker compose -f docker-compose.dockerhub.yml \
+              --env-file .env.staging \
+              up -d --force-recreate
+            docker exec trusty-backend-1 npx prisma migrate deploy
