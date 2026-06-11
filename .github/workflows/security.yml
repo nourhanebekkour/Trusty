@@ -219,15 +219,30 @@ jobs:
           kill $SERVER_PID || true
 
   # ════════════════════════════════════════════════════════
-  # PHASE 4 — SÉCURITÉ TRIVY (github-hosted, après smoke)
+  # PHASE 4 — BUILD IMAGES DOCKER
+  # ════════════════════════════════════════════════════════
+
+  build-images:
+    name: Build — Images Docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [backend-smoke, frontend-run]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image backend
+        run: docker build -t trusty-backend:ci ./backend
+      - name: Build image frontend
+        run: docker build -t trusty-frontend:ci ./frontend
+
+  # ════════════════════════════════════════════════════════
+  # PHASE 5 — SÉCURITÉ TRIVY (github-hosted, après build)
   # ════════════════════════════════════════════════════════
 
   trivy-scan:
     name: Security — Trivy (deps + images Docker)
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    # FIX ✅ — backend-run → backend-smoke
-    needs: [backend-smoke, frontend-run]
+    needs: [backend-smoke, frontend-run, build-images]
     permissions:
       security-events: write
       actions: read
@@ -346,7 +361,7 @@ jobs:
           category: trivy-image-frontend
 
   # ════════════════════════════════════════════════════════
-  # PHASE 5 — SONARQUBE + OWASP ZAP (self-hosted, après Trivy)
+  # PHASE 6 — SONARQUBE + OWASP ZAP (self-hosted, après Trivy)
   # ════════════════════════════════════════════════════════
 
   sonarqube:
