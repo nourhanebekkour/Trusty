@@ -44,6 +44,7 @@ describe("authStore + authService — Tests d'intégration", () => {
     expect(api.post).toHaveBeenCalledWith('/auth/login', {
       email: 'alice@test.com',
       password: '1234',
+      remember: false,
     })
     expect(api.get).toHaveBeenCalledWith('/auth/me')
     expect(store.user).not.toBeNull()
