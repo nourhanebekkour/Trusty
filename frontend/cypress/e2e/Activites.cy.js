@@ -41,7 +41,7 @@ describe('E2E – Activités – Rendu UI', () => {
 describe('E2E – Activités – Appels API', () => {
   it('charge les activités depuis le backend au chargement', () => {
     loginSession()
-    cy.intercept('GET', '**/activites/**').as('activites')
+    cy.intercept('GET', '**/api/activites/**').as('activites')
     cy.visit('/activites')
     cy.wait('@activites').its('response.statusCode').should('be.oneOf', [200, 304])
   })
@@ -62,11 +62,13 @@ describe('E2E – Activités – Création', () => {
   })
 
   it('appelle POST /activites/etudiant/:id lors de la création', () => {
-    cy.intercept('POST', '**/activites/**').as('createActivite')
+    cy.intercept('POST', '**/api/activites/**', { statusCode: 201, body: { id: 'test-id' } }).as('createActivite')
     cy.contains('Ajouter une activité').click()
+    cy.get('select').first().select(1)
     cy.get('input[type="text"]').first().type('Club de robotique')
-    cy.get('select').first().select(0)
-    cy.contains(/enregistrer|sauvegarder|créer|ajouter/i).last().click()
+    cy.get('input[type="text"]').eq(1).type('ENSA Tanger')
+    cy.get('input[type="text"]').eq(2).type('Participant')
+    cy.get('.btn-submit').click()
     cy.wait('@createActivite').its('response.statusCode').should('be.oneOf', [200, 201])
   })
 })
@@ -77,9 +79,13 @@ describe('E2E – Activités – Création', () => {
 describe('E2E – Activités – État vide', () => {
   it('affiche "Aucune activité trouvée" si la liste est vide', () => {
     loginSession()
-    cy.intercept('GET', '**/activites/**', { statusCode: 200, body: { data: [] } }).as('emptyActivites')
+    cy.intercept('GET', '**/api/activites/**', (req) => {
+      req.reply({ statusCode: 200, body: [], headers: { 'Content-Type': 'application/json' } })
+    }).as('emptyActivites')
     cy.visit('/activites')
     cy.wait('@emptyActivites')
+    cy.url().should('include', '/activites')
+    cy.get('.loading-state').should('not.exist')
     cy.contains('Aucune activité trouvée').should('be.visible')
   })
 })
