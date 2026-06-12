@@ -30,7 +30,8 @@ describe('Integration API : Formations', () => {
                 nom: 'Test',
                 prenom: 'Formation',
                 role: 'ETUDIANT',
-                status_compte: 'ACTIF'
+                status_compte: 'ACTIF',
+                email_verifie: true
             }
         });
         utilisateurId = user.id_utilisateur;

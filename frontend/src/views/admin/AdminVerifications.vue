@@ -9,14 +9,7 @@
         </p>
       </div>
       <div class="page__actions">
-        <button
-          class="btn btn--secondary"
-          @click="load"
-          :disabled="isRefreshLimited"
-          :title="isRefreshLimited ? `Attendez ${refreshCountdown}s` : ''"
-        >
-          {{ isRefreshLimited ? `🔄 (${refreshCountdown}s)` : '🔄 Rafraîchir' }}
-        </button>
+        <button class="btn btn--secondary" @click="load"><AppIcon name="refresh" /> Rafraîchir</button>
       </div>
     </div>
 
@@ -26,13 +19,13 @@
 
     <div class="stats-row">
       <StatCard label="En attente" :value="admin.loading ? '…' : String(totalPending)">
-        <template #icon>🕐</template>
+        <template #icon><AppIcon name="clock" /></template>
       </StatCard>
       <StatCard label="Activités" :value="admin.loading ? '…' : String(activitiesCount)">
-        <template #icon>📋</template>
+        <template #icon><AppIcon name="activity" /></template>
       </StatCard>
       <StatCard v-if="authStore.isSuperAdmin" label="Professionnels" :value="admin.loading ? '…' : String(prosCount)">
-        <template #icon>🏢</template>
+        <template #icon><AppIcon name="building" /></template>
       </StatCard>
     </div>
 
@@ -57,20 +50,8 @@
             </div>
             <p class="verif-card__desc">{{ sanitizeText(item.description) || 'Aucune description' }}</p>
             <div class="verif-card__actions">
-              <button
-                class="btn btn--primary btn--sm"
-                :disabled="admin.validatingId === item.id || isActionLimited"
-                @click="approve(item)"
-              >
-                ✓ Approuver
-              </button>
-              <button
-                class="btn btn--ghost btn--sm"
-                :disabled="admin.validatingId === item.id || isActionLimited"
-                @click="reject(item)"
-              >
-                ✕ Rejeter
-              </button>
+              <button class="btn btn--primary btn--sm" :disabled="admin.validatingId === item.id" @click="approve(item)"><AppIcon name="check" /> Approuver</button>
+              <button class="btn btn--ghost btn--sm" :disabled="admin.validatingId === item.id" @click="reject(item)"><AppIcon name="x" /> Rejeter</button>
             </div>
           </div>
         </div>
@@ -103,8 +84,8 @@
                 <span v-if="!item.entreprise && !item.siret">Aucune information professionnelle</span>
               </p>
               <div class="verif-card__actions">
-                <button class="btn btn--primary btn--sm" :disabled="admin.validatingId === item.id" @click="approvePro(item)">✓ Approuver</button>
-                <button class="btn btn--ghost btn--sm" :disabled="admin.validatingId === item.id" @click="rejectPro(item)">✕ Rejeter</button>
+                <button class="btn btn--primary btn--sm" :disabled="admin.validatingId === item.id" @click="approvePro(item)"><AppIcon name="check" /> Approuver</button>
+                <button class="btn btn--ghost btn--sm" :disabled="admin.validatingId === item.id" @click="rejectPro(item)"><AppIcon name="x" /> Rejeter</button>
               </div>
             </div>
           </div>

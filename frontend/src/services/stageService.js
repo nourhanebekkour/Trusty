@@ -1,6 +1,6 @@
 import api from '@/api'
 
-// ✅ Remplace assertPositiveInt — les IDs sont des cuid() (strings)
+// Les IDs sont des cuid() (strings).
 const assertId = (val, label) => {
   if (typeof val !== 'string' || val.trim() === '') {
     throw new TypeError(`[stageService] ${label} doit être une chaîne non vide, reçu : ${val}`)
@@ -13,6 +13,7 @@ const STAGE_ALLOWED_FIELDS = [
   'encadrant_professionnel', 'encadrant_academique',
   'duree_semaines', 'date_debut', 'date_fin',
   'missions', 'est_public', 'status_validation',
+  'id_rapport', 'rapport', 'rapport_url', 'technologies',
   'createdAt', 'updatedAt', 'etudiant',
 ]
 
@@ -83,7 +84,7 @@ const sanitizePayload = (payload) => {
 
 /** GET /stages/etudiant/:id */
 export async function fetchStagesEtudiant(idEtudiant) {
-  assertId(idEtudiant, 'idEtudiant') // ✅
+  assertId(idEtudiant, 'idEtudiant')
 
   const res    = await api.get(`/stages/etudiant/${idEtudiant}`)
   const stages = Array.isArray(res.data?.data) ? res.data.data
@@ -101,7 +102,7 @@ export async function fetchStageById(id) {
 
 /** POST /stages/etudiant/:id */
 export async function creerStage(idEtudiant, payload) {
-  assertId(idEtudiant, 'idEtudiant') // ✅
+  assertId(idEtudiant, 'idEtudiant')
 
   const safePayload = sanitizePayload(payload)
 
@@ -111,7 +112,7 @@ export async function creerStage(idEtudiant, payload) {
 
 /** PUT /stages/:id */
 export async function modifierStage(id, payload) {
-  assertId(id, 'id') // ✅
+  assertId(id, 'id')
 
   const safePayload = sanitizePayload(payload)
 
@@ -121,7 +122,7 @@ export async function modifierStage(id, payload) {
 
 /** DELETE /stages/:id */
 export async function supprimerStage(id) {
-  assertId(id, 'id') // ✅
+  assertId(id, 'id')
   await api.delete(`/stages/${id}`)
 }
 
@@ -147,7 +148,6 @@ export async function uploadRapport(stageId, file, onProgress) {
   const formData = new FormData()
   formData.append('fichier', file)
   const res = await api.post(`/stages/${stageId}/rapport`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
     onUploadProgress: onProgress,
   })
   return res.data?.data ?? res.data

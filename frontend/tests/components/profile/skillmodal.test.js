@@ -208,7 +208,7 @@ describe('SkillModal.vue', () => {
       expect(wrapper.emitted('close')).toBeTruthy()
     })
 
-    it('émet "close" au clic sur le bouton ✕', async () => {
+    it('émet "close" au clic sur le bouton de fermeture', async () => {
       wrapper = await mountComponent()
       await wrapper.find('.skill-modal-close').trigger('click')
       expect(wrapper.emitted('close')).toBeTruthy()

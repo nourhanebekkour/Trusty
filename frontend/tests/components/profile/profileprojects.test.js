@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import ProfileProjects from '@/components/profile/ProfileProjects.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
 
 // ─── Mock du router ────────────────────────────────────────────────────────────
 const mockPush = vi.fn()
@@ -32,6 +33,7 @@ describe('ProfileProjects.vue', () => {
     mount(ProfileProjects, {
       props: { user },
       global: {
+        components: { AppIcon },
         mocks: { $router: { push: mockPush } },
       },
     })
@@ -106,14 +108,12 @@ describe('ProfileProjects.vue', () => {
 
     it('affiche la description du projet', () => {
       wrapper = mountComponent(makeUser([makeProjet({ projet: { id_projet: 1, titre: 'Test', description: 'Ma description', status_validation: 'VALIDE' } })]))
-      // Le composant utilise .project-description pour la description complète
-      const desc = wrapper.find('.project-description')
-      expect(desc.text()).toContain('Ma description')
+      expect(wrapper.find('.project-description').text()).toContain('Ma description')
     })
 
-    it('affiche l\'icône 📁', () => {
+    it('affiche l\'icône de projet', () => {
       wrapper = mountComponent(makeUser([makeProjet()]))
-      expect(wrapper.find('.project-icon').text()).toBe('📁')
+      expect(wrapper.find('.project-icon svg').exists()).toBe(true)
     })
   })
 

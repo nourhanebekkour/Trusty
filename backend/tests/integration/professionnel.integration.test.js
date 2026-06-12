@@ -42,7 +42,8 @@ describe('Integration API : Professionnel', () => {
                 nom: 'Admin',
                 prenom: 'Integration',
                 role: 'ADMINISTRATEUR',
-                status_compte: 'ACTIF'
+                status_compte: 'ACTIF',
+                email_verifie: true
             }
         });
         adminId = admin.id_utilisateur;
@@ -56,7 +57,8 @@ describe('Integration API : Professionnel', () => {
                 nom: 'Pro',
                 prenom: 'Integration',
                 role: 'PROFESSIONNEL',
-                status_compte: 'ACTIF'
+                status_compte: 'ACTIF',
+                email_verifie: true
             }
         });
         userId = user.id_utilisateur;

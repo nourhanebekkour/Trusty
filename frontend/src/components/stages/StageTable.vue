@@ -39,7 +39,7 @@
 
     <!-- Error -->
     <div v-else-if="store.error" class="error-state">
-      <span>⚠ {{ store.error }}</span>
+      <span><AppIcon name="warning" /> {{ store.error }}</span>
       <button class="filter-btn" @click="store.chargerStages">Réessayer</button>
     </div>
 
@@ -100,7 +100,7 @@
           <div class="card-fields">
 
             <div class="field-row">
-              <span class="field-label">📅 Du</span>
+              <span class="field-label"><AppIcon name="calendar" /> Du</span>
               <span class="field-value">{{ formatDate(stage.date_debut) }}</span>
               <span class="field-label">au</span>
               <span class="field-value">{{ stage.date_fin ? formatDate(stage.date_fin) : '—' }}</span>
@@ -108,24 +108,24 @@
             </div>
 
             <div v-if="stage.adresse_entreprise" class="field-row">
-              <span class="field-label">📍 Lieu</span>
+              <span class="field-label"><AppIcon name="map" /> Lieu</span>
               <span class="field-value">{{ stage.adresse_entreprise }}</span>
             </div>
 
             <div class="field-row">
-              <span class="field-label">👤 Tuteur professionnel</span>
+              <span class="field-label"><AppIcon name="user" /> Tuteur professionnel</span>
               <span class="field-value">{{ stage.encadrant_professionnel || '—' }}</span>
             </div>
 
             <div class="field-row">
-              <span class="field-label">👤 Tuteur académique</span>
+              <span class="field-label"><AppIcon name="user-check" /> Tuteur académique</span>
               <span class="field-value">{{ stage.encadrant_academique || '—' }}</span>
             </div>
 
             <!-- Missions expandable -->
             <div class="field-row field-row--col">
               <div class="field-label-row">
-                <span class="field-label">📋 Missions</span>
+                <span class="field-label"><AppIcon name="file-text" /> Missions</span>
                 <button
                   v-if="stage.missions && stage.missions.length > 100"
                   class="expand-btn"
@@ -144,10 +144,10 @@
 
             <!-- Technologies -->
             <div v-if="getTechnologies(stage).length" class="field-row field-row--col">
-              <span class="field-label">🛠️ Technologies</span>
+              <span class="field-label"><AppIcon name="wrench" /> Technologies</span>
               <div class="tech-tags">
                 <span v-for="tech in getTechnologies(stage)" :key="tech.id_technologie" class="tech-tag">
-                  <span>{{ techEmoji(tech) }}</span>
+                  <AppIcon :name="techEmoji(tech)" />
                   <span>{{ tech.nom }}</span>
                   <span v-if="tech.version" class="tech-version">v{{ tech.version }}</span>
                   <span class="tech-lvl" :class="techNiveauClass(tech.niveau_utilisation)">
@@ -162,13 +162,23 @@
 
         <!-- Card footer -->
         <div class="card-footer">
-          <label class="footer-btn upload-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            Joindre une attestation
-            <input type="file" hidden accept=".pdf,image/*" />
-          </label>
+          <template v-if="stage.rapport_url || stage.rapport?.url">
+            <a :href="stage.rapport_url || stage.rapport?.url" target="_blank" class="footer-link footer-link--has">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+              Voir le rapport
+            </a>
+          </template>
+          <template v-else>
+            <label class="footer-btn upload-btn" :class="{ 'is-uploading': uploadingStageId === stage.id_stage }">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              {{ uploadingStageId === stage.id_stage ? 'Upload en cours...' : 'Joindre un rapport' }}
+              <input type="file" hidden accept=".pdf,application/pdf" @change="(e) => onAttestationChange(stage, e)" />
+            </label>
+          </template>
         </div>
       </div>
 
@@ -200,12 +210,39 @@
 <script setup>
 import { ref } from 'vue'
 import { useStageStore, initiales, logoColor, formatDate, badgeClass, labelStatut } from '@/stores/stageStore'
+import { uploadRapport } from '@/services/stageService'
+import { getUploadErrorMessage, validateUploadFile } from '@/utils/fileUpload'
 
 const store = useStageStore()
 
 defineEmits(['voir', 'edit', 'delete'])
 
 const expandedMissions = ref(new Set())
+const uploadingStageId = ref(null)
+
+async function onAttestationChange(stage, e) {
+  const file = e.target.files?.[0]
+  if (!file) return
+
+  const fileError = validateUploadFile(file, { allowImages: false })
+  if (fileError) {
+    store.showToast(fileError, 'error')
+    e.target.value = ''
+    return
+  }
+
+  uploadingStageId.value = stage.id_stage
+  try {
+    await uploadRapport(stage.id_stage, file)
+    await store.chargerStages()
+    store.showToast('Rapport uploadé avec succès.')
+  } catch (err) {
+    store.showToast(getUploadErrorMessage(err, "Erreur lors de l'upload du rapport."), 'error')
+  } finally {
+    uploadingStageId.value = null
+    e.target.value = ''
+  }
+}
 
 function toggleMissions(id) {
   const s = new Set(expandedMissions.value)
@@ -226,12 +263,12 @@ function getTechnologies(stage) {
 
 function techEmoji(tech) {
   const map = {
-    FRONTEND: '🎨', BACKEND: '⚙️', DATABASE: '🗄️',
-    DEVOPS: '🚀', MOBILE: '📱', IA: '🤖', AI: '🤖',
-    SECURITE: '🔒', CLOUD: '☁️', TESTING: '🧪',
-    DESIGN: '✏️', AUTRE: '🔧',
+    FRONTEND: 'palette', BACKEND: 'code', DATABASE: 'database',
+    DEVOPS: 'rocket', MOBILE: 'smartphone', IA: 'sparkles', AI: 'sparkles',
+    SECURITE: 'lock', CLOUD: 'cloud', TESTING: 'test',
+    DESIGN: 'pencil', AUTRE: 'wrench',
   }
-  return map[(tech.categorie || '').toUpperCase()] ?? '🔧'
+  return map[(tech.categorie || '').toUpperCase()] ?? 'wrench'
 }
 
 function techNiveauClass(n) {
@@ -682,6 +719,38 @@ function techNiveauLabel(n) {
 }
 
 .upload-btn { cursor: pointer; }
+
+.footer-btn.is-uploading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: none;
+  transition: all 0.2s;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.footer-link:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.footer-link--has {
+  border-color: var(--color-accent-border);
+  color: var(--color-accent);
+}
 
 /* ── Empty card ── */
 .empty-card {

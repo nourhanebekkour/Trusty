@@ -31,6 +31,7 @@
         <ProfessorProjects
           :projets="store.projets"
           @valider="store.validerProjet"
+          @details="router.push('/professor/validations')"
         />
       </div>
       <aside class="content-grid__sidebar">
@@ -51,6 +52,7 @@
 
 <script setup>
 import { onMounted, ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useProfessorStore } from '@/stores/professorStore'
 import { useAuthStore }      from '@/stores/authstore'
 
@@ -90,6 +92,7 @@ const isValidName = (name) => {
   if (/<[^>]*>/.test(trimmed)) return false
   return true
 }
+const router = useRouter()
 
 const selectedStudent = ref(null)
 

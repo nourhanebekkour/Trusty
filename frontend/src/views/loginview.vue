@@ -31,6 +31,7 @@
                 </svg>
               </button>
             </div>
+            <div class="login-eyebrow"><span></span> Espace sécurisé TRUSTY</div>
             <h1 class="login-title">Bienvenue</h1>
             <p class="login-subtitle">Connectez-vous pour accéder à votre espace.</p>
           </div>
@@ -123,8 +124,14 @@
         <div class="illustration-content">
           <LoginScene />
           <div class="illustration-text">
-            <h3>Développez votre réseau</h3>
-            <p>Portfolios certifiés, recommandations et opportunités</p>
+            <span class="illustration-kicker">Votre parcours, enfin visible</span>
+            <h3>Transformez vos preuves en opportunités</h3>
+            <p>Portfolios certifiés, recommandations et connexions professionnelles dans un espace de confiance.</p>
+            <div class="illustration-benefits">
+              <span><AppIcon name="check" /> Identité vérifiée</span>
+              <span><AppIcon name="check" /> Données sécurisées</span>
+              <span><AppIcon name="check" /> Profils certifiés</span>
+            </div>
           </div>
         </div>
       </div>
@@ -168,7 +175,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import { useAuthStore } from '../stores/authstore'
 import { useRouter } from 'vue-router'
 import { authService } from '@/services/auth.service'
@@ -178,62 +185,9 @@ import { useLandingTheme } from '@/composables/useLandingTheme'
 
 const { landingMode, toggle: toggleTheme } = useLandingTheme()
 
-/* ─── 3D PARALLAX ─── */
-const mouseX = ref(0)
-const mouseY = ref(0)
-const targetX = ref(0)
-const targetY = ref(0)
-let rafId = null
-
-/* ─── PARTICLES ─── */
-const particleList = ref([])
-
-onMounted(() => {
-  for (let i = 0; i < 20; i++) {
-    particleList.value.push({
-      id: i,
-      style: {
-        left: `${Math.random() * 100}%`,
-        top: `${Math.random() * 100}%`,
-        width: `${2 + Math.random() * 3}px`,
-        height: `${2 + Math.random() * 3}px`,
-        animationDuration: `${15 + Math.random() * 20}s`,
-        animationDelay: `${-(Math.random() * 10)}s`,
-        opacity: 0.05 + Math.random() * 0.1,
-      }
-    })
-  }
-  const animate = () => {
-    mouseX.value += (targetX.value - mouseX.value) * 0.06
-    mouseY.value += (targetY.value - mouseY.value) * 0.06
-    const left = document.querySelector('.login-page .left')
-    if (left) {
-      left.style.transform = `perspective(800px) rotateY(${mouseX.value * 0.5}deg) rotateX(${-mouseY.value * 0.3}deg)`
-    }
-    rafId = requestAnimationFrame(animate)
-  }
-  rafId = requestAnimationFrame(animate)
-})
-
 onUnmounted(() => {
   clearInterval(lockTimer)
-  if (rafId) cancelAnimationFrame(rafId)
 })
-
-function handleMouseMove(e) {
-  const page = document.querySelector('.login-page')
-  if (!page) return
-  const rect = page.getBoundingClientRect()
-  const centerX = rect.left + rect.width / 2
-  const centerY = rect.top + rect.height / 2
-  targetX.value = (e.clientX - centerX) / 40
-  targetY.value = (e.clientY - centerY) / 40
-}
-
-function handleMouseLeave() {
-  targetX.value = 0
-  targetY.value = 0
-}
 
 /* ─── STATE ─── */
 const email    = ref('')
@@ -426,7 +380,7 @@ async function submitForgotPassword() {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
-  max-width: 1100px;
+  max-width: 1180px;
   width: 100%;
   min-height: 100vh;
 }
@@ -441,14 +395,24 @@ async function submitForgotPassword() {
 
 .login-card {
   width: 100%;
-  max-width: 420px;
-  padding: 40px;
-  background: var(--landing-surface);
+  max-width: 440px;
+  padding: 42px;
+  background: color-mix(in srgb, var(--landing-surface) 82%, transparent);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--landing-border);
   border-radius: 24px;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+  box-shadow: 0 35px 100px var(--landing-shadow-card), inset 0 1px var(--landing-highlight);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(145deg, var(--landing-highlight), transparent 30%);
 }
 
 .login-header {
@@ -467,15 +431,36 @@ async function submitForgotPassword() {
 }
 
 .login-title {
-  font-size: 1.8rem;
+  font-size: 2.25rem;
   font-weight: 800;
   color: var(--landing-text);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  letter-spacing: -0.04em;
 }
 
 .login-subtitle {
   font-size: 0.9rem;
   color: var(--landing-text-secondary);
+}
+
+.login-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 12px;
+  color: var(--landing-accent);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.login-eyebrow span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 12px #34d399;
 }
 
 .field {
@@ -493,8 +478,8 @@ async function submitForgotPassword() {
 
 .field input {
   width: 100%;
-  padding: 12px 16px;
-  background: var(--landing-surface);
+  padding: 14px 16px;
+  background: color-mix(in srgb, var(--landing-bg) 58%, transparent);
   border: 1px solid var(--landing-border);
   border-radius: 12px;
   color: var(--landing-text);
@@ -621,7 +606,9 @@ async function submitForgotPassword() {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 48px;
+  min-height: 52px;
+  position: relative;
+  overflow: hidden;
 }
 
 .btn-submit:not(:disabled):hover {
@@ -686,7 +673,7 @@ async function submitForgotPassword() {
 
 .illustration-content {
   text-align: center;
-  max-width: 400px;
+  max-width: 460px;
 }
 
 .illustration-text {
@@ -694,10 +681,11 @@ async function submitForgotPassword() {
 }
 
 .illustration-text h3 {
-  font-size: 1.3rem;
-  font-weight: 700;
+  font-size: 1.65rem;
+  font-weight: 800;
   color: var(--landing-text);
   margin-bottom: 8px;
+  letter-spacing: -0.03em;
 }
 
 .illustration-text p {
@@ -706,11 +694,40 @@ async function submitForgotPassword() {
   line-height: 1.6;
 }
 
+.illustration-kicker {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--landing-accent);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.illustration-benefits {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.illustration-benefits span {
+  padding: 6px 10px;
+  border: 1px solid var(--landing-border);
+  border-radius: 999px;
+  background: var(--landing-surface);
+  color: var(--landing-text-secondary);
+  font-size: 0.58rem;
+  font-weight: 700;
+  backdrop-filter: blur(10px);
+}
+
 /* ─── Modal ──────────────────────────────── */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: var(--landing-modal-overlay);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
@@ -732,7 +749,7 @@ async function submitForgotPassword() {
   max-width: 420px;
   position: relative;
   animation: modalIn 0.3s ease-out;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+  box-shadow: 0 24px 80px var(--landing-shadow-card);
 }
 
 .modal-close {

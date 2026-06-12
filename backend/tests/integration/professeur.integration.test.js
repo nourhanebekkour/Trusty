@@ -36,7 +36,8 @@ describe('Integration API : Professeur', () => {
                 nom: 'Prof',
                 prenom: 'Test',
                 role: 'PROFESSEUR',
-                status_compte: 'ACTIF'
+                status_compte: 'ACTIF',
+                email_verifie: true
             }
         });
         professeurId = profUser.id_utilisateur;
@@ -52,7 +53,8 @@ describe('Integration API : Professeur', () => {
                 nom: 'Admin',
                 prenom: 'Test',
                 role: 'ADMINISTRATEUR',
-                status_compte: 'ACTIF'
+                status_compte: 'ACTIF',
+                email_verifie: true
             }
         });
         adminId = adminUser.id_utilisateur;
@@ -68,7 +70,8 @@ describe('Integration API : Professeur', () => {
                 nom: 'Autre',
                 prenom: 'Prof',
                 role: 'PROFESSEUR',
-                status_compte: 'ACTIF'
+                status_compte: 'ACTIF',
+                email_verifie: true
             }
         });
         autreProfesseurId = autreProfUser.id_utilisateur;

@@ -144,7 +144,7 @@ describe('ProfileEditModal.vue', () => {
 
   // ── Événements émis ──────────────────────────────────────────────────────
   describe('Événements', () => {
-    it('émet "close" au clic sur le bouton ✕', async () => {
+    it('émet "close" au clic sur le bouton de fermeture', async () => {
       wrapper = mountComponent()
       await wrapper.find('.close-btn').trigger('click')
       expect(wrapper.emitted('close')).toBeTruthy()

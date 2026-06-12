@@ -39,17 +39,17 @@
             <div class="role-selector">
               <label class="role-option" :class="{ active: role === 'ETUDIANT' }">
                 <input type="radio" v-model="role" value="ETUDIANT" />
-                <span class="role-icon">🎓</span>
+                <span class="role-icon"><AppIcon name="graduation" /></span>
                 <span class="role-label">Étudiant</span>
               </label>
               <label class="role-option" :class="{ active: role === 'PROFESSEUR' }">
                 <input type="radio" v-model="role" value="PROFESSEUR" />
-                <span class="role-icon">👨‍🏫</span>
+                <span class="role-icon"><AppIcon name="users" /></span>
                 <span class="role-label">Professeur</span>
               </label>
               <label class="role-option" :class="{ active: role === 'PROFESSIONNEL' }">
                 <input type="radio" v-model="role" value="PROFESSIONNEL" />
-                <span class="role-icon">💼</span>
+                <span class="role-icon"><AppIcon name="briefcase" /></span>
                 <span class="role-label">Professionnel</span>
               </label>
             </div>

@@ -8,7 +8,7 @@
     </div>
 
     <div v-else-if="error" class="error-state">
-      <span>⚠ {{ error }}</span>
+      <span><AppIcon name="warning" /> {{ error }}</span>
     </div>
 
     <div v-else class="cards-grid">

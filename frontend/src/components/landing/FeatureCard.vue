@@ -1,7 +1,7 @@
 <template>
   <div class="feature-card-wrapper" :ref="(el) => { if (el) cardRef = el }" :class="{ visible: isVisible }" :style="{ transitionDelay: `${index * 0.08}s` }">
     <GlassCard class="feature-card" hover>
-      <div class="feature-icon">{{ icon }}</div>
+      <div class="feature-icon"><AppIcon :name="icon" :size="28" /></div>
       <h3 class="feature-title">{{ title }}</h3>
       <p class="feature-desc">{{ desc }}</p>
     </GlassCard>
@@ -39,8 +39,8 @@ const { el: cardRef, isVisible } = useIntersectionObserver()
 }
 
 .feature-icon {
-  font-size: 1.6rem;
   margin-bottom: 14px;
+  color: var(--landing-accent);
 }
 
 .feature-title {

@@ -128,7 +128,7 @@ describe('ProfileCard.vue', () => {
     it('n\'affiche pas le téléphone si undefined', () => {
       wrapper = mountComponent(makeUser({ telephone: undefined }))
       const rows = wrapper.findAll('.info-row')
-      expect(rows.find(r => r.text().includes('📞'))).toBeUndefined()
+      expect(rows.find(r => r.text().includes('+212'))).toBeUndefined()
     })
 
     it('affiche la ville si définie', () => {
@@ -140,13 +140,13 @@ describe('ProfileCard.vue', () => {
     it('n\'affiche pas la ville si undefined', () => {
       wrapper = mountComponent(makeUser({ etudiant: { ville: undefined } }))
       const rows = wrapper.findAll('.info-row')
-      expect(rows.find(r => r.text().includes('📍'))).toBeUndefined()
+      expect(rows.find(r => r.text().includes('Casablanca'))).toBeUndefined()
     })
 
     it('affiche la date d\'inscription si définie', () => {
       wrapper = mountComponent(makeUser({ date_creation: '2022-09-01T00:00:00Z' }))
       const rows = wrapper.findAll('.info-row')
-      const dateRow = rows.find(r => r.text().includes('📅'))
+      const dateRow = rows.find(r => r.text().includes('Inscrit en'))
       expect(dateRow).toBeTruthy()
       expect(dateRow.text()).toContain('2022')
     })
@@ -154,7 +154,7 @@ describe('ProfileCard.vue', () => {
     it('n\'affiche pas la date si date_creation est undefined', () => {
       wrapper = mountComponent(makeUser({ date_creation: undefined }))
       const rows = wrapper.findAll('.info-row')
-      expect(rows.find(r => r.text().includes('📅'))).toBeUndefined()
+      expect(rows.find(r => r.text().includes('Inscrit en'))).toBeUndefined()
     })
   })
 
@@ -173,7 +173,7 @@ describe('ProfileCard.vue', () => {
     it('formatDate retourne une chaîne avec l\'année en français', () => {
       wrapper = mountComponent(makeUser({ date_creation: '2023-03-01T00:00:00Z' }))
       const rows = wrapper.findAll('.info-row')
-      const dateRow = rows.find(r => r.text().includes('📅'))
+      const dateRow = rows.find(r => r.text().includes('Inscrit en'))
       expect(dateRow.text()).toContain('2023')
     })
 

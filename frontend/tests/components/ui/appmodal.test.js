@@ -48,7 +48,7 @@ describe('AppModal.vue', () => {
     expect(wrapper.find('.modal__subtitle').exists()).toBe(false)
   })
 
-  it("émet 'close' en cliquant sur le bouton ✕", async () => {
+  it("émet 'close' en cliquant sur le bouton de fermeture", async () => {
     const wrapper = mount(AppModal, {
       props: defaultProps,
       global: { stubs: { Teleport: true } },

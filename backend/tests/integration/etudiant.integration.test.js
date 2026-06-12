@@ -32,7 +32,8 @@ describe('Integration API : Profil Étudiant', () => {
                 nom: 'Test',
                 prenom: 'Integration',
                 role: 'ETUDIANT',
-                status_compte: 'ACTIF'
+                status_compte: 'ACTIF',
+                email_verifie: true
             }
         });
         utilisateurId = user.id_utilisateur;
@@ -45,7 +46,8 @@ describe('Integration API : Profil Étudiant', () => {
                 nom: 'Admin',
                 prenom: 'Integration',
                 role: 'ADMINISTRATEUR',
-                status_compte: 'ACTIF'
+                status_compte: 'ACTIF',
+                email_verifie: true
             }
         });
         adminId = admin.id_utilisateur;

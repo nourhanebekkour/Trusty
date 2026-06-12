@@ -6,7 +6,7 @@
         <p class="page__subtitle">Toutes les actions de certification et d'audit sur la plateforme.</p>
       </div>
       <div class="page__actions">
-        <button class="btn btn--secondary" @click="load" :disabled="admin.loading">🔄 Rafraîchir</button>
+        <button class="btn btn--secondary" @click="load"><AppIcon name="refresh" /> Rafraîchir</button>
       </div>
     </div>
 

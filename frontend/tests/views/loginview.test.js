@@ -8,6 +8,11 @@ vi.mock('@/stores/authstore', () => ({
   useAuthStore: vi.fn(),
 }))
 
+
+import { useAuthStore } from '../../src/stores/authstore'
+// Cas nominal
+import LoginView from '../../src/views/loginview.vue'
+
 import { useAuthStore } from '@/stores/authstore'
 import LoginView from '@/views/loginview.vue'
 

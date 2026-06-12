@@ -8,7 +8,7 @@
     <div class="badges-grid" v-if="badges.length">
       <div class="badge-card" v-for="eb in badges" :key="eb.badge.id_badge">
         <div class="badge-icon-wrap" :style="{ background: categoryColor(eb.badge.categorie).bg }">
-          <span>{{ eb.badge.icone_url ?? '🏅' }}</span>
+          <AppIcon name="award" />
         </div>
         <div class="badge-info">
           <p class="badge-title">{{ eb.badge.nom }}</p>
@@ -21,14 +21,14 @@
     </div>
 
     <div class="empty-badges" v-else>
-      <span class="empty-icon">🏅</span>
+      <span class="empty-icon"><AppIcon name="award" :size="32" /></span>
       <p>Aucun badge certifié pour l'instant.</p>
       <p class="empty-sub">Complétez vos projets et activités pour en obtenir.</p>
     </div>
 
     <div class="generate-box">
       <div class="gen-left">
-        <div class="gen-icon">✨</div>
+        <div class="gen-icon"><AppIcon name="sparkles" :size="24" /></div>
         <div>
           <h4>Générer mon portfolio</h4>
           <p>Créez un portfolio professionnel certifié à partir de vos projets et badges validés.</p>

@@ -129,13 +129,13 @@ const router = createRouter({
       path: '/profile',
       name: 'profile',
       component: Profile,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
       path: '/projets',
       name: 'projets',
       component: ProjectList,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
       path: '/projets/:id',
@@ -148,7 +148,7 @@ const router = createRouter({
       path: '/settings',
       name: 'settings',
       component: Settings,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
       path: '/recommendations',
@@ -178,6 +178,7 @@ const router = createRouter({
       path: '/parcours',
       name: 'parcours',
       component: Parcours,
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
       path: '/portfolio',
@@ -194,6 +195,7 @@ const router = createRouter({
       path: '/activites',
       name: 'activites',
       component: activites,
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
 
     // ── Professional ─────────────────────────────────────
@@ -320,8 +322,9 @@ router.beforeEach(async (to) => {
 
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const allowedRoles = to.matched.flatMap(record => record.meta.roles ?? [])
+  const isPublicPortfolio = to.name === 'portfolio-template1'
 
-  if (authStore.isAuthenticated) {
+  if (authStore.isAuthenticated && !isPublicPortfolio) {
     if (authStore.isAdmin && !to.path.startsWith('/admin')) {
       return '/admin/dashboard'
     } else if (authStore.isProfesseur && !to.path.startsWith('/professor')) {

@@ -2,7 +2,7 @@
   <div class="card">
     <div class="section-header">
       <h3>Projets Académiques</h3>
-      <button class="add-btn" @click="router.push('/projets/nouveau')">+ Ajouter</button>
+      <button class="add-btn" @click="router.push({ path: '/projets', query: { action: 'new' } })">+ Ajouter</button>
     </div>
 
     <!-- Chargement -->
@@ -20,7 +20,7 @@
         style="cursor:pointer"
       >
         <div class="project-info">
-          <span class="project-icon">{{ typeIcon(pp.projet?.type_projet ?? pp.type_projet) }}</span>
+          <span class="project-icon"><AppIcon :name="typeIcon(pp.projet?.type_projet ?? pp.type_projet)" /></span>
           <div>
             <p class="project-title">{{ pp.projet?.titre ?? pp.titre }}</p>
             <p class="project-desc">
@@ -34,7 +34,7 @@
           <span class="status" :class="statusClass(pp.projet?.status_validation ?? pp.status_validation)">
             {{ formatStatut(pp.projet?.status_validation ?? pp.status_validation) }}
           </span>
-          <span class="creator-badge" v-if="pp.est_createur">👑 Créateur</span>
+          <span class="creator-badge" v-if="pp.est_createur"><AppIcon name="crown" /> Créateur</span>
         </div>
       </div>
 
@@ -80,15 +80,15 @@ const statusClass = (s) => ({
 })
 
 const typeIcon = (type) => ({
-  MODULE:      '📚',
-  INTEGRATION: '🔗',
-  PFA:         '🎓',
-  PFE:         '🏆',
-  STAGE:       '💼',
-  PERSONNEL:   '💡',
-  HACKATHON:   '⚡',
-  AUTRE:       '📁',
-}[type] ?? '📁')
+  MODULE:      'book',
+  INTEGRATION: 'link',
+  PFA:         'graduation',
+  PFE:         'award',
+  STAGE:       'briefcase',
+  PERSONNEL:   'lightbulb',
+  HACKATHON:   'zap',
+  AUTRE:       'folder',
+}[type] ?? 'folder')
 
 const goToProjet = (pp) => {
   const id = pp.projet?.id_projet ?? pp.id_projet
