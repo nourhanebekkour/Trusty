@@ -352,9 +352,7 @@ export async function updateProfessorProfile(professorId, data) {
 export async function uploadProfessorAvatar(professorId, file) {
   const formData = new FormData()
   formData.append('fichier', file)
-  const res = await api.post(`/professeurs/${professorId}/avatar`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
+  const res = await api.post(`/professeurs/${professorId}/avatar`, formData)
   return getData(res)
 }
 

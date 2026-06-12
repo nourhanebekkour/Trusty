@@ -13,6 +13,7 @@ const STAGE_ALLOWED_FIELDS = [
   'encadrant_professionnel', 'encadrant_academique',
   'duree_semaines', 'date_debut', 'date_fin',
   'missions', 'est_public', 'status_validation',
+  'id_rapport', 'rapport', 'rapport_url', 'technologies',
   'createdAt', 'updatedAt', 'etudiant',
 ]
 
@@ -147,7 +148,6 @@ export async function uploadRapport(stageId, file, onProgress) {
   const formData = new FormData()
   formData.append('fichier', file)
   const res = await api.post(`/stages/${stageId}/rapport`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
     onUploadProgress: onProgress,
   })
   return res.data?.data ?? res.data

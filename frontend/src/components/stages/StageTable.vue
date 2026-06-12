@@ -176,7 +176,7 @@
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
               </svg>
               {{ uploadingStageId === stage.id_stage ? 'Upload en cours...' : 'Joindre un rapport' }}
-              <input type="file" hidden accept=".pdf,image/*" @change="(e) => onAttestationChange(stage, e)" />
+              <input type="file" hidden accept=".pdf,application/pdf" @change="(e) => onAttestationChange(stage, e)" />
             </label>
           </template>
         </div>
@@ -211,6 +211,7 @@
 import { ref } from 'vue'
 import { useStageStore, initiales, logoColor, formatDate, badgeClass, labelStatut } from '@/stores/stageStore'
 import { uploadRapport } from '@/services/stageService'
+import { getUploadErrorMessage, validateUploadFile } from '@/utils/fileUpload'
 
 const store = useStageStore()
 
@@ -223,26 +224,20 @@ async function onAttestationChange(stage, e) {
   const file = e.target.files?.[0]
   if (!file) return
 
-  const maxSize = 10 * 1024 * 1024
-  if (file.size > maxSize) {
-    store.showToast('Le fichier ne doit pas dépasser 10 Mo.', 'error')
+  const fileError = validateUploadFile(file, { allowImages: false })
+  if (fileError) {
+    store.showToast(fileError, 'error')
     e.target.value = ''
     return
   }
 
   uploadingStageId.value = stage.id_stage
   try {
-    const result = await uploadRapport(stage.id_stage, file)
-    const fileData = result?.data ?? result
-    if (fileData?.url) {
-      stage.rapport_url = fileData.url
-    }
+    await uploadRapport(stage.id_stage, file)
+    await store.chargerStages()
     store.showToast('Rapport uploadé avec succès.')
   } catch (err) {
-    store.showToast(
-      err.response?.data?.message || "Erreur lors de l'upload du rapport.",
-      'error'
-    )
+    store.showToast(getUploadErrorMessage(err, "Erreur lors de l'upload du rapport."), 'error')
   } finally {
     uploadingStageId.value = null
     e.target.value = ''

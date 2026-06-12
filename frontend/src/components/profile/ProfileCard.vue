@@ -20,6 +20,7 @@
       <!-- Badge rôle -->
       <span class="role-badge">{{ roleLabel }}</span>
     </div>
+    <p v-if="avatarError" class="avatar-error">{{ avatarError }}</p>
 
     <div class="profile-info">
       <h2>{{ user.prenom }} {{ user.nom }}</h2>
@@ -92,16 +93,25 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { validateUploadFile } from '@/utils/fileUpload'
 
 const props = defineProps({ user: Object })
 const emit  = defineEmits(['edit', 'avatar-change'])
 
 const fileInput = ref(null)
+const avatarError = ref(null)
 const triggerAvatarInput = () => fileInput.value?.click()
 
 const onFileChange = (e) => {
   const file = e.target.files?.[0]
   if (!file) return
+  const fileError = validateUploadFile(file, { allowPdf: false })
+  if (fileError) {
+    avatarError.value = fileError
+    e.target.value = ''
+    return
+  }
+  avatarError.value = null
   emit('avatar-change', file)
   e.target.value = ''
 }
@@ -202,6 +212,13 @@ const visibilityClass = computed(() => ({
   transition: opacity .2s;
 }
 .avatar:hover .avatar-overlay { opacity: 1; }
+
+.avatar-error {
+  margin: 8px 16px 0;
+  color: #c45a5a;
+  font-size: 12px;
+  text-align: center;
+}
 
 .role-badge {
   position: absolute;

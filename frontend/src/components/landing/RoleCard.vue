@@ -1,7 +1,7 @@
 <template>
   <div class="role-card-wrapper" :ref="(el) => { if (el) cardRef = el }" :class="{ visible: isVisible }">
     <GlassCard class="role-card" hover>
-      <div class="role-icon">{{ icon }}</div>
+      <div class="role-icon"><AppIcon :name="icon" :size="38" :stroke-width="1.7" /></div>
       <h3 class="role-title">{{ title }}</h3>
       <p class="role-desc">{{ desc }}</p>
     </GlassCard>
@@ -41,8 +41,8 @@ const { el: cardRef, isVisible } = useIntersectionObserver()
 }
 
 .role-icon {
-  font-size: 2.5rem;
   margin-bottom: 16px;
+  color: var(--landing-accent);
   filter: drop-shadow(0 0 12px var(--landing-glow));
 }
 

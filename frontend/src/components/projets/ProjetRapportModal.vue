@@ -19,11 +19,12 @@
           <div class="upload-zone" :class="{ 'upload-zone--active': dragging }"
                @dragover.prevent="dragging = true"
                @dragleave="dragging = false"
-               @drop.prevent="onDrop">
+               @drop.prevent="onDrop"
+               @click="$refs.fileInput.click()">
             <input
               ref="fileInput"
               type="file"
-              accept=".pdf,.doc,.docx,.zip,.png,.jpg,.jpeg"
+              accept=".pdf,image/*"
               class="file-input-hidden"
               @change="onFileChange"
             />
@@ -36,7 +37,7 @@
               <span v-if="selectedFile">{{ selectedFile.name }}</span>
               <span v-else>Cliquez ou glissez un fichier ici</span>
             </div>
-            <button v-if="selectedFile" class="upload-clear" @click="selectedFile = null">×</button>
+            <button v-if="selectedFile" class="upload-clear" @click.stop="clearSelectedFile">×</button>
           </div>
 
           <div class="separator-text">ou</div>
@@ -76,6 +77,7 @@
 
 <script>
 import api from '@/api'
+import { getUploadErrorMessage, validateUploadFile } from '@/utils/fileUpload'
 
 export default {
   name: 'ProjetRapportModal',
@@ -119,9 +121,9 @@ export default {
     onFileChange(e) {
       const file = e.target.files?.[0]
       if (file) {
-        const maxSize = 20 * 1024 * 1024
-        if (file.size > maxSize) {
-          this.uploadError = 'Le fichier ne doit pas dépasser 20 Mo.'
+        const validationError = validateUploadFile(file)
+        if (validationError) {
+          this.uploadError = validationError
           e.target.value = ''
           return
         }
@@ -134,14 +136,19 @@ export default {
       this.dragging = false
       const file = e.dataTransfer?.files?.[0]
       if (file) {
-        const maxSize = 20 * 1024 * 1024
-        if (file.size > maxSize) {
-          this.uploadError = 'Le fichier ne doit pas dépasser 20 Mo.'
+        const validationError = validateUploadFile(file)
+        if (validationError) {
+          this.uploadError = validationError
           return
         }
         this.selectedFile = file
       }
       this.uploadError = null
+    },
+
+    clearSelectedFile() {
+      this.selectedFile = null
+      if (this.$refs.fileInput) this.$refs.fileInput.value = ''
     },
 
     async save() {
@@ -150,21 +157,15 @@ export default {
       try {
         const data = {}
         if (this.selectedFile) {
-          if (this.projetId) {
-            const formData = new FormData()
-            formData.append('fichier', this.selectedFile)
-            const res = await api.post(`/projets/${this.projetId}/fichiers`, formData, {
-              headers: { 'Content-Type': 'multipart/form-data' },
-            })
-            const fileData = res.data?.data ?? res.data
-            data.url = fileData?.url || fileData?.nom_fichier || ''
-            data.nom = this.selectedFile.name
-            data.type = 'file'
-          } else {
-            data.nom = this.selectedFile.name
-            data.url = URL.createObjectURL(this.selectedFile)
-            data.type = 'file'
-          }
+          if (!this.projetId) throw new Error('Projet introuvable. Rechargez la page puis reessayez.')
+
+          const formData = new FormData()
+          formData.append('fichier', this.selectedFile)
+          const res = await api.post(`/projets/${this.projetId}/fichiers`, formData)
+          const fileData = res.data?.data ?? res.data
+          data.url = fileData?.url || fileData?.nom_fichier || ''
+          data.nom = this.selectedFile.name
+          data.type = 'file'
         } else if (this.rapportUrl.trim()) {
           data.url = this.rapportUrl.trim()
           data.type = 'url'
@@ -172,7 +173,7 @@ export default {
         this.$emit('save', data)
         this.close()
       } catch (err) {
-        this.uploadError = err.response?.data?.message || "Erreur lors de l'upload."
+        this.uploadError = getUploadErrorMessage(err, err.message || "Erreur lors de l'upload.")
       } finally {
         this.saving = false
       }

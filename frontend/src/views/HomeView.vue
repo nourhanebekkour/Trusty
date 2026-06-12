@@ -33,7 +33,9 @@
               <span>ML</span><span>YK</span><span>SA</span><span>+2k</span>
             </div>
             <div>
-              <div class="trust-stars">★★★★★</div>
+              <div class="trust-stars" aria-label="5 étoiles">
+                <AppIcon v-for="n in 5" :key="n" name="star" :size="14" />
+              </div>
               <p>Une expérience pensée avec les étudiants et les recruteurs</p>
             </div>
           </div>
@@ -67,19 +69,19 @@
       </p>
       <div class="spaces-grid">
         <RoleCard
-          icon="🎓"
+          icon="graduation"
           title="Espace Étudiant"
           desc="Gérez votre portfolio, vos projets, stages et recommandations en un seul endroit."
           :index="0"
         />
         <RoleCard
-          icon="👨‍🏫"
+          icon="users"
           title="Espace Professeur"
           desc="Validez les compétences, suivez vos étudiants et recommandez leurs travaux."
           :index="1"
         />
         <RoleCard
-          icon="💼"
+          icon="briefcase"
           title="Espace Professionnel"
           desc="Consultez les portfolios certifiés et recommandez les talents prometteurs."
           :index="2"
@@ -140,12 +142,12 @@ import StepCard from '@/components/landing/StepCard.vue'
 import FooterLanding from '@/components/landing/FooterLanding.vue'
 
 const features = [
-  { icon: '📁', title: 'Portfolios étudiants', desc: 'Créez et gérez votre portfolio numérique avec projets, stages et compétences validés.' },
-  { icon: '⭐', title: 'Recommandations', desc: 'Recevez des recommandations de vos professeurs et professionnels du secteur.' },
-  { icon: '🏫', title: 'Suivi établissement', desc: 'Les professeurs valident et suivent les progrès de chaque étudiant.' },
-  { icon: '👔', title: 'Consultation professionnelle', desc: 'Les professionnels accèdent aux portfolios certifiés pour trouver les talents.' },
-  { icon: '🔔', title: 'Notifications unifiées', desc: 'Restez informé des validations, recommandations et mises à jour en temps réel.' },
-  { icon: '⚙️', title: 'Paramètres unifiés', desc: 'Gérez votre profil, vos préférences et votre confidentialité depuis un seul endroit.' },
+  { icon: 'folder', title: 'Portfolios étudiants', desc: 'Créez et gérez votre portfolio numérique avec projets, stages et compétences validés.' },
+  { icon: 'star', title: 'Recommandations', desc: 'Recevez des recommandations de vos professeurs et professionnels du secteur.' },
+  { icon: 'building', title: 'Suivi établissement', desc: 'Les professeurs valident et suivent les progrès de chaque étudiant.' },
+  { icon: 'briefcase', title: 'Consultation professionnelle', desc: 'Les professionnels accèdent aux portfolios certifiés pour trouver les talents.' },
+  { icon: 'bell', title: 'Notifications unifiées', desc: 'Restez informé des validations, recommandations et mises à jour en temps réel.' },
+  { icon: 'settings', title: 'Paramètres unifiés', desc: 'Gérez votre profil, vos préférences et votre confidentialité depuis un seul endroit.' },
 ]
 
 const steps = [

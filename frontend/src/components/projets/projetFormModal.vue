@@ -400,7 +400,7 @@
           <!-- STEP 6: Fichiers (step 5 en mode édition) -->
           <div v-show="currentStep === 6 || (editMode && currentStep === 5)" class="step-content">
             <div class="section-hint">
-              Ajoutez des fichiers à votre projet (PDF, images, archives…).
+              Ajoutez des fichiers à votre projet (PDF ou images, 10 Mo maximum).
             </div>
 
             <div
@@ -415,13 +415,14 @@
                 ref="fileInput"
                 type="file"
                 multiple
+                accept=".pdf,image/*"
                 class="file-input-hidden"
                 @change="onFileInputChange"
               />
               <div class="upload-zone-inner">
                 <span class="upload-icon">📁</span>
                 <p class="upload-label">Glissez vos fichiers ici ou <span class="upload-link">cliquez pour parcourir</span></p>
-                <p class="upload-hint">Tous types de fichiers acceptés</p>
+                <p class="upload-hint">PDF et images, 10 Mo maximum par fichier</p>
               </div>
             </div>
 
@@ -475,6 +476,7 @@
             <div v-if="!pendingFiles.length && !uploadedFiles.length && !uploadingFiles.length" class="empty-hint">
               Aucun fichier ajouté.
             </div>
+            <p v-if="uploadError" class="form-error">{{ uploadError }}</p>
           </div>
 
         </div>
@@ -581,6 +583,7 @@
 <script>
 import { emptyForm } from './projetHelpers'
 import api from '@/api'
+import { getUploadErrorMessage, validateUploadFile } from '@/utils/fileUpload'
 
 const ECOLES = ['ENSATanger', 'ENSIAS', 'ENSEM', 'ENSA Marrakech', 'ENSA Agadir', 'ENSA Fès', 'ENSA Oujda']
 
@@ -681,6 +684,7 @@ export default {
       isDragOver: false,
       deletingFileId: null,
       techError: null,
+      uploadError: null,
     }
   },
 
@@ -1164,10 +1168,17 @@ export default {
       e.target.value = ''
     },
     addFiles(files) {
+      const validFiles = files.filter((file) => {
+        const error = validateUploadFile(file)
+        if (error) this.uploadError = `${file.name || 'Fichier'} : ${error}`
+        return !error
+      })
+      if (!validFiles.length) return
+      this.uploadError = null
       if (this.activeProjetId) {
-        this.uploadFiles(files)
+        this.uploadFiles(validFiles)
       } else {
-        this.pendingFiles.push(...files)
+        this.pendingFiles.push(...validFiles)
       }
     },
     removePendingFile(idx) {
@@ -1182,14 +1193,14 @@ export default {
         formData.append('fichier', file)
         try {
           await api.post(`/projets/${this.activeProjetId}/fichiers`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
             onUploadProgress: (e) => {
-              entry.progress = Math.round((e.loaded / e.total) * 100)
+              if (e.total) entry.progress = Math.round((e.loaded / e.total) * 100)
             },
           })
           await this.fetchUploadedFiles()
         } catch (e) {
           console.error('Erreur upload fichier', e)
+          this.uploadError = `${file.name} : ${getUploadErrorMessage(e)}`
         } finally {
           const idx = this.uploadingFiles.indexOf(entry)
           if (idx !== -1) this.uploadingFiles.splice(idx, 1)

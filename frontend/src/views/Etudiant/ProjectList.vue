@@ -317,10 +317,11 @@ function openRapportModal(projet) {
   showRapportModal.value = true
 }
 
-function handleRapportSave(data) {
+async function handleRapportSave(data) {
   const p = rapportTarget.value
   if (!p) return
   p.rapport = data.url || data.nom
+  await store.fetchProjets(idEtudiant)
   rapportTarget.value = null
 }
 

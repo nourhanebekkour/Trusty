@@ -382,6 +382,7 @@
 
 <script>
 import api from '@/api'
+import { getUploadErrorMessage, validateUploadFile } from '@/utils/fileUpload'
 import {
   emptyForm, buildPayload,
   niveauLabel, niveauClass,
@@ -453,6 +454,7 @@ export default {
       rapportFileName: '',
       isDragOver: false,
       pendingRapportFile: null,
+      validationError: null,
     }
   },
 
@@ -825,10 +827,16 @@ export default {
     },
 
     async uploadRapportFile(file) {
+      const fileError = validateUploadFile(file, { allowImages: false })
+      if (fileError) {
+        this.validationError = fileError
+        return false
+      }
+      this.validationError = null
       if (!this.activeStageId) {
         this.pendingRapportFile = file
         this.rapportFileName = file.name
-        return
+        return true
       }
       this.rapportUploading = true
       this.rapportProgress = 0
@@ -837,9 +845,8 @@ export default {
         const formData = new FormData()
         formData.append('fichier', file)
         const res = await api.post(`/stages/${this.activeStageId}/rapport`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
           onUploadProgress: (e) => {
-            this.rapportProgress = Math.round((e.loaded / e.total) * 100)
+            if (e.total) this.rapportProgress = Math.round((e.loaded / e.total) * 100)
           },
         })
         const fileData = res.data?.data ?? res.data
@@ -848,8 +855,11 @@ export default {
         } else {
           await this.refreshRapportUrl()
         }
+        return true
       } catch (e) {
         console.error('Erreur upload rapport', e)
+        this.validationError = getUploadErrorMessage(e, "Erreur lors de l'upload du rapport.")
+        return false
       } finally {
         this.rapportUploading = false
       }
@@ -894,7 +904,8 @@ export default {
         }
       }
       if (this.pendingRapportFile && this.activeStageId) {
-        await this.uploadRapportFile(this.pendingRapportFile)
+        const uploaded = await this.uploadRapportFile(this.pendingRapportFile)
+        if (!uploaded) return
         this.pendingRapportFile = null
       }
       this.$emit('update:modelValue', false)

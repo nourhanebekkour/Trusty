@@ -44,17 +44,18 @@ export const useActivitesStore = defineStore('activites', {
   actions: {
     async fetchActivites() {
       if (!this.currentEtudiantId) {
-        this.activites = getDemoActivites();
+        this.activites = [];
         return;
       }
       this.loading = true;
       this.error = null;
       try {
         const result = await activitesService.getActivitesByEtudiant(this.currentEtudiantId);
-        this.activites = Array.isArray(result) ? result : (result?.data ?? getDemoActivites());
+        const items = Array.isArray(result) ? result : (result?.data ?? []);
+        this.activites = Array.isArray(items) ? items.map(normalizeActivite) : [];
       } catch (e) {
         this.error = e.message;
-        this.activites = getDemoActivites();
+        this.activites = [];
       } finally {
         this.loading = false;
       }
@@ -100,21 +101,25 @@ export const useActivitesStore = defineStore('activites', {
     },
 
     async uploadAttestation(id, file) {
+      this.error = null;
       try {
-        await activitesService.uploadAttestation(id, file);
-      } catch {}
-      finally {
-        const idx = this.activites.findIndex((a) => a.id === id);
-        if (idx !== -1) this.activites[idx].has_attestation = true;
+        const result = await activitesService.uploadAttestation(id, file);
+        await this.fetchActivites();
+        return result;
+      } catch (e) {
+        this.error = e.response?.data?.message || e.message;
+        throw e;
       }
     },
 
     async removeAttestation(id) {
       try {
         await activitesService.deleteAttestation(id);
-      } catch {}
-      const idx = this.activites.findIndex((a) => a.id === id);
-      if (idx !== -1) this.activites[idx].has_attestation = false;
+        await this.fetchActivites();
+      } catch (e) {
+        this.error = e.response?.data?.message || e.message;
+        throw e;
+      }
     },
 
     setFilter(filter) {
@@ -123,33 +128,12 @@ export const useActivitesStore = defineStore('activites', {
   },
 });
 
-function getDemoActivites() {
-  return [
-    {
-      id: '1',
-      type_activite: 'EVENEMENT',
-      nom_activite: 'Forum Entreprises ENSA 2024',
-      organisation: 'ENSA Tanger',
-      role: 'Coordinateur logistique',
-      description: "Coordination de l'accueil des entreprises partenaires.",
-      date_debut: '2024-04-01',
-      date_fin: '2024-04-30',
-      statut: 'EN_ATTENTE',
-      has_attestation: false,
-      est_public: true,
-    },
-    {
-      id: '2',
-      type_activite: 'HACKATHON',
-      nom_activite: 'Hackathon IA Maroc 2024',
-      organisation: 'Technopark Tanger',
-      role: 'Participant',
-      description: 'Développement d\'une solution IA en 48h. Classé 2ème sur 30 équipes.',
-      date_debut: '2024-03-01',
-      date_fin: '2024-03-31',
-      statut: 'VALIDEE',
-      has_attestation: true,
-      est_public: true,
-    },
-  ];
+function normalizeActivite(activite) {
+  return {
+    ...activite,
+    id: activite.id ?? activite.id_activite,
+    statut: activite.statut ?? activite.status_validation,
+    has_attestation: activite.has_attestation
+      ?? Boolean(activite.id_attestation || activite.attestation),
+  };
 }
