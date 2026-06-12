@@ -60,7 +60,7 @@
     </div>
 
     <div class="floating-card floating-card--validation">
-      <span class="floating-icon">✓</span>
+      <span class="floating-icon"><AppIcon name="check" /></span>
       <div><strong>Compétence validée</strong><small>Architecture logicielle</small></div>
     </div>
 

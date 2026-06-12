@@ -8,7 +8,7 @@
       <div class="avatar" @click="triggerAvatarInput" title="Changer la photo">
         <img v-if="user.photo" :src="user.photo" :alt="`${user.prenom} ${user.nom}`" />
         <span v-else class="initials">{{ getInitials(`${user.prenom} ${user.nom}`) }}</span>
-        <div class="avatar-overlay">📷</div>
+        <div class="avatar-overlay"><AppIcon name="camera" /></div>
       </div>
       <input
         ref="fileInput"
@@ -31,7 +31,7 @@
 
       <!-- Objectif professionnel -->
       <p class="objectif" v-if="user.etudiant?.objectif_professionnel">
-        🎯 {{ user.etudiant.objectif_professionnel }}
+        <AppIcon name="target" /> {{ user.etudiant.objectif_professionnel }}
       </p>
 
       <!-- Biographie -->
@@ -41,17 +41,17 @@
 
       <!-- Infos de contact -->
       <div class="info-list">
-        <div class="info-row"><span class="info-icon">✉</span><span>{{ user.email }}</span></div>
-        <div class="info-row" v-if="user.telephone"><span class="info-icon">📞</span><span>{{ user.telephone }}</span></div>
+        <div class="info-row"><span class="info-icon"><AppIcon name="mail" /></span><span>{{ user.email }}</span></div>
+        <div class="info-row" v-if="user.telephone"><span class="info-icon"><AppIcon name="phone" /></span><span>{{ user.telephone }}</span></div>
         <div class="info-row" v-if="user.etudiant?.ville">
-          <span class="info-icon">📍</span>
+          <span class="info-icon"><AppIcon name="map" /></span>
           <span>{{ user.etudiant.ville }}<template v-if="user.etudiant?.pays && user.etudiant.pays !== 'Maroc'">, {{ user.etudiant.pays }}</template></span>
         </div>
         <div class="info-row" v-if="user.etudiant?.numero_etudiant">
-          <span class="info-icon">🎓</span><span>{{ user.etudiant.numero_etudiant }}</span>
+          <span class="info-icon"><AppIcon name="graduation" /></span><span>{{ user.etudiant.numero_etudiant }}</span>
         </div>
         <div class="info-row" v-if="user.date_creation">
-          <span class="info-icon">📅</span><span>Inscrit en {{ formatDate(user.date_creation) }}</span>
+          <span class="info-icon"><AppIcon name="calendar" /></span><span>Inscrit en {{ formatDate(user.date_creation) }}</span>
         </div>
       </div>
 
@@ -70,23 +70,23 @@
           target="_blank"
           rel="noopener"
           class="social-btn github"
-        >⚙ GitHub</a>
+        ><AppIcon name="github" /> GitHub</a>
         <a
           v-if="user.etudiant?.site_web"
           :href="user.etudiant.site_web"
           target="_blank"
           rel="noopener"
           class="social-btn site"
-        >🌐 Site web</a>
+        ><AppIcon name="globe" /> Site web</a>
       </div>
 
       <!-- Visibilité profil -->
       <div class="visibility-row" v-if="user.etudiant?.visibilite_profil">
         <span class="visibility-dot" :class="visibilityClass"></span>
-        <span class="visibility-label">{{ visibilityLabel }}</span>
+        <span class="visibility-label"><AppIcon :name="visibilityIcon" /> {{ visibilityLabel }}</span>
       </div>
 
-      <button class="btn-edit" @click="$emit('edit')">✏️ Modifier le profil</button>
+      <button class="btn-edit" @click="$emit('edit')"><AppIcon name="pencil" /> Modifier le profil</button>
     </div>
   </div>
 </template>
@@ -130,11 +130,18 @@ const roleLabel = computed(() => ({
 }[props.user.role] ?? props.user.role))
 
 const visibilityLabel = computed(() => ({
-  PUBLIC:                 '👁 Profil public',
-  PRIVE:                  '🔒 Profil privé',
-  ENSEIGNANTS_UNIQUEMENT: '🏫 Enseignants uniquement',
-  LIEN_PARTAGE:           '🔗 Accès par lien',
+  PUBLIC:                 'Profil public',
+  PRIVE:                  'Profil privé',
+  ENSEIGNANTS_UNIQUEMENT: 'Enseignants uniquement',
+  LIEN_PARTAGE:           'Accès par lien',
 }[props.user.etudiant?.visibilite_profil] ?? ''))
+
+const visibilityIcon = computed(() => ({
+  PUBLIC: 'eye',
+  PRIVE: 'lock',
+  ENSEIGNANTS_UNIQUEMENT: 'building',
+  LIEN_PARTAGE: 'link',
+}[props.user.etudiant?.visibilite_profil] ?? 'eye'))
 
 const visibilityClass = computed(() => ({
   PUBLIC:                 'dot-green',

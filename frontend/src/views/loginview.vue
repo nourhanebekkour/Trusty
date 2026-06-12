@@ -128,9 +128,9 @@
             <h3>Transformez vos preuves en opportunités</h3>
             <p>Portfolios certifiés, recommandations et connexions professionnelles dans un espace de confiance.</p>
             <div class="illustration-benefits">
-              <span>✓ Identité vérifiée</span>
-              <span>✓ Données sécurisées</span>
-              <span>✓ Profils certifiés</span>
+              <span><AppIcon name="check" /> Identité vérifiée</span>
+              <span><AppIcon name="check" /> Données sécurisées</span>
+              <span><AppIcon name="check" /> Profils certifiés</span>
             </div>
           </div>
         </div>

@@ -9,7 +9,7 @@
       <div class="network-center">
         <div class="profile-ring">
           <div class="profile-avatar">ML</div>
-          <span class="profile-check">✓</span>
+          <span class="profile-check"><AppIcon name="check" :size="12" /></span>
         </div>
         <strong>Profil certifié</strong>
         <small>Score de crédibilité 92/100</small>
@@ -30,7 +30,7 @@
         <div><strong>6</strong><span>recommandations</span></div>
       </div>
     </div>
-    <div class="scene-note scene-note--top">Portfolio publié <span>✓</span></div>
+    <div class="scene-note scene-note--top">Portfolio publié <span><AppIcon name="check" :size="12" /></span></div>
     <div class="scene-note scene-note--bottom"><span>+24%</span> de visibilité</div>
   </div>
 </template>

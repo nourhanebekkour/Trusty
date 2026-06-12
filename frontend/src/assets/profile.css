@@ -260,7 +260,7 @@
   color: var(--color-text-tertiary);
 }
 
-/* BODY SCROLLABLE 👇 IMPORTANT */
+/* Corps de page defilable */
 .modal-body {
   display: flex;
   flex-direction: column;

@@ -98,11 +98,11 @@
             <td>
               <div class="action-btns">
                 <button class="btn btn--icon btn--sm" title="Activer/Suspendre"
-                        @click="handleToggleStatus(user)">🔒</button>
+                        @click="handleToggleStatus(user)"><AppIcon name="lock" /></button>
                 <button class="btn btn--icon btn--sm" title="Changer rôle"
-                        @click="handleChangeRole(user)">🔄</button>
+                        @click="handleChangeRole(user)"><AppIcon name="refresh" /></button>
                 <button class="btn btn--icon btn--sm" title="Supprimer"
-                        @click="handleDelete(user.id_utilisateur)">🗑</button>
+                        @click="handleDelete(user.id_utilisateur)"><AppIcon name="trash" /></button>
               </div>
             </td>
           </tr>
@@ -216,7 +216,7 @@
                    minlength="8" maxlength="128"
                    :class="{ 'input--error': v$.password.$error }"
                    @blur="v$.password.$touch()" />
-            <button type="button" class="input-group__btn" @click="showPwd = !showPwd">👁</button>
+            <button type="button" class="input-group__btn" @click="showPwd = !showPwd"><AppIcon name="eye" /></button>
             <button type="button" class="input-group__btn" @click="generatePassword">↻ Générer</button>
           </div>
           <span v-if="v$.password.$error" class="field-error">Min. 8 caractères requis</span>

@@ -203,7 +203,7 @@
                         <div class="pf2-project-body">
                             <div class="pf2-project-meta">
                                 <span class="pf2-project-cat">{{ project.category }}</span>
-                                <span v-if="project.certified" class="pf2-cert-badge">✦ Certifié {{ project.institution }}</span>
+                                <span v-if="project.certified" class="pf2-cert-badge"><AppIcon name="shield" /> Certifié {{ project.institution }}</span>
                                 <span v-else class="pf2-pending-badge">En attente</span>
                             </div>
                             <h3 class="pf2-project-title">{{ project.title }}</h3>
@@ -306,7 +306,7 @@
                                     <p class="pf2-stage__duration">{{ stage.duration }}</p>
                                 </div>
                                 <div class="pf2-stage__badges">
-                                    <span v-if="stage.certified" class="pf2-cert-badge">✦ Certifié {{ stage.institution }}</span>
+                                    <span v-if="stage.certified" class="pf2-cert-badge"><AppIcon name="shield" /> Certifié {{ stage.institution }}</span>
                                     <span v-else class="pf2-pending-badge">En attente</span>
                                     <span class="pf2-duration-badge">{{ stage.months }}</span>
                                 </div>
@@ -475,7 +475,7 @@
                             </div>
                             <div class="pf2-letter__row">
                                 <span>Validée</span>
-                                <span class="pf2-cert-badge pf2-cert-badge--sm">✦ Validée par l'institution</span>
+                                <span class="pf2-cert-badge pf2-cert-badge--sm"><AppIcon name="shield" /> Validée par l'institution</span>
                             </div>
                         </div>
                         <button v-if="letter.visibility === 'public'" class="pf2-download-btn"
@@ -673,7 +673,7 @@
                         <span v-for="t in activeProject.tech" :key="t" class="pf2-tech-tag pf2-tech-tag--light">{{ t }}</span>
                     </div>
                     <div class="pf2-modal__footer">
-                        <span v-if="activeProject.certified" class="pf2-cert-badge">✦ Certifié {{ activeProject.institution }}</span>
+                        <span v-if="activeProject.certified" class="pf2-cert-badge"><AppIcon name="shield" /> Certifié {{ activeProject.institution }}</span>
                         <span v-else class="pf2-pending-badge">En attente de validation</span>
                         <a v-if="activeProject.github" :href="activeProject.github" target="_blank" class="pf2-btn-accent">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -709,7 +709,7 @@
 
     <div class="pf2-ep-header">
       <h3>Personnalisation</h3>
-      <button @click="panelOpen = false">✕</button>
+      <button aria-label="Fermer" @click="panelOpen = false"><AppIcon name="x" /></button>
     </div>
 
     <div class="pf2-ep-body">

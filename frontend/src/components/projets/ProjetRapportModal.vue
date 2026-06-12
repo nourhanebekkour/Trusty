@@ -4,9 +4,9 @@
       <div class="rapport-modal">
 
         <div class="rapport-header">
-          <span class="rapport-icon">📄</span>
+          <span class="rapport-icon"><AppIcon name="file-text" /></span>
           <h3 class="rapport-title">Joindre un rapport</h3>
-          <button class="rapport-close" @click="close">×</button>
+          <button class="rapport-close" aria-label="Fermer" @click="close"><AppIcon name="x" /></button>
         </div>
 
         <div class="rapport-body">

@@ -34,7 +34,7 @@
             {{ statusLabel(featured.status) }}
           </span>
 
-          <p class="reco-featured__quote-icon">❝❝</p>
+          <p class="reco-featured__quote-icon"><AppIcon name="quote" :size="28" /></p>
           <p class="reco-featured__text">{{ featured.message }}</p>
 
           <div class="author">
@@ -62,10 +62,10 @@
           <!-- Actions si EN_ATTENTE -->
           <div class="reco-actions" v-if="featured.status === 'EN_ATTENTE'">
             <button class="btn-accept" @click="$emit('valider', featured.id_recommandation, 'VALIDE')">
-              ✓ Accepter
+              <AppIcon name="check" /> Accepter
             </button>
             <button class="btn-reject" @click="$emit('valider', featured.id_recommandation, 'REJETE')">
-              ✕ Rejeter
+              <AppIcon name="x" /> Rejeter
             </button>
           </div>
         </div>
@@ -85,7 +85,7 @@
               {{ statusLabel(reco.status) }}
             </span>
 
-            <p class="reco-featured__quote-icon">❝❝</p>
+            <p class="reco-featured__quote-icon"><AppIcon name="quote" :size="28" /></p>
             <p class="reco-featured__text reco-card__text">{{ reco.message }}</p>
 
             <div class="author">
@@ -113,10 +113,10 @@
             <!-- Actions si EN_ATTENTE -->
             <div class="reco-actions" v-if="reco.status === 'EN_ATTENTE'">
               <button class="btn-accept" @click="$emit('valider', reco.id_recommandation, 'VALIDE')">
-                ✓ Accepter
+                <AppIcon name="check" /> Accepter
               </button>
               <button class="btn-reject" @click="$emit('valider', reco.id_recommandation, 'REJETE')">
-                ✕ Rejeter
+                <AppIcon name="x" /> Rejeter
               </button>
             </div>
           </div>
@@ -149,9 +149,9 @@ const formatDate = (d) =>
   d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
 
 const statusLabel = (status) => ({
-  VALIDE:     '✓ Validé',
-  EN_ATTENTE: '⏳ En attente',
-  REJETE:     '✕ Rejeté',
+  VALIDE:     'Validé',
+  EN_ATTENTE: 'En attente',
+  REJETE:     'Rejeté',
 }[status] ?? status)
 
 const statusClass = (status) => ({

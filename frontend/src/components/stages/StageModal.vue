@@ -6,7 +6,7 @@
         <!-- Header -->
         <div class="modal-header">
           <div class="modal-header-left">
-            <span class="modal-icon">{{ editMode ? '✏️' : '💼' }}</span>
+            <span class="modal-icon"><AppIcon :name="editMode ? 'pencil' : 'briefcase'" /></span>
             <h3 class="modal-title">{{ editMode ? 'Modifier le stage' : 'Nouveau Stage' }}</h3>
           </div>
           <button class="modal-close" @click="$emit('update:modelValue', false)">×</button>
@@ -23,8 +23,8 @@
             :disabled="viewMode"
           >
             <span class="step-num">
-              <span v-if="currentStep > i" class="step-check">✓</span>
-              <span v-else class="step-icon">{{ stepIcon(i) }}</span>
+              <AppIcon v-if="currentStep > i" class="step-check" name="check" />
+              <AppIcon v-else class="step-icon" :name="stepIcon(i)" />
             </span>
             <span class="step-label">
               <span class="step-label-text">{{ step }}</span>
@@ -129,7 +129,7 @@
               <div v-else-if="professeurs.length" class="form-group">
                 <label class="form-label">Rechercher un professeur</label>
                 <div class="search-box" @click.stop>
-                  <span class="search-icon">🔍</span>
+                  <span class="search-icon"><AppIcon name="search" /></span>
                   <input
                     v-model="profSearch"
                     type="text"
@@ -153,7 +153,7 @@
                       <span class="person-name">{{ prof.utilisateur.prenom }} {{ prof.utilisateur.nom }}</span>
                       <span class="person-sub">{{ prof.utilisateur.email }}</span>
                     </div>
-                    <span v-if="localForm.id_validateur === prof.id_professeur" class="check-icon">✓</span>
+                    <AppIcon v-if="localForm.id_validateur === prof.id_professeur" class="check-icon" name="check" />
                   </div>
                 </div>
               </div>
@@ -179,7 +179,7 @@
               <div class="form-group">
                 <label class="form-label">Rechercher une technologie</label>
                 <div class="search-box">
-                  <span class="search-icon">🔍</span>
+                  <span class="search-icon"><AppIcon name="search" /></span>
                   <input
                     v-model="techSearch"
                     type="text"
@@ -204,7 +204,7 @@
                     :class="{ disabled: isTechAdded(tech.id_technologie) }"
                     @click="viewMode ? null : openAddTech(tech)"
                   >
-                    <div class="tech-icon-cell">{{ techEmoji(tech.categorie) }}</div>
+                    <div class="tech-icon-cell"><AppIcon :name="techEmoji(tech.categorie)" /></div>
                     <div class="person-info">
                       <span class="person-name">{{ tech.nom }}</span>
                       <span class="person-sub">
@@ -219,7 +219,7 @@
               <transition name="slide-down">
                 <div v-if="pendingTech" class="inline-role-form">
                   <div class="inline-role-header">
-                    <span class="tech-icon-lg">{{ techEmoji(pendingTech.categorie) }}</span>
+                    <span class="tech-icon-lg"><AppIcon :name="techEmoji(pendingTech.categorie)" /></span>
                     <span>{{ pendingTech.nom }}</span>
                     <span class="tech-cat-badge">{{ pendingTech.categorie }}</span>
                   </div>
@@ -232,10 +232,10 @@
                     <div class="form-group">
                       <label class="form-label">Niveau d'utilisation</label>
                       <select v-model="pendingTechNiveau" class="form-input" :disabled="viewMode">
-                        <option value="DEBUTANT">🟢 Débutant</option>
-                        <option value="INTERMEDIAIRE">🟡 Intermédiaire</option>
-                        <option value="AVANCE">🟠 Avancé</option>
-                        <option value="EXPERT">🔴 Expert</option>
+                        <option value="DEBUTANT">Débutant</option>
+                        <option value="INTERMEDIAIRE">Intermédiaire</option>
+                        <option value="AVANCE">Avancé</option>
+                        <option value="EXPERT">Expert</option>
                       </select>
                     </div>
                   </div>
@@ -248,7 +248,7 @@
 
               <TransitionGroup v-if="localForm.technologies.length" name="list" tag="div" class="tech-tags">
                 <div v-for="(t, idx) in localForm.technologies" :key="t.id_technologie" class="tech-tag">
-                  <span class="tech-emoji">{{ techEmoji(t.categorie) }}</span>
+                  <span class="tech-emoji"><AppIcon :name="techEmoji(t.categorie)" /></span>
                   <span class="tech-name">{{ t.nom }}</span>
                   <span v-if="t.version" class="tech-version">v{{ t.version }}</span>
                   <span class="tech-level" :class="niveauClass(t.niveau_utilisation)">
@@ -282,7 +282,7 @@
                   @change="onRapportInputChange"
                 />
                 <div class="upload-zone-inner">
-                  <span class="upload-icon">📄</span>
+                  <span class="upload-icon"><AppIcon name="file-text" :size="28" /></span>
                   <p class="upload-label">Glissez votre rapport ici ou <span class="upload-link">cliquez pour parcourir</span></p>
                   <p class="upload-hint">PDF uniquement</p>
                 </div>
@@ -290,7 +290,7 @@
 
               <div v-if="rapportUploading" class="upload-progress-list">
                 <div class="upload-progress-item">
-                  <span class="file-type-icon">📄</span>
+                  <span class="file-type-icon"><AppIcon name="file-text" /></span>
                   <div class="person-info">
                     <span class="person-name">{{ rapportFileName }}</span>
                     <div class="progress-bar-wrap">
@@ -302,12 +302,12 @@
               </div>
 
               <div v-if="rapportUrl" class="file-card">
-                <span class="file-type-icon">📄</span>
+                <span class="file-type-icon"><AppIcon name="file-text" /></span>
                 <div class="person-info">
                   <span class="person-name">Rapport de stage</span>
                   <span class="person-sub">PDF · Déposé</span>
                 </div>
-                <a v-if="rapportUrl" :href="rapportUrl" target="_blank" class="file-link-btn" title="Voir">👁</a>
+                <a v-if="rapportUrl" :href="rapportUrl" target="_blank" class="file-link-btn" title="Voir"><AppIcon name="eye" /></a>
                 <button class="remove-btn" :disabled="viewMode" @click="deleteExistingRapport" title="Supprimer">×</button>
               </div>
 
@@ -369,7 +369,7 @@
                 class="btn-submit btn-finish"
                 @click="finish"
               >
-                ✓ Terminer
+                <AppIcon name="check" /> Terminer
               </button>
             </div>
           </template>
@@ -540,8 +540,8 @@ export default {
 
   methods: {
     stepIcon(i) {
-      const icons = ['📋', '👤', '🛠️', '📄']
-      return icons[i] ?? '○'
+      const icons = ['file-text', 'user-check', 'wrench', 'file']
+      return icons[i] ?? 'file'
     },
 
     touchField(field) {
@@ -919,12 +919,12 @@ export default {
 
     techEmoji(categorie) {
       const map = {
-        FRONTEND: '🎨', BACKEND: '⚙️', DATABASE: '🗄️',
-        DEVOPS: '🚀', MOBILE: '📱', IA: '🤖', AI: '🤖',
-        SECURITE: '🔒', CLOUD: '☁️', TESTING: '🧪',
-        DESIGN: '✏️', AUTRE: '🔧',
+        FRONTEND: 'palette', BACKEND: 'code', DATABASE: 'database',
+        DEVOPS: 'rocket', MOBILE: 'smartphone', IA: 'sparkles', AI: 'sparkles',
+        SECURITE: 'lock', CLOUD: 'cloud', TESTING: 'test',
+        DESIGN: 'pencil', AUTRE: 'wrench',
       }
-      return map[(categorie || '').toUpperCase()] ?? '🔧'
+      return map[(categorie || '').toUpperCase()] ?? 'wrench'
     },
   },
 }

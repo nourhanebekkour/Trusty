@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import DashboardRecos from '@/components/dashboard/DashboardRecos.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
 
 // ── mock vue-router ──────────────────────────────────────────────────────────
 const mockPush = vi.fn()
@@ -32,6 +33,7 @@ const mountComponent = (props = {}) =>
   mount(DashboardRecos, {
     props: { recos: [], loading: false, ...props },
     global: {
+      components: { AppIcon },
       stubs: { 'router-link': true },
       mocks: { $router: { push: mockPush } },
     },
@@ -128,9 +130,9 @@ describe('DashboardRecos.vue', () => {
       expect(wrapper.find('.author__avatar').text()).toBe('MD')
     })
 
-    it('affiche les guillemets décoratifs', () => {
+    it('affiche l\'icône de citation', () => {
       const wrapper = mountComponent({ recos: [RECO_1] })
-      expect(wrapper.find('.reco-featured__quote-icon').text()).toContain('❝')
+      expect(wrapper.find('.reco-featured__quote-icon svg').exists()).toBe(true)
     })
   })
 

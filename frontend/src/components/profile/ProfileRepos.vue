@@ -18,7 +18,7 @@
 
     <!-- Erreur -->
     <div v-else-if="error" class="repos-error">
-      <span>⚠️ {{ error }}</span>
+      <span><AppIcon name="warning" /> {{ error }}</span>
       <button class="link-btn" @click="loadRepos">Réessayer</button>
     </div>
 
@@ -38,7 +38,7 @@
         rel="noopener"
       >
         <div class="repo-icon">
-          <span v-if="repo.is_fork">🍴</span>
+          <AppIcon v-if="repo.is_fork" name="code" />
           <Github v-else class="github-icon" />
         </div>
         <div class="repo-info">
@@ -61,10 +61,10 @@
               {{ repo.langage_principal }}
             </p>
             <span class="repo-stars" v-if="repo.stargazers_count">
-              ⭐ {{ repo.stargazers_count }}
+              <AppIcon name="star" /> {{ repo.stargazers_count }}
             </span>
             <span class="repo-forks" v-if="repo.forks_count">
-              🍴 {{ repo.forks_count }}
+              <AppIcon name="code" /> {{ repo.forks_count }}
             </span>
             <p class="repo-meta" v-if="repo.date_dernier_commit">
               Màj : {{ formatDate(repo.date_dernier_commit) }}

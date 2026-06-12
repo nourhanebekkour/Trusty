@@ -6,7 +6,7 @@
     </div>
 
     <div v-else-if="error" class="error-state">
-      <p>⚠️ {{ error }}</p>
+      <p><AppIcon name="warning" /> {{ error }}</p>
       <button @click="loadProfile" class="btn-outline">Réessayer</button>
     </div>
 

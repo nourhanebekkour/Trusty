@@ -39,7 +39,7 @@
 
     <!-- Error -->
     <div v-else-if="store.error" class="error-state">
-      <span>⚠ {{ store.error }}</span>
+      <span><AppIcon name="warning" /> {{ store.error }}</span>
       <button class="filter-btn" @click="store.chargerStages">Réessayer</button>
     </div>
 
@@ -100,7 +100,7 @@
           <div class="card-fields">
 
             <div class="field-row">
-              <span class="field-label">📅 Du</span>
+              <span class="field-label"><AppIcon name="calendar" /> Du</span>
               <span class="field-value">{{ formatDate(stage.date_debut) }}</span>
               <span class="field-label">au</span>
               <span class="field-value">{{ stage.date_fin ? formatDate(stage.date_fin) : '—' }}</span>
@@ -108,24 +108,24 @@
             </div>
 
             <div v-if="stage.adresse_entreprise" class="field-row">
-              <span class="field-label">📍 Lieu</span>
+              <span class="field-label"><AppIcon name="map" /> Lieu</span>
               <span class="field-value">{{ stage.adresse_entreprise }}</span>
             </div>
 
             <div class="field-row">
-              <span class="field-label">👤 Tuteur professionnel</span>
+              <span class="field-label"><AppIcon name="user" /> Tuteur professionnel</span>
               <span class="field-value">{{ stage.encadrant_professionnel || '—' }}</span>
             </div>
 
             <div class="field-row">
-              <span class="field-label">👤 Tuteur académique</span>
+              <span class="field-label"><AppIcon name="user-check" /> Tuteur académique</span>
               <span class="field-value">{{ stage.encadrant_academique || '—' }}</span>
             </div>
 
             <!-- Missions expandable -->
             <div class="field-row field-row--col">
               <div class="field-label-row">
-                <span class="field-label">📋 Missions</span>
+                <span class="field-label"><AppIcon name="file-text" /> Missions</span>
                 <button
                   v-if="stage.missions && stage.missions.length > 100"
                   class="expand-btn"
@@ -144,10 +144,10 @@
 
             <!-- Technologies -->
             <div v-if="getTechnologies(stage).length" class="field-row field-row--col">
-              <span class="field-label">🛠️ Technologies</span>
+              <span class="field-label"><AppIcon name="wrench" /> Technologies</span>
               <div class="tech-tags">
                 <span v-for="tech in getTechnologies(stage)" :key="tech.id_technologie" class="tech-tag">
-                  <span>{{ techEmoji(tech) }}</span>
+                  <AppIcon :name="techEmoji(tech)" />
                   <span>{{ tech.nom }}</span>
                   <span v-if="tech.version" class="tech-version">v{{ tech.version }}</span>
                   <span class="tech-lvl" :class="techNiveauClass(tech.niveau_utilisation)">
@@ -263,12 +263,12 @@ function getTechnologies(stage) {
 
 function techEmoji(tech) {
   const map = {
-    FRONTEND: '🎨', BACKEND: '⚙️', DATABASE: '🗄️',
-    DEVOPS: '🚀', MOBILE: '📱', IA: '🤖', AI: '🤖',
-    SECURITE: '🔒', CLOUD: '☁️', TESTING: '🧪',
-    DESIGN: '✏️', AUTRE: '🔧',
+    FRONTEND: 'palette', BACKEND: 'code', DATABASE: 'database',
+    DEVOPS: 'rocket', MOBILE: 'smartphone', IA: 'sparkles', AI: 'sparkles',
+    SECURITE: 'lock', CLOUD: 'cloud', TESTING: 'test',
+    DESIGN: 'pencil', AUTRE: 'wrench',
   }
-  return map[(tech.categorie || '').toUpperCase()] ?? '🔧'
+  return map[(tech.categorie || '').toUpperCase()] ?? 'wrench'
 }
 
 function techNiveauClass(n) {

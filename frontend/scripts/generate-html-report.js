@@ -21,7 +21,7 @@ const statusColor = numFailedTests === 0 ? '#22c55e' : '#ef4444'
 
 function renderAssertions(assertions = []) {
   return assertions.map(t => {
-    const icon = t.status === 'passed' ? '✅' : t.status === 'failed' ? '❌' : '⏭️'
+    const icon = t.status === 'passed' ? '[OK]' : t.status === 'failed' ? '[ERREUR]' : '[IGNORÉ]'
     const rowBg = t.status === 'passed' ? '#f0fdf4' : t.status === 'failed' ? '#fef2f2' : '#fefce8'
     const titleParts = [...(t.ancestorTitles || []), t.title]
     const err = t.failureMessages?.length
@@ -41,7 +41,7 @@ const suitesHtml = testResults.filter(s => s != null).map(suite => {
   return `
   <div style="margin-bottom:24px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)">
     <div style="background:${suiteOk ? '#f0fdf4' : '#fef2f2'};padding:12px 16px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center">
-      <span style="font-weight:700;font-size:14px">${suiteOk ? '✅' : '❌'} ${name}</span>
+      <span style="font-weight:700;font-size:14px">${suiteOk ? '[OK]' : '[ERREUR]'} ${name}</span>
       <span style="font-size:12px;color:#64748b">${suite.assertionResults?.length ?? 0} test(s)</span>
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -118,5 +118,5 @@ const html = `<!DOCTYPE html>
 </html>`
 
 writeFileSync(resolve(root, 'test-report.html'), html, 'utf-8')
-console.log(`✅  Rapport HTML généré : test-report.html`)
+console.log('[OK] Rapport HTML généré : test-report.html')
 console.log(`    ${numTotalTests} tests — ${numPassedTests} réussis — ${numFailedTests} échoués — ${passRate}% de réussite`)

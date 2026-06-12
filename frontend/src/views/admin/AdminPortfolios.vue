@@ -6,7 +6,7 @@
         <p class="page__subtitle">Liste des étudiants inscrits et suivi de leurs portfolios.</p>
       </div>
       <div class="page__actions">
-        <button class="btn btn--secondary" @click="load">🔄 Rafraîchir</button>
+        <button class="btn btn--secondary" @click="load"><AppIcon name="refresh" /> Rafraîchir</button>
       </div>
     </div>
 
@@ -14,13 +14,13 @@
 
     <div class="stats-row">
       <StatCard label="Total Étudiants" :value="admin.loading ? '…' : String(admin.students.length)">
-        <template #icon>🎓</template>
+        <template #icon><AppIcon name="graduation" /></template>
       </StatCard>
       <StatCard label="Actifs" :value="admin.loading ? '…' : String(activeCount)">
-        <template #icon>✅</template>
+        <template #icon><AppIcon name="check-circle" /></template>
       </StatCard>
       <StatCard label="En attente" :value="admin.loading ? '…' : String(admin.verificationQueue.length)">
-        <template #icon>🕐</template>
+        <template #icon><AppIcon name="clock" /></template>
       </StatCard>
     </div>
 
@@ -70,7 +70,7 @@
                   :disabled="!portfolioSlug(s)"
                   :title="portfolioSlug(s) ? 'Voir le portfolio public' : 'Portfolio non publié'"
                   @click="openPortfolio(s)"
-                >👁</button>
+                ><AppIcon name="eye" /></button>
               </div>
             </td>
           </tr>

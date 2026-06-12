@@ -10,7 +10,7 @@ vi.mock('@/stores/authstore', () => ({
 
 <<<<<<< HEAD
 import { useAuthStore } from '../../src/stores/authstore'
-// ✅
+// Cas nominal
 import LoginView from '../../src/views/loginview.vue'
 =======
 import { useAuthStore } from '@/stores/authstore'

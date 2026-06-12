@@ -164,7 +164,7 @@ describe('E2E – Connexion réussie', () => {
 
 // ============================================================
 // 4. ÉCHECS D'AUTHENTIFICATION
-// ⚠️  Le backend renvoie toujours 401 (email inexistant,
+// Le backend renvoie toujours 401 (email inexistant,
 //     mauvais mot de passe ET compte inactif)
 // ============================================================
 describe('E2E – Échecs d\'authentification', () => {
