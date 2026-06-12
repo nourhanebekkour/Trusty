@@ -1049,7 +1049,17 @@ const visibleRecs = computed(() => recommandations.value.slice(recsIdx.value, re
 function nextRecs() { if (recsIdx.value < recommandations.value.length - 3) recsIdx.value++ }
 function prevRecs() { if (recsIdx.value > 0) recsIdx.value-- }
 
-const lettres = computed(() => [])
+const lettres = computed(() => {
+  if (!portfolioData.value) return []
+  return (portfolioData.value.etudiant.lettres_recommandation || []).map(l => ({
+    id: l.id_lettre,
+    initials: `${l.redacteur?.utilisateur?.prenom?.[0] || ''}${l.redacteur?.utilisateur?.nom?.[0] || ''}`.toUpperCase(),
+    author:   `${l.redacteur?.utilisateur?.prenom || ''} ${l.redacteur?.utilisateur?.nom || ''}`.trim(),
+    title:    l.type_lettre || '',
+    purpose:  l.destinataire || '',
+    visibility: 'public'
+  }))
+})
 
 const github = computed(() => {
     if (!portfolioData.value) return { repos: [] }
@@ -1108,7 +1118,11 @@ function langColor(lang) {
 
 function scrollTo(id) { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }) }
 function share() { navigator.clipboard?.writeText(window.location.href); alert('Lien copié !') }
-function downloadPDF() { window.print() }
+
+function downloadPDF() {
+    const url = route.params.url_publique || route.params.username
+    window.open(`/api/portfolio/${url}/pdf`, '_blank')
+}
 
 function handleScroll() {
     isScrolled.value = window.scrollY > 80
@@ -1147,7 +1161,7 @@ function handleScroll() {
 *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 .pf2 {
-    background: #F8FAFC;
+    background: #0F2040;
     min-height: 100vh;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     color: #1A1D2E;
@@ -1250,7 +1264,7 @@ function handleScroll() {
 .pf2-btn-accent:hover { background: #3B6BC4; }
 
 /* ── DOCUMENT ────────────────────────────────────────────────────────── */
-.pf2-doc { max-width: 1100px; margin: 0 auto; background: #FFFFFF; }
+.pf2-doc { max-width: 100%; margin: 0; background: #FFFFFF; }
 
 /* ── HERO ────────────────────────────────────────────────────────────── */
 .pf2-hero {

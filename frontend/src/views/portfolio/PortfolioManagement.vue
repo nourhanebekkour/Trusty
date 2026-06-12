@@ -17,25 +17,17 @@
     <!-- ── ERROR ─────────────────────────────────────────────────── -->
     <div v-if="errorMsg" class="error-banner">{{ errorMsg }}</div>
 
-    <!-- ── AUTO-GENERATED BANNER ─────────────────────────────────── -->
-    <div v-if="hasAutoPortfolio" class="auto-default-banner">
-      <div>
-        <p class="auto-default-title">Portfolio généré automatiquement</p>
-        <p class="auto-default-msg">Votre portfolio a été généré automatiquement lors de votre inscription. Personnalisez-le et publiez-le !</p>
-      </div>
-    </div>
-
     <!-- ── LOADING ────────────────────────────────────────────────── -->
     <div v-if="loading" class="loading-state">Chargement de vos portfolios...</div>
 
     <!-- ── PORTFOLIO GRID ────────────────────────────────────────── -->
     <div v-else class="portfolio-grid">
-      <div v-for="p in portfolios" :key="p.id_portfolio" :class="['pf-card', p.isAuto && 'pf-card--auto']">
+      <div v-for="p in portfolios" :key="p.id_portfolio" class="pf-card">
 
         <div class="pf-card__top">
           <div class="pf-card__meta">
             <span v-if="p.objective" :class="['obj-badge', `obj-badge--${p.objective}`]">{{ p.objective }}</span>
-            <span class="tpl-label">{{ p.modele?.nom_modele }}</span>
+            <span class="tpl-label">{{ p.modele?.nom }}</span>
           </div>
           <span :class="['status-badge', p.est_publie ? 'status-badge--published' : 'status-badge--draft']">
             <span class="badge__dot"></span>
@@ -44,8 +36,6 @@
         </div>
 
         <h3 class="pf-card__title">{{ p.titre_personnalise }}</h3>
-
-        <p v-if="p.isAuto && !p.est_publie" class="auto-portfolio-msg">Votre portfolio a été généré automatiquement. Personnalisez-le et publiez-le !</p>
 
         <a v-if="p.est_publie && p.url_publique" :href="`/portfolio/${p.url_publique}`" target="_blank" class="pf-card__url">
           🔗 /portfolio/{{ p.url_publique }}
@@ -232,8 +222,10 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/api'
+import { useAuthStore } from '@/stores/authstore' 
 
 const router = useRouter()
+const authStore = useAuthStore() 
 
 // ── Static display data (ne vient pas de l'API) ──────────────────────
 const TEMPLATE_COLORS = {
@@ -248,7 +240,7 @@ const templateShowcase = [
   { id: 'Template 3', name: 'CV Minimaliste', bg: '#FFFFFF', desc: 'Design épuré façon CV, idéal pour impression PDF.' },
 ]
 
-const objectives = ['WEBDEV', 'DEVOPS', 'DATA', 'CYBER']
+const objectives = ['GENERAL', 'WEBDEV', 'DEVOPS', 'DATA', 'CYBER']
 
 // ── State ────────────────────────────────────────────────────────────
 const portfolios   = ref([])
@@ -262,14 +254,12 @@ const errorMsg     = ref('')
 const templates = computed(() =>
   apiModeles.value.map(m => ({
     id:    m.id_modele,
-    name:  m.nom_modele,
-    color: TEMPLATE_COLORS[m.nom_modele] ?? '#374151',
+    name:  m.nom,                              // ✅
+    color: TEMPLATE_COLORS[m.nom] ?? '#374151' // ✅
   }))
 )
 
-const hasAutoPortfolio = computed(() => portfolios.value.some(p => p.isAuto))
-
-const activeTemplate = computed(() => portfolios.value[0]?.modele?.nom_modele ?? 'Template 1')
+const activeTemplate = computed(() => portfolios.value[0]?.modele?.nom ?? 'Template 1')
 
 // ── Data loading ─────────────────────────────────────────────────────
 async function loadPortfolios() {
@@ -320,12 +310,32 @@ async function savePortfolio() {
   saving.value = true
   errorMsg.value = ''
   try {
-    await api.post('/portfolio/me', {
+    const createRes = await api.post('/portfolio/me', {
       titre_personnalise: form.title || 'Nouveau Portfolio',
       id_modele: form.template,
     })
+    const newPortfolio = createRes.data.data
+
     closeModal()
+
+    if (form.objective && form.objective !== 'GENERAL' && newPortfolio?.id_portfolio) {
+      try {
+        const aiRes = await api.post('/portfolio/generate-adaptative', {
+          objectif: form.objective
+        })
+        const { projets_selectionnes, competences_selectionnees, stages_selectionnes } = aiRes.data
+        await api.put(`/portfolio/me/${newPortfolio.id_portfolio}`, {
+          projets_selectionnes,
+          competences_selectionnees,
+          stages_selectionnes,
+        })
+      } catch (aiErr) {
+        console.warn('Adaptation IA échouée, portfolio créé sans sélection IA', aiErr)
+      }
+    }
+
     await loadPortfolios()
+
   } catch (e) {
     errorMsg.value = e.response?.data?.message ?? 'Erreur lors de la création.'
     console.error(e)
@@ -333,16 +343,20 @@ async function savePortfolio() {
     saving.value = false
   }
 }
-
 // ── Actions ──────────────────────────────────────────────────────────
+
+const ROUTE_MAP = {
+  'Template 1': 'portfolio-template1',
+  'Template 2': 'portfolio-template2',
+}
 function editPortfolio(p) {
-  router.push({ name: 'portfolio-template1', params: { url_publique: p.url_publique }, query: { edit: 'true' } })
+  const name = ROUTE_MAP[p.modele?.nom] ?? 'portfolio-template1'
+  router.push({ name, params: { url_publique: p.url_publique }, query: { edit: 'true' } })
 }
-
 function viewPortfolio(p) {
-  router.push({ name: 'portfolio-template1', params: { url_publique: p.url_publique } })
+  const name = ROUTE_MAP[p.modele?.nom] ?? 'portfolio-template1'
+  router.push({ name, params: { url_publique: p.url_publique } })
 }
-
 async function togglePublish(p) {
   publishingId.value = p.id_portfolio
   errorMsg.value = ''
@@ -510,6 +524,8 @@ async function deletePortfolio(p) {
 .obj-option--DEVOPS.obj-option--active { background: rgba(139, 92, 246, 0.12); color: #7c3aed; border-color: rgba(139, 92, 246, 0.35); }
 .obj-option--DATA.obj-option--active   { background: rgba(234, 179, 8,   0.12); color: #a16207; border-color: rgba(234, 179, 8,   0.35); }
 .obj-option--CYBER.obj-option--active  { background: rgba(239, 68, 68,  0.12); color: #dc2626; border-color: rgba(239, 68, 68,  0.35); }
+.obj-badge--GENERAL { background: rgba(107,114,128,0.12); color: #6b7280; }
+.obj-option--GENERAL.obj-option--active { background: rgba(107,114,128,0.12); color: #374151; border-color: rgba(107,114,128,0.35); }
 
 .template-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .template-card { border: 2px solid var(--color-border); border-radius: 10px; overflow: hidden; cursor: pointer; transition: border-color 0.15s, transform 0.15s; }
