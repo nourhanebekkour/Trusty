@@ -109,10 +109,13 @@ describe('E2E – Profile – Compétences', () => {
   })
 
   it('appelle POST /competences/ lors de l\'ajout d\'une compétence', () => {
-    cy.intercept('POST', '**/competences**').as('addSkill')
+    const fakeSkill = { id_competence: 'cypress-mock-99', nom: 'CypressMockSkill', type: 'TECHNIQUE' }
+    // Stub catalog endpoint so the modal always has at least one unowned skill to show
+    cy.intercept('GET', /\/competences\/?$/, { statusCode: 200, body: { data: [fakeSkill] } })
+    cy.intercept('POST', /\/competences\/etudiant\//, { statusCode: 201, body: { data: {} } }).as('addSkill')
     cy.contains(/ajouter/i).first().click()
-    cy.get('input[type="text"]').last().type('Vue.js')
-    cy.contains(/valider|ajouter|confirmer/i).last().click()
+    cy.get('.skill-tag-btn').first().click()
+    cy.get('.skill-modal').contains(/ajouter au profil/i).click()
     cy.wait('@addSkill').its('response.statusCode').should('be.oneOf', [200, 201])
   })
 })

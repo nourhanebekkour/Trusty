@@ -57,7 +57,7 @@ export const useAuthStore = defineStore('auth', {
 
   actions: {
     // Login
-    async login(email, password) {
+    async login(email, password, remember = false) {
       if (typeof email !== 'string' || typeof password !== 'string') {
         this.error = 'Données de connexion invalides'
         return false
@@ -67,7 +67,7 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
 
       try {
-        await withTimeout(authService.login({ email: email.trim(), password }))
+        await withTimeout(authService.login({ email: email.trim(), password, remember: !!remember }))
         await this.fetchUser()
         return true
       } catch (err) {

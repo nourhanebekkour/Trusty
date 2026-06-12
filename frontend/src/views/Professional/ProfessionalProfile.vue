@@ -20,7 +20,7 @@
 
     <div v-else-if="error" class="prof-state-box prof-state-error">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <span>{{ error }}</span>
+      <span>{{ sanitizeText(error) }}</span>
       <button class="btn-ghost" @click="loadProfile">Réessayer</button>
     </div>
 
@@ -30,8 +30,8 @@
           {{ initials(profile.fullName || profile.email) }}
         </div>
         <div class="profile-info">
-          <h2>{{ profile.fullName || 'Utilisateur' }}</h2>
-          <p class="profile-email">{{ profile.email }}</p>
+          <h2>{{ sanitizeText(profile.fullName) || 'Utilisateur' }}</h2>
+          <p class="profile-email">{{ sanitizeText(profile.email) }}</p>
           <span class="profile-role">Professionnel</span>
         </div>
       </div>
@@ -41,15 +41,15 @@
           <h3>Informations générales</h3>
           <div class="detail-row">
             <span class="detail-label">Nom complet</span>
-            <span class="detail-value">{{ profile.fullName || '—' }}</span>
+            <span class="detail-value">{{ sanitizeText(profile.fullName) || '—' }}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Email</span>
-            <span class="detail-value">{{ profile.email || '—' }}</span>
+            <span class="detail-value">{{ sanitizeText(profile.email) || '—' }}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Téléphone</span>
-            <span class="detail-value">{{ profile.telephone || profile.phone || '—' }}</span>
+            <span class="detail-value">{{ sanitizeText(profile.telephone || profile.phone) || '—' }}</span>
           </div>
         </div>
 
@@ -57,11 +57,11 @@
           <h3>Entreprise</h3>
           <div class="detail-row">
             <span class="detail-label">Entreprise</span>
-            <span class="detail-value">{{ profile.entreprise || profile.company || '—' }}</span>
+            <span class="detail-value">{{ sanitizeText(profile.entreprise || profile.company) || '—' }}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Poste</span>
-            <span class="detail-value">{{ profile.poste || profile.position || '—' }}</span>
+            <span class="detail-value">{{ sanitizeText(profile.poste || profile.position) || '—' }}</span>
           </div>
         </div>
       </div>
@@ -74,18 +74,39 @@ import { onMounted, ref } from 'vue'
 import { getProfessionalProfile } from '@/services/professionalApi'
 
 const loading = ref(true)
-const error = ref(null)
+const error   = ref(null)
 const profile = ref({})
 
+function sanitizeText(value) {
+  if (!value) return ''
+  return String(value)
+    .replace(/<[^>]*>/g, '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .trim()
+    .slice(0, 300)
+}
+
 function initials(name) {
-  return String(name || '?').split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase()
+  return String(name || '?')
+    .replace(/<[^>]*>/g, '')
+    .trim()
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(p => p[0])
+    .join('')
+    .toUpperCase()
 }
 
 async function loadProfile() {
+  if (loading.value && Object.keys(profile.value).length > 0) return
   loading.value = true
-  error.value = null
+  error.value   = null
   try {
-    profile.value = await getProfessionalProfile()
+    const data = await getProfessionalProfile()
+    profile.value = data && typeof data === 'object' ? data : {}
   } catch {
     error.value = 'Impossible de charger le profil.'
   } finally {

@@ -1,11 +1,11 @@
 <template>
-  <div class="recommandations-page">
+  <div class="recommandations-page" @keydown.esc="handleEscape">
 
     <!-- ── Page Header ── -->
     <div class="page-header">
       <div class="header-left">
         <h1 class="page-title">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="title-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="title-icon" aria-hidden="true">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
           </svg>
           Recommandations
@@ -18,28 +18,28 @@
     <!-- ── Stats Row ── -->
     <div class="stats-row">
       <div class="stat-card">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         <div>
           <div class="stat-label">TOTAL REÇUES</div>
           <div class="stat-value">{{ recommandations.length }}</div>
         </div>
       </div>
       <div class="stat-card">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="20 6 9 17 4 12"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
         <div>
           <div class="stat-label">VALIDÉES</div>
           <div class="stat-value">{{ recommandations.filter(r => r.status === 'VALIDE').length }}</div>
         </div>
       </div>
       <div class="stat-card">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         <div>
           <div class="stat-label">EN ATTENTE</div>
           <div class="stat-value">{{ recommandations.filter(r => r.status === 'EN_ATTENTE').length }}</div>
         </div>
       </div>
       <div class="stat-card">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         <div>
           <div class="stat-label">AUTEURS UNIQUES</div>
           <div class="stat-value">{{ uniqueAuthors }}</div>
@@ -48,12 +48,14 @@
     </div>
 
     <!-- ── Tabs ── -->
-    <div class="tabs-row">
+    <div class="tabs-row" role="tablist" aria-label="Filtrer les recommandations">
       <button
         v-for="tab in tabs"
         :key="tab.key"
         class="tab-btn"
         :class="{ 'tab-active': activeTab === tab.key }"
+        role="tab"
+        :aria-selected="activeTab === tab.key"
         @click="activeTab = tab.key"
       >
         {{ tab.label }}
@@ -62,21 +64,21 @@
     </div>
 
     <!-- ── Loading ── -->
-    <div v-if="loading" class="state-box">
-      <div class="spinner"></div>
+    <div v-if="loading" class="state-box" role="status" aria-live="polite">
+      <div class="spinner" aria-hidden="true"></div>
       <span>Chargement des recommandations...</span>
     </div>
 
     <!-- ── Error ── -->
-    <div v-else-if="error" class="state-box state-error">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <div v-else-if="error" class="state-box state-error" role="alert">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       <span>{{ error }}</span>
       <button class="btn-ghost" @click="fetchRecommandations">Réessayer</button>
     </div>
 
     <!-- ── Empty ── -->
     <div v-else-if="filteredRecommandations.length === 0" class="empty-card">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" class="empty-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" class="empty-icon" aria-hidden="true">
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
       </svg>
       <p class="empty-title">Aucune recommandation {{ activeTab !== 'all' ? statusLabel(activeTab) : '' }}</p>
@@ -94,7 +96,7 @@
         <!-- Card Header -->
         <div class="rec-card-header">
           <div class="author-row">
-            <div class="avatar" :style="{ background: getAvatarColor(rec.auteur?.nom) }">
+            <div class="avatar" :style="{ background: getAvatarColor(rec.auteur?.nom) }" aria-hidden="true">
               {{ getInitials(rec.auteur) }}
             </div>
             <div class="author-info">
@@ -104,7 +106,7 @@
           </div>
           <div class="rec-right">
             <span class="status-badge" :class="statusClass(rec.status)">
-              <span class="status-dot"></span>
+              <span class="status-dot" aria-hidden="true"></span>
               {{ statusLabel(rec.status) }}
             </span>
             <span class="rec-date">{{ formatDate(rec.date_creation) }}</span>
@@ -118,21 +120,32 @@
         <button
           v-if="rec.message && rec.message.length > 180"
           class="btn-expand"
+          :aria-expanded="expandedIds.includes(rec.id_recommandation)"
           @click="toggleExpand(rec.id_recommandation)"
         >
           {{ expandedIds.includes(rec.id_recommandation) ? 'Voir moins ↑' : 'Voir plus ↓' }}
         </button>
 
-        <!-- Footer : EN_ATTENTE → l'étudiant connecté valide SI c'est lui la cible -->
+        <!-- Footer : EN_ATTENTE -->
         <div class="rec-footer" v-if="rec.status === 'EN_ATTENTE' && isCurrentUser(rec.id_etudiant)">
           <span class="footer-hint">En attente de votre validation</span>
           <div class="footer-actions">
-            <button class="btn-reject" @click="validerRecommandation(rec.id_recommandation, 'REJETE')" :disabled="actionLoading === rec.id_recommandation">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <button
+              class="btn-reject"
+              @click="validerRecommandation(rec.id_recommandation, 'REJETE')"
+              :disabled="actionLoading === rec.id_recommandation || rateLimitedIds.has(rec.id_recommandation)"
+              :aria-busy="actionLoading === rec.id_recommandation"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               Rejeter
             </button>
-            <button class="btn-accept" @click="validerRecommandation(rec.id_recommandation, 'VALIDE')" :disabled="actionLoading === rec.id_recommandation">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <button
+              class="btn-accept"
+              @click="validerRecommandation(rec.id_recommandation, 'VALIDE')"
+              :disabled="actionLoading === rec.id_recommandation || rateLimitedIds.has(rec.id_recommandation)"
+              :aria-busy="actionLoading === rec.id_recommandation"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
               Accepter
             </button>
           </div>
@@ -140,16 +153,17 @@
 
         <div class="rec-footer" v-else-if="rec.status === 'VALIDE'">
           <span class="footer-validated">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
             Validée le {{ formatDate(rec.date_validation) }}
           </span>
           <button
             v-if="canDelete(rec)"
             class="btn-icon-sm"
             @click="confirmDelete(rec)"
+            :aria-label="`Supprimer la recommandation de ${rec.auteur?.prenom} ${rec.auteur?.nom}`"
             title="Supprimer"
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
           </button>
         </div>
       </div>
@@ -157,48 +171,64 @@
 
     <!-- ── Modal : Recommander un autre étudiant ── -->
     <Transition name="fade">
-      <div v-if="showWriteModal" class="modal-overlay" @click.self="closeWriteModal">
-        <div class="modal-box">
+      <div
+        v-if="showWriteModal"
+        class="modal-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="write-modal-title"
+        @click.self="closeWriteModal"
+      >
+        <div class="modal-box" ref="writeModalRef" tabindex="-1" @keydown="trapFocusWrite">
           <div class="modal-header">
-            <h2 class="modal-title">Recommander un étudiant</h2>
-            <button class="modal-close" @click="closeWriteModal">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <h2 class="modal-title" id="write-modal-title">Recommander un étudiant</h2>
+            <button class="modal-close" @click="closeWriteModal" aria-label="Fermer">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
-          <form @submit.prevent="submitRecommandation" class="modal-form">
+          <form @submit.prevent="submitRecommandation" class="modal-form" novalidate>
             <div class="field">
-              <label>ID de l'étudiant à recommander <span class="req">*</span></label>
+              <label for="field-id-etudiant">ID de l'étudiant à recommander <span class="req" aria-hidden="true">*</span></label>
               <input
+                id="field-id-etudiant"
                 v-model="writeForm.id_etudiant"
                 type="text"
                 placeholder="ID de l'étudiant cible (pas le vôtre)"
                 required
+                autocomplete="off"
+                spellcheck="false"
+                :aria-invalid="isSelfRecommandation ? 'true' : 'false'"
+                aria-describedby="self-reco-error"
               />
-              <!-- Empêcher l'étudiant de se recommander lui-même -->
-              <span v-if="isSelfRecommandation" class="field-error">
+              <span v-if="isSelfRecommandation" id="self-reco-error" class="field-error" role="alert">
                 Vous ne pouvez pas vous recommander vous-même.
               </span>
             </div>
             <div class="field">
-              <label>Message <span class="req">*</span></label>
+              <label for="field-message">Message <span class="req" aria-hidden="true">*</span></label>
               <textarea
+                id="field-message"
                 v-model="writeForm.message"
                 rows="5"
                 placeholder="Décrivez les qualités, compétences et réalisations de cet étudiant…"
                 maxlength="1000"
                 required
+                autocomplete="off"
+                spellcheck="true"
+                aria-describedby="message-counter"
               ></textarea>
-              <span class="field-hint">{{ writeForm.message.length }} / 1000 caractères</span>
+              <span id="message-counter" class="field-hint">{{ writeForm.message.length }} / 1000 caractères</span>
             </div>
-            <div v-if="writeError" class="form-error">{{ writeError }}</div>
+            <div v-if="writeError" class="form-error" role="alert">{{ writeError }}</div>
             <div class="modal-footer">
               <button type="button" class="btn-ghost" @click="closeWriteModal">Annuler</button>
               <button
                 type="submit"
                 class="btn-primary"
-                :disabled="writeLoading || isSelfRecommandation"
+                :disabled="writeLoading || isSelfRecommandation || !isWriteFormValid"
+                :aria-busy="writeLoading"
               >
-                <span v-if="writeLoading" class="spinner-sm"></span>
+                <span v-if="writeLoading" class="spinner-sm" aria-hidden="true"></span>
                 Envoyer la recommandation
               </button>
             </div>
@@ -209,17 +239,29 @@
 
     <!-- ── Delete Confirm ── -->
     <Transition name="fade">
-      <div v-if="showDeleteConfirm" class="modal-overlay" @click.self="showDeleteConfirm = false">
-        <div class="modal-box modal-box-sm">
-          <div class="delete-icon-wrap">
+      <div
+        v-if="showDeleteConfirm"
+        class="modal-overlay"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-confirm-title"
+        @click.self="showDeleteConfirm = false"
+      >
+        <div class="modal-box modal-box-sm" ref="deleteModalRef" tabindex="-1" @keydown="trapFocusDelete">
+          <div class="delete-icon-wrap" aria-hidden="true">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
           </div>
-          <h3 class="modal-title" style="text-align:center">Supprimer la recommandation ?</h3>
+          <h3 class="modal-title" id="delete-confirm-title" style="text-align:center">Supprimer la recommandation ?</h3>
           <p class="delete-sub">Cette action est irréversible.</p>
           <div class="modal-footer" style="justify-content:center">
             <button class="btn-ghost" @click="showDeleteConfirm = false">Annuler</button>
-            <button class="btn-danger" @click="deleteRecommandation" :disabled="deleteLoading">
-              <span v-if="deleteLoading" class="spinner-sm"></span>
+            <button
+              class="btn-danger"
+              @click="deleteRecommandation"
+              :disabled="deleteLoading"
+              :aria-busy="deleteLoading"
+            >
+              <span v-if="deleteLoading" class="spinner-sm" aria-hidden="true"></span>
               Supprimer
             </button>
           </div>
@@ -231,13 +273,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import api from '@/api.js'
 import { useAuthStore } from '@/stores/authstore.js'
 
 const authStore = useAuthStore()
 
-// ── State ──────────────────────────────────────────────────────────────────
 const recommandations   = ref([])
 const loading           = ref(false)
 const error             = ref(null)
@@ -254,7 +295,25 @@ const showDeleteConfirm = ref(false)
 const deleteLoading     = ref(false)
 const recToDelete       = ref(null)
 
-// ── Tabs ───────────────────────────────────────────────────────────────────
+const writeModalRef     = ref(null)
+const deleteModalRef    = ref(null)
+
+// Ensemble des IDs de recommandations temporairement bloquées
+const rateLimitedIds = ref(new Set())
+const RATE_LIMIT_MS = 1500
+const rateLimitTimers = new Map()
+
+function startRateLimitForId(id) {
+  rateLimitedIds.value = new Set([...rateLimitedIds.value, id])
+  const timer = setTimeout(() => {
+    const next = new Set(rateLimitedIds.value)
+    next.delete(id)
+    rateLimitedIds.value = next
+    rateLimitTimers.delete(id)
+  }, RATE_LIMIT_MS)
+  rateLimitTimers.set(id, timer)
+}
+
 const tabs = [
   { key: 'all',        label: 'Toutes' },
   { key: 'EN_ATTENTE', label: 'En attente' },
@@ -262,7 +321,6 @@ const tabs = [
   { key: 'REJETE',     label: 'Rejetées' },
 ]
 
-// ── Computed ───────────────────────────────────────────────────────────────
 const filteredRecommandations = computed(() => {
   if (activeTab.value === 'all') return recommandations.value
   return recommandations.value.filter(r => r.status === activeTab.value)
@@ -272,14 +330,19 @@ const uniqueAuthors = computed(() =>
   new Set(recommandations.value.map(r => r.id_recommandeur)).size
 )
 
-// Empêcher l'auto-recommandation : l'id_etudiant saisi ne doit pas être celui de l'utilisateur connecté
 const isSelfRecommandation = computed(() => {
   const myStudentId = getStudentId()
   return writeForm.value.id_etudiant.trim() !== '' &&
          writeForm.value.id_etudiant.trim() === myStudentId
 })
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+// Valide le formulaire d'envoi de recommandation avant d'activer le bouton submit.
+const isWriteFormValid = computed(() => {
+  const idTrimmed = writeForm.value.id_etudiant.trim()
+  const msgTrimmed = writeForm.value.message.trim()
+  return idTrimmed.length > 0 && msgTrimmed.length >= 10 && msgTrimmed.length <= 1000
+})
+
 function getStudentId() {
   const user = authStore.user
   return user?.etudiant?.id_etudiant ?? null
@@ -291,7 +354,6 @@ function getUserId() {
 }
 
 function isCurrentUser(id_etudiant) {
-  // Vérifie si l'étudiant cible de la reco est bien l'utilisateur connecté
   return getStudentId() === id_etudiant
 }
 
@@ -339,9 +401,40 @@ function toggleExpand(id) {
   else expandedIds.value.splice(idx, 1)
 }
 
-// ── API ────────────────────────────────────────────────────────────────────
+//Ferme la modal visible avec Escape.
+function handleEscape() {
+  if (showDeleteConfirm.value) {
+    showDeleteConfirm.value = false
+  } else if (showWriteModal.value) {
+    closeWriteModal()
+  }
+}
 
-// Récupère les recommandations reçues par l'étudiant connecté
+//Piège le focus dans la modal d'écriture.
+function trapFocusWrite(event) {
+  trapFocusInRef(event, writeModalRef)
+}
+
+//Piège le focus dans la modal de suppression.
+function trapFocusDelete(event) {
+  trapFocusInRef(event, deleteModalRef)
+}
+
+function trapFocusInRef(event, containerRef) {
+  if (event.key !== 'Tab' || !containerRef.value) return
+  const focusable = containerRef.value.querySelectorAll(
+    'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )
+  if (!focusable.length) return
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+  if (event.shiftKey) {
+    if (document.activeElement === first) { event.preventDefault(); last.focus() }
+  } else {
+    if (document.activeElement === last) { event.preventDefault(); first.focus() }
+  }
+}
+
 async function fetchRecommandations() {
   if (!authStore.user) await authStore.fetchUser()
   loading.value = true; error.value = null
@@ -353,10 +446,10 @@ async function fetchRecommandations() {
   } finally { loading.value = false }
 }
 
-// L'étudiant connecté valide ou rejette une reco reçue
-// L'API attend : PATCH /recommandations/{id}/valider  body: { status: "VALIDE" | "REJETE" }
 async function validerRecommandation(id, status) {
+  if (rateLimitedIds.value.has(id)) return
   actionLoading.value = id
+  startRateLimitForId(id)
   try {
     await api.patch(`/recommandations/${id}/valider`, { status })
     await fetchRecommandations()
@@ -365,18 +458,15 @@ async function validerRecommandation(id, status) {
   } finally { actionLoading.value = null }
 }
 
-// L'étudiant connecté recommande un AUTRE étudiant
-// POST /recommandations/  body: { id_etudiant: <id de l'autre>, message }
 async function submitRecommandation() {
-  if (isSelfRecommandation.value) return
+  if (isSelfRecommandation.value || !isWriteFormValid.value) return
   writeError.value = null; writeLoading.value = true
   try {
     await api.post('/recommandations/', {
       id_etudiant: writeForm.value.id_etudiant.trim(),
-      message:     writeForm.value.message
+      message:     writeForm.value.message.trim().slice(0, 1000),
     })
     closeWriteModal()
-    // Pas de re-fetch ici : cette reco apparaîtra dans la liste de l'AUTRE étudiant, pas la nôtre
   } catch (e) {
     writeError.value = e.response?.data?.message || 'Erreur lors de l\'envoi.'
   } finally { writeLoading.value = false }
@@ -395,17 +485,24 @@ async function deleteRecommandation() {
   } finally { deleteLoading.value = false }
 }
 
-// ── Modal helpers ──────────────────────────────────────────────────────────
-
 function closeWriteModal() {
   showWriteModal.value = false
+  writeForm.value = { id_etudiant: '', message: '' }
+  writeError.value = null
 }
+
 function confirmDelete(rec) {
   recToDelete.value = rec
   showDeleteConfirm.value = true
+  nextTick(() => deleteModalRef.value?.focus())
 }
 
 onMounted(fetchRecommandations)
+
+onUnmounted(() => {
+  rateLimitTimers.forEach(t => clearTimeout(t))
+  rateLimitTimers.clear()
+})
 </script>
 
 <style scoped>

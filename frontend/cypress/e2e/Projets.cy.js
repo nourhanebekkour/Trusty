@@ -52,20 +52,20 @@ describe('E2E – Projets – Filtres', () => {
 
   it('ouvre le panneau de filtres', () => {
     cy.contains('Filtres').click()
-    cy.contains('Réinitialiser').should('be.visible')
+    cy.get('.filter-select').first().should('be.visible')
   })
 
   it('filtre par statut "Validé"', () => {
     cy.contains('Filtres').click()
-    cy.contains('Validé').click()
+    cy.get('.filter-select').first().select('VALIDE')
     cy.get('input[placeholder*="projet"]').should('exist')
   })
 
   it('réinitialise les filtres', () => {
     cy.contains('Filtres').click()
-    cy.contains('Validé').click()
-    cy.contains('Réinitialiser').click()
-    cy.contains('Tous').should('be.visible')
+    cy.get('.filter-select').first().select('VALIDE')
+    cy.get('.filter-select').first().select('')
+    cy.get('.filter-select').first().should('have.value', '')
   })
 })
 
@@ -86,11 +86,15 @@ describe('E2E – Projets – Création', () => {
   it('crée un nouveau projet', () => {
     cy.intercept('POST', '**/projets**').as('createProjet')
     cy.contains('Nouveau projet').click()
-    cy.get('input[placeholder="Ex: Système de gestion…"]').type(`Projet E2E ${Date.now()}`)
+    cy.get('input[placeholder="Ex: Système de gestion des étudiants…"]').type(`Projet E2E ${Date.now()}`)
     cy.get('select.form-input').first().select('PERSONNEL')
     cy.get('input[type="date"]').first().type('2024-01-01')
     cy.get('textarea[placeholder="Décrivez votre projet…"]').type('Description du projet de test E2E')
-    cy.contains('button', /soumettre|enregistrer/i).click()
+    // Step 0 → 1 → 2 → 3 → triggers goToCreateStep (POST /projets)
+    cy.contains('button', 'Suivant →').click()
+    cy.contains('button', 'Suivant →').click()
+    cy.contains('button', 'Suivant →').click()
+    cy.contains('button', 'Suivant →').click()
     cy.wait('@createProjet').its('response.statusCode').should('eq', 201)
   })
 })
