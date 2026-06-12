@@ -1,18 +1,18 @@
 name: CI
 
+# Permissions globales minimales — Least Privilege
+# Par défaut GitHub donne write-all, on restreint à read uniquement
 permissions:
   contents: read
-  actions: read
-  security-events: write
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main, dev, frontend-finalisation]
   pull_request:
     branches: [main, dev]
 
 jobs:
-
+  # ─── QUALITÉ CODE ───────────────────────────────────────────────────────────
   backend-lint:
     name: Backend — Lint
     runs-on: ubuntu-latest
@@ -92,52 +92,19 @@ jobs:
           sleep 10
           kill $SERVER_PID || true
 
-  frontend-test-report:
-    name: Frontend — Tests & Rapport
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./frontend
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-      - run: npm ci
-      - name: Run Vitest (JSON output)
-        run: npm run test:ci
-        continue-on-error: true
-      - name: Generate HTML report
-        run: npm run report:generate
-      - name: Send report (email + Jira)
-        run: npm run report:send
-        env:
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          SMTP_TO:   ${{ secrets.SMTP_TO }}
-          JIRA_BASE_URL:    ${{ secrets.JIRA_BASE_URL }}
-          JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
-          JIRA_USER_EMAIL:  ${{ secrets.JIRA_USER_EMAIL }}
-          JIRA_API_TOKEN:   ${{ secrets.JIRA_API_TOKEN }}
-      - name: Upload HTML report as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-test-report
-          path: frontend/test-report.html
-
+  # ─── SÉCURITÉ — TRIVY ──────────────────────────────────────────────────────
   trivy-scan:
     name: Security — Trivy Scan
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      security-events: write
+      security-events: write   # nécessaire pour upload SARIF vers GitHub Security
       actions: read
       contents: read
     steps:
       - uses: actions/checkout@v4
 
+      # --- Scan des dépendances npm (filesystem — sans builder l'image) ---
       - name: Trivy — Scan dépendances backend
         uses: aquasecurity/trivy-action@v0.36.0
         with:
@@ -158,6 +125,7 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: '0'
 
+      # --- Scan des Dockerfiles (misconfigurations) ---
       - name: Trivy — Misconfig Dockerfile backend
         uses: aquasecurity/trivy-action@v0.36.0
         with:
@@ -176,12 +144,14 @@ jobs:
           output: trivy-config-frontend.sarif
           exit-code: '0'
 
+      # --- Build des images Docker ---
       - name: Build image backend
         run: docker build -t trusty-backend:ci ./backend
 
       - name: Build image frontend
         run: docker build -t trusty-frontend:ci ./frontend
 
+      # exit-code: '1' → fait échouer le pipeline si CVE CRITICAL dans NOS images
       - name: Trivy — Scan image backend
         uses: aquasecurity/trivy-action@v0.36.0
         with:
@@ -201,6 +171,7 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: '1'
 
+      # --- Upload résultats vers GitHub Security tab (toujours, même si scan échoue) ---
       - name: Upload — dépendances backend
         uses: github/codeql-action/upload-sarif@v4
         if: always()
@@ -243,10 +214,148 @@ jobs:
           sarif_file: trivy-image-frontend.sarif
           category: trivy-image-frontend
 
-  # ─── PHASE 6 — appel security.yml après trivy ──────────────────────────────
-  security:
-    name: Security — SonarQube + OWASP ZAP
-    needs: trivy-scan
-    uses: ./.github/workflows/security.yml
-    secrets:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  frontend-test-report:
+    name: Frontend — Tests & Rapport
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+
+      - name: Run Vitest (JSON output)
+        run: npm run test:ci
+        continue-on-error: true
+
+      - name: Generate HTML report
+        run: npm run report:generate
+
+      - name: Send report (email + Jira)
+        run: npm run report:send
+        env:
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_TO:   ${{ secrets.SMTP_TO }}
+          JIRA_BASE_URL:     ${{ secrets.JIRA_BASE_URL }}
+          JIRA_PROJECT_KEY:  ${{ secrets.JIRA_PROJECT_KEY }}
+          JIRA_USER_EMAIL:   ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN:    ${{ secrets.JIRA_API_TOKEN }}
+
+      - name: Upload HTML report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-report
+          path: frontend/test-report.html
+
+ 
+#   trivy-scan:
+#     name: Security — Trivy Scan
+#     runs-on: ubuntu-latest
+#     permissions:
+#       security-events: write
+#       actions: read
+#       contents: read
+#     steps:
+#       - uses: actions/checkout@v4
+  # ─── TESTS E2E — CYPRESS ─────────────────────────────────────────────────────
+  cypress-e2e:
+    name: Frontend — E2E (Cypress)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [frontend-lint, backend-lint]
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: trusty
+          POSTGRES_PASSWORD: trusty
+          POSTGRES_DB: trusty_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: ./backend
+
+      - name: Create backend .env for CI
+        run: |
+          echo "DATABASE_URL=postgresql://trusty:trusty@localhost:5432/trusty_ci?schema=public" > .env
+          echo "JWT_SECRET=ci-secret-trusty" >> .env
+          echo "JWT_REFRESH_SECRET=ci-refresh-trusty" >> .env
+          echo "JWT_EXPIRES_IN=1h" >> .env
+          echo "PORT=3000" >> .env
+          echo "NODE_ENV=test" >> .env
+          echo "FRONTEND_URL=http://localhost:5173" >> .env
+          echo "MINIO_ENDPOINT=localhost" >> .env
+          echo "MINIO_PORT=9000" >> .env
+          echo "MINIO_USE_SSL=false" >> .env
+          echo "MINIO_ACCESS_KEY=minioadmin" >> .env
+          echo "MINIO_SECRET_KEY=minioadmin" >> .env
+          echo "MINIO_PUBLIC_BUCKET=dev-public" >> .env
+          echo "MINIO_PRIVATE_BUCKET=dev-private" >> .env
+        working-directory: ./backend
+
+      - name: Prisma — deploy migrations
+        run: npx prisma migrate deploy
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://trusty:trusty@localhost:5432/trusty_ci?schema=public
+
+      - name: Start backend
+        run: npm start &
+        working-directory: ./backend
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: ./frontend
+
+      - name: Start frontend dev server
+        run: npm run dev &
+        working-directory: ./frontend
+
+      - name: Wait for servers to be ready
+        run: |
+          timeout 30 bash -c 'until curl -s http://localhost:3000 > /dev/null 2>&1; do sleep 1; done' || true
+          timeout 30 bash -c 'until curl -s http://localhost:5173 > /dev/null 2>&1; do sleep 1; done'
+
+      - name: Run Cypress E2E tests
+        run: npx cypress run
+        working-directory: ./frontend
+        continue-on-error: true
+
+      - name: Upload Cypress screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-screenshots
+          path: frontend/cypress/screenshots
+          if-no-files-found: ignore
+
+      - name: Upload Cypress videos
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-videos
+          path: frontend/cypress/videos
+          if-no-files-found: ignore

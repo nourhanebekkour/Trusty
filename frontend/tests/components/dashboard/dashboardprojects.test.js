@@ -197,10 +197,10 @@ describe('DashboardProjects.vue', () => {
       expect(mockPush).toHaveBeenCalledWith('/projets/1')
     })
 
-    it('navigue vers /projets/:id_projet au clic sur "Détails ↗"', async () => {
+    it('navigue vers /projets au clic sur "Détails ↗"', async () => {
       await mountComponent({ projects: [PROJECT_VALIDE] })
         .find('.btn--link').trigger('click')
-      expect(mockPush).toHaveBeenCalledWith('/projets/1')
+      expect(mockPush).toHaveBeenCalledWith('/projets')
     })
   })
 

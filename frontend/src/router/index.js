@@ -42,6 +42,7 @@ const router = createRouter({
       path: '/register',
       name: 'register',
       component: registerview,
+      meta: { guestOnly: true },
     },
     {
       path: '/login',
@@ -187,6 +188,7 @@ const router = createRouter({
       path: '/activites',
       name: 'activites',
       component: activites,
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
 
     // ── Professional ─────────────────────────────────────

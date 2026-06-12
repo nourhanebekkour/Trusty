@@ -1,14 +1,14 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',  // ✅ reste '/api'
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   withCredentials: true,
 })
 
 // Intercepteur de requête
 api.interceptors.request.use(
   (config) => {
-    // ✅ Supprimé complètement — new URL('/api') est invalide avec une URL relative
+    // Une base relative est resolue par le proxy Vite.
     // La sécurité d'origine est déjà gérée par le proxy Vite dans vite.config.js
 
     delete config.headers['Authorization']

@@ -40,7 +40,7 @@ export function normaliserCandidat(e) {
   const hasName  = prenom || nom
   return {
     id:          e.id_etudiant,
-    nom:         hasName ? `${prenom} ${nom}`.trim() : `Étudiant ${e.id_etudiant?.slice(-4) ?? ''}`,
+    nom:         hasName ? `${prenom} ${nom}`.trim() : `Étudiant ${String(e.id_etudiant ?? '').slice(-4)}`,
     initiales:   hasName ? `${prenom[0] ?? '?'}${nom[0] ?? '?'}`.toUpperCase() : '??',
     formation:   e.filiere ?? '',
     ecole:       'ENSA',

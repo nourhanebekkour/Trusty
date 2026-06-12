@@ -1,16 +1,22 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
+import { createPinia, setActivePinia } from 'pinia'
 import AdminLayout from '@/components/admin/AdminLayout.vue'
 
 // ── Stubs des sous-composants ─────────────────────────────
-const AppTopbar  = { template: '<header class="topbar" :data-notif-count="notifCount"/>', props: ['notifCount'] }
-const AppSidebar = { template: '<nav class="sidebar"/>' }
+// AdminLayout.vue uses NavBar and AdminSideBar (not AppTopbar/AppSidebar)
+// Stubs définis inline dans les factories vi.mock (pas de variables top-level)
+vi.mock('@/components/laayout/NavBar.vue',      () => ({ default: { template: '<header class="topbar"/>' } }))
+vi.mock('@/components/admin/AdminSideBar.vue',  () => ({ default: { template: '<nav class="sidebar"/>' } }))
+vi.mock('@/components/laayout/Footer.vue',      () => ({ default: { template: '<footer/>' } }))
 
-vi.mock('../../src/components/layout/AppTopbar.vue',  () => ({ default: AppTopbar  }))
-vi.mock('../../src/components/layout/AppSidebar.vue', () => ({ default: AppSidebar }))
+const NavBar       = { template: '<header class="topbar"/>' }
+const AdminSideBar = { template: '<nav class="sidebar"/>' }
+const Footer       = { template: '<footer/>' }
 
-function buildWrapper(routerView = false) {
+function buildWrapper() {
+  setActivePinia(createPinia())
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [{ path: '/', component: { template: '<div class="router-view-content">Vue routée</div>' } }],
@@ -20,13 +26,18 @@ function buildWrapper(routerView = false) {
     global: {
       plugins: [router],
       stubs: {
-        AppTopbar,
-        AppSidebar,
+        NavBar,
+        AdminSideBar,
+        Footer,
         RouterView: { template: '<div class="router-view-content">Vue routée</div>' },
       },
     },
   })
 }
+
+beforeEach(() => {
+  setActivePinia(createPinia())
+})
 
 // ─────────────────────────────────────────────────────────
 describe('AdminLayout.vue', () => {
@@ -40,29 +51,28 @@ describe('AdminLayout.vue', () => {
       expect(wrapper.exists()).toBe(true)
     })
 
-    it('contient le wrapper racine .admin-layout', () => {
+    it('contient le wrapper racine .app', () => {
       const wrapper = buildWrapper()
-      expect(wrapper.find('.admin-layout').exists()).toBe(true)
+      expect(wrapper.find('.app').exists()).toBe(true)
     })
 
-    it('affiche AppTopbar', () => {
+    it('affiche NavBar (topbar)', () => {
       const wrapper = buildWrapper()
       expect(wrapper.find('.topbar').exists()).toBe(true)
     })
 
-    it('affiche AppSidebar', () => {
+    it('affiche AdminSideBar (sidebar)', () => {
       const wrapper = buildWrapper()
       expect(wrapper.find('.sidebar').exists()).toBe(true)
     })
 
-    it('affiche la zone de contenu principal (.admin-layout__main)', () => {
+    it('affiche la zone de contenu principal (.content)', () => {
       const wrapper = buildWrapper()
-      expect(wrapper.find('.admin-layout__main').exists()).toBe(true)
+      expect(wrapper.find('.content').exists()).toBe(true)
     })
 
     it('affiche la topbar', () => {
       const wrapper = buildWrapper()
-      // AdminLayout inclut AppTopbar sans prop data-notif-count direct
       expect(wrapper.find('.topbar').exists()).toBe(true)
     })
   })
@@ -71,15 +81,15 @@ describe('AdminLayout.vue', () => {
   // 2. STRUCTURE CSS
   // ══════════════════════════════════════════════════════
   describe('structure CSS', () => {
-    it('.admin-layout__main est bien à l\'intérieur de .admin-layout', () => {
+    it('.content est bien à l\'intérieur de .app', () => {
       const wrapper = buildWrapper()
-      const layout = wrapper.find('.admin-layout')
-      expect(layout.find('.admin-layout__main').exists()).toBe(true)
+      const app = wrapper.find('.app')
+      expect(app.find('.content').exists()).toBe(true)
     })
 
-    it('RouterView est dans .admin-layout__main', () => {
+    it('RouterView est dans .content', () => {
       const wrapper = buildWrapper()
-      const main = wrapper.find('.admin-layout__main')
+      const main = wrapper.find('.content')
       expect(main.find('.router-view-content').exists()).toBe(true)
     })
   })
@@ -97,7 +107,7 @@ describe('AdminLayout.vue', () => {
     it('Sidebar est rendu avant le contenu principal', () => {
       const wrapper = buildWrapper()
       const html = wrapper.html()
-      expect(html.indexOf('sidebar')).toBeLessThan(html.indexOf('admin-layout__main'))
+      expect(html.indexOf('sidebar')).toBeLessThan(html.indexOf('content'))
     })
   })
 })

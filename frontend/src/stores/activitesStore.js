@@ -44,17 +44,17 @@ export const useActivitesStore = defineStore('activites', {
   actions: {
     async fetchActivites() {
       if (!this.currentEtudiantId) {
-        this.activites = getDemoActivites();
+        this.activites = [];
         return;
       }
       this.loading = true;
       this.error = null;
       try {
         const result = await activitesService.getActivitesByEtudiant(this.currentEtudiantId);
-        this.activites = Array.isArray(result) ? result : (result?.data ?? getDemoActivites());
+        this.activites = Array.isArray(result) ? result : (Array.isArray(result?.data) ? result.data : []);
       } catch (e) {
         this.error = e.message;
-        this.activites = getDemoActivites();
+        this.activites = [];
       } finally {
         this.loading = false;
       }
