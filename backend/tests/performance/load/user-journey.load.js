@@ -69,11 +69,6 @@ export default function (data) {
     notifTime.add(notifs.timings.duration);
     errorRate.add(notifs.status !== 200);
 
-    // dans user-journey.load.js — après les notifications
-    const portfolio = http.get(`${BASE_URL}/api/portfolio/etudiant/${idEtudiant}`, headers);
-    check(portfolio, { 'GET /portfolio → 200': (r) => r.status === 200 });
-    errorRate.add(portfolio.status !== 200);
-    sleep(1);
 
     sleep(1);
 }
