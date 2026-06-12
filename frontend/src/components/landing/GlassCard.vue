@@ -34,7 +34,7 @@ const cardStyle = {}
   border: 1px solid var(--landing-border);
   border-radius: 20px;
   box-shadow:
-    0 8px 32px rgba(0,0,0,0.2),
+    0 8px 32px var(--landing-shadow-soft),
     inset 0 1px 0 rgba(255,255,255,0.05);
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
               box-shadow 0.3s ease,
@@ -46,7 +46,7 @@ const cardStyle = {}
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(145deg, rgba(255,255,255,0.09), transparent 32%);
+  background: linear-gradient(145deg, var(--landing-highlight), transparent 32%);
   opacity: 0.7;
 }
 
@@ -67,7 +67,7 @@ const cardStyle = {}
   transform: translateY(-6px);
   border-color: var(--landing-accent-border);
   box-shadow:
-    0 16px 48px rgba(0,0,0,0.3),
+    0 16px 48px var(--landing-shadow-hover),
     0 0 30px var(--landing-glow),
     inset 0 1px 0 rgba(255,255,255,0.08);
 }

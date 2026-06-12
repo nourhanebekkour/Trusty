@@ -402,7 +402,7 @@ async function submitForgotPassword() {
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--landing-border);
   border-radius: 24px;
-  box-shadow: 0 35px 100px rgba(0,0,0,0.42), inset 0 1px rgba(255,255,255,0.08);
+  box-shadow: 0 35px 100px var(--landing-shadow-card), inset 0 1px var(--landing-highlight);
   position: relative;
   overflow: hidden;
 }
@@ -412,7 +412,7 @@ async function submitForgotPassword() {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(145deg, rgba(255,255,255,0.1), transparent 30%);
+  background: linear-gradient(145deg, var(--landing-highlight), transparent 30%);
 }
 
 .login-header {
@@ -727,7 +727,7 @@ async function submitForgotPassword() {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: var(--landing-modal-overlay);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
@@ -749,7 +749,7 @@ async function submitForgotPassword() {
   max-width: 420px;
   position: relative;
   animation: modalIn 0.3s ease-out;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+  box-shadow: 0 24px 80px var(--landing-shadow-card);
 }
 
 .modal-close {

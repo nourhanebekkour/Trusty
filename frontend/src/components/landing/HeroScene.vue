@@ -108,7 +108,7 @@
   border-radius: 24px;
   overflow: hidden;
   background: color-mix(in srgb, var(--landing-bg) 82%, transparent);
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.36), 0 0 60px var(--landing-glow);
+  box-shadow: 0 40px 100px var(--landing-shadow-card), 0 0 60px var(--landing-glow);
   backdrop-filter: blur(24px) saturate(130%);
   transform: translate(-50%, -50%) rotateY(-8deg) rotateX(4deg);
   animation: window-float 7s ease-in-out infinite;
@@ -214,7 +214,7 @@
   border: 1px solid var(--landing-border-hover);
   border-radius: 14px;
   background: color-mix(in srgb, var(--landing-bg) 75%, transparent);
-  box-shadow: 0 20px 46px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 46px var(--landing-shadow-hover);
   backdrop-filter: blur(18px);
   animation: badge-float 5s ease-in-out infinite;
 }

@@ -133,7 +133,7 @@ for (let i = 0; i < 40; i++) {
 .vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 60% 50% at 50% 50%, transparent 40%, rgba(0,0,0,0.25) 100%);
+  background: radial-gradient(ellipse 60% 50% at 50% 50%, transparent 40%, var(--landing-vignette) 100%);
   pointer-events: none;
 }
 

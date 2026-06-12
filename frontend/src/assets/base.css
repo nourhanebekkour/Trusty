@@ -144,7 +144,9 @@ body {
 }
 
 /* ─── LANDING THEME ──────────────────────────────── */
+:root[data-landing-mode="dark"],
 [data-theme="landing"] {
+  color-scheme: dark;
   --landing-bg: #050816;
   --landing-bg-gradient: linear-gradient(135deg, #050816 0%, #0f172a 50%, #111827 100%);
   --landing-surface: rgba(255,255,255,0.06);
@@ -172,13 +174,21 @@ body {
   --landing-nav-border: rgba(255,255,255,0.06);
   --landing-text-on-dark: #f1f5f9;
   --landing-text-on-light: #0F1B2D;
+  --landing-shadow-card: rgba(0, 0, 0, 0.42);
+  --landing-shadow-soft: rgba(0, 0, 0, 0.24);
+  --landing-shadow-hover: rgba(0, 0, 0, 0.3);
+  --landing-vignette: rgba(0, 0, 0, 0.25);
+  --landing-modal-overlay: rgba(0, 0, 0, 0.6);
+  --landing-highlight: rgba(255, 255, 255, 0.09);
 }
 
-[data-landing-mode="light"] {
+:root[data-landing-mode="light"],
+:root[data-landing-mode="light"] [data-theme="landing"] {
+  color-scheme: light;
   --landing-bg: #F5F3EE;
   --landing-bg-gradient: linear-gradient(135deg, #F5F3EE 0%, #FAFAF8 50%, #F0EDE6 100%);
-  --landing-surface: #FFFFFF;
-  --landing-surface-hover: #F0EDE6;
+  --landing-surface: rgba(255, 255, 255, 0.82);
+  --landing-surface-hover: rgba(255, 255, 255, 0.96);
   --landing-border: #D6D0C4;
   --landing-border-hover: #A8CEC5;
   --landing-text: #0F1B2D;
@@ -197,12 +207,18 @@ body {
   --landing-aurora-2: rgba(61,107,94,0.08);
   --landing-aurora-3: rgba(168,206,197,0.12);
   --landing-nav-bg: #F5F3EE;
-  --landing-nav-scrolled: #FFFFFF;
+  --landing-nav-scrolled: rgba(255, 255, 255, 0.86);
   --landing-nav-border: #D6D0C4;
   --landing-btn-glass-bg: #FFFFFF;
   --landing-btn-glass-border: #D6D0C4;
   --landing-btn-glass-hover-bg: #F0EDE6;
   --landing-btn-glass-hover-border: #A8CEC5;
+  --landing-shadow-card: rgba(42, 57, 53, 0.16);
+  --landing-shadow-soft: rgba(42, 57, 53, 0.1);
+  --landing-shadow-hover: rgba(42, 57, 53, 0.18);
+  --landing-vignette: rgba(61, 107, 94, 0.06);
+  --landing-modal-overlay: rgba(15, 27, 45, 0.28);
+  --landing-highlight: rgba(255, 255, 255, 0.72);
 }
 
 @keyframes aurora-drift {
