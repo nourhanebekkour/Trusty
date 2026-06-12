@@ -28,6 +28,15 @@
               Découvrir la plateforme
             </button>
           </div>
+          <div class="hero-trust">
+            <div class="trust-avatars">
+              <span>ML</span><span>YK</span><span>SA</span><span>+2k</span>
+            </div>
+            <div>
+              <div class="trust-stars">★★★★★</div>
+              <p>Une expérience pensée avec les étudiants et les recruteurs</p>
+            </div>
+          </div>
           <div class="hero-metrics">
             <div class="metric">
               <span class="metric-value">25k+</span>
@@ -196,6 +205,16 @@ const steps = [
   padding: 120px 32px 80px;
 }
 
+.section-hero::after {
+  content: '';
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--landing-border-hover), transparent);
+}
+
 .hero-inner {
   max-width: 1280px;
   margin: 0 auto;
@@ -235,10 +254,12 @@ const steps = [
 }
 
 .hero-title {
-  font-size: 3.2rem;
+  font-size: clamp(3.1rem, 5vw, 4.65rem);
   font-weight: 800;
-  line-height: 1.12;
-  letter-spacing: -0.03em;
+  line-height: 1.02;
+  letter-spacing: -0.055em;
+  text-wrap: balance;
+  text-shadow: 0 16px 46px rgba(0, 0, 0, 0.2);
 }
 
 .gradient-text {
@@ -271,13 +292,26 @@ const steps = [
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 18px 40px var(--landing-glow);
+  position: relative;
+  overflow: hidden;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
+.btn-gradient::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.28) 48%, transparent 72%);
+  transform: translateX(-130%);
+  transition: transform 0.7s ease;
+}
+
 .btn-gradient:hover {
-  transform: scale(1.05);
+  transform: translateY(-3px);
   box-shadow: 0 22px 50px var(--landing-glow-strong);
 }
+
+.btn-gradient:hover::after { transform: translateX(130%); }
 
 .btn-glass {
   background: var(--landing-surface);
@@ -303,6 +337,9 @@ const steps = [
   display: flex;
   gap: 32px;
   margin-top: 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--landing-border);
+  width: fit-content;
 }
 
 .metric-value {
@@ -319,12 +356,58 @@ const steps = [
   letter-spacing: 0.04em;
 }
 
+.hero-trust {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 2px;
+}
+
+.trust-avatars {
+  display: flex;
+  padding-left: 8px;
+}
+
+.trust-avatars span {
+  width: 32px;
+  height: 32px;
+  margin-left: -8px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--landing-bg);
+  border-radius: 50%;
+  background: linear-gradient(145deg, var(--landing-accent), var(--landing-accent-hover));
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: 800;
+  box-shadow: 0 5px 16px rgba(0,0,0,0.2);
+}
+
+.trust-avatars span:last-child {
+  background: var(--landing-surface);
+  color: var(--landing-text);
+  border-color: var(--landing-border);
+}
+
+.trust-stars {
+  color: #fbbf24;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+}
+
+.hero-trust p {
+  margin: 3px 0 0;
+  color: var(--landing-text-secondary);
+  font-size: 0.68rem;
+}
+
 /* ─── Espaces ────────────────────────────────────── */
 .section-spaces {
   position: relative;
   z-index: 1;
   padding: 100px 32px;
   text-align: center;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--landing-surface) 38%, transparent), transparent);
 }
 
 .section-spaces .section-desc {
@@ -346,6 +429,19 @@ const steps = [
   z-index: 1;
   padding: 100px 32px;
   text-align: center;
+}
+
+.section-features::before {
+  content: '';
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  right: -160px;
+  top: 16%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--landing-glow), transparent 70%);
+  filter: blur(30px);
+  pointer-events: none;
 }
 
 .section-features .section-desc {
@@ -410,6 +506,8 @@ const steps = [
   .hero-metrics { justify-content: center; }
   .hero-visual { display: none; }
   .hero-title { font-size: 2.2rem; }
+  .hero-trust { justify-content: center; }
+  .hero-metrics { width: 100%; justify-content: center; }
   .section-title { font-size: 1.8rem; }
   .spaces-grid { grid-template-columns: 1fr; }
   .features-grid { grid-template-columns: 1fr; }

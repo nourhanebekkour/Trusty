@@ -26,6 +26,8 @@ const cardStyle = {}
 
 <style scoped>
 .glass-card {
+  position: relative;
+  overflow: hidden;
   background: var(--landing-surface);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
@@ -39,6 +41,28 @@ const cardStyle = {}
               border-color 0.3s ease;
 }
 
+.glass-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(145deg, rgba(255,255,255,0.09), transparent 32%);
+  opacity: 0.7;
+}
+
+.glass-card::after {
+  content: '';
+  position: absolute;
+  top: -80%;
+  left: -45%;
+  width: 35%;
+  height: 240%;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  transform: rotate(20deg);
+  transition: left 0.7s ease;
+}
+
 .glass-card--hoverable:hover {
   transform: translateY(-6px);
   border-color: var(--landing-accent-border);
@@ -46,6 +70,10 @@ const cardStyle = {}
     0 16px 48px rgba(0,0,0,0.3),
     0 0 30px var(--landing-glow),
     inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.glass-card--hoverable:hover::after {
+  left: 120%;
 }
 
 .glass-card.sm {
