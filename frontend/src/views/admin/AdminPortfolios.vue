@@ -6,7 +6,7 @@
         <p class="page__subtitle">Liste des étudiants inscrits et suivi de leurs portfolios.</p>
       </div>
       <div class="page__actions">
-        <button class="btn btn--secondary" @click="load">🔄 Rafraîchir</button>
+        <button class="btn btn--secondary" @click="load"><AppIcon name="refresh" /> Rafraîchir</button>
       </div>
     </div>
 
@@ -14,13 +14,13 @@
 
     <div class="stats-row">
       <StatCard label="Total Étudiants" :value="admin.loading ? '…' : String(admin.students.length)">
-        <template #icon>🎓</template>
+        <template #icon><AppIcon name="graduation" /></template>
       </StatCard>
       <StatCard label="Actifs" :value="admin.loading ? '…' : String(activeCount)">
-        <template #icon>✅</template>
+        <template #icon><AppIcon name="check-circle" /></template>
       </StatCard>
       <StatCard label="En attente" :value="admin.loading ? '…' : String(admin.verificationQueue.length)">
-        <template #icon>🕐</template>
+        <template #icon><AppIcon name="clock" /></template>
       </StatCard>
     </div>
 
@@ -37,6 +37,7 @@
         <thead>
           <tr>
             <th>Étudiant</th>
+            <th v-if="authStore.isSuperAdmin">Établissement</th>
             <th>Email</th>
             <th>Statut</th>
             <th>Inscription</th>
@@ -54,6 +55,7 @@
                 </div>
               </div>
             </td>
+            <td v-if="authStore.isSuperAdmin" class="text-muted">{{ s.utilisateur?.ecole || s.ecole || '—' }}</td>
             <td class="text-muted">{{ s.email || s.utilisateur?.email }}</td>
             <td>
               <span :class="['statut', (s.status_compte || s.utilisateur?.status_compte) === 'ACTIF' ? 'statut--ok' : 'statut--pending']">
@@ -63,13 +65,17 @@
             <td class="text-muted">{{ formatDate(s.date_creation || s.utilisateur?.date_creation) }}</td>
             <td>
               <div class="action-btns">
-                <button class="btn btn--icon btn--sm" title="Voir le profil"
-                        @click="$router.push('/admin/profil')">👁</button>
+                <button
+                  class="btn btn--icon btn--sm"
+                  :disabled="!portfolioSlug(s)"
+                  :title="portfolioSlug(s) ? 'Voir le portfolio public' : 'Portfolio non publié'"
+                  @click="openPortfolio(s)"
+                ><AppIcon name="eye" /></button>
               </div>
             </td>
           </tr>
           <tr v-if="!admin.loading && paginated.length === 0">
-            <td colspan="5" class="state-msg">Aucun étudiant trouvé</td>
+            <td :colspan="authStore.isSuperAdmin ? 6 : 5" class="state-msg">Aucun étudiant trouvé</td>
           </tr>
         </tbody>
       </table>
@@ -97,6 +103,10 @@ import { useAuthStore }  from '../../stores/authstore'
 const admin = useAdminStore()
 const authStore = useAuthStore()
 const router = useRouter()
+
+const scope = computed(() =>
+  authStore.isSuperAdmin ? 'global' : (authStore.user?.ecole || '')
+)
 
 const activeCount = computed(() =>
   (admin.students || []).filter(s =>
@@ -126,6 +136,20 @@ const paginated = computed(() => {
   const start = (currentPage.value - 1) * perPage
   return filtered.value.slice(start, start + perPage)
 })
+
+function portfolioSlug(student) {
+  return student.portfolioUrl
+    || student.portfolio?.url_publique
+    || student.portfolios?.find(portfolio => portfolio.est_publie)?.url_publique
+    || null
+}
+
+function openPortfolio(student) {
+  const slug = portfolioSlug(student)
+  if (slug) {
+    router.push({ name: 'portfolio-template1', params: { url_publique: slug } })
+  }
+}
 
 function initials(prenom, nom) {
   const p = prenom?.[0] || ''
@@ -225,4 +249,5 @@ onMounted(async () => {
 .btn--sm   { padding: 6px 12px; font-size: 12px; }
 .btn--icon { background: transparent; border: 1px solid var(--color-border); color: var(--color-text-tertiary); padding: 5px 9px; }
 .btn--icon:hover { background: var(--color-surface-hover); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
 </style>

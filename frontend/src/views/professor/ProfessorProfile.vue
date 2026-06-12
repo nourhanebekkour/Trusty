@@ -37,6 +37,7 @@
         <section class="prof-card">
           <div class="prof-card-title">Identité</div>
           <div class="profile-field"><span class="profile-label">Email</span><span>{{ profile.utilisateur?.email || '—' }}</span></div>
+          <div class="profile-field"><span class="profile-label">Établissement</span><span>{{ auth.user?.ecole || 'Établissement non renseigné' }}</span></div>
           <div class="profile-field"><span class="profile-label">Nom</span><span>{{ profile.utilisateur?.nom || '—' }}</span></div>
           <div class="profile-field"><span class="profile-label">Prénom</span><span>{{ profile.utilisateur?.prenom || '—' }}</span></div>
           <div class="profile-field"><span class="profile-label">Téléphone</span><span>{{ profile.utilisateur?.telephone || '—' }}</span></div>
@@ -92,6 +93,7 @@ import {
   updateProfessorProfile,
   uploadProfessorAvatar,
 } from '@/services/professorApi'
+import { getUploadErrorMessage, validateUploadFile } from '@/utils/fileUpload'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -124,6 +126,14 @@ const initials = computed(() => {
 function onFileChange(e) {
   const file = e.target.files?.[0]
   if (!file) return
+  const fileError = validateUploadFile(file, { allowPdf: false })
+  if (fileError) {
+    saveError.value = fileError
+    e.target.value = ''
+    return
+  }
+  saveError.value = null
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
   avatarFile.value = file
   previewUrl.value = URL.createObjectURL(file)
 }
@@ -175,7 +185,9 @@ async function save() {
     showToast('Profil mis à jour avec succès.')
     await loadProfile()
   } catch (err) {
-    saveError.value = err.response?.data?.message || 'Erreur lors de la sauvegarde.'
+    saveError.value = avatarFile.value
+      ? getUploadErrorMessage(err, 'Erreur lors de la sauvegarde.')
+      : (err.response?.data?.message || 'Erreur lors de la sauvegarde.')
   } finally {
     saving.value = false
   }

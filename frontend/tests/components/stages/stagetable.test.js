@@ -67,14 +67,14 @@ describe('StageTable.vue — Tests Unitaires', () => {
     expect(wrapper.text()).toContain('Erreur réseau')
   })
 
-  it('3 — affiche le tableau si pas d\'erreur ni loading', () => {
+  it('3 — affiche les cartes si pas d\'erreur ni loading', () => {
     const { wrapper } = mountTable()
-    expect(wrapper.find('table').exists()).toBe(true)
+    expect(wrapper.find('.cards-grid').exists()).toBe(true)
   })
 
-  it('4 — affiche autant de lignes que de stages dans stagesPagines', () => {
+  it('4 — affiche autant de cartes que de stages dans stagesPagines', () => {
     const { wrapper } = mountTable()
-    expect(wrapper.findAll('tbody tr').length).toBe(STAGES.length)
+    expect(wrapper.findAll('.stage-card').length).toBe(STAGES.length)
   })
 
   it('5 — affiche le nom de l\'entreprise', () => {
@@ -89,7 +89,7 @@ describe('StageTable.vue — Tests Unitaires', () => {
 
   it('7 — le bouton Filtrer toggle showFilter', async () => {
     const { wrapper, store } = mountTable()
-    await wrapper.find('.btn-sm').trigger('click')
+    await wrapper.find('.filter-btn').trigger('click')
     expect(store.showFilter).toBeDefined()
   })
 
@@ -98,24 +98,26 @@ describe('StageTable.vue — Tests Unitaires', () => {
     expect(wrapper.find('.filter-bar').exists()).toBe(true)
   })
 
-  it('9 — clic sur le bouton modifier appelle openModal("edit", stage)', async () => {
-    const { wrapper, store } = mountTable()
+  it('9 — clic sur le bouton modifier émet l\'événement "edit"', async () => {
+    const { wrapper } = mountTable()
     const editBtns = wrapper.findAll('button[title="Modifier"]')
     await editBtns[0].trigger('click')
-    expect(store.openModal).toHaveBeenCalledWith('edit', STAGES[0])
+    expect(wrapper.emitted('edit')).toBeTruthy()
+    expect(wrapper.emitted('edit')[0]).toEqual([STAGES[0]])
   })
 
-  it('10 — clic sur le bouton supprimer appelle confirmerSuppression(stage)', async () => {
-    const { wrapper, store } = mountTable()
+  it('10 — clic sur le bouton supprimer émet l\'événement "delete"', async () => {
+    const { wrapper } = mountTable()
     const deleteBtns = wrapper.findAll('button[title="Supprimer"]')
     await deleteBtns[0].trigger('click')
-    expect(store.confirmerSuppression).toHaveBeenCalledWith(STAGES[0])
+    expect(wrapper.emitted('delete')).toBeTruthy()
+    expect(wrapper.emitted('delete')[0]).toEqual([STAGES[0]])
   })
 
-  it('11 — clic sur le bouton voir émet l\'événement "voir"', async () => {
+  it('11 — clic sur le corps de la carte émet l\'événement "voir"', async () => {
     const { wrapper } = mountTable()
-    const voirBtns = wrapper.findAll('button[title="Voir"]')
-    await voirBtns[0].trigger('click')
+    const cardBodies = wrapper.findAll('.card-body')
+    await cardBodies[0].trigger('click')
     expect(wrapper.emitted('voir')).toBeTruthy()
     expect(wrapper.emitted('voir')[0]).toEqual([STAGES[0]])
   })

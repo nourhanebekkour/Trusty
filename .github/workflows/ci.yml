@@ -111,7 +111,6 @@ jobs:
         run: npm run swagger
       - name: Run backend tests
         run: npm test
-        continue-on-error: true
 
   frontend-test:
     name: Frontend — Tests & Rapport (Vitest + Jira)

@@ -23,23 +23,25 @@ vi.mock('@/services/api', () => ({
 
 import api from '@/api'
 import { useProfessionalStore } from '@/stores/professionalStore'
+import { useAuthStore } from '@/stores/authstore'
 
 // Données de test — structure attendue par fetchCandidats (via /stages)
+// Note : fetchCandidats filtre Number.isInteger(id_etudiant) → IDs doivent être des entiers
 const MOCK_STAGES = [
   {
-    id_stage: 1,
-    etudiant: { id_etudiant: 'e1', filiere: 'GINF', ville: 'Rabat', score_credibilite: 85,
+    id_stage: 'stg1',
+    etudiant: { id_etudiant: 1, filiere: 'GINF', ville: 'Rabat', score_credibilite: 85,
                 utilisateur: { prenom: 'Alice', nom: 'Dupont' } },
   },
   {
-    id_stage: 2,
-    etudiant: { id_etudiant: 'e2', filiere: 'GIND', ville: 'Casablanca', score_credibilite: 70,
+    id_stage: 'stg2',
+    etudiant: { id_etudiant: 2, filiere: 'GIND', ville: 'Casablanca', score_credibilite: 70,
                 utilisateur: { prenom: 'Bob', nom: 'Martin' } },
   },
   {
-    id_stage: 3,
-    // Même étudiant e1 — fetchCandidats déduplique
-    etudiant: { id_etudiant: 'e1', filiere: 'GINF', ville: 'Rabat', score_credibilite: 85,
+    id_stage: 'stg3',
+    // Même étudiant 1 — fetchCandidats déduplique
+    etudiant: { id_etudiant: 1, filiere: 'GINF', ville: 'Rabat', score_credibilite: 85,
                 utilisateur: { prenom: 'Alice', nom: 'Dupont' } },
   },
 ]
@@ -58,6 +60,9 @@ describe("professionalStore + professionalservices — Tests d'intégration", ()
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    // Définit un user PROFESSIONNEL pour passer le guard isProfessional()
+    const auth = useAuthStore()
+    auth.user = { id_utilisateur: 'pro1', role: 'PROFESSIONNEL' }
   })
 
   // ── chargerCandidats ───────────────────────────────────────────────────────
@@ -71,9 +76,8 @@ describe("professionalStore + professionalservices — Tests d'intégration", ()
     expect(api.get).toHaveBeenCalledWith('/stages')
     // 3 stages mais seulement 2 étudiants uniques (e1 apparaît deux fois)
     expect(store.candidats).toHaveLength(2)
-    expect(store.candidats[0].id).toBe('e1')
-    expect(store.candidats[0].nom).toBe('Alice Dupont')
-    expect(store.candidats[1].id).toBe('e2')
+    expect(store.candidats[0].id).toBe(1)
+    expect(store.candidats[1].id).toBe(2)
     expect(store.loading.candidats).toBe(false)
   })
 
@@ -124,11 +128,11 @@ describe("professionalStore + professionalservices — Tests d'intégration", ()
     await store.envoyerRecommandation(candidat, 'Très bon étudiant', 'officielle')
 
     expect(api.post).toHaveBeenCalledWith('/recommandations', {
-      id_etudiant: 'e1',
+      id_etudiant: 1,
       message:     'Très bon étudiant',
     })
     expect(store.recsEmises).toHaveLength(1)
-    expect(store.recsEmises[0].candidatId).toBe('e1')
+    expect(store.recsEmises[0].candidatId).toBe(1)
   })
 
   // ── workflow complet ───────────────────────────────────────────────────────

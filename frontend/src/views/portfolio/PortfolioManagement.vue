@@ -48,7 +48,7 @@
         <p v-if="p.isAuto && !p.est_publie" class="auto-portfolio-msg">Votre portfolio a été généré automatiquement. Personnalisez-le et publiez-le !</p>
 
         <a v-if="p.est_publie && p.url_publique" :href="`/portfolio/${p.url_publique}`" target="_blank" class="pf-card__url">
-          🔗 /portfolio/{{ p.url_publique }}
+          <AppIcon name="link" /> /portfolio/{{ p.url_publique }}
         </a>
 
         <div class="pf-card__stats">
@@ -170,7 +170,7 @@
         <div class="modal">
           <div class="modal__header">
             <h2 class="modal__title">Créer un portfolio</h2>
-            <button class="modal__close" @click="closeModal">✕</button>
+            <button class="modal__close" aria-label="Fermer" @click="closeModal"><AppIcon name="x" /></button>
           </div>
 
           <div class="modal__body">

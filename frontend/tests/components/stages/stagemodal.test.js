@@ -2,31 +2,27 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
 
-vi.mock('@/stores/stageStore', () => ({
-  useStageStore: vi.fn(),
+// Mock the api module used by StageModal
+vi.mock('@/api', () => ({
+  default: {
+    get:    vi.fn().mockResolvedValue({ data: {} }),
+    post:   vi.fn().mockResolvedValue({ data: {} }),
+    put:    vi.fn().mockResolvedValue({ data: {} }),
+    delete: vi.fn().mockResolvedValue({ data: {} }),
+  },
 }))
 
-import { useStageStore } from '@/stores/stageStore'
 import StageModal from '@/components/stages/StageModal.vue'
 
-function makeStore(overrides = {}) {
-  const mockStore = {
-    modal:       { open: false, mode: 'create', stageId: null },
-    form:        { entreprise: '', poste: '', adresse_entreprise: '', encadrant_professionnel: '', encadrant_academique: '', duree_semaines: null, date_debut: '', date_fin: '', missions: '', est_public: true },
-    saving:      false,
-    sauvegarder: vi.fn(),
-    ...overrides,
-  }
-  useStageStore.mockReturnValue(mockStore)
-  return mockStore
-}
-
-function mountModal(storeOverrides = {}) {
-  const store = makeStore(storeOverrides)
-  return {
-    wrapper: mount(StageModal, { global: { stubs: { Teleport: true } } }),
-    store,
-  }
+function mountModal(props = {}) {
+  return mount(StageModal, {
+    props: {
+      modelValue: false,
+      editMode: false,
+      ...props,
+    },
+    global: { stubs: { Teleport: true } },
+  })
 }
 
 // ═════════════════════════════════════════════════════════════
@@ -40,61 +36,62 @@ describe('StageModal.vue — Tests Unitaires', () => {
     vi.clearAllMocks()
   })
 
-  it('1 — ne s\'affiche pas si modal.open est false', () => {
-    const { wrapper } = mountModal({ modal: { open: false, mode: 'create', stageId: null } })
+  it('1 — ne s\'affiche pas si modelValue est false', () => {
+    const wrapper = mountModal({ modelValue: false })
     expect(wrapper.find('.modal').exists()).toBe(false)
   })
 
-  it('2 — s\'affiche si modal.open est true', () => {
-    const { wrapper } = mountModal({ modal: { open: true, mode: 'create', stageId: null } })
+  it('2 — s\'affiche si modelValue est true', () => {
+    const wrapper = mountModal({ modelValue: true })
     expect(wrapper.find('.modal').exists()).toBe(true)
   })
 
-  it('3 — titre "Nouveau stage" en mode create', () => {
-    const { wrapper } = mountModal({ modal: { open: true, mode: 'create', stageId: null } })
-    expect(wrapper.find('h2').text()).toBe('Nouveau stage')
+  it('3 — titre "Nouveau Stage" en mode création', () => {
+    const wrapper = mountModal({ modelValue: true, editMode: false })
+    expect(wrapper.find('h3.modal-title').text()).toBe('Nouveau Stage')
   })
 
-  it('4 — titre "Modifier le stage" en mode edit', () => {
-    const { wrapper } = mountModal({ modal: { open: true, mode: 'edit', stageId: 5 } })
-    expect(wrapper.find('h2').text()).toBe('Modifier le stage')
+  it('4 — titre "Modifier le stage" en mode édition', () => {
+    const wrapper = mountModal({ modelValue: true, editMode: true })
+    expect(wrapper.find('h3.modal-title').text()).toBe('Modifier le stage')
   })
 
-  it('5 — bouton "Créer le stage" en mode create', () => {
-    const { wrapper } = mountModal({ modal: { open: true, mode: 'create', stageId: null } })
-    expect(wrapper.find('.btn-new').text()).toContain('Créer le stage')
+  it('5 — bouton "Suivant →" à l\'étape 0', () => {
+    const wrapper = mountModal({ modelValue: true, editMode: false })
+    expect(wrapper.find('.btn-submit').exists()).toBe(true)
   })
 
-  it('6 — bouton "Enregistrer" en mode edit', () => {
-    const { wrapper } = mountModal({ modal: { open: true, mode: 'edit', stageId: 5 } })
-    expect(wrapper.find('.btn-new').text()).toContain('Enregistrer')
+  it('6 — bouton submit présent en mode édition', () => {
+    const wrapper = mountModal({ modelValue: true, editMode: true })
+    expect(wrapper.find('.btn-submit').exists()).toBe(true)
   })
 
-  it('7 — bouton submit désactivé quand saving est true', () => {
-    const { wrapper } = mountModal({ modal: { open: true, mode: 'create', stageId: null }, saving: true })
-    expect(wrapper.find('.btn-new').attributes('disabled')).toBeDefined()
+  it('7 — bouton submit désactivé quand isStep0Valid est false', () => {
+    const wrapper = mountModal({ modelValue: true, editMode: false })
+    // Form is empty by default, so step0 is not valid
+    expect(wrapper.find('.btn-submit').attributes('disabled')).toBeDefined()
   })
 
-  it('8 — bouton submit affiche "Enregistrement..." quand saving est true', () => {
-    const { wrapper } = mountModal({ modal: { open: true, mode: 'create', stageId: null }, saving: true })
-    expect(wrapper.find('.btn-new').text()).toContain('Enregistrement...')
+  it('8 — bouton submit affiche "Suivant →" à l\'étape 0', () => {
+    const wrapper = mountModal({ modelValue: true, editMode: false })
+    expect(wrapper.find('.btn-submit').text()).toContain('Suivant')
   })
 
-  it('9 — clic sur le bouton submit appelle store.sauvegarder()', async () => {
-    const { wrapper, store } = mountModal({ modal: { open: true, mode: 'create', stageId: null } })
-    await wrapper.find('.btn-new').trigger('click')
-    expect(store.sauvegarder).toHaveBeenCalled()
+  it('9 — émet update:modelValue=false au clic sur le bouton Annuler', async () => {
+    const wrapper = mountModal({ modelValue: true, editMode: false })
+    await wrapper.find('.btn-cancel').trigger('click')
+    expect(wrapper.emitted('update:modelValue')).toBeTruthy()
+    expect(wrapper.emitted('update:modelValue')[0][0]).toBe(false)
   })
 
-  it('10 — clic sur "Annuler" ferme le modal', async () => {
-    const store = makeStore({ modal: { open: true, mode: 'create', stageId: null } })
-    mount(StageModal, { global: { stubs: { Teleport: true } } })
-    store.modal.open = false
-    expect(store.modal.open).toBe(false)
+  it('10 — clic sur "×" ferme le modal', async () => {
+    const wrapper = mountModal({ modelValue: true })
+    await wrapper.find('.modal-close').trigger('click')
+    expect(wrapper.emitted('update:modelValue')[0][0]).toBe(false)
   })
 
   it('11 — affiche les champs Entreprise et Poste', () => {
-    const { wrapper } = mountModal({ modal: { open: true, mode: 'create', stageId: null } })
+    const wrapper = mountModal({ modelValue: true })
     const inputs = wrapper.findAll('input')
     expect(inputs.length).toBeGreaterThan(1)
   })

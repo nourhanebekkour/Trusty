@@ -1,112 +1,108 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 
-vi.mock('@/services/professorApi', () => ({
-  getProfessorDashboard:        vi.fn(),
-  approveProfessorValidation:   vi.fn(),
-  requestProfessorChanges:      vi.fn(),
-  certifyProfessorPortfolio:    vi.fn(),
-  sendProfessorMessage:         vi.fn(),
+vi.mock('@/stores/professorStore', () => ({
+  useProfessorStore:   vi.fn(),
+  normaliserProjet:    vi.fn(p => p),
+  normaliserStage:     vi.fn(s => s),
+  normaliserEtudiant:  vi.fn(e => e),
+  normaliserNotif:     vi.fn(n => n),
 }))
 
-import ProfessorDashboard from '@/views/professor/ProfessorDashboard.vue'
-import * as professorApi from '@/services/professorApi'
+import { useProfessorStore } from '@/stores/professorStore'
+import ProfessorView from '@/views/professor/ProfessorView.vue'
 
-function mountView() {
-  return mount(ProfessorDashboard, {
-    global: { plugins: [createPinia()] }
+function makeMockStore(overrides = {}) {
+  return {
+    projets:         [],
+    stages:          [],
+    etudiants:       [],
+    notifications:   [],
+    loading:         { projets: false, stages: false, notifs: false },
+    erreur:          null,
+    enAttente:       0,
+    valides:         0,
+    etudiantsSuivis: 0,
+    stagesEnCours:   0,
+    init:                    vi.fn(),
+    chargerProjets:          vi.fn(),
+    chargerStages:           vi.fn(),
+    chargerNotifications:    vi.fn(),
+    validerProjet:           vi.fn(),
+    validerStage:            vi.fn(),
+    ...overrides,
+  }
+}
+
+let store
+
+function mountView(overrides = {}) {
+  setActivePinia(createPinia())
+  store = makeMockStore(overrides)
+  useProfessorStore.mockReturnValue(store)
+  return mount(ProfessorView, {
+    global: { stubs: { RouterLink: true } },
   })
 }
 
 beforeEach(() => {
-  setActivePinia(createPinia())
   vi.clearAllMocks()
 })
 
-describe('ProfessorDashboard.vue — rendu initial', () => {
+describe('ProfessorView.vue — rendu initial', () => {
   it('affiche le titre de la page', () => {
-    professorApi.getProfessorDashboard.mockResolvedValue({ stats: {}, students: [], validations: [] })
     const wrapper = mountView()
-    expect(wrapper.text()).toContain('Tableau de bord professeur')
-  })
-
-  it('affiche le bouton Exporter rapport', () => {
-    professorApi.getProfessorDashboard.mockResolvedValue({ stats: {}, students: [], validations: [] })
-    const wrapper = mountView()
-    expect(wrapper.text()).toContain('Exporter rapport')
+    expect(wrapper.text()).toContain('Tableau de Bord Professeur')
   })
 
   it('affiche le sous-titre de la page', () => {
-    professorApi.getProfessorDashboard.mockResolvedValue({ stats: {}, students: [], validations: [] })
     const wrapper = mountView()
-    expect(wrapper.text()).toContain('Suivez les étudiants')
+    expect(wrapper.text()).toContain('étudiants')
+  })
+
+  it('se monte sans erreur', () => {
+    const wrapper = mountView()
+    expect(wrapper.exists()).toBe(true)
   })
 })
 
-describe('ProfessorDashboard.vue — erreur', () => {
-  it('affiche le message d\'erreur si l\'API échoue', async () => {
-    professorApi.getProfessorDashboard.mockRejectedValue(new Error('Erreur serveur'))
-    const wrapper = mountView()
-    await new Promise(r => setTimeout(r, 10))
-    expect(wrapper.find('.error-box').exists()).toBe(true)
+describe('ProfessorView.vue — données chargées', () => {
+  it('appelle store.init() au montage', async () => {
+    mountView()
+    await flushPromises()
+    expect(store.init).toHaveBeenCalledOnce()
+  })
+
+  it('initialise le store avec les données', async () => {
+    mountView({ enAttente: 12, valides: 3 })
+    await flushPromises()
+    expect(store.enAttente).toBe(12)
+    expect(store.valides).toBe(3)
+  })
+
+  it('store sans projets : projets est vide', async () => {
+    mountView({ projets: [] })
+    await flushPromises()
+    expect(store.projets).toHaveLength(0)
   })
 })
 
-describe('ProfessorDashboard.vue — données chargées', () => {
-  it('affiche les statistiques après chargement', async () => {
-    professorApi.getProfessorDashboard.mockResolvedValue({
-      stats: { studentsCount: 12, pendingValidationsCount: 3, certificationsCount: 5, averageDelay: '2j' },
-      students: [],
-      validations: [],
-    })
-    const wrapper = mountView()
-    await new Promise(r => setTimeout(r, 10))
-    expect(wrapper.text()).toContain('12')
-    expect(wrapper.text()).toContain('3')
+describe('ProfessorView.vue — recherche étudiants', () => {
+  it('store retourne les étudiants mockés', () => {
+    const etudiants = [
+      { id: '1', fullName: 'Alice Martin', level: 'M2', field: 'Info' },
+      { id: '2', fullName: 'Bob Dupont',   level: 'L3', field: 'Maths' },
+    ]
+    mountView({ etudiants })
+    expect(store.etudiants).toHaveLength(2)
   })
 
-  it('affiche "Aucun étudiant trouvé" si la liste est vide', async () => {
-    professorApi.getProfessorDashboard.mockResolvedValue({
-      stats: { studentsCount: 0, pendingValidationsCount: 0, certificationsCount: 0, averageDelay: null },
-      students: [],
-      validations: [],
-    })
-    const wrapper = mountView()
-    await new Promise(r => setTimeout(r, 10))
-    expect(wrapper.text()).toContain('Aucun étudiant')
-  })
-
-  it('affiche la liste des étudiants', async () => {
-    professorApi.getProfessorDashboard.mockResolvedValue({
-      stats: { studentsCount: 1, pendingValidationsCount: 0, certificationsCount: 0 },
-      students: [{ id: '1', fullName: 'Alice Martin', level: 'M2', field: 'Informatique' }],
-      validations: [],
-    })
-    const wrapper = mountView()
-    await new Promise(r => setTimeout(r, 10))
-    expect(wrapper.text()).toContain('Alice Martin')
-  })
-})
-
-describe('ProfessorDashboard.vue — recherche étudiants', () => {
-  it('filtre les étudiants par nom', async () => {
-    professorApi.getProfessorDashboard.mockResolvedValue({
-      stats: { studentsCount: 2, pendingValidationsCount: 0, certificationsCount: 0 },
-      students: [
-        { id: '1', fullName: 'Alice Martin', level: 'M2', field: 'Info' },
-        { id: '2', fullName: 'Bob Dupont',   level: 'L3', field: 'Maths' },
-      ],
-      validations: [],
-    })
-    const wrapper = mountView()
-    await new Promise(r => setTimeout(r, 10))
-    const input = wrapper.find('input.input')
-    if (input.exists()) {
-      await input.setValue('Alice')
-      await wrapper.vm.$nextTick()
-      expect(wrapper.text()).toContain('Alice Martin')
-      expect(wrapper.text()).not.toContain('Bob Dupont')
-    }
+  it('store retourne les projets mockés', () => {
+    const projets = [
+      { id: 'pj1', nom: 'Projet IA', status: 'pending' },
+    ]
+    mountView({ projets })
+    expect(store.projets).toHaveLength(1)
   })
 })

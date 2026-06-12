@@ -352,9 +352,7 @@ export async function updateProfessorProfile(professorId, data) {
 export async function uploadProfessorAvatar(professorId, file) {
   const formData = new FormData()
   formData.append('fichier', file)
-  const res = await api.post(`/professeurs/${professorId}/avatar`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
+  const res = await api.post(`/professeurs/${professorId}/avatar`, formData)
   return getData(res)
 }
 
@@ -379,4 +377,16 @@ export async function getStudentDetails(studentId) {
     competences: competences.status === 'fulfilled' ? (Array.isArray(competences.value) ? competences.value : []) : [],
     badges: badges.status === 'fulfilled' ? (Array.isArray(badges.value) ? badges.value : []) : [],
   }
+}
+
+export async function getStudentsByEcole(ecole) {
+  const res = await api.get(`/etudiants/ecole/${ecole}`)
+  const data = getData(res)
+  return Array.isArray(data) ? data.map(mapEtudiant) : []
+}
+
+export async function getProfessorMyRecommendations() {
+  const res = await api.get('/recommandations/mes-recommandations-emises')
+  const data = getData(res)
+  return Array.isArray(data) ? data : []
 }

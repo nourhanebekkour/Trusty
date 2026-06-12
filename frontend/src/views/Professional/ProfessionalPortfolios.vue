@@ -17,7 +17,7 @@
       <div class="url-search-row">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input v-model="portfolioSlug" class="form-input" placeholder="Ou entrez l'URL du portfolio (ex: john-doe-portfolio)" @keyup.enter="viewPortfolio" />
-        <button class="btn-primary" @click="viewPortfolio" :disabled="!portfolioSlug.trim()">
+        <button class="btn-primary" @click="viewPortfolio">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 4px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           Consulter
         </button>
@@ -72,9 +72,9 @@
             </div>
           </div>
           <div class="student-actions">
-            <button class="btn-primary btn--sm" @click="openPortfolio(s)">
+            <button class="btn-primary btn--sm" @click="openPortfolio(s)" :disabled="!s.portfolioUrl">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-              Portfolio
+              {{ s.portfolioUrl ? 'Portfolio' : 'Non publié' }}
             </button>
           </div>
         </div>
@@ -87,7 +87,10 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { getProfessionalInternships } from '@/services/professionalApi'
+
+const router = useRouter()
 
 const stages = ref([])
 const loading = ref(true)
@@ -105,23 +108,26 @@ function initials(name) {
   return String(name || '?').split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase()
 }
 
-function buildPortfolioUrl(s) {
-  const prenom = (s.prenom || '').toLowerCase().replace(/[^a-z0-9]/g, '-')
-  const nom = (s.nom || '').toLowerCase().replace(/[^a-z0-9]/g, '-')
-  return `${prenom}-${nom}-portfolio`
-}
-
 function openPortfolio(s) {
-  const url = buildPortfolioUrl(s)
-  window.open(`/portfolio/${url}`, '_blank')
+  if (s.portfolioUrl) {
+    router.push(`/portfolio/${s.portfolioUrl}`)
+  } else {
+    showToast('Portfolio non disponible')
+  }
 }
 
 function viewPortfolio() {
   const slug = portfolioSlug.value.trim()
-  if (!slug) return
-  window.open(`/portfolio/${slug}`, '_blank')
+  if (!slug) {
+    showToast('Veuillez entrer une URL de portfolio')
+    return
+  }
+  if (slug.startsWith('http://') || slug.startsWith('https://')) {
+    window.open(slug, '_blank')
+  } else {
+    router.push(`/portfolio/${slug}`)
+  }
   portfolioSlug.value = ''
-  showToast('Portfolio ouvert dans un nouvel onglet.')
 }
 
 const students = computed(() => {
@@ -138,6 +144,7 @@ const students = computed(() => {
       name: `${u.prenom || ''} ${u.nom || ''}`.trim() || 'Étudiant',
       filiere: e.filiere || '',
       entreprise: stage.entreprise || stage.nom_entreprise || '',
+      portfolioUrl: e.portfolio?.url_publique ?? null,
     })
   }
   return [...map.values()]

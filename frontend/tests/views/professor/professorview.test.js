@@ -15,11 +15,10 @@ vi.mock('@/stores/professorStore', () => ({
 }))
 
 import { useProfessorStore } from '@/stores/professorStore'
-import ProfessorView from '@/views/ProfessorView.vue'
 
 const MOCK_PROJETS = [
-  { id: 'pj1', nom: 'Projet IA', etudiant: 'Alice Dupont', context: 'PFA', status: 'pending', statusLabel: 'En attente', progress: 50, statusColor: '#f4b94b', color: 'blue', date: '01/05/2024', description: 'desc', icon: '💻' },
-  { id: 'pj2', nom: 'App Mobile', etudiant: 'Bob Martin', context: 'PFE', status: 'pending', statusLabel: 'En attente', progress: 50, statusColor: '#f4b94b', color: 'blue', date: '15/04/2024', description: 'desc', icon: '💻' },
+  { id: 'pj1', nom: 'Projet IA', etudiant: 'Alice Dupont', context: 'PFA', status: 'pending', statusLabel: 'En attente', progress: 50, statusColor: '#f4b94b', color: 'blue', date: '01/05/2024', description: 'desc', icon: 'laptop' },
+  { id: 'pj2', nom: 'App Mobile', etudiant: 'Bob Martin', context: 'PFE', status: 'pending', statusLabel: 'En attente', progress: 50, statusColor: '#f4b94b', color: 'blue', date: '15/04/2024', description: 'desc', icon: 'laptop' },
 ]
 
 const MOCK_STAGES = [
@@ -122,9 +121,9 @@ describe('ProfessorView — Tests Unitaires', () => {
     expect(wrapper.text()).toContain('Stages supervisés')
   })
 
-  it('9 — affiche la section "Lettres de recommandation"', () => {
+  it('9 — affiche la section "Activité récente" ou notifications', () => {
     const wrapper = mountView()
-    expect(wrapper.text()).toContain('Lettres de recommandation')
+    expect(wrapper.text()).toMatch(/Activité|Notification/i)
   })
 
   it('10 — affiche des projets en attente avec le bouton "Valider"', () => {

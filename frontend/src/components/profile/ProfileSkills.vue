@@ -18,7 +18,7 @@
               v-for="i in 3" :key="i"
               class="star"
               :class="i <= niveauToInt[ec.niveau_maitrise] ? 'on' : 'off'"
-            >{{ i <= niveauToInt[ec.niveau_maitrise] ? '★' : '☆' }}</span>
+            ><AppIcon name="star" :size="13" :stroke-width="i <= niveauToInt[ec.niveau_maitrise] ? 3 : 1.5" /></span>
             <span class="niv-badge">{{ niveauLabel[ec.niveau_maitrise] }}</span>
           </div>
 

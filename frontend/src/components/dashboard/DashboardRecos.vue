@@ -34,7 +34,7 @@
             {{ statusLabel(featured.status) }}
           </span>
 
-          <p class="reco-featured__quote-icon">❝❝</p>
+          <p class="reco-featured__quote-icon"><AppIcon name="quote" :size="28" /></p>
           <p class="reco-featured__text">{{ featured.message }}</p>
 
           <div class="author">
@@ -62,10 +62,10 @@
           <!-- Actions si EN_ATTENTE -->
           <div class="reco-actions" v-if="featured.status === 'EN_ATTENTE'">
             <button class="btn-accept" @click="$emit('valider', featured.id_recommandation, 'VALIDE')">
-              ✓ Accepter
+              <AppIcon name="check" /> Accepter
             </button>
             <button class="btn-reject" @click="$emit('valider', featured.id_recommandation, 'REJETE')">
-              ✕ Rejeter
+              <AppIcon name="x" /> Rejeter
             </button>
           </div>
         </div>
@@ -76,12 +76,20 @@
         <div
           v-for="reco in recos.slice(1, 4)"
           :key="reco.id_recommandation"
-          class="reco-card"
+          class="reco-card reco-featured"
           :class="{ 'reco-card--pending': reco.status === 'EN_ATTENTE' }"
         >
-          <div class="reco-card__header">
+          <div class="reco-featured__bar" />
+          <div class="reco-featured__body">
+            <span class="status-badge" :class="statusClass(reco.status)">
+              {{ statusLabel(reco.status) }}
+            </span>
+
+            <p class="reco-featured__quote-icon"><AppIcon name="quote" :size="28" /></p>
+            <p class="reco-featured__text reco-card__text">{{ reco.message }}</p>
+
             <div class="author">
-              <div class="author__avatar author__avatar--sm" :style="avatarStyle(reco.auteur)">
+              <div class="author__avatar" :style="avatarStyle(reco.auteur)">
                 <img
                   v-if="reco.auteur?.photo"
                   :src="reco.auteur.photo"
@@ -92,23 +100,25 @@
               <div class="author__info">
                 <p class="author__name">
                   {{ reco.auteur?.prenom }} {{ reco.auteur?.nom }}
-                  <span v-if="getAuteurLabel(reco.auteur)" class="text-muted">
-                    · {{ getAuteurLabel(reco.auteur) }}
-                  </span>
+                </p>
+                <p class="author__role" v-if="getAuteurLabel(reco.auteur)">
+                  {{ getAuteurLabel(reco.auteur) }}
+                </p>
+                <p class="author__date" v-if="reco.date_creation">
+                  {{ formatDate(reco.date_creation) }}
                 </p>
               </div>
             </div>
-            <span class="status-badge status-badge--sm" :class="statusClass(reco.status)">
-              {{ statusLabel(reco.status) }}
-            </span>
-          </div>
 
-          <p class="reco-card__text">{{ reco.message }}</p>
-
-          <!-- Actions inline si EN_ATTENTE -->
-          <div class="reco-actions reco-actions--sm" v-if="reco.status === 'EN_ATTENTE'">
-            <button class="btn-accept btn-accept--sm" @click="$emit('valider', reco.id_recommandation, 'VALIDE')">✓</button>
-            <button class="btn-reject btn-reject--sm" @click="$emit('valider', reco.id_recommandation, 'REJETE')">✕</button>
+            <!-- Actions si EN_ATTENTE -->
+            <div class="reco-actions" v-if="reco.status === 'EN_ATTENTE'">
+              <button class="btn-accept" @click="$emit('valider', reco.id_recommandation, 'VALIDE')">
+                <AppIcon name="check" /> Accepter
+              </button>
+              <button class="btn-reject" @click="$emit('valider', reco.id_recommandation, 'REJETE')">
+                <AppIcon name="x" /> Rejeter
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -139,9 +149,9 @@ const formatDate = (d) =>
   d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
 
 const statusLabel = (status) => ({
-  VALIDE:     '✓ Validé',
-  EN_ATTENTE: '⏳ En attente',
-  REJETE:     '✕ Rejeté',
+  VALIDE:     'Validé',
+  EN_ATTENTE: 'En attente',
+  REJETE:     'Rejeté',
 }[status] ?? status)
 
 const statusClass = (status) => ({
@@ -179,8 +189,16 @@ const avatarStyle = (auteur) => ({
 }
 .status-badge--sm { font-size: 9px; padding: 2px 7px; margin-bottom: 0; }
 
-.badge--valide   { background: #d1fae5; color: #065f46; }
-.badge--pending  { background: #fef3c7; color: #92400e; }
+.badge--valide {
+  background: var(--color-valid-bg);
+  color: var(--color-valid-text);
+  border: 1px solid var(--color-valid-border);
+}
+.badge--pending  {
+  background: var(--color-waiting-bg);
+  color: var(--color-waiting-text);
+  border: 1px solid var(--color-waiting-border);
+}
 .badge--rejected { background: #fee2e2; color: #991b1b; }
 
 /* ── Featured card états ───────────────────────────────────────────────────── */
@@ -217,9 +235,26 @@ const avatarStyle = (auteur) => ({
 }
 
 /* ── Carte EN_ATTENTE ──────────────────────────────────────────────────────── */
-.reco-card--pending {
-  border: 1.5px dashed #f59e0b;
-  background: #fffbeb;
+.reco-card {
+  padding: 0;
+  border-radius: 12px;
+  margin-bottom: 0;
+}
+
+.reco-grid {
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.reco-card.reco-featured .reco-card__text {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--color-text-primary);
+  margin: 0 0 18px;
+}
+
+.reco-card--pending .reco-featured__bar {
+  background: var(--color-waiting-text);
 }
 
 /* ── Avatar avec photo ─────────────────────────────────────────────────────── */

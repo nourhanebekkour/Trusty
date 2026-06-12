@@ -37,9 +37,7 @@ export const activitesService = {
   async uploadAttestation(id, fichier) {
     const form = new FormData();
     form.append('fichier', fichier);
-    const res = await api.post(`${BASE_URL}/${id}/attestation`, form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const res = await api.post(`${BASE_URL}/${id}/attestation`, form);
     return res.data;
   },
 

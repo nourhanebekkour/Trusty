@@ -4,9 +4,9 @@
       <div class="rapport-modal">
 
         <div class="rapport-header">
-          <span class="rapport-icon">📄</span>
+          <span class="rapport-icon"><AppIcon name="file-text" /></span>
           <h3 class="rapport-title">Joindre un rapport</h3>
-          <button class="rapport-close" @click="close">×</button>
+          <button class="rapport-close" aria-label="Fermer" @click="close"><AppIcon name="x" /></button>
         </div>
 
         <div class="rapport-body">
@@ -19,11 +19,12 @@
           <div class="upload-zone" :class="{ 'upload-zone--active': dragging }"
                @dragover.prevent="dragging = true"
                @dragleave="dragging = false"
-               @drop.prevent="onDrop">
+               @drop.prevent="onDrop"
+               @click="$refs.fileInput.click()">
             <input
               ref="fileInput"
               type="file"
-              accept=".pdf,.doc,.docx,.zip,.png,.jpg,.jpeg"
+              accept=".pdf,image/*"
               class="file-input-hidden"
               @change="onFileChange"
             />
@@ -36,7 +37,7 @@
               <span v-if="selectedFile">{{ selectedFile.name }}</span>
               <span v-else>Cliquez ou glissez un fichier ici</span>
             </div>
-            <button v-if="selectedFile" class="upload-clear" @click="selectedFile = null">×</button>
+            <button v-if="selectedFile" class="upload-clear" @click.stop="clearSelectedFile">×</button>
           </div>
 
           <div class="separator-text">ou</div>
@@ -54,13 +55,18 @@
 
         </div>
 
+        <div v-if="uploadError" class="rapport-error">{{ uploadError }}</div>
+
         <div class="rapport-footer">
-          <button class="btn-cancel" @click="close">Annuler</button>
-          <button class="btn-save" :disabled="!canSave" @click="save">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+          <button class="btn-cancel" :disabled="saving" @click="close">Annuler</button>
+          <button class="btn-save" :disabled="!canSave || saving" @click="save">
+            <svg v-if="saving" class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="32"/><line x1="12" y1="2" x2="12" y2="6"/>
+            </svg>
+            <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
               <path d="M20 6L9 17l-5-5"/>
             </svg>
-            Enregistrer
+            {{ saving ? 'Upload en cours...' : 'Enregistrer' }}
           </button>
         </div>
 
@@ -70,11 +76,15 @@
 </template>
 
 <script>
+import api from '@/api'
+import { getUploadErrorMessage, validateUploadFile } from '@/utils/fileUpload'
+
 export default {
   name: 'ProjetRapportModal',
 
   props: {
     modelValue: { type: Boolean, default: false },
+    projetId:   { type: String, default: null },
   },
 
   emits: ['update:modelValue', 'save'],
@@ -84,6 +94,8 @@ export default {
       selectedFile: null,
       rapportUrl: '',
       dragging: false,
+      saving: false,
+      uploadError: null,
     }
   },
 
@@ -99,6 +111,8 @@ export default {
         this.selectedFile = null
         this.rapportUrl = ''
         this.dragging = false
+        this.saving = false
+        this.uploadError = null
       }
     },
   },
@@ -106,27 +120,63 @@ export default {
   methods: {
     onFileChange(e) {
       const file = e.target.files?.[0]
-      if (file) this.selectedFile = file
+      if (file) {
+        const validationError = validateUploadFile(file)
+        if (validationError) {
+          this.uploadError = validationError
+          e.target.value = ''
+          return
+        }
+        this.selectedFile = file
+      }
+      this.uploadError = null
     },
 
     onDrop(e) {
       this.dragging = false
       const file = e.dataTransfer?.files?.[0]
-      if (file) this.selectedFile = file
+      if (file) {
+        const validationError = validateUploadFile(file)
+        if (validationError) {
+          this.uploadError = validationError
+          return
+        }
+        this.selectedFile = file
+      }
+      this.uploadError = null
     },
 
-    save() {
-      const data = {}
-      if (this.selectedFile) {
-        data.nom = this.selectedFile.name
-        data.url = URL.createObjectURL(this.selectedFile)
-        data.type = 'file'
-      } else if (this.rapportUrl.trim()) {
-        data.url = this.rapportUrl.trim()
-        data.type = 'url'
+    clearSelectedFile() {
+      this.selectedFile = null
+      if (this.$refs.fileInput) this.$refs.fileInput.value = ''
+    },
+
+    async save() {
+      this.saving = true
+      this.uploadError = null
+      try {
+        const data = {}
+        if (this.selectedFile) {
+          if (!this.projetId) throw new Error('Projet introuvable. Rechargez la page puis reessayez.')
+
+          const formData = new FormData()
+          formData.append('fichier', this.selectedFile)
+          const res = await api.post(`/projets/${this.projetId}/fichiers`, formData)
+          const fileData = res.data?.data ?? res.data
+          data.url = fileData?.url || fileData?.nom_fichier || ''
+          data.nom = this.selectedFile.name
+          data.type = 'file'
+        } else if (this.rapportUrl.trim()) {
+          data.url = this.rapportUrl.trim()
+          data.type = 'url'
+        }
+        this.$emit('save', data)
+        this.close()
+      } catch (err) {
+        this.uploadError = getUploadErrorMessage(err, err.message || "Erreur lors de l'upload.")
+      } finally {
+        this.saving = false
       }
-      this.$emit('save', data)
-      this.close()
     },
 
     close() {
@@ -324,10 +374,31 @@ export default {
   transition: all 0.2s;
 }
 
-.btn-cancel:hover {
+.btn-cancel:hover:not(:disabled) {
   background: var(--color-surface-hover);
   color: var(--color-text-primary);
 }
+
+.btn-cancel:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.rapport-error {
+  margin: 0 24px;
+  padding: 8px 12px;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #DC2626;
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .btn-save {
   display: flex;

@@ -203,7 +203,7 @@
                         <div class="pf2-project-body">
                             <div class="pf2-project-meta">
                                 <span class="pf2-project-cat">{{ project.category }}</span>
-                                <span v-if="project.certified" class="pf2-cert-badge">✦ Certifié {{ project.institution }}</span>
+                                <span v-if="project.certified" class="pf2-cert-badge"><AppIcon name="shield" /> Certifié {{ project.institution }}</span>
                                 <span v-else class="pf2-pending-badge">En attente</span>
                             </div>
                             <h3 class="pf2-project-title">{{ project.title }}</h3>
@@ -306,7 +306,7 @@
                                     <p class="pf2-stage__duration">{{ stage.duration }}</p>
                                 </div>
                                 <div class="pf2-stage__badges">
-                                    <span v-if="stage.certified" class="pf2-cert-badge">✦ Certifié {{ stage.institution }}</span>
+                                    <span v-if="stage.certified" class="pf2-cert-badge"><AppIcon name="shield" /> Certifié {{ stage.institution }}</span>
                                     <span v-else class="pf2-pending-badge">En attente</span>
                                     <span class="pf2-duration-badge">{{ stage.months }}</span>
                                 </div>
@@ -475,7 +475,7 @@
                             </div>
                             <div class="pf2-letter__row">
                                 <span>Validée</span>
-                                <span class="pf2-cert-badge pf2-cert-badge--sm">✦ Validée par l'institution</span>
+                                <span class="pf2-cert-badge pf2-cert-badge--sm"><AppIcon name="shield" /> Validée par l'institution</span>
                             </div>
                         </div>
                         <button v-if="letter.visibility === 'public'" class="pf2-download-btn"
@@ -540,6 +540,63 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <!-- ── COMMENTAIRES ───────────────────────────────────────── -->
+            <section id="comments" class="pf2-section pf2-section--comments">
+                <div class="pf2-section__header">
+                    <p class="pf2-section__label">Échanges</p>
+                    <h2 class="pf2-section__title">Commentaires</h2>
+                </div>
+
+                <div class="pf2-comments">
+                    <p v-if="commentsLoading" class="pf2-comments__state">Chargement des commentaires...</p>
+                    <p v-else-if="commentsError" class="pf2-comments__error">{{ commentsError }}</p>
+                    <p v-else-if="comments.length === 0" class="pf2-comments__state">
+                        Aucun commentaire pour le moment.
+                    </p>
+
+                    <div v-else class="pf2-comments__list">
+                        <article v-for="comment in comments" :key="comment.id" class="pf2-comment">
+                            <div class="pf2-comment__avatar">{{ commentInitials(comment.authorName) }}</div>
+                            <div class="pf2-comment__body">
+                                <div class="pf2-comment__meta">
+                                    <strong>{{ comment.authorName }}</strong>
+                                    <time :datetime="comment.createdAt">{{ formatCommentDate(comment.createdAt) }}</time>
+                                </div>
+                                <p>{{ comment.content }}</p>
+                                <span v-if="comment.status === 'EN_ATTENTE'" class="pf2-comment__pending">
+                                    En attente de validation
+                                </span>
+                            </div>
+                        </article>
+                    </div>
+
+                    <form v-if="authStore.isAuthenticated" class="pf2-comment-form" @submit.prevent="submitComment">
+                        <label for="portfolio-comment">Ajouter un commentaire</label>
+                        <textarea
+                            id="portfolio-comment"
+                            v-model="newComment"
+                            rows="4"
+                            maxlength="2000"
+                            placeholder="Écrivez votre commentaire..."
+                            :disabled="commentSending"
+                            @input="commentSubmitError = ''"
+                        ></textarea>
+                        <p v-if="commentSubmitError" class="pf2-comments__error">{{ commentSubmitError }}</p>
+                        <button
+                            type="submit"
+                            class="pf2-btn-accent pf2-comment-form__submit"
+                            :disabled="commentSending"
+                        >
+                            {{ commentSending ? 'Envoi en cours...' : 'Publier le commentaire' }}
+                        </button>
+                    </form>
+
+                    <p v-else class="pf2-comments__login">
+                        Connectez-vous pour ajouter un commentaire.
+                    </p>
                 </div>
             </section>
 
@@ -616,7 +673,7 @@
                         <span v-for="t in activeProject.tech" :key="t" class="pf2-tech-tag pf2-tech-tag--light">{{ t }}</span>
                     </div>
                     <div class="pf2-modal__footer">
-                        <span v-if="activeProject.certified" class="pf2-cert-badge">✦ Certifié {{ activeProject.institution }}</span>
+                        <span v-if="activeProject.certified" class="pf2-cert-badge"><AppIcon name="shield" /> Certifié {{ activeProject.institution }}</span>
                         <span v-else class="pf2-pending-badge">En attente de validation</span>
                         <a v-if="activeProject.github" :href="activeProject.github" target="_blank" class="pf2-btn-accent">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -636,7 +693,7 @@
         </div>
         </template>
 <!-- ── EDIT PANEL ─────────────────────────────────────────────────── -->
-<template v-if="isEditMode">
+<template v-if="canEdit">
 
   <!-- FAB -->
   <button class="pf2-edit-fab" @click="panelOpen = !panelOpen">
@@ -652,7 +709,7 @@
 
     <div class="pf2-ep-header">
       <h3>Personnalisation</h3>
-      <button @click="panelOpen = false">✕</button>
+      <button aria-label="Fermer" @click="panelOpen = false"><AppIcon name="x" /></button>
     </div>
 
     <div class="pf2-ep-body">
@@ -742,17 +799,30 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, reactive } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted, watch, reactive } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/api'
+import { useAuthStore } from '@/stores/authstore'
+import {
+    createPortfolioComment,
+    getPortfolioComments,
+} from '@/services/portfolioComments'
 
 const route = useRoute()
+const authStore = useAuthStore()
 const portfolioData = ref(null)
 const loading = ref(true)
 const error = ref(null)
+const comments = ref([])
+const commentsLoading = ref(false)
+const commentsError = ref('')
+const newComment = ref('')
+const commentSending = ref(false)
+const commentSubmitError = ref('')
 
 const accentColor = computed(() => portfolioData.value?.couleur_accent || '#5A89D8')
 const isEditMode = computed(() => route.query.edit === 'true')
+const canEdit = computed(() => isEditMode.value && authStore.isEtudiant)
 const panelOpen = ref(false)
 const saving = ref(false)
 const portfolioId = computed(() => portfolioData.value?.id_portfolio)
@@ -832,8 +902,24 @@ const tabs = computed(() => [
     { id: 'recommandations', label: 'Recommandations' },
     { id: 'lettres',         label: 'Lettres' },
     ...(student.value.github ? [{ id: 'github', label: 'GitHub' }] : []),
+    { id: 'comments',        label: 'Commentaires' },
 ])
 
+async function loadComments() {
+    const studentId = portfolioData.value?.id_etudiant
+    if (!studentId) return
+
+    commentsLoading.value = true
+    commentsError.value = ''
+    try {
+        comments.value = await getPortfolioComments(studentId)
+    } catch {
+        comments.value = []
+        commentsError.value = 'Impossible de charger les commentaires.'
+    } finally {
+        commentsLoading.value = false
+    }
+}
 
 onMounted(async () => {
     window.addEventListener('scroll', handleScroll)
@@ -846,6 +932,11 @@ onMounted(async () => {
             return
         }
         portfolioData.value = json.data
+        await loadComments()
+        await nextTick()
+        if (route.hash === '#comments') {
+            document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' })
+        }
     } catch (e) {
         error.value = 'Erreur de connexion'
     } finally {
@@ -858,6 +949,56 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 function formatDate(dateStr) {
     if (!dateStr) return ''
     return new Date(dateStr).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })
+}
+
+function formatCommentDate(dateStr) {
+    if (!dateStr) return ''
+    const date = new Date(dateStr)
+    if (Number.isNaN(date.getTime())) return ''
+
+    return date.toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    })
+}
+
+function commentInitials(name) {
+    return String(name || '')
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(part => part[0])
+        .join('')
+        .toUpperCase() || '?'
+}
+
+async function submitComment() {
+    const content = newComment.value.trim()
+    commentSubmitError.value = ''
+
+    if (!authStore.isAuthenticated) {
+        commentSubmitError.value = 'Vous devez être connecté pour commenter.'
+        return
+    }
+    if (!content) {
+        commentSubmitError.value = 'Le commentaire ne peut pas être vide.'
+        return
+    }
+
+    commentSending.value = true
+    try {
+        const comment = await createPortfolioComment(portfolioData.value.id_etudiant, content)
+        comments.value = [comment, ...comments.value]
+        newComment.value = ''
+    } catch (err) {
+        commentSubmitError.value =
+            err.response?.data?.message || 'Impossible d’ajouter le commentaire.'
+    } finally {
+        commentSending.value = false
+    }
 }
 
 function calcDuration(start, end) {
@@ -1842,6 +1983,88 @@ function handleScroll() {
 .pf2-repo__lang { display: flex; align-items: center; gap: 5px; }
 .pf2-repo__dot { width: 10px; height: 10px; border-radius: 50%; }
 .pf2-repo__activity { font-size: 12px; color: #9CA3AF; white-space: nowrap; }
+
+/* ── COMMENTAIRES ────────────────────────────────────────────────────── */
+.pf2-section--comments { background: #F8FAFC; }
+.pf2-comments { max-width: 820px; }
+.pf2-comments__list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
+.pf2-comments__state,
+.pf2-comments__login {
+    color: #6B7280;
+    font-size: 14px;
+    padding: 18px;
+    background: #FFFFFF;
+    border: 1px solid #E5E8ED;
+    border-radius: 10px;
+}
+.pf2-comments__error {
+    color: #B42318;
+    font-size: 13px;
+    margin: 0;
+}
+.pf2-comment {
+    display: flex;
+    gap: 12px;
+    padding: 18px;
+    background: #FFFFFF;
+    border: 1px solid #E5E8ED;
+    border-radius: 12px;
+}
+.pf2-comment__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #E8EFFA;
+    color: #2B5090;
+    font-size: 13px;
+    font-weight: 700;
+}
+.pf2-comment__body { flex: 1; min-width: 0; }
+.pf2-comment__meta { display: flex; align-items: baseline; gap: 12px; margin-bottom: 7px; }
+.pf2-comment__meta strong { color: #0F2040; font-size: 14px; }
+.pf2-comment__meta time { color: #9CA3AF; font-size: 11px; margin-left: auto; }
+.pf2-comment__body > p { color: #4B5563; font-size: 14px; line-height: 1.65; white-space: pre-wrap; }
+.pf2-comment__pending {
+    display: inline-block;
+    margin-top: 8px;
+    color: #946200;
+    background: #FFF4D8;
+    border-radius: 20px;
+    padding: 3px 9px;
+    font-size: 10.5px;
+    font-weight: 600;
+}
+.pf2-comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 24px;
+    padding: 20px;
+    background: #FFFFFF;
+    border: 1px solid #E5E8ED;
+    border-radius: 12px;
+}
+.pf2-comment-form label { color: #0F2040; font-size: 13px; font-weight: 700; }
+.pf2-comment-form textarea {
+    width: 100%;
+    border: 1px solid #D1D5DB;
+    border-radius: 9px;
+    padding: 12px;
+    color: #1F2937;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+    box-sizing: border-box;
+}
+.pf2-comment-form textarea:focus { border-color: #5A89D8; box-shadow: 0 0 0 3px rgba(90,137,216,0.12); }
+.pf2-comment-form textarea:disabled { background: #F3F4F6; cursor: wait; }
+.pf2-comment-form__submit { align-self: flex-end; }
 
 /* ── FOOTER ──────────────────────────────────────────────────────────── */
 .pf2-footer {
