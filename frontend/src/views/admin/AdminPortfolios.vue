@@ -6,7 +6,7 @@
         <p class="page__subtitle">Liste des étudiants inscrits et suivi de leurs portfolios.</p>
       </div>
       <div class="page__actions">
-        <button class="btn btn--secondary" @click="load">🔄 Rafraîchir</button>
+        <button class="btn btn--secondary" @click="load"><AppIcon name="refresh" /> Rafraîchir</button>
       </div>
     </div>
 
@@ -14,13 +14,13 @@
 
     <div class="stats-row">
       <StatCard label="Total Étudiants" :value="admin.loading ? '…' : String(admin.students.length)">
-        <template #icon>🎓</template>
+        <template #icon><AppIcon name="graduation" /></template>
       </StatCard>
       <StatCard label="Actifs" :value="admin.loading ? '…' : String(activeCount)">
-        <template #icon>✅</template>
+        <template #icon><AppIcon name="check-circle" /></template>
       </StatCard>
       <StatCard label="En attente" :value="admin.loading ? '…' : String(admin.verificationQueue.length)">
-        <template #icon>🕐</template>
+        <template #icon><AppIcon name="clock" /></template>
       </StatCard>
     </div>
 
@@ -65,8 +65,12 @@
             <td class="text-muted">{{ formatDate(s.date_creation || s.utilisateur?.date_creation) }}</td>
             <td>
               <div class="action-btns">
-                <button class="btn btn--icon btn--sm" title="Voir le profil"
-                        @click="$router.push('/admin/profil')">👁</button>
+                <button
+                  class="btn btn--icon btn--sm"
+                  :disabled="!portfolioSlug(s)"
+                  :title="portfolioSlug(s) ? 'Voir le portfolio public' : 'Portfolio non publié'"
+                  @click="openPortfolio(s)"
+                ><AppIcon name="eye" /></button>
               </div>
             </td>
           </tr>
@@ -132,6 +136,20 @@ const paginated = computed(() => {
   const start = (currentPage.value - 1) * perPage
   return filtered.value.slice(start, start + perPage)
 })
+
+function portfolioSlug(student) {
+  return student.portfolioUrl
+    || student.portfolio?.url_publique
+    || student.portfolios?.find(portfolio => portfolio.est_publie)?.url_publique
+    || null
+}
+
+function openPortfolio(student) {
+  const slug = portfolioSlug(student)
+  if (slug) {
+    router.push({ name: 'portfolio-template1', params: { url_publique: slug } })
+  }
+}
 
 function initials(prenom, nom) {
   const p = prenom?.[0] || ''
@@ -231,4 +249,5 @@ onMounted(async () => {
 .btn--sm   { padding: 6px 12px; font-size: 12px; }
 .btn--icon { background: transparent; border: 1px solid var(--color-border); color: var(--color-text-tertiary); padding: 5px 9px; }
 .btn--icon:hover { background: var(--color-surface-hover); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
 </style>

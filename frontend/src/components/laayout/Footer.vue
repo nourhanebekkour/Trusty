@@ -15,28 +15,28 @@
       <div class="footer__col">
         <p class="footer__col-title">Plateforme</p>
         <nav class="footer__links">
-          <a href="#">Comment ça marche</a>
-          <a href="#">Sécurité &amp; Certification</a>
-          <a href="#">Tarifs</a>
+          <span>Comment ça marche</span>
+          <span>Sécurité &amp; Certification</span>
+          <span>Tarifs</span>
         </nav>
       </div>
 
       <div class="footer__col">
         <p class="footer__col-title">Support</p>
         <nav class="footer__links">
-          <a href="#">Centre d'aide</a>
-          <a href="#">Contact</a>
-          <a href="#">Mentions Légales</a>
+          <span>Centre d'aide</span>
+          <a href="mailto:contact@trusty.fr">Contact</a>
+          <span>Mentions Légales</span>
         </nav>
       </div>
 
       <div class="footer__col">
         <p class="footer__col-title">Suivez-nous</p>
         <div class="footer__social">
-          <button class="footer__social-btn" aria-label="Réseaux sociaux">
+          <button class="footer__social-btn" aria-label="Réseaux sociaux non configurés" disabled>
             <img :src="iconReseaux" alt="Réseaux sociaux" class="footer__social-icon" />
           </button>
-          <button class="footer__social-btn" aria-label="Applications">
+          <button class="footer__social-btn" aria-label="Applications non configurées" disabled>
             <img :src="iconApps" alt="Applications" class="footer__social-icon" />
           </button>
         </div>
@@ -118,7 +118,8 @@ import iconApps from '@/assets/icons/apps.svg'
   gap: 6px;
 }
 
-.footer__links a {
+.footer__links a,
+.footer__links span {
   font-family: 'Roboto', sans-serif;
   font-size: 12px;
   line-height: 18px;

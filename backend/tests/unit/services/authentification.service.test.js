@@ -252,7 +252,7 @@ describe('demanderCreationCompte', () => {
 describe('login', () => {
 
     test('retourne accessToken, refreshToken et user sans mot_de_passe si connexion réussie', async () => {
-        const mockUser = { id_utilisateur: 'u1', email: 'test@etu.uae.ac.ma', mot_de_passe: 'hashedPwd', status_compte: 'ACTIF' };
+        const mockUser = { id_utilisateur: 'u1', email: 'test@etu.uae.ac.ma', mot_de_passe: 'hashedPwd', status_compte: 'ACTIF', email_verifie: true };
         utilisateur.findUnique.mockResolvedValue(mockUser);
         mockBcrypt.compare.mockResolvedValue(true);
         mockJwt.sign.mockReturnValue('test-token');
@@ -273,21 +273,21 @@ describe('login', () => {
     });
 
     test('lève une erreur si compte INACTIF', async () => {
-        utilisateur.findUnique.mockResolvedValue({ id_utilisateur: 'u1', status_compte: 'INACTIF' });
+        utilisateur.findUnique.mockResolvedValue({ id_utilisateur: 'u1', status_compte: 'INACTIF', email_verifie: true });
 
         await expect(login('test@etu.uae.ac.ma', 'password'))
             .rejects.toThrow('Compte inactif. En attente de validation par un administrateur');
     });
 
     test('lève une erreur si compte SUSPENDU', async () => {
-        utilisateur.findUnique.mockResolvedValue({ id_utilisateur: 'u1', status_compte: 'SUSPENDU' });
+        utilisateur.findUnique.mockResolvedValue({ id_utilisateur: 'u1', status_compte: 'SUSPENDU', email_verifie: true });
 
         await expect(login('test@etu.uae.ac.ma', 'password'))
             .rejects.toThrow("Compte suspendu. Contactez l'administrateur");
     });
 
     test('lève une erreur si mot de passe incorrect', async () => {
-        utilisateur.findUnique.mockResolvedValue({ id_utilisateur: 'u1', mot_de_passe: 'hashedPwd', status_compte: 'ACTIF' });
+        utilisateur.findUnique.mockResolvedValue({ id_utilisateur: 'u1', mot_de_passe: 'hashedPwd', status_compte: 'ACTIF', email_verifie: true });
         mockBcrypt.compare.mockResolvedValue(false);
 
         await expect(login('test@etu.uae.ac.ma', 'wrongpassword'))
@@ -295,7 +295,7 @@ describe('login', () => {
     });
 
     test('sauvegarde le refresh token en BDD après connexion réussie', async () => {
-        utilisateur.findUnique.mockResolvedValue({ id_utilisateur: 'u1', email: 'test@etu.uae.ac.ma', mot_de_passe: 'hashed', status_compte: 'ACTIF' });
+        utilisateur.findUnique.mockResolvedValue({ id_utilisateur: 'u1', email: 'test@etu.uae.ac.ma', mot_de_passe: 'hashed', status_compte: 'ACTIF', email_verifie: true });
         mockBcrypt.compare.mockResolvedValue(true);
         mockJwt.sign.mockReturnValue('token-123');
         utilisateur.update.mockResolvedValue({});

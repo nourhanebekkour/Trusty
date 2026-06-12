@@ -7,14 +7,14 @@
     </div>
 
     <div v-else-if="success" class="status-card success">
-      <div class="icon-check">✓</div>
+      <div class="icon-check"><AppIcon name="check-circle" :size="40" /></div>
       <h1>Compte vérifié !</h1>
       <p>Votre adresse e-mail a été validée avec succès. Vous pouvez maintenant vous connecter.</p>
       <router-link to="/login" class="btn-primary">Se connecter</router-link>
     </div>
 
     <div v-else class="status-card error">
-      <div class="icon-error">✕</div>
+      <div class="icon-error"><AppIcon name="x-circle" :size="40" /></div>
       <h1>Échec de la vérification</h1>
       <p>{{ errorMessage || "Le lien de vérification est invalide ou a expiré." }}</p>
       <router-link to="/login" class="btn-secondary">Retour à la connexion</router-link>

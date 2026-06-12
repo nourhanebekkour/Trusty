@@ -46,12 +46,13 @@ export const useAuthStore = defineStore('auth', {
 
   getters: {
     isAuthenticated: (state) => !!state.user,
-    isAdmin:         (state) => state.user?.role?.toUpperCase() === 'ADMINISTRATEUR',
-    isSuperAdmin:    (state) => state.user?.role?.toUpperCase() === 'ADMINISTRATEUR' && !state.user?.ecole,
-    isNormalAdmin:   (state) => state.user?.role?.toUpperCase() === 'ADMINISTRATEUR' && !!state.user?.ecole,
-    isEtudiant:      (state) => state.user?.role?.toUpperCase() === 'ETUDIANT',
-    isProfesseur:    (state) => state.user?.role?.toUpperCase() === 'PROFESSEUR',
+    isAdmin: (state) => state.user?.role?.toUpperCase() === 'ADMINISTRATEUR',
+    isSuperAdmin: (state) => state.user?.role?.toUpperCase() === 'ADMINISTRATEUR' && !state.user?.ecole,
+    isNormalAdmin: (state) => state.user?.role?.toUpperCase() === 'ADMINISTRATEUR' && !!state.user?.ecole,
+    isEtudiant: (state) => state.user?.role?.toUpperCase() === 'ETUDIANT',
+    isProfesseur: (state) => state.user?.role?.toUpperCase() === 'PROFESSEUR',
     isProfessionnel: (state) => state.user?.role?.toUpperCase() === 'PROFESSIONNEL',
+    etudiantId: (state) => state.user?.id_utilisateur ?? null,
   },
 
   actions: {

@@ -17,6 +17,7 @@ const enrichirProfil = async (user) => {
     return user;
 };
 
+
 async function register(email, password, nom, prenom, role, ecole) {
   const existingUser = await prisma.utilisateur.findUnique({ where: { email } });
   if (existingUser) throw new Error('Cet email est déjà utilisé');
@@ -208,6 +209,8 @@ async function login(email, password) {
       date_expiration_refresh: new Date(Date.now() + 7 * 24 * 3600000)
     }
   });
+
+  await enrichirProfil(user);
 
   const { mot_de_passe, ...userSafe } = user;
   return { accessToken, refreshToken, user: userSafe };

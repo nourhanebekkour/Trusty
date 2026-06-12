@@ -100,8 +100,11 @@ const userInitials = computed(() => {
   z-index: 100;
   width: 100%;
   height: 60px;
-  background: var(--color-surface, #FFFFFF);
+  background: color-mix(in srgb, var(--color-surface, #FFFFFF) 86%, transparent);
   border-bottom: 1px solid var(--color-border, #D6D0C4);
+  box-shadow: 0 8px 24px rgba(15, 27, 45, 0.07);
+  backdrop-filter: blur(14px) saturate(125%);
+  -webkit-backdrop-filter: blur(14px) saturate(125%);
   display: flex;
   align-items: center;
   justify-content: space-between;

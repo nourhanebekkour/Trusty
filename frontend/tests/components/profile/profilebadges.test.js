@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import ProfileBadges from '@/components/profile/ProfileBadges.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
 
 // ─── Mock du router ────────────────────────────────────────────────────────────
 const mockPush = vi.fn()
@@ -13,7 +14,7 @@ const makeBadge = (overrides = {}) => ({
   badge: {
     id_badge: 1,
     nom: 'Badge Test',
-    icone: '🎖️',
+    icone: null,
     ...overrides.badge,
   },
   date_attribution: '2024-03-15',
@@ -32,6 +33,7 @@ describe('ProfileBadges.vue', () => {
     mount(ProfileBadges, {
       props: { user },
       global: {
+        components: { AppIcon },
         mocks: { $router: { push: mockPush } },
         stubs: { RouterLink: true },
       },
@@ -94,24 +96,24 @@ describe('ProfileBadges.vue', () => {
     })
 
     it('affiche le bon nombre de badge-card', () => {
-      const badges = [makeBadge({ badge: { id_badge: 1, nom: 'A', icone: '🏅' } }), makeBadge({ badge: { id_badge: 2, nom: 'B', icone: '⭐' } })]
+      const badges = [makeBadge({ badge: { id_badge: 1, nom: 'A' } }), makeBadge({ badge: { id_badge: 2, nom: 'B' } })]
       wrapper = mountComponent(makeUser(badges))
       expect(wrapper.findAll('.badge-card')).toHaveLength(2)
     })
 
     it('affiche le nom du badge', () => {
-      wrapper = mountComponent(makeUser([makeBadge({ badge: { id_badge: 1, nom: 'Expert Vue', icone: '⚡' } })]))
+      wrapper = mountComponent(makeUser([makeBadge({ badge: { id_badge: 1, nom: 'Expert Vue' } })]))
       expect(wrapper.find('.badge-title').text()).toBe('Expert Vue')
     })
 
-    it('affiche l\'icône du badge', () => {
-      wrapper = mountComponent(makeUser([makeBadge({ badge: { id_badge: 1, nom: 'Test', icone: '🎖️' } })]))
-      expect(wrapper.find('.badge-icon-wrap span').text()).toBe('🎖️')
+    it('affiche une icône professionnelle pour le badge', () => {
+      wrapper = mountComponent(makeUser([makeBadge({ badge: { id_badge: 1, nom: 'Test' } })]))
+      expect(wrapper.find('.badge-icon-wrap svg').exists()).toBe(true)
     })
 
-    it('affiche l\'icône par défaut 🏅 si icone est null', () => {
+    it('affiche l\'icône de badge si icone est null', () => {
       wrapper = mountComponent(makeUser([makeBadge({ badge: { id_badge: 1, nom: 'Test', icone: null } })]))
-      expect(wrapper.find('.badge-icon-wrap span').text()).toBe('🏅')
+      expect(wrapper.find('.badge-icon-wrap svg').exists()).toBe(true)
     })
 
     it('affiche l\'année d\'attribution dans .badge-year', () => {

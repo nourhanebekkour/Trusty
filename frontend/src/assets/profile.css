@@ -41,12 +41,14 @@
 /* ── Card ── */
 .card { background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: var(--radius-panel);
   padding: 18px 20px;
   min-width: 0;
   width: 100%;
   overflow: hidden;
-  box-sizing: border-box; }
+  box-sizing: border-box;
+  box-shadow: var(--shadow-panel);
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base); }
 
 /* ── Profile Card ── */
 .cover-banner {
@@ -258,7 +260,7 @@
   color: var(--color-text-tertiary);
 }
 
-/* BODY SCROLLABLE 👇 IMPORTANT */
+/* Corps de page defilable */
 .modal-body {
   display: flex;
   flex-direction: column;

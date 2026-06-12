@@ -6,7 +6,7 @@
         <!-- Header -->
         <div class="detail-header">
           <div class="detail-header-left">
-            <span class="detail-icon">📁</span>
+            <span class="detail-icon"><AppIcon name="folder" /></span>
             <h3 class="detail-title">Détail du projet</h3>
           </div>
           <button class="modal-close" @click="close">×</button>
@@ -20,7 +20,7 @@
 
         <!-- Error -->
         <div v-else-if="error" class="detail-error">
-          <span>⚠ {{ error }}</span>
+          <span><AppIcon name="warning" /> {{ error }}</span>
         </div>
 
         <!-- Content -->
@@ -41,7 +41,8 @@
                 {{ formatStatut(projet.status_validation) }}
               </span>
               <span class="badge" :class="projet.est_public ? 'badge--public' : 'badge--private'">
-                {{ projet.est_public ? '🌐 Public' : '🔒 Privé' }}
+                <AppIcon :name="projet.est_public ? 'globe' : 'lock'" />
+                {{ projet.est_public ? 'Public' : 'Privé' }}
               </span>
             </div>
           </div>
@@ -51,13 +52,13 @@
 
             <!-- Description -->
             <div class="detail-section detail-section--full">
-              <h4 class="detail-section-title">📝 Description</h4>
+              <h4 class="detail-section-title"><AppIcon name="file-text" /> Description</h4>
               <p class="detail-text">{{ projet.description || '—' }}</p>
             </div>
 
             <!-- Période -->
             <div class="detail-section">
-              <h4 class="detail-section-title">📅 Période</h4>
+              <h4 class="detail-section-title"><AppIcon name="calendar" /> Période</h4>
               <div class="detail-field">
                 <span class="detail-label">Début</span>
                 <span class="detail-value">{{ formatDate(projet.date_debut) }}</span>
@@ -70,7 +71,7 @@
 
             <!-- Infos -->
             <div class="detail-section">
-              <h4 class="detail-section-title">ℹ️ Infos</h4>
+              <h4 class="detail-section-title"><AppIcon name="alert" /> Infos</h4>
               <div class="detail-field">
                 <span class="detail-label">Type</span>
                 <span class="detail-value">{{ formatType(projet.type_projet) }}</span>
@@ -87,13 +88,13 @@
 
             <!-- Résultats -->
             <div v-if="projet.resultats_obtenus" class="detail-section detail-section--full">
-              <h4 class="detail-section-title">🎯 Résultats</h4>
+              <h4 class="detail-section-title"><AppIcon name="target" /> Résultats</h4>
               <p class="detail-text">{{ projet.resultats_obtenus }}</p>
             </div>
 
             <!-- Commentaire validation -->
             <div v-if="projet.commentaire_validation" class="detail-section detail-section--full">
-              <h4 class="detail-section-title">💬 Commentaire de validation</h4>
+              <h4 class="detail-section-title"><AppIcon name="message" /> Commentaire de validation</h4>
               <p class="detail-text">{{ projet.commentaire_validation }}</p>
             </div>
 
@@ -101,10 +102,10 @@
 
           <!-- Technologies -->
           <div v-if="technologies.length" class="detail-section detail-section--full">
-            <h4 class="detail-section-title">🛠️ Technologies</h4>
+            <h4 class="detail-section-title"><AppIcon name="wrench" /> Technologies</h4>
             <div class="detail-techs">
               <div v-for="tech in technologies" :key="tech.id_technologie" class="detail-tech-item">
-                <span class="detail-tech-emoji">{{ techEmoji(tech) }}</span>
+                <AppIcon class="detail-tech-emoji" :name="techEmoji(tech)" />
                 <div class="detail-tech-info">
                   <span class="detail-tech-name">{{ tech.nom }}</span>
                   <span v-if="tech.version" class="detail-tech-version">v{{ tech.version }}</span>
@@ -118,7 +119,7 @@
 
           <!-- Participants -->
           <div v-if="participants.length" class="detail-section detail-section--full">
-            <h4 class="detail-section-title">👥 Participants</h4>
+            <h4 class="detail-section-title"><AppIcon name="users" /> Participants</h4>
             <div class="detail-participants">
               <div v-for="p in participants" :key="p.id_etudiant" class="detail-participant">
                 <span class="participant-avatar">{{ initiales(p.etudiant) }}</span>
@@ -132,7 +133,7 @@
 
           <!-- Liens -->
           <div v-if="hasLinks" class="detail-section detail-section--full">
-            <h4 class="detail-section-title">🔗 Liens</h4>
+            <h4 class="detail-section-title"><AppIcon name="link" /> Liens</h4>
             <div class="detail-links">
               <a v-if="projet.lien_github" :href="projet.lien_github" target="_blank" class="detail-link github">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
@@ -162,7 +163,7 @@
         <!-- Footer -->
         <div class="detail-footer">
           <button class="btn-cancel" @click="close">Fermer</button>
-          <button class="btn-new" @click="goToEdit">✎ Modifier ce projet</button>
+          <button class="btn-new" @click="goToEdit"><AppIcon name="pencil" /> Modifier ce projet</button>
         </div>
 
       </div>
@@ -239,12 +240,12 @@ export default {
 
     techEmoji(tech) {
       const map = {
-        FRONTEND: '🎨', BACKEND: '⚙️', DATABASE: '🗄️',
-        DEVOPS: '🚀', MOBILE: '📱', IA: '🤖', AI: '🤖',
-        SECURITE: '🔒', CLOUD: '☁️', TESTING: '🧪',
-        DESIGN: '✏️', AUTRE: '🔧',
+        FRONTEND: 'palette', BACKEND: 'code', DATABASE: 'database',
+        DEVOPS: 'rocket', MOBILE: 'smartphone', IA: 'sparkles', AI: 'sparkles',
+        SECURITE: 'lock', CLOUD: 'cloud', TESTING: 'test',
+        DESIGN: 'pencil', AUTRE: 'wrench',
       }
-      return map[(tech.categorie || '').toUpperCase()] ?? '🔧'
+      return map[(tech.categorie || '').toUpperCase()] ?? 'wrench'
     },
   },
 }

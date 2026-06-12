@@ -22,6 +22,7 @@ import badgesRoutes from "./cursus/badges/badges.routes.js";
 import commentaireRoutes from "./systeme/commentaire/commentaire.routes.js";
 import recommandationRoutes from "./systeme/recommandation/recommandation.routes.js";
 import portfolioRoutes from "./portfolio/portfolio.routes.js";
+import suggestionRoutes from "./systeme/suggestionSysteme/suggestion.routes.js";
 import { authMiddleware } from '#Middlewares/auth.middleware.js';
 
 
@@ -51,6 +52,7 @@ router.use('/historique-actions', historiqueActionRoutes);
 router.use('/badges', badgesRoutes);
 router.use('/commentaires', commentaireRoutes);
 router.use('/recommandations', recommandationRoutes);
+router.use('/suggestions', suggestionRoutes);
 
 
 router.use('/etudiants', etudiantRoutes);

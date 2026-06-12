@@ -43,10 +43,15 @@
         >
           Valider
         </button>
-        <button v-if="projet.status === 'valide'" class="btn-ghost btn-sm ok-border">
+        <button
+          v-if="projet.status === 'valide'"
+          class="btn-ghost btn-sm ok-border"
+          disabled
+          title="Projet déjà certifié"
+        >
           Certifier
         </button>
-        <button class="btn-ghost btn-sm">Détails</button>
+        <button class="btn-ghost btn-sm" @click="emit('details', projet)">Détails</button>
       </div>
     </div>
   </div>
@@ -59,7 +64,7 @@ defineProps({
   projets: { type: Array, default: () => [] },
 })
 
-const emit = defineEmits(['valider'])
+const emit = defineEmits(['valider', 'details'])
 
 const tabs      = ['Projets', 'Stages', 'Activités']
 const activeTab = ref('Projets')

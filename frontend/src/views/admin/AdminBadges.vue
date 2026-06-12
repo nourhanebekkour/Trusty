@@ -15,10 +15,10 @@
 
     <div class="stats-row">
       <StatCard label="Certifications" :value="admin.loading ? '…' : String(admin.certHistory.length)">
-        <template #icon>🏅</template>
+        <template #icon><AppIcon name="award" /></template>
       </StatCard>
       <StatCard label="Étudiants certifiés" :value="admin.loading ? '…' : String(certifiedStudents)">
-        <template #icon>✅</template>
+        <template #icon><AppIcon name="check-circle" /></template>
       </StatCard>
     </div>
 

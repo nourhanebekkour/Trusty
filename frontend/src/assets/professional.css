@@ -13,6 +13,10 @@
   border: 1px solid var(--color-border, #D6D0C4);
   border-radius: 14px;
   padding: 22px;
+  box-shadow: var(--shadow-panel);
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--transition-base, 0.25s), box-shadow var(--transition-base, 0.25s), border-color var(--transition-base, 0.25s);
 }
 .card-header {
   display: flex;

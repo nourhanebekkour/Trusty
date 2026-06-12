@@ -882,9 +882,12 @@ onMounted(fetchFormations)
   border-color: var(--color-accent);
 }
 .check-label input:checked + .check-box::after {
-  content: '✓';
-  font-size: 11px;
-  font-weight: 700;
+  content: '';
+  width: 4px;
+  height: 8px;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translate(-1px, -1px);
   color: var(--color-page-bg);
 }
 

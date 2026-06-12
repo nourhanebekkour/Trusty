@@ -6,7 +6,7 @@
     </div>
 
     <div v-else-if="error" class="error-state">
-      <p>⚠️ {{ error }}</p>
+      <p><AppIcon name="warning" /> {{ error }}</p>
       <button @click="loadProfile" class="btn-outline">Réessayer</button>
     </div>
 
@@ -78,6 +78,7 @@ import {
   addSkill,
   removeSkill,
 } from '@/services/profileservices'
+import { getUploadErrorMessage } from '@/utils/fileUpload'
 
 const authStore      = useAuthStore()
 const user           = ref(null)
@@ -135,7 +136,7 @@ const onAvatarChange = async (file) => {
       authStore.user = user.value
     }
   } catch (err) {
-    alert(err.response?.data?.message || "Erreur lors de l'upload de la photo.")
+    alert(getUploadErrorMessage(err, "Erreur lors de l'upload de la photo."))
   }
 }
 

@@ -89,13 +89,14 @@
                     <button class="btn btn--primary btn--sm"
                             :disabled="admin.validatingId === item.id"
                             @click="handleValidate(item)">
-                      {{ admin.validatingId === item.id ? '…' : '✓ Valider' }}
+                      <AppIcon v-if="admin.validatingId !== item.id" name="check" />
+                      {{ admin.validatingId === item.id ? '…' : 'Valider' }}
                     </button>
                   </div>
                 </td>
               </tr>
               <tr v-if="!admin.loading && admin.verificationQueue.length === 0">
-                <td colspan="5" class="state-msg">Aucun élément en attente ✓</td>
+                <td colspan="5" class="state-msg">Aucun élément en attente <AppIcon name="check" /></td>
               </tr>
             </tbody>
           </table>
@@ -160,7 +161,7 @@
 
           <div v-else class="cert-list">
             <div v-for="cert in admin.certHistory.slice(0, 10)" :key="cert.id_historique || cert.id" class="cert-item">
-              <div class="cert-item__icon">✓</div>
+              <div class="cert-item__icon"><AppIcon name="check" /></div>
               <div class="cert-item__body">
                 <p class="cert-item__text">
                   <strong>{{ cert.utilisateur?.prenom || '' }} {{ cert.utilisateur?.nom || '' }}</strong>
@@ -277,7 +278,7 @@
                    minlength="8" maxlength="128"
                    :class="{ 'input--error': v$.password.$error }"
                    @blur="v$.password.$touch()" />
-            <button type="button" class="input-group__btn" @click="showPwd = !showPwd">👁</button>
+            <button type="button" class="input-group__btn" @click="showPwd = !showPwd"><AppIcon name="eye" /></button>
             <button type="button" class="input-group__btn" @click="generatePassword">↻ Générer un mot de passe fort</button>
           </div>
           <span v-if="v$.password.$error" class="field-error">
