@@ -12,7 +12,7 @@
 
     <DashboardStats    :stats="stats" />
     <DashboardProjects :projects="projects"     :loading="loadingProjects" />
-    <DashboardRecos    :recos="recommandations" :loading="loadingRecos" />
+    <DashboardRecos    :recos="recommandations" :loading="loadingRecos" @valider="handleValiderReco" />
 
     <div class="cta-banner">
       <div class="cta-banner__content">
@@ -71,6 +71,16 @@ async function openPublicPreview() {
   await router.push('/portfolio')
 }
 
+async function handleValiderReco(idReco, status) {
+  try {
+    await api.patch(`/recommandations/${idReco}/valider`, { status })
+    const recosData = await fetchRecos(idEtudiant)
+    recommandations.value = recosData
+  } catch (error) {
+    console.error('[Dashboard] Erreur validation recommandation :', error)
+  }
+}
+
 onMounted(async () => {
   if (!idEtudiant) {
     console.warn('[Dashboard] id_utilisateur introuvable dans le store auth')
@@ -89,7 +99,8 @@ onMounted(async () => {
     fetchRecos(idEtudiant),
   ])
 
-  stats.value           = statsData
+  const projetsCertifies = projectsData.filter(p => p.status === 'VALIDE').length
+  stats.value           = { ...statsData, projetsCertifies }
   projects.value        = projectsData
   loadingProjects.value = false
   recommandations.value = recosData

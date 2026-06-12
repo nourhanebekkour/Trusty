@@ -28,6 +28,12 @@ export const recupererTousLesProfils = async () => {
     const etudiants = await prisma.etudiant.findMany({
         include: {
             utilisateur: UtilisateurSansMotDePasse,
+            _count: {
+                select: {
+                    participations_projets: true,
+                    recommandations: true
+                }
+            }
         }
     });
     return await Promise.all(etudiants.map(enrichirProfil));
@@ -42,6 +48,12 @@ export const recupererEtudiantsParEcole = async (ecole) => {
         },
         include: {
             utilisateur: UtilisateurSansMotDePasse,
+            _count: {
+                select: {
+                    participations_projets: true,
+                    recommandations: true
+                }
+            }
         }
     });
     return await Promise.all(etudiants.map(enrichirProfil));
@@ -52,6 +64,12 @@ export const recupererParId = async (id_etudiant) => {
         where: { id_etudiant },
         include: {
             utilisateur: UtilisateurSansMotDePasse,
+            _count: {
+                select: {
+                    participations_projets: true,
+                    recommandations: true
+                }
+            }
         }
     });
     return await enrichirProfil(etudiant);
@@ -85,6 +103,12 @@ export const ajouterOuModifierEtudiant = async (id, donnees) => {
         },
         include: {
             utilisateur: UtilisateurSansMotDePasse,
+            _count: {
+                select: {
+                    participations_projets: true,
+                    recommandations: true
+                }
+            }
         }
     });
 

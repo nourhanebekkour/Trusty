@@ -47,7 +47,12 @@ export const recupererRecommandations = async (filtres = {}) => {
         where: filtres,
         include: {
             auteur: {
-                select: { nom: true, prenom: true, photo: true, role: true }
+                select: { nom: true, prenom: true, photo: true, role: true },
+                include: {
+                    professeur: { select: { specialite: true, departement: true } },
+                    professionnel: { select: { poste: true, entreprise: true } },
+                    etudiant: { select: { filiere: true, annee: true } }
+                }
             },
             cible: {
                 include: {
@@ -69,7 +74,12 @@ export const recupererRecommandationParId = async (id_recommandation) => {
         where: { id_recommandation },
         include: {
             auteur: {
-                select: { nom: true, prenom: true, photo: true, role: true }
+                select: { nom: true, prenom: true, photo: true, role: true },
+                include: {
+                    professeur: { select: { specialite: true, departement: true } },
+                    professionnel: { select: { poste: true, entreprise: true } },
+                    etudiant: { select: { filiere: true, annee: true } }
+                }
             },
             cible: {
                 include: {

@@ -64,8 +64,12 @@ export const useActivitesStore = defineStore('activites', {
     async addActivite(data) {
       if (!Array.isArray(this.activites)) this.activites = [];
       this.loading = true;
+      const payload = {
+        ...data,
+        date_debut: data.date_debut || new Date().toISOString().split('T')[0],
+      };
       try {
-        const newActivite = await activitesService.createActivite(this.currentEtudiantId, data);
+        const newActivite = await activitesService.createActivite(this.currentEtudiantId, payload);
         this.activites.unshift(newActivite);
       } catch (e) {
         this.activites.unshift({

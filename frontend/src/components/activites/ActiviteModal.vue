@@ -110,7 +110,7 @@ watch(() => props.activite, (val) => {
 }, { immediate: true });
 
 const isValid = computed(() =>
-  form.value.type_activite && form.value.nom_activite && form.value.organisation && form.value.role
+  form.value.type_activite && form.value.nom_activite && form.value.organisation && form.value.role && form.value.date_debut
 );
 
 function submit() {
