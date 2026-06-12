@@ -75,7 +75,7 @@ const setupGetProfileMocks = () => {
 describe('profileservices.js — Tests Unitaires', () => {
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    vi.resetAllMocks()
   })
 
   // ── getProfile() ───────────────────────────────────────────────────────────

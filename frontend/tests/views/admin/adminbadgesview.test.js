@@ -5,7 +5,7 @@ import { createPinia, setActivePinia } from 'pinia'
 vi.mock('@/stores/adminStore', () => ({ useAdminStore: vi.fn() }))
 vi.mock('@/stores/authstore',  () => ({ useAuthStore:  vi.fn() }))
 vi.mock('vue-router',          () => ({ useRouter:     vi.fn() }))
-vi.mock('@/services/api',      () => ({ default: { post: vi.fn().mockResolvedValue({}) } }))
+vi.mock('@/services/api',      () => ({ default: { post: vi.fn().mockResolvedValue({ data: { id_badge: 'badge-1' } }) } }))
 vi.mock('@/components/ui/StatCard.vue', () => ({
   default: {
     template: '<div class="stat-card"><span class="stat-label">{{ label }}</span><span class="stat-value">{{ value }}</span></div>',
@@ -218,8 +218,10 @@ describe('AdminBadges.vue — Tests d\'Intégration', () => {
     await wrapper.find('.modal-confirm-btn').trigger('click')
     await flushPromises()
     expect(api.post).toHaveBeenCalledWith('/badges', expect.objectContaining({
-      id_etudiant: 'stu-1',
       nom: 'Badge Expert',
+    }))
+    expect(api.post).toHaveBeenCalledWith('/badges/badge-1/attribuer', expect.objectContaining({
+      id_etudiant: 'stu-1',
     }))
   })
 
@@ -233,6 +235,6 @@ describe('AdminBadges.vue — Tests d\'Intégration', () => {
     await wrapper.find('input[type="text"]').setValue('Badge Expert')
     await wrapper.find('.modal-confirm-btn').trigger('click')
     await flushPromises()
-    expect(wrapper.find('.msg.msg--ok').text()).toContain('Badge créé avec succès')
+    expect(wrapper.find('.msg.msg--ok').text()).toContain('Badge créé et attribué avec succès')
   })
 })

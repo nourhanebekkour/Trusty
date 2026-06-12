@@ -22,11 +22,12 @@ beforeEach(() => vi.clearAllMocks())
 describe('dashboardServices — fetchStats', () => {
 
   it('1 — retourne les stats depuis l\'API si la réponse n\'est pas vide', async () => {
-    api.get.mockResolvedValue({ data: { data: {
-      score_credibilite: 88,
-      _count: { participations_projets: 5, recommendation: 3 },
-      portfolio: { nombre_vues: 120 }
-    }}})
+    api.get
+      .mockResolvedValueOnce({ data: { data: {
+        score_credibilite: 88,
+        _count: { participations_projets: 5, recommandations: 3 },
+      }}})
+      .mockResolvedValueOnce({ data: { data: [{ nombre_vues: 120 }] } })
 
     const result = await fetchStats('u1')
 
@@ -59,16 +60,9 @@ describe('dashboardServices — fetchStats', () => {
 // ─────────────────────────────────────────────
 describe('dashboardServices — fetchProjects', () => {
 
-  it('4 — retourne les projets filtrés par étudiant', async () => {
-    api.get.mockResolvedValue({ data: { data: [
-      {
-        id_projet: '1', titre: 'Projet A',
-        participations: [{ id_etudiant: 'u1', est_visible_portfolio: true, est_createur: true, role_joue: 'dev' }]
-      },
-      {
-        id_projet: '2', titre: 'Projet B',
-        participations: [{ id_etudiant: 'u2', est_visible_portfolio: true }]
-      },
+  it('4 — retourne les projets normalisés depuis l\'API', async () => {
+    api.get.mockResolvedValueOnce({ data: { data: [
+      { id_projet: '1', titre: 'Projet A', type_projet: 'PFA', status_validation: 'VALIDE', date_debut: '2024-01-01', description: 'desc', technologies: [], est_createur: true },
     ]}})
 
     const result = await fetchProjects('u1')
@@ -78,13 +72,13 @@ describe('dashboardServices — fetchProjects', () => {
     expect(result[0].est_createur).toBe(true)
   })
 
-  it('5 — retourne les données démo si aucun projet', async () => {
-    api.get.mockResolvedValue({ data: { data: [] } })
+  it('5 — retourne un tableau vide si aucun projet', async () => {
+    api.get.mockResolvedValueOnce({ data: { data: [] } })
 
     const result = await fetchProjects('u1')
 
     expect(Array.isArray(result)).toBe(true)
-    expect(result.length).toBeGreaterThan(0) // données démo
+    expect(result).toHaveLength(0)
   })
 
   it('6 — retourne les données démo si l\'API échoue', async () => {
