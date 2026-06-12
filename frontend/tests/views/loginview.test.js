@@ -202,7 +202,7 @@ describe("LoginView — Tests d'Intégration", () => {
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
-    expect(mockStore.login).toHaveBeenCalledWith('alice@test.com', 'Password1!')
+    expect(mockStore.login).toHaveBeenCalledWith('alice@test.com', 'Password1!', false)
   })
 
   it('17 — login réussi : redirige vers "/dashboard"', async () => {
@@ -252,6 +252,6 @@ describe("LoginView — Tests d'Intégration", () => {
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
-    expect(mockStore.login).toHaveBeenCalledWith('alice@test.com', 'Password1!')
+    expect(mockStore.login).toHaveBeenCalledWith('alice@test.com', 'Password1!', true)
   })
 })
