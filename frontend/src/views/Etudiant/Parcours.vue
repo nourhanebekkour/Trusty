@@ -1132,6 +1132,7 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .parcours-page { padding: 1.25rem 1rem 3rem; }
+  .page-header { flex-direction: column; }
   .stats-row { grid-template-columns: repeat(2, 1fr); }
   .cards-grid { grid-template-columns: 1fr; }
   .field-row { grid-template-columns: 1fr; }

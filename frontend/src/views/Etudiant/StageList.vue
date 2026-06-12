@@ -337,4 +337,11 @@ onUnmounted(() => {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+@media (max-width: 768px) {
+  .stages-page { padding: 1.25rem 1rem 3rem; }
+  .page-header { flex-direction: column; }
+  .page-title { font-size: 1.35rem; }
+  .add-btn { width: 100%; justify-content: center; }
+}
 </style>

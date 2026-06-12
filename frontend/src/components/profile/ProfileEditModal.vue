@@ -465,4 +465,15 @@ const submit = () => emit('save', { ...form })
   flex-shrink: 0;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 640px) {
+  .modal { max-width: 100%; margin: 0; border-radius: 0; max-height: 100vh; height: 100vh; }
+  .modal-header { padding: 16px 18px 12px; }
+  .modal-body { padding: 18px; }
+  .form-row { grid-template-columns: 1fr; }
+  .locked-grid { grid-template-columns: 1fr; }
+  .visibility-options { grid-template-columns: 1fr; }
+  .modal-footer { padding: 14px 18px; }
+  .modal-footer .btn-cancel, .modal-footer .btn-save { flex: 1; justify-content: center; }
+}
 </style>

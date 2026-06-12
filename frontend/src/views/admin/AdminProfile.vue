@@ -146,4 +146,15 @@ onMounted(() => {
 .btn--primary   { background: var(--color-accent); color: #fff; }
 .btn--primary:hover { background: var(--color-accent-hover); }
 .btn--primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+@media (max-width: 768px) {
+  .page { padding: 20px 16px; }
+  .page__header { flex-direction: column; gap: 12px; }
+  .page__title { font-size: 20px; }
+  .page__actions { width: 100%; }
+  .form-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .info-grid { grid-template-columns: 1fr; }
+}
 </style>

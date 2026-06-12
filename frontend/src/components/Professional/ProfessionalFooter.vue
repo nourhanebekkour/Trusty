@@ -17,4 +17,11 @@
   align-items: center;
   justify-content: space-between;
 }
+
+@media (max-width: 768px) {
+  .professional-footer {
+    padding: 0 14px;
+    font-size: 11px;
+  }
+}
 </style>

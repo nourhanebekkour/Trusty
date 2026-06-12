@@ -7,6 +7,12 @@
   min-height: 100vh;
 }
 
+@media (max-width: 768px) {
+  .professional-page {
+    padding: 16px 14px 40px;
+  }
+}
+
 /* Legacy classes (kept for backwards compatibility) */
 .card {
   background: var(--color-surface, #FFFFFF);

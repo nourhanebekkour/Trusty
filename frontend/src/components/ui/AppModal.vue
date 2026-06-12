@@ -105,4 +105,12 @@ defineEmits(['close', 'confirm'])
   color: #fff;
 }
 .btn--primary:hover { background: var(--color-accent-hover); }
+
+@media (max-width: 640px) {
+  .modal { max-width: 100%; margin: 8px; max-height: 96vh; border-radius: 12px; }
+  .modal__header { padding: 18px 20px 12px; }
+  .modal__body { padding: 18px 20px; }
+  .modal__footer { padding: 14px 20px 18px; flex-direction: column-reverse; }
+  .modal__footer .btn { width: 100%; justify-content: center; }
+}
 </style>

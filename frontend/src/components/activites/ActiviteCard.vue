@@ -353,4 +353,24 @@ async function onFileChange(e) {
   border-color: rgba(196, 90, 90, 0.25);
   color: #c45a5a;
 }
+
+@media (max-width: 768px) {
+  .activite-card {
+    padding: 1rem;
+  }
+
+  .card-meta {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .card-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .footer-btn {
+    justify-content: center;
+  }
+}
 </style>

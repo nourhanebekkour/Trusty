@@ -593,7 +593,14 @@ watch(() => route.query, applyRouteActions)
 }
 
 @media (max-width: 768px) {
+  .projets-page { padding: 1.25rem 1rem; }
+  .page-header { flex-direction: column; }
+  .page-title { font-size: 1.35rem; }
+  .add-btn { width: 100%; justify-content: center; }
+  .section-header { flex-direction: column; align-items: stretch; gap: 0.75rem; }
+  .section-actions { flex-wrap: wrap; }
+  .search-input { width: 100%; }
+  .filter-btn { flex: 1; justify-content: center; }
   .bottom-grid { grid-template-columns: 1fr; }
-  .search-input { width: 150px; }
 }
 </style>

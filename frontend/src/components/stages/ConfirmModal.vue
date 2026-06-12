@@ -125,4 +125,9 @@ export default {
   opacity: 0;
 }
 
+@media (max-width: 640px) {
+  .confirm-modal { max-width: 100%; margin: 12px; }
+  .confirm-body { padding: 18px; }
+  .confirm-footer { padding: 14px 18px; }
+}
 </style>

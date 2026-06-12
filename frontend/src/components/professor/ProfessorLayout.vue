@@ -16,7 +16,9 @@ import ProfessorTopbar from './ProfessorTopbar.vue'
 import ProfessorSidebar from './ProfessorSideBar.vue'
 
 const isCollapsed = ref(false)
+const isMobileOpen = ref(false)
 provide('sidebarCollapsed', isCollapsed)
+provide('sidebarMobileOpen', isMobileOpen)
 </script>
 
 <style scoped>

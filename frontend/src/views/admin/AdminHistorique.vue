@@ -103,4 +103,13 @@ onMounted(async () => {
 .btn { padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
 .btn--secondary       { background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-secondary); }
 .btn--secondary:hover { background: var(--color-surface-hover); }
+
+@media (max-width: 768px) {
+  .page { padding: 20px 16px; }
+  .page__header { flex-direction: column; gap: 12px; }
+  .page__title { font-size: 20px; }
+}
+@media (max-width: 480px) {
+  .table { display: block; overflow-x: auto; white-space: nowrap; }
+}
 </style>

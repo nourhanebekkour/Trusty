@@ -425,4 +425,12 @@ export default {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+@media (max-width: 640px) {
+  .rapport-modal { max-width: 100%; margin: 8px; border-radius: 12px; max-height: 96vh; }
+  .rapport-header { padding: 16px 18px 12px; }
+  .rapport-body { padding: 18px; }
+  .rapport-footer { padding: 14px 18px; }
+  .rapport-footer .btn-cancel, .rapport-footer .btn-save { flex: 1; justify-content: center; }
+}
 </style>

@@ -666,4 +666,26 @@ onMounted(async () => {
 }
 .checkbox-group { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
 .checkbox-group label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-text-secondary); cursor: pointer; }
+
+@media (max-width: 768px) {
+  .page { padding: 20px 16px; }
+  .page__header { flex-direction: column; gap: 12px; }
+  .page__title { font-size: 20px; }
+  .page__actions { width: 100%; }
+  .page__actions .btn { flex: 1; justify-content: center; }
+  .stats-row { flex-wrap: wrap; }
+  .content-grid { grid-template-columns: 1fr; }
+  .card__header { flex-direction: column; gap: 12px; }
+  .search-box { width: 100%; }
+  .search-box input { width: 100%; }
+  .table { display: block; overflow-x: auto; white-space: nowrap; }
+}
+@media (max-width: 480px) {
+  .stats-row { flex-direction: column; }
+  .form-grid { grid-template-columns: 1fr; }
+  .input-group { flex-direction: column; }
+  .page__actions { flex-wrap: wrap; }
+  .page__actions .btn { flex: 1 1 auto; text-align: center; white-space: normal; }
+  .action-btns { flex-wrap: wrap; }
+}
 </style>

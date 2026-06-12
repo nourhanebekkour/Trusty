@@ -292,8 +292,7 @@ onMounted(async () => {
     await router.replace('/login')
     return
   }
-  const role = authStore.user?.role || authStore.role
-  if (role !== 'ADMIN') {
+  if (!authStore.isAdmin) {
     await router.replace('/')
     return
   }
