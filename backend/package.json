@@ -33,6 +33,7 @@
     "seed": "node prisma/seed.js"
   },
   "dependencies": {
+    "@google/genai": "^2.8.0",
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",
@@ -47,6 +48,7 @@
     "multer": "^2.1.1",
     "nodemailer": "^8.0.7",
     "nodemon": "^3.1.14",
+    "puppeteer": "^25.1.0",
     "swagger-autogen": "^2.23.7",
     "swagger-ui-express": "^5.0.1",
     "swot-node": "^2.0.1489",

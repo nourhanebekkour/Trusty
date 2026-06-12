@@ -1,5 +1,6 @@
 import * as portfolioService from './portfolio.service.js';
 import sendResponse from '#Utils/response.handler.js';
+import { generatePortfolioPDF } from './portfolio.pdf.service.js';
 
 export const getPublicPortfolio = async (req, res) => {
     // #swagger.tags = ['Portfolio']
@@ -14,7 +15,7 @@ export const getPublicPortfolio = async (req, res) => {
         }
 
         if (!portfolio.est_publie) {
-            const isOwner = req.user?.id === portfolio.id_etudiant
+            const isOwner = req.user?.id === portfolio.etudiant?.utilisateur?.id_utilisateur
             if (!isOwner) {
                 return sendResponse(res, 404, false, "Portfolio non public");
             }
@@ -227,3 +228,41 @@ export const deletePortfolio = async (req, res) => {
         return sendResponse(res, 500, false, "Erreur serveur", null, erreur.message)
     }
 }
+
+export const generateAdaptative = async (req, res) => {
+    // #swagger.tags = ['Portfolio']
+    // #swagger.summary = 'Générer une sélection adaptative par IA'
+    /* #swagger.parameters['body'] = {
+        in: 'body',
+        required: true,
+        schema: {
+            objectif: 'DEVOPS'
+        }
+    } */
+    try {
+        const { objectif } = req.body;
+
+        if (!objectif) {
+            return sendResponse(res, 400, false, "L'objectif est requis");
+        }
+
+        const selection = await portfolioService.genererSelectionAdaptative(req.user.id, objectif);
+        return res.json(selection);
+    } catch (erreur) {
+        console.error("Erreur lors de la génération IA:", erreur);
+        return sendResponse(res, 500, false, "Erreur de génération", null, erreur.message);
+    }
+};
+
+export const exportPDF = async (req, res) => {
+    try {
+        const { url_publique } = req.params;
+        const pdf = await generatePortfolioPDF(url_publique);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="portfolio-${url_publique}.pdf"`);
+        res.send(pdf);
+    } catch (erreur) {
+        console.error('Erreur génération PDF:', erreur);
+        return sendResponse(res, 500, false, 'Erreur génération PDF', null, erreur.message);
+    }
+};
