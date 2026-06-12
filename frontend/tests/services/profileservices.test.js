@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// profileservices.js importe '@/api' (src/api.js)
+// profileservices.js importe '@/services/api'
 vi.mock('@/services/api', () => ({
   default: {
     get:  vi.fn(),
@@ -16,6 +16,8 @@ vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
   ok:   true,
   json: vi.fn().mockResolvedValue([]),
 }))
+
+import api from '@/services/api'
 import { getProfile, saveProfile, addSkill } from '@/services/profileservices'
 
 const EXPECTED_ID    = 'clx123456789abcdefghijk'

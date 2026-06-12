@@ -84,7 +84,7 @@ function assembleUser(me, etudiant, competences = [], badges = [], projets = [],
     nom:            me.nom,
     prenom:         me.prenom,
     telephone:      me.telephone ?? null,
-    photo:          me.photo     ?? null,
+    photo:          me.photo_url    ?? null,
     role:           me.role,
     date_creation:  me.date_creation ?? null,
     etudiant: {

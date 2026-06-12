@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview --host",
     "test": "vitest",
+    "test:ui": "vitest --ui",
     "test:ci": "vitest run --reporter=verbose --reporter=json --outputFile=test-results.json",
     "report:generate": "node scripts/generate-html-report.js",
     "report:send": "node scripts/send-report.js"
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.3",
+    "@vitest/ui": "^4.1.8",
     "@vue/test-utils": "^2.4.9",
     "bcryptjs": "^3.0.3",
     "cypress": "^15.15.0",

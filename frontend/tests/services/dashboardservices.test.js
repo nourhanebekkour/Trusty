@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 // ── mock api ─────────────────────────────────────────────────────────────────
-vi.mock('@/api', () => ({
+vi.mock('@/services/api', () => ({
   default: {
     get: vi.fn(),
   },
 }))
 
-import api from '@/api'
+import api from '@/services/api'
 import { fetchStats, fetchProjects, fetchRecos } from '@/services/dashboardservices'
 
 // ── données mock attendues (identiques au service) ───────────────────────────
@@ -76,10 +76,10 @@ describe('dashboardservices.js — Tests Unitaires', () => {
     it('chaque projet a les propriétés requises', async () => {
       const result = await fetchProjects()
       result.forEach(project => {
-        expect(project).toHaveProperty('id_projet')
+        expect(project).toHaveProperty('id')
         expect(project).toHaveProperty('titre')
-        expect(project).toHaveProperty('type_projet')
-        expect(project).toHaveProperty('status_validation')
+        expect(project).toHaveProperty('type')
+        expect(project).toHaveProperty('status')
         expect(project).toHaveProperty('date_debut')
         expect(project).toHaveProperty('description')
         expect(project).toHaveProperty('technologies')
@@ -90,7 +90,7 @@ describe('dashboardservices.js — Tests Unitaires', () => {
       const STATUTS_VALIDES = ['VALIDE', 'EN_ATTENTE', 'REJETE']
       const result = await fetchProjects()
       result.forEach(project => {
-        expect(STATUTS_VALIDES).toContain(project.status_validation)
+        expect(STATUTS_VALIDES).toContain(project.status)
       })
     })
 

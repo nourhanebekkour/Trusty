@@ -89,7 +89,7 @@ describe('AppTopbar.vue', () => {
       // fetchProfile est appelée donc on attend
       await flushPromises()
       // après fetchProfile, user reste null dans ce mock
-      expect(wrapper.find('.topbar__user-name').text()).toBe('Chargement...')
+      expect(wrapper.find('.topbar__user-name').text()).toBe('Chargement…')
     })
   })
 

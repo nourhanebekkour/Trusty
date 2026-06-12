@@ -1,4 +1,4 @@
-import api from '../api.js'
+import api from './api.js'
 
 const SECURITY = {
   REGISTER_ALLOWED_FIELDS: ['nom', 'prenom', 'email', 'password', 'role', 'ecole'],

@@ -26,7 +26,8 @@ describe('Integration API : Utilisateur', () => {
                     in: [
                         'admin.integration@utilisateur.com',
                         'user.integration@utilisateur.com',
-                        'autre.integration@utilisateur.com'
+                        'autre.integration@utilisateur.com',
+                        'tmp.delete@utilisateur.com'
                     ]
                 }
             }
@@ -40,7 +41,8 @@ describe('Integration API : Utilisateur', () => {
                 nom: 'Admin',
                 prenom: 'Integration',
                 role: 'ADMINISTRATEUR',
-                status_compte: 'ACTIF'
+                status_compte: 'ACTIF',
+                email_verifie: true
             }
         });
         adminId = admin.id_utilisateur;
@@ -54,7 +56,8 @@ describe('Integration API : Utilisateur', () => {
                 nom: 'User',
                 prenom: 'Integration',
                 role: 'ETUDIANT',
-                status_compte: 'ACTIF'
+                status_compte: 'ACTIF',
+                email_verifie: true
             }
         });
         userId = user.id_utilisateur;
@@ -67,7 +70,8 @@ describe('Integration API : Utilisateur', () => {
                 nom: 'Autre',
                 prenom: 'Integration',
                 role: 'ETUDIANT',
-                status_compte: 'ACTIF'
+                status_compte: 'ACTIF',
+                email_verifie: true
             }
         });
         autreUserId = autreUser.id_utilisateur;

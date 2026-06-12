@@ -4,6 +4,7 @@ import { RouterView, useRoute, useRouter } from 'vue-router'
 import SideBar from './components/laayout/SideBar.vue'
 import NavBar from './components/laayout/NavBar.vue'
 import Footer from './components/laayout/Footer.vue'
+import ProfessionalSideBar from './components/Professional/ProfessionalSidebar.vue'
 
 import { useAuthStore } from './stores/authstore'
 import { useThemeStore } from './stores/themeStore'
@@ -18,7 +19,7 @@ const PUBLIC_ROUTES = ['login', 'home', 'about', 'portfolio-template1']
 
 // ── Mapping rôle → préfixe de route autorisé ──────
 const ROLE_ALLOWED_PREFIXES = {
-  ETUDIANT:       ['/dashboard', '/notifications', '/profile', '/projets', '/settings', '/recommendations', '/stage', '/modele', '/portfolio','/lettres'],
+  ETUDIANT:       ['/dashboard', '/notifications', '/profile', '/projets', '/settings', '/recommendations', '/suggestions', '/stage', '/modele', '/portfolio','/lettres'],
   PROFESSIONNEL:  ['/professional'],
   PROFESSEUR:     ['/professor'],
   ADMINISTRATEUR: ['/admin'],
@@ -70,7 +71,7 @@ const isAdminPage = computed(() => route.path.startsWith('/admin'))
 const isStudentPage = computed(() => {
   const studentPaths = [
     '/dashboard', '/notifications', '/profile', '/projets', '/parcours',
-    '/settings', '/recommendations', '/stage', '/activites', '/portfolio','/lettres'
+    '/settings', '/recommendations', '/suggestions', '/stage', '/activites', '/portfolio','/lettres'
   ]
   return studentPaths.some(p => route.path.startsWith(p))
 })
