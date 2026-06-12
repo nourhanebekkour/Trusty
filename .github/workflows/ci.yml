@@ -117,8 +117,8 @@ jobs:
       - name: Generate Swagger
         run: npm run swagger
       - name: Run backend tests
-        run: npm test
-
+        run: npm test 
+        
   frontend-test:
     name: Frontend — Tests & Rapport (Vitest + Jira)
     runs-on: ubuntu-latest
