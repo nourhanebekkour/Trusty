@@ -8,9 +8,9 @@ permissions:
 on:
   workflow_call: {}   
   push:
-    branches: [main, dev,mirroring]
+    branches: [main, dev, mirroring]
   pull_request:
-    branches: [main, dev,mirroring]
+    branches: [main, dev, mirroring]
 
 
 jobs:
@@ -235,7 +235,7 @@ jobs:
       - run: npm run build
 
   # ════════════════════════════════════════════════════════
-  # PHASE 5 — SÉCURITÉ TRIVY (dernier job du pipeline)
+  # PHASE 5 — SÉCURITÉ & E2E (jobs parallèles)
   # ════════════════════════════════════════════════════════
 
   trivy-scan:
@@ -355,3 +355,101 @@ jobs:
         with:
           sarif_file: trivy-image-frontend.sarif
           category: trivy-image-frontend
+
+  cypress-e2e:
+    name: Frontend — E2E (Cypress)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [backend-run, frontend-build]
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: trusty
+          POSTGRES_PASSWORD: trusty
+          POSTGRES_DB: trusty_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: ./backend
+      - name: Create backend .env for CI
+        run: |
+          echo "DATABASE_URL=postgresql://trusty:trusty@localhost:5432/trusty_ci?schema=public" > .env
+          echo "JWT_SECRET=ci-secret-trusty" >> .env
+          echo "JWT_REFRESH_SECRET=ci-refresh-trusty" >> .env
+          echo "JWT_EXPIRES_IN=1h" >> .env
+          echo "PORT=3000" >> .env
+          echo "NODE_ENV=test" >> .env
+          echo "FRONTEND_URL=http://localhost:5173" >> .env
+          echo "MINIO_ENDPOINT=localhost" >> .env
+          echo "MINIO_PORT=9000" >> .env
+          echo "MINIO_USE_SSL=false" >> .env
+          echo "MINIO_ACCESS_KEY=minioadmin" >> .env
+          echo "MINIO_SECRET_KEY=minioadmin" >> .env
+          echo "MINIO_PUBLIC_BUCKET=dev-public" >> .env
+          echo "MINIO_PRIVATE_BUCKET=dev-private" >> .env
+        working-directory: ./backend
+      - name: Start MinIO
+        run: |
+          docker run -d \
+            --name minio \
+            -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio server /data
+          echo "Waiting for MinIO..."
+          until curl -sf http://localhost:9000/minio/health/live; do
+            sleep 2
+          done
+          echo "MinIO ready ✓"
+      - name: Prisma — deploy migrations
+        run: npx prisma migrate deploy
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://trusty:trusty@localhost:5432/trusty_ci?schema=public
+      - name: Start backend
+        run: npm start &
+        working-directory: ./backend
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: ./frontend
+      - name: Start frontend dev server
+        run: npm run dev &
+        working-directory: ./frontend
+      - name: Wait for servers to be ready
+        run: |
+          timeout 30 bash -c 'until curl -s http://localhost:3000 > /dev/null 2>&1; do sleep 1; done' || true
+          timeout 30 bash -c 'until curl -s http://localhost:5173 > /dev/null 2>&1; do sleep 1; done'
+      - name: Run Cypress E2E tests
+        run: npx cypress run
+        working-directory: ./frontend
+        continue-on-error: true
+      - name: Upload Cypress screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-screenshots
+          path: frontend/cypress/screenshots
+          if-no-files-found: ignore
+      - name: Upload Cypress videos
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-videos
+          path: frontend/cypress/videos
+          if-no-files-found: ignore
