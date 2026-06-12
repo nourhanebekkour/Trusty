@@ -44,6 +44,7 @@ describe('Integration API : Profil Administrateur', () => {
                 prenom: 'Integration',
                 role: 'ADMINISTRATEUR',
                 status_compte: 'ACTIF',
+                email_verifie: true,
             },
         });
         adminId = admin.id_utilisateur;
@@ -59,6 +60,7 @@ describe('Integration API : Profil Administrateur', () => {
                 prenom: 'Admin',
                 role: 'ADMINISTRATEUR',
                 status_compte: 'ACTIF',
+                email_verifie: true,
             },
         });
         autreAdminId = autreAdmin.id_utilisateur;

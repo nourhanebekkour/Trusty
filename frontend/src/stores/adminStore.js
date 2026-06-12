@@ -20,8 +20,13 @@ export const useAdminStore = defineStore('admin', () => {
     return auth.user?.role === 'ADMINISTRATEUR'
   }
 
+  function isSuperAdmin() {
+    return auth.user?.role === 'ADMINISTRATEUR' && !auth.user?.ecole
+  }
+
   const users             = ref([])
   const verificationQueue = ref([])
+  const professionalQueue = ref([])
   const students          = ref([])
   const certHistory       = ref([])
 
@@ -40,13 +45,31 @@ export const useAdminStore = defineStore('admin', () => {
     if (!isAdmin()) { error.value = 'Accès refusé'; return }
     try {
       loading.value = true
-      const res = await api.get('/utilisateurs/')
-      const data = extractData(res)
-      if (Array.isArray(data)) {
+      if (isSuperAdmin()) {
+        const [etudiantsRes, professeursRes] = await Promise.all([
+          api.get('/etudiants/'),
+          api.get('/professeurs/'),
+        ])
+        const etudiants = extractData(etudiantsRes) ?? []
+        const professeurs = extractData(professeursRes) ?? []
         stats.value = {
-          studentsActive: data.filter(u => u.role === 'ETUDIANT').length,
-          professors:     data.filter(u => u.role === 'PROFESSEUR').length,
-          partners:       data.filter(u => u.role === 'PROFESSIONNEL').length,
+          studentsActive: (Array.isArray(etudiants) ? etudiants : []).filter(e => e.utilisateur?.status_compte === 'ACTIF').length,
+          professors:     (Array.isArray(professeurs) ? professeurs : []).length,
+          partners:       0,
+        }
+      } else {
+        const ecole = auth.user?.ecole
+        if (!ecole) { stats.value = { studentsActive: 0, professors: 0, partners: 0 }; return }
+        const [etudiantsRes, professeursRes] = await Promise.all([
+          api.get('/etudiants/ecole/' + ecole),
+          api.get('/professeurs/ecole/' + ecole),
+        ])
+        const etudiants = extractData(etudiantsRes) ?? []
+        const professeurs = extractData(professeursRes) ?? []
+        stats.value = {
+          studentsActive: (Array.isArray(etudiants) ? etudiants : []).filter(e => e.utilisateur?.status_compte === 'ACTIF').length,
+          professors:     (Array.isArray(professeurs) ? professeurs : []).length,
+          partners:       0,
         }
       }
     } catch (e) {
@@ -56,12 +79,48 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
+  function normaliserUser(item, role) {
+    return {
+      id_utilisateur: item.id_etudiant || item.id_professeur,
+      email:          item.utilisateur?.email,
+      nom:            item.utilisateur?.nom,
+      prenom:         item.utilisateur?.prenom,
+      telephone:      item.utilisateur?.telephone,
+      photo:          item.utilisateur?.photo,
+      role,
+      ecole:          item.utilisateur?.ecole,
+      status_compte:  item.utilisateur?.status_compte,
+      date_creation:  item.utilisateur?.date_creation,
+      email_verifie:  item.utilisateur?.email_verifie,
+    }
+  }
+
   async function fetchUsers() {
     if (!isAdmin()) { error.value = 'Accès refusé'; return }
     try {
       loading.value = true
-      const res = await api.get('/utilisateurs/')
-      users.value = extractData(res)
+      let etudiants, professeurs
+      if (isSuperAdmin()) {
+        const [etudiantsRes, professeursRes] = await Promise.all([
+          api.get('/etudiants/'),
+          api.get('/professeurs/'),
+        ])
+        etudiants = extractData(etudiantsRes) ?? []
+        professeurs = extractData(professeursRes) ?? []
+      } else {
+        const ecole = auth.user?.ecole
+        if (!ecole) { users.value = []; return }
+        const [etudiantsRes, professeursRes] = await Promise.all([
+          api.get('/etudiants/ecole/' + ecole),
+          api.get('/professeurs/ecole/' + ecole),
+        ])
+        etudiants = extractData(etudiantsRes) ?? []
+        professeurs = extractData(professeursRes) ?? []
+      }
+      users.value = [
+        ...(Array.isArray(etudiants) ? etudiants : []).map(e => normaliserUser(e, 'ETUDIANT')),
+        ...(Array.isArray(professeurs) ? professeurs : []).map(p => normaliserUser(p, 'PROFESSEUR')),
+      ]
     } catch (e) {
       error.value = getErrorMessage(e)
     } finally {
@@ -141,15 +200,16 @@ export const useAdminStore = defineStore('admin', () => {
     if (!isAdmin()) { error.value = 'Accès refusé'; return }
     try {
       loading.value = true
-      const [activitesRes, prosRes] = await Promise.allSettled([
-        api.get('/activites/a-valider'),
-        api.get('/professionnels/en-attente'),
-      ])
+      let activites
+      if (isSuperAdmin()) {
+        const res = await api.get('/activites/?status_validation=EN_ATTENTE')
+        activites = extractData(res) ?? []
+      } else {
+        const res = await api.get('/activites/a-valider')
+        activites = extractData(res) ?? []
+      }
 
-      const activites = activitesRes.status === 'fulfilled' ? (extractData(activitesRes.value) ?? []) : []
-      const pros      = prosRes.status      === 'fulfilled' ? (extractData(prosRes.value)      ?? []) : []
-
-      const mappedActivites = (Array.isArray(activites) ? activites : []).map(a => ({
+      verificationQueue.value = (Array.isArray(activites) ? activites : []).map(a => ({
         id:          a.id_activite || a.id,
         type:        'ACTIVITE',
         title:       a.nom_activite || a.type_activite || 'Activité',
@@ -158,18 +218,6 @@ export const useAdminStore = defineStore('admin', () => {
         date:        a.date_demande || a.date_creation || a.date_debut || '',
         entity:      a,
       }))
-
-      const mappedPros = (Array.isArray(pros) ? pros : []).map(p => ({
-        id:          p.id_professionnel || p.id,
-        type:        'PROFESSIONNEL',
-        title:       p.entreprise || 'Professionnel',
-        author:      p.utilisateur?.nom ? `${p.utilisateur.prenom || ''} ${p.utilisateur.nom || ''}`.trim() : p.nom || 'Professionnel',
-        description: p.poste || p.missions || '',
-        date:        p.date_demande || p.date_creation || '',
-        entity:      p,
-      }))
-
-      verificationQueue.value = [...mappedActivites, ...mappedPros]
     } catch (e) {
       error.value = getErrorMessage(e)
     } finally {
@@ -183,10 +231,47 @@ export const useAdminStore = defineStore('admin', () => {
     try {
       if (type === 'ACTIVITE') {
         await api.post(`/activites/${id}/valider`, { decision, ...(comment && { commentaire: comment }) })
-      } else if (type === 'PROFESSIONNEL') {
-        await api.patch(`/professionnels/${id}/valider`, { action: decision })
       }
       verificationQueue.value = verificationQueue.value.filter(v => !(v.id === id && v.type === type))
+      return { success: true }
+    } catch (e) {
+      return { success: false, message: getErrorMessage(e) }
+    } finally {
+      validatingId.value = null
+    }
+  }
+
+  async function fetchProfessionalQueue() {
+    if (!isAdmin() || !isSuperAdmin()) { error.value = 'Accès refusé'; return }
+    try {
+      loading.value = true
+      const res = await api.get('/professionnels/en-attente')
+      const pros = extractData(res) ?? []
+      professionalQueue.value = (Array.isArray(pros) ? pros : []).map(p => ({
+        id:          p.id_professionnel || p.id,
+        type:        'PROFESSIONNEL',
+        nom:         p.utilisateur?.nom || p.nom || '',
+        prenom:      p.utilisateur?.prenom || p.prenom || '',
+        email:       p.utilisateur?.email || p.email || '',
+        siret:       p.siret || '',
+        entreprise:  p.nom_entreprise || p.entreprise || '',
+        description: p.description || '',
+        date:        p.date_demande || p.date_creation || '',
+        entity:      p,
+      }))
+    } catch (e) {
+      error.value = getErrorMessage(e)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function validateProfessional(id, action) {
+    if (!isAdmin() || !isSuperAdmin()) return { success: false, message: 'Accès refusé' }
+    validatingId.value = id
+    try {
+      await api.patch(`/professionnels/${id}/valider`, { action })
+      professionalQueue.value = professionalQueue.value.filter(p => p.id !== id)
       return { success: true }
     } catch (e) {
       return { success: false, message: getErrorMessage(e) }
@@ -212,8 +297,15 @@ export const useAdminStore = defineStore('admin', () => {
     if (!isAdmin()) { error.value = 'Accès refusé'; return }
     try {
       loading.value = true
-      const res = await api.get('/etudiants/')
-      students.value = extractData(res)
+      if (isSuperAdmin()) {
+        const res = await api.get('/etudiants/')
+        students.value = extractData(res)
+      } else {
+        const ecole = auth.user?.ecole
+        if (!ecole) { students.value = []; return }
+        const res = await api.get('/etudiants/ecole/' + ecole)
+        students.value = extractData(res)
+      }
     } catch (e) {
       error.value = getErrorMessage(e)
     } finally {
@@ -222,11 +314,12 @@ export const useAdminStore = defineStore('admin', () => {
   }
 
   return {
-    users, verificationQueue, students, certHistory, stats,
+    users, verificationQueue, professionalQueue, students, certHistory, stats,
     loading, error, creatingUser, validatingId,
     fetchDashboardStats, fetchUsers, createUser, deleteUser,
     updateUserRole, updateUserStatus,
     fetchVerificationQueue, validateEntity,
+    fetchProfessionalQueue, validateProfessional,
     fetchCertHistory, fetchStudents,
   }
 })

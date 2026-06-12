@@ -1,25 +1,87 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { setActivePinia, createPinia } from 'pinia'
+import { createPinia, setActivePinia } from 'pinia'
 import NotificationView from '@/views/Etudiant/Notification.vue'
 
-vi.mock('@/api', () => ({ default: { get: vi.fn().mockResolvedValue({ data: [] }), post: vi.fn(), patch: vi.fn() } }))
-vi.mock('@/stores/authstore', () => ({ useAuthStore: vi.fn(() => ({ user: { id_utilisateur: 'u1' }, fetchUser: vi.fn(), isAdmin: false })) }))
+const mocks = vi.hoisted(() => ({
+  push: vi.fn(),
+  getStudentNotifications: vi.fn(),
+  markStudentNotificationAsRead: vi.fn(),
+  resolveStudentNotificationTarget: vi.fn(),
+}))
 
-describe('NotificationView — Tests Unitaires', () => {
+vi.mock('vue-router', () => ({
+  useRouter: () => ({ push: mocks.push }),
+}))
+
+vi.mock('@/services/studentNotificationService', () => ({
+  getStudentNotifications: mocks.getStudentNotifications,
+  markAllStudentNotificationsAsRead: vi.fn(),
+  markStudentNotificationAsRead: mocks.markStudentNotificationAsRead,
+  resolveStudentNotificationTarget: mocks.resolveStudentNotificationTarget,
+}))
+
+vi.mock('@/stores/authstore', () => ({
+  useAuthStore: vi.fn(() => ({
+    user: { id_utilisateur: 'u1' },
+    fetchUser: vi.fn(),
+    isAdmin: false,
+  })),
+}))
+
+describe('NotificationView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
+    vi.clearAllMocks()
+    mocks.getStudentNotifications.mockResolvedValue([])
   })
 
-  it('1 — se monte sans erreur', () => {
-    expect(mount(NotificationView).exists()).toBe(true)
+  it('reloads notifications from the service', async () => {
+    const wrapper = mount(NotificationView)
+
+    await vi.waitFor(() => expect(mocks.getStudentNotifications).toHaveBeenCalledTimes(1))
+    expect(wrapper.exists()).toBe(true)
   })
 
-  it('2 — affiche un contenu visible', () => {
-    expect(mount(NotificationView).text().length).toBeGreaterThan(0)
+  it('displays a notification and its unread count after reload', async () => {
+    mocks.getStudentNotifications.mockResolvedValue([
+      {
+        id_notification: 'notification-1',
+        titre: 'Nouveau commentaire',
+        message: 'Un commentaire a ete ajoute',
+        type_notification: 'COMMENTAIRE',
+        est_lue: false,
+        date_creation: new Date().toISOString(),
+      },
+    ])
+
+    const wrapper = mount(NotificationView)
+
+    await vi.waitFor(() => expect(wrapper.text()).toContain('Nouveau commentaire'))
+    expect(wrapper.findAll('.stat-value')[1].text()).toBe('1')
   })
 
-  it('3 — contient un élément racine div', () => {
-    expect(mount(NotificationView).find('div').exists()).toBe(true)
+  it('opens the resolved portfolio in read-only mode', async () => {
+    mocks.getStudentNotifications.mockResolvedValue([
+      {
+        id_notification: 'notification-1',
+        titre: 'Nouveau commentaire',
+        message: 'Un commentaire a ete ajoute',
+        type_notification: 'COMMENTAIRE',
+        est_lue: false,
+        date_creation: new Date().toISOString(),
+        lien_action: '/profil/student-1',
+      },
+    ])
+    mocks.resolveStudentNotificationTarget.mockResolvedValue('/portfolio/marguerite-lucas-new#comments')
+
+    const wrapper = mount(NotificationView)
+    await vi.waitFor(() => expect(wrapper.find('.notif-card').exists()).toBe(true))
+    await wrapper.find('.notif-card').trigger('click')
+
+    await vi.waitFor(() =>
+      expect(mocks.push).toHaveBeenCalledWith('/portfolio/marguerite-lucas-new#comments')
+    )
+    expect(mocks.markStudentNotificationAsRead).toHaveBeenCalledWith('notification-1')
   })
 })

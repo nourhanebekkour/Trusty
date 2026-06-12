@@ -31,6 +31,7 @@
         <ProfessorProjects
           :projets="store.projets"
           @valider="store.validerProjet"
+          @details="router.push('/professor/validations')"
         />
       </div>
       <aside class="content-grid__sidebar">

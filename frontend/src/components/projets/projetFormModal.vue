@@ -6,7 +6,7 @@
         <!-- Header -->
         <div class="modal-header">
           <div class="modal-header-left">
-            <span class="modal-icon">{{ editMode ? '✏️' : '🚀' }}</span>
+            <span class="modal-icon"><AppIcon :name="editMode ? 'pencil' : 'rocket'" /></span>
             <h3 class="modal-title">{{ editMode ? 'Modifier le projet' : 'Nouveau Projet' }}</h3>
           </div>
           <button class="modal-close" @click="$emit('update:modelValue', false)">×</button>
@@ -22,8 +22,8 @@
             @click="goToStep(i)"
           >
             <span class="step-num">
-              <span v-if="currentStep > i" class="step-check">✓</span>
-              <span v-else class="step-icon">{{ stepIcon(i) }}</span>
+              <AppIcon v-if="currentStep > i" class="step-check" name="check" />
+              <AppIcon v-else class="step-icon" :name="stepIcon(i)" />
             </span>
             <span class="step-label">
               <span class="step-label-text">{{ step }}</span>
@@ -135,7 +135,7 @@
               <p class="creating-label">Création du projet en cours…</p>
             </div>
             <div v-else-if="projectCreated" class="created-success">
-              <span class="success-icon">✅</span>
+              <span class="success-icon"><AppIcon name="check-circle" :size="48" /></span>
               <p>Projet créé avec succès ! Vous pouvez maintenant ajouter des technologies et des fichiers.</p>
             </div>
             <div v-else-if="createError" class="modal-error">
@@ -162,7 +162,7 @@
             <div v-else-if="professeurs.length" class="form-group">
               <label class="form-label">Rechercher</label>
               <div class="search-box" @click.stop>
-                <span class="search-icon">🔍</span>
+                <span class="search-icon"><AppIcon name="search" /></span>
                 <input
                   v-model="professeurSearch"
                   type="text"
@@ -186,7 +186,7 @@
                     <span class="person-name">{{ prof.utilisateur.prenom }} {{ prof.utilisateur.nom }}</span>
                     <span class="person-sub">{{ prof.utilisateur.email }}</span>
                   </div>
-                  <span v-if="localForm.id_validateur === prof.id_professeur" class="check-icon">✓</span>
+                  <AppIcon v-if="localForm.id_validateur === prof.id_professeur" class="check-icon" name="check" />
                 </div>
               </div>
             </div>
@@ -217,7 +217,7 @@
 
             <!-- Endpoint non disponible : bannière d'avertissement -->
             <div v-if="etudiantsEndpointUnavailable" class="unavailable-hint">
-              <span class="unavailable-icon">🔧</span>
+              <span class="unavailable-icon"><AppIcon name="wrench" /></span>
               <div>
                 <strong>Fonctionnalité en cours de déploiement</strong>
                 <p>L'endpoint de recherche des étudiants par école est en cours d'ajout par l'équipe backend. Vous pourrez ajouter des collaborateurs une fois qu'il sera disponible. <button class="btn-retry" @click.prevent="fetchEtudiants">Réessayer</button></p>
@@ -231,7 +231,7 @@
             <div v-if="!loadingEtudiants && !etudiantsEndpointUnavailable && etudiants.length" class="form-group">
               <label class="form-label">Rechercher un étudiant</label>
               <div class="search-box" @click.stop>
-                <span class="search-icon">🔍</span>
+                <span class="search-icon"><AppIcon name="search" /></span>
                 <input
                   v-model="etudiantSearch"
                   type="text"
@@ -301,8 +301,8 @@
                 </div>
                 <span v-if="c.est_createur" class="badge-creator">Créateur</span>
                 <span v-if="c.est_visible_portfolio" class="badge-portfolio">Portfolio</span>
-                <span v-if="c.posting" class="badge-posting">⏳</span>
-                <span v-if="c.posted" class="badge-posted">✓</span>
+                <AppIcon v-if="c.posting" class="badge-posting" name="loader" />
+                <AppIcon v-if="c.posted" class="badge-posted" name="check" />
                 <button class="remove-btn" @click="removeCollaborateur(idx)">×</button>
               </div>
             </TransitionGroup>
@@ -316,7 +316,7 @@
             <div class="form-group">
               <label class="form-label">Rechercher une technologie</label>
               <div class="search-box">
-                <span class="search-icon">🔍</span>
+                <span class="search-icon"><AppIcon name="search" /></span>
                 <input
                   v-model="techSearch"
                   type="text"
@@ -341,7 +341,7 @@
                   :class="{ disabled: isTechAdded(tech.id_technologie) }"
                   @click="openAddTech(tech)"
                 >
-                  <div class="tech-icon-cell">{{ techEmoji(tech.categorie) }}</div>
+                  <div class="tech-icon-cell"><AppIcon :name="techEmoji(tech.categorie)" /></div>
                   <div class="person-info">
                     <span class="person-name">{{ tech.nom }}</span>
                     <span class="person-sub">
@@ -356,7 +356,7 @@
             <transition name="slide-down">
               <div v-if="pendingTech" class="inline-role-form">
                 <div class="inline-role-header">
-                  <span class="tech-icon-lg">{{ techEmoji(pendingTech.categorie) }}</span>
+                  <span class="tech-icon-lg"><AppIcon :name="techEmoji(pendingTech.categorie)" /></span>
                   <span>{{ pendingTech.nom }}</span>
                   <span class="tech-cat-badge">{{ pendingTech.categorie }}</span>
                 </div>
@@ -369,10 +369,10 @@
                   <div class="form-group">
                     <label class="form-label">Niveau d'utilisation</label>
                     <select v-model="pendingTechNiveau" class="form-input">
-                      <option value="DEBUTANT">🟢 Débutant</option>
-                      <option value="INTERMEDIAIRE">🟡 Intermédiaire</option>
-                      <option value="AVANCE">🟠 Avancé</option>
-                      <option value="EXPERT">🔴 Expert</option>
+                      <option value="DEBUTANT">Débutant</option>
+                      <option value="INTERMEDIAIRE">Intermédiaire</option>
+                      <option value="AVANCE">Avancé</option>
+                      <option value="EXPERT">Expert</option>
                     </select>
                   </div>
                 </div>
@@ -385,7 +385,7 @@
 
             <TransitionGroup v-if="localForm.technologies.length" name="list" tag="div" class="tech-tags">
               <div v-for="(t, idx) in localForm.technologies" :key="t.id_technologie" class="tech-tag">
-                <span class="tech-emoji">{{ techEmoji(t.categorie) }}</span>
+                <span class="tech-emoji"><AppIcon :name="techEmoji(t.categorie)" /></span>
                 <span class="tech-name">{{ t.nom }}</span>
                 <span v-if="t.version" class="tech-version">v{{ t.version }}</span>
                 <span class="tech-level" :class="niveauClass(t.niveau_utilisation)">
@@ -400,7 +400,7 @@
           <!-- STEP 6: Fichiers (step 5 en mode édition) -->
           <div v-show="currentStep === 6 || (editMode && currentStep === 5)" class="step-content">
             <div class="section-hint">
-              Ajoutez des fichiers à votre projet (PDF, images, archives…).
+              Ajoutez des fichiers à votre projet (PDF ou images, 10 Mo maximum).
             </div>
 
             <div
@@ -415,13 +415,14 @@
                 ref="fileInput"
                 type="file"
                 multiple
+                accept=".pdf,image/*"
                 class="file-input-hidden"
                 @change="onFileInputChange"
               />
               <div class="upload-zone-inner">
-                <span class="upload-icon">📁</span>
+                <span class="upload-icon"><AppIcon name="folder" :size="30" /></span>
                 <p class="upload-label">Glissez vos fichiers ici ou <span class="upload-link">cliquez pour parcourir</span></p>
-                <p class="upload-hint">Tous types de fichiers acceptés</p>
+                <p class="upload-hint">PDF et images, 10 Mo maximum par fichier</p>
               </div>
             </div>
 
@@ -429,7 +430,7 @@
               <div class="files-section-title">En attente d'upload ({{ pendingFiles.length }})</div>
               <TransitionGroup name="list" tag="div" class="file-list">
                 <div v-for="(f, idx) in pendingFiles" :key="'pending-' + idx" class="file-card">
-                  <span class="file-type-icon">{{ fileEmoji(f.name) }}</span>
+                  <span class="file-type-icon"><AppIcon :name="fileEmoji(f.name)" /></span>
                   <div class="person-info">
                     <span class="person-name">{{ f.name }}</span>
                     <span class="person-sub">{{ formatSize(f.size) }}</span>
@@ -443,7 +444,7 @@
               <div class="files-section-title">Fichiers du projet ({{ uploadedFiles.length }})</div>
               <TransitionGroup name="list" tag="div" class="file-list">
                 <div v-for="f in uploadedFiles" :key="f.id_fichier" class="file-card">
-                  <span class="file-type-icon">{{ fileEmoji(f.nom_fichier || f.url) }}</span>
+                  <span class="file-type-icon"><AppIcon :name="fileEmoji(f.nom_fichier || f.url)" /></span>
                   <div class="person-info">
                     <span class="person-name">{{ f.nom_fichier || 'Fichier' }}</span>
                     <span class="person-sub">{{ f.taille ? formatSize(f.taille) : '' }}</span>
@@ -461,7 +462,7 @@
 
             <div v-if="uploadingFiles.length" class="upload-progress-list">
               <div v-for="(uf, idx) in uploadingFiles" :key="idx" class="upload-progress-item">
-                <span class="file-type-icon">{{ fileEmoji(uf.name) }}</span>
+                <span class="file-type-icon"><AppIcon :name="fileEmoji(uf.name)" /></span>
                 <div class="person-info">
                   <span class="person-name">{{ uf.name }}</span>
                   <div class="progress-bar-wrap">
@@ -475,6 +476,7 @@
             <div v-if="!pendingFiles.length && !uploadedFiles.length && !uploadingFiles.length" class="empty-hint">
               Aucun fichier ajouté.
             </div>
+            <p v-if="uploadError" class="form-error">{{ uploadError }}</p>
           </div>
 
         </div>
@@ -557,7 +559,7 @@
               <button v-else class="btn-submit btn-finish"
                       :disabled="uploadingFiles.length > 0"
                       @click="finishWithFiles">
-                ✓ Terminer
+                <AppIcon name="check" /> Terminer
               </button>
             </template>
 
@@ -568,7 +570,7 @@
               :disabled="uploadingFiles.length > 0"
               @click="finishWithFiles"
             >
-              ✓ Terminer
+              <AppIcon name="check" /> Terminer
             </button>
           </div>
         </div>
@@ -581,6 +583,7 @@
 <script>
 import { emptyForm } from './projetHelpers'
 import api from '@/api'
+import { getUploadErrorMessage, validateUploadFile } from '@/utils/fileUpload'
 
 const ECOLES = ['ENSATanger', 'ENSIAS', 'ENSEM', 'ENSA Marrakech', 'ENSA Agadir', 'ENSA Fès', 'ENSA Oujda']
 
@@ -681,6 +684,7 @@ export default {
       isDragOver: false,
       deletingFileId: null,
       techError: null,
+      uploadError: null,
     }
   },
 
@@ -852,11 +856,13 @@ export default {
       this.createError = null
       this.projectCreated = false
 
+      const today = new Date().toISOString().split('T')[0]
+
       const payload = {
-        titre:                 this.localForm.titre,
+        titre:                 this.localForm.titre || 'Projet sans titre',
         description:           this.localForm.description,
-        type_projet:           this.localForm.type_projet,
-        date_debut:            this.localForm.date_debut,
+        type_projet:           this.localForm.type_projet || 'AUTRE',
+        date_debut:            this.localForm.date_debut || today,
         date_fin:              this.localForm.date_fin        || null,
         lien_github:           this.localForm.lien_github     || null,
         lien_youtube:          this.localForm.lien_youtube    || null,
@@ -880,9 +886,10 @@ export default {
           await Promise.all(this.localForm.collaborateurs.map(c => {
             c.posting = true
             return api.post(`/projets/${projetId}/participants/${c.id_etudiant}`, {
-              role_joue:             c.role_joue             || '',
+              role_joue:             c.role_joue             || 'Membre',
               est_createur:          c.est_createur          ?? false,
               est_visible_portfolio: c.est_visible_portfolio ?? true,
+              date_debut:            this.localForm.date_debut || today,
             }).then(() => { c.posted = true })
               .catch(e => { console.error(`Erreur ajout participant ${c.id_etudiant}`, e) })
               .finally(() => { c.posting = false })
@@ -1161,10 +1168,17 @@ export default {
       e.target.value = ''
     },
     addFiles(files) {
+      const validFiles = files.filter((file) => {
+        const error = validateUploadFile(file)
+        if (error) this.uploadError = `${file.name || 'Fichier'} : ${error}`
+        return !error
+      })
+      if (!validFiles.length) return
+      this.uploadError = null
       if (this.activeProjetId) {
-        this.uploadFiles(files)
+        this.uploadFiles(validFiles)
       } else {
-        this.pendingFiles.push(...files)
+        this.pendingFiles.push(...validFiles)
       }
     },
     removePendingFile(idx) {
@@ -1179,14 +1193,14 @@ export default {
         formData.append('fichier', file)
         try {
           await api.post(`/projets/${this.activeProjetId}/fichiers`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
             onUploadProgress: (e) => {
-              entry.progress = Math.round((e.loaded / e.total) * 100)
+              if (e.total) entry.progress = Math.round((e.loaded / e.total) * 100)
             },
           })
           await this.fetchUploadedFiles()
         } catch (e) {
           console.error('Erreur upload fichier', e)
+          this.uploadError = `${file.name} : ${getUploadErrorMessage(e)}`
         } finally {
           const idx = this.uploadingFiles.indexOf(entry)
           if (idx !== -1) this.uploadingFiles.splice(idx, 1)
@@ -1236,8 +1250,8 @@ export default {
 
     // ─── Helpers ──────────────────────────────────────────────────
     stepIcon(i) {
-      const icons = ['📋', '🔗', '👤', '👥', '⚡', '🛠️', '📁']
-      return icons[i] ?? '○'
+      const icons = ['file-text', 'link', 'user-check', 'users', 'zap', 'wrench', 'folder']
+      return icons[i] ?? 'file'
     },
     initials(user) {
       if (!user) return '?'
@@ -1246,12 +1260,12 @@ export default {
 
     techEmoji(categorie) {
       const map = {
-        FRONTEND: '🎨', BACKEND: '⚙️', DATABASE: '🗄️',
-        DEVOPS: '🚀', MOBILE: '📱', IA: '🤖', AI: '🤖',
-        SECURITE: '🔒', CLOUD: '☁️', TESTING: '🧪',
-        DESIGN: '✏️', AUTRE: '🔧',
+        FRONTEND: 'palette', BACKEND: 'code', DATABASE: 'database',
+        DEVOPS: 'rocket', MOBILE: 'smartphone', IA: 'sparkles', AI: 'sparkles',
+        SECURITE: 'lock', CLOUD: 'cloud', TESTING: 'test',
+        DESIGN: 'pencil', AUTRE: 'wrench',
       }
-      return map[(categorie || '').toUpperCase()] ?? '🔧'
+      return map[(categorie || '').toUpperCase()] ?? 'wrench'
     },
 
     niveauLabel(n) {
@@ -1265,15 +1279,15 @@ export default {
     fileEmoji(name = '') {
       const ext = (name.split('.').pop() || '').toLowerCase()
       const map = {
-        pdf: '📄', png: '🖼️', jpg: '🖼️', jpeg: '🖼️', gif: '🖼️', svg: '🖼️',
-        zip: '🗜️', rar: '🗜️', '7z': '🗜️',
-        mp4: '🎬', mov: '🎬', avi: '🎬',
-        mp3: '🎵', wav: '🎵',
-        doc: '📝', docx: '📝', txt: '📝',
-        xls: '📊', xlsx: '📊', csv: '📊',
-        ppt: '📑', pptx: '📑',
+        pdf: 'file-text', png: 'file-image', jpg: 'file-image', jpeg: 'file-image', gif: 'file-image', svg: 'file-image',
+        zip: 'file-archive', rar: 'file-archive', '7z': 'file-archive',
+        mp4: 'file-video', mov: 'file-video', avi: 'file-video',
+        mp3: 'file-music', wav: 'file-music',
+        doc: 'file-text', docx: 'file-text', txt: 'file-text',
+        xls: 'file-spreadsheet', xlsx: 'file-spreadsheet', csv: 'file-spreadsheet',
+        ppt: 'file', pptx: 'file',
       }
-      return map[ext] ?? '📎'
+      return map[ext] ?? 'paperclip'
     },
 
     formatSize(bytes) {

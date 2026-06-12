@@ -5,17 +5,40 @@ import api from '@/services/api'
 const GH_API = 'https://api.github.com'
 
 /**
+ * Extrait le nom d'utilisateur GitHub depuis une saisie libre (URL, @username, etc.)
+ * @param {string|null|undefined} input
+ * @returns {string} Nom d'utilisateur nettoyé, ou chaîne vide
+ */
+export function extractGithubUsername(input) {
+  if (!input || typeof input !== 'string') return ''
+  let username = input.trim()
+  // Si c'est une URL GitHub complète, extraire le username
+  const match = username.match(/(?:github\.com\/)([a-zA-Z0-9_.-]+)/)
+  if (match) return match[1]
+  // Enlever le @ si présent
+  username = username.replace(/^@/, '')
+  // Enlever les slashs traînants
+  username = username.replace(/\/+$/, '')
+  return username
+}
+
+/**
  * Récupère les dépôts publics d'un utilisateur GitHub.
  * @param {string} username
  * @returns {Promise<Array>} Liste de dépôts formatés
  */
 export async function fetchGithubRepos(username) {
-  if (!username) return []
+  const sanitized = extractGithubUsername(username)
+  if (!sanitized) return []
   try {
     const res = await fetch(
-      `${GH_API}/users/${username}/repos?per_page=6&sort=updated&type=public`,
+      `${GH_API}/users/${encodeURIComponent(sanitized)}/repos?per_page=6&sort=updated&type=public`,
       { headers: { Accept: 'application/vnd.github+json' } }
     )
+    if (res.status === 404) {
+      console.warn('[fetchGithubRepos] Profil GitHub introuvable pour :', sanitized)
+      return []
+    }
     if (!res.ok) throw new Error(`GitHub API: ${res.status}`)
     const repos = await res.json()
     return repos.map((r) => ({
@@ -61,7 +84,7 @@ function assembleUser(me, etudiant, competences = [], badges = [], projets = [],
     nom:            me.nom,
     prenom:         me.prenom,
     telephone:      me.telephone ?? null,
-    photo:          me.photo     ?? null,
+    photo:          me.photo_url    ?? null,
     role:           me.role,
     date_creation:  me.date_creation ?? null,
     etudiant: {
@@ -83,18 +106,16 @@ export async function getProfile() {
     const me    = extractData(meRes)
     const id    = me.id_utilisateur
 
-    // 2. Récupérer profil étudiant, compétences, badges en parallèle
-    const [etudiantRes, competencesRes, badgesRes, projetsRes] = await Promise.allSettled([
+    // 2. Récupérer profil étudiant, compétences, badges, projets en parallèle
+    const [etudiantRes, competencesRes, badgesRes] = await Promise.all([
       api.get(`/etudiants/${id}`),
       api.get(`/competences/etudiant/${id}`),
       api.get(`/badges/etudiant/${id}`),
-      // Projets via participations — l'étudiant est identifié par son id utilisateur
-      api.get(`/projets/`), // on filtrera côté client ou via un endpoint dédié
     ])
 
-    const etudiant = etudiantRes.status    === 'fulfilled' ? extractData(etudiantRes.value)    : {}
-    const competences = competencesRes.status === 'fulfilled' ? (extractData(competencesRes.value) ?? []) : []
-    const badgesRaw   = badgesRes.status   === 'fulfilled' ? extractData(badgesRes.value)      : null
+    const etudiant = extractData(etudiantRes) ?? {}
+    const competences = extractData(competencesRes) ?? []
+    const badgesRaw   = extractData(badgesRes)
     const badges      = badgesRaw?.badges ?? badgesRaw ?? []
 
     // 3. Récupérer les dépôts GitHub via l'API GitHub si username disponible
@@ -104,9 +125,8 @@ export async function getProfile() {
     // 4. Récupérer les participations projets de l'étudiant
     let projets = []
     try {
-      const ppRes = await api.get(`/projets/`) // adapter si endpoint dédié existe
+      const ppRes = await api.get(`/projets/etudiant/${id}`)
       const allProjets = extractData(ppRes) ?? []
-      // Filtrer les projets où l'étudiant participe (selon la structure de l'API)
       projets = Array.isArray(allProjets) ? allProjets : []
     } catch {
       projets = []
@@ -144,19 +164,19 @@ export async function saveProfile(id, formData) {
   const etudiant    = extractData(etudiantRes)
 
   // Rechargement complet après sauvegarde
-  const [meRes, competencesRes, badgesRes] = await Promise.all([
+  const [meRes, competencesRes, badgesRes] = await Promise.allSettled([
     api.get('/auth/me'),
     api.get(`/competences/etudiant/${id}`),
     api.get(`/badges/etudiant/${id}`),
   ])
 
-  const me          = extractData(meRes)
-  const competences = extractData(competencesRes) ?? []
-  const badgesRaw   = extractData(badgesRes)
+  const me          = meRes.status === 'fulfilled' ? extractData(meRes.value) : {}
+  const competences = competencesRes.status === 'fulfilled' ? (extractData(competencesRes.value) ?? []) : []
+  const badgesRaw   = badgesRes.status === 'fulfilled' ? extractData(badgesRes.value) : null
   const badges      = badgesRaw?.badges ?? badgesRaw ?? []
 
   // Re-fetch GitHub avec le nouveau username (si modifié)
-  const githubUsername = cleanEtudiantFields.github_username ?? etudiant?.github_username
+  const githubUsername = extractGithubUsername(cleanEtudiantFields.github_username ?? etudiant?.github_username)
   const depots = await fetchGithubRepos(githubUsername)
 
   return { data: assembleUser(me, etudiant, competences, badges, [], depots) }
@@ -166,10 +186,8 @@ export async function saveProfile(id, formData) {
 
 export async function uploadAvatar(id, file) {
   const form = new FormData()
-  form.append('file', file)
-  const res = await api.post(`/etudiants/${id}/avatar`, form, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
+  form.append('fichier', file)
+  const res = await api.post(`/etudiants/${id}/avatar`, form)
   return { data: extractData(res) }
 }
 
@@ -247,3 +265,6 @@ export async function getStudentProjects(idEtudiant) {
     return []
   }
 }
+
+
+

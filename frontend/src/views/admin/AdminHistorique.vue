@@ -6,7 +6,7 @@
         <p class="page__subtitle">Toutes les actions de certification et d'audit sur la plateforme.</p>
       </div>
       <div class="page__actions">
-        <button class="btn btn--secondary" @click="load" :disabled="admin.loading">🔄 Rafraîchir</button>
+        <button class="btn btn--secondary" @click="load"><AppIcon name="refresh" /> Rafraîchir</button>
       </div>
     </div>
 
@@ -28,13 +28,13 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="c in safeHistory" :key="c.id_historique || c.id">
+          <tr v-for="c in admin.certHistory" :key="c.id_historique || c.id">
             <td class="text-muted">{{ formatDate(c.date_action || c.date_creation) }}</td>
-            <td><span class="badge">{{ sanitizeText(c.action || c.type_action || '—') }}</span></td>
-            <td>{{ sanitizeText(c.utilisateur?.prenom || c.prenom || '') }} {{ sanitizeText(c.utilisateur?.nom || c.nom || '') }}</td>
-            <td class="text-muted">{{ sanitizeText(c.description || c.detail || '—') }}</td>
+            <td><span class="badge">{{ c.action || c.type_action || '—' }}</span></td>
+            <td>{{ c.utilisateur?.prenom || c.prenom || '' }} {{ c.utilisateur?.nom || c.nom || '' }}</td>
+            <td class="text-muted">{{ c.description || c.detail || '—' }}</td>
           </tr>
-          <tr v-if="!admin.loading && safeHistory.length === 0">
+          <tr v-if="!admin.loading && admin.certHistory.length === 0">
             <td colspan="4" class="state-msg">Aucun historique disponible</td>
           </tr>
         </tbody>
@@ -44,7 +44,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAdminStore } from '../../stores/adminStore'
 import { useAuthStore } from '../../stores/authstore'
@@ -53,32 +53,12 @@ const admin = useAdminStore()
 const authStore = useAuthStore()
 const router = useRouter()
 
-function sanitizeText(value) {
-  if (!value) return ''
-  return String(value)
-    .replace(/<[^>]*>/g, '')
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .trim()
-    .slice(0, 500)
-}
-
-const safeHistory = computed(() =>
-  Array.isArray(admin.certHistory)
-    ? admin.certHistory.filter(c => c && (c.id_historique != null || c.id != null))
-    : []
-)
-
 function formatDate(dateStr) {
   if (!dateStr) return '—'
-  const d = new Date(dateStr)
-  if (isNaN(d.getTime())) return '—'
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 async function load() {
-  if (admin.loading) return
   await admin.fetchCertHistory()
 }
 
@@ -123,5 +103,4 @@ onMounted(async () => {
 .btn { padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
 .btn--secondary       { background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-secondary); }
 .btn--secondary:hover { background: var(--color-surface-hover); }
-.btn--secondary:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>

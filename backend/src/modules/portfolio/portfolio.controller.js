@@ -1,5 +1,6 @@
 import * as portfolioService from './portfolio.service.js';
 import sendResponse from '#Utils/response.handler.js';
+import { generatePortfolioPDF } from './portfolio.pdf.service.js';
 
 export const getPublicPortfolio = async (req, res) => {
     // #swagger.tags = ['Portfolio']
@@ -14,7 +15,10 @@ export const getPublicPortfolio = async (req, res) => {
         }
 
         if (!portfolio.est_publie) {
-            return sendResponse(res, 404, false, "Portfolio non public");
+            const isOwner = req.user?.id === portfolio.etudiant?.utilisateur?.id_utilisateur
+            if (!isOwner) {
+                return sendResponse(res, 404, false, "Portfolio non public");
+            }
         }
 
         await portfolioService.incrementPortfolioViews(portfolio.id_portfolio);
@@ -80,7 +84,7 @@ export const getMyPortfolios = async (req, res) => {
     try {
         const userId = req.user.id;
         const portfolios = await portfolioService.getMyPortfolios(userId);
-        
+
         return sendResponse(res, 200, true, "Portfolios récupérés avec succès", portfolios);
     } catch (erreur) {
         console.error("Erreur lors de la récupération de vos portfolios:", erreur);
@@ -104,7 +108,7 @@ export const createPortfolio = async (req, res) => {
     } */
     try {
         const userId = req.user.id;
-        
+
         if (req.body.url_publique) {
             const existing = await portfolioService.getPortfolioByUrl(req.body.url_publique);
             if (existing) {
@@ -137,7 +141,7 @@ export const updatePortfolio = async (req, res) => {
     try {
         const userId = req.user.id;
         const { id_portfolio } = req.params;
-        
+
         if (req.body.url_publique) {
             const existing = await portfolioService.getPortfolioByUrl(req.body.url_publique);
             if (existing && existing.id_portfolio !== id_portfolio) {
@@ -146,7 +150,7 @@ export const updatePortfolio = async (req, res) => {
         }
 
         const portfolio = await portfolioService.updatePortfolio(id_portfolio, userId, req.body);
-        
+
         if (!portfolio) {
             return sendResponse(res, 404, false, "Portfolio introuvable ou non autorisé.");
         }
@@ -173,13 +177,13 @@ export const publishPortfolio = async (req, res) => {
         const userId = req.user.id;
         const { id_portfolio } = req.params;
         const { est_publie } = req.body;
-        
+
         if (est_publie === undefined) {
             return sendResponse(res, 400, false, "Le champ 'est_publie' est requis.");
         }
 
         const portfolio = await portfolioService.publishPortfolio(id_portfolio, userId, est_publie);
-        
+
         if (!portfolio) {
             return sendResponse(res, 404, false, "Portfolio introuvable ou non autorisé.");
         }
@@ -199,7 +203,7 @@ export const getPortfolioStats = async (req, res) => {
         const userId = req.user.id;
         const { id_portfolio } = req.params;
         const stats = await portfolioService.getPortfolioStats(id_portfolio, userId);
-        
+
         if (!stats) {
             return sendResponse(res, 404, false, "Portfolio introuvable ou non autorisé.");
         }
@@ -208,5 +212,57 @@ export const getPortfolioStats = async (req, res) => {
     } catch (erreur) {
         console.error("Erreur lors de la récupération des statistiques:", erreur);
         return sendResponse(res, 500, false, "Erreur serveur", null, erreur.message);
+    }
+};
+
+export const deletePortfolio = async (req, res) => {
+    try {
+        const userId = req.user.id
+        const { id_portfolio } = req.params
+        const existing = await portfolioService.getMyPortfolios(userId)
+        const portfolio = existing.find(p => p.id_portfolio === id_portfolio)
+        if (!portfolio) return sendResponse(res, 404, false, "Portfolio introuvable ou non autorisé.")
+        await portfolioService.deletePortfolio(id_portfolio)
+        return sendResponse(res, 200, true, "Portfolio supprimé avec succès")
+    } catch (erreur) {
+        return sendResponse(res, 500, false, "Erreur serveur", null, erreur.message)
+    }
+}
+
+export const generateAdaptative = async (req, res) => {
+    // #swagger.tags = ['Portfolio']
+    // #swagger.summary = 'Générer une sélection adaptative par IA'
+    /* #swagger.parameters['body'] = {
+        in: 'body',
+        required: true,
+        schema: {
+            objectif: 'DEVOPS'
+        }
+    } */
+    try {
+        const { objectif } = req.body;
+
+        if (!objectif) {
+            return sendResponse(res, 400, false, "L'objectif est requis");
+        }
+
+        const selection = await portfolioService.genererSelectionAdaptative(req.user.id, objectif);
+        return res.json(selection);
+    } catch (erreur) {
+        console.error("Erreur lors de la génération IA:", erreur);
+        return sendResponse(res, 500, false, "Erreur de génération", null, erreur.message);
+    }
+};
+
+export const exportPDF = async (req, res) => {
+    try {
+        const { url_publique } = req.params;
+        const pdf = await generatePortfolioPDF(url_publique);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="portfolio-${url_publique}.pdf"`);
+        res.send(pdf);
+    } catch (erreur) {
+        console.error('Erreur génération PDF:', erreur);
+        return sendResponse(res, 500, false, 'Erreur génération PDF', null, erreur.message);
     }
 };

@@ -49,6 +49,9 @@ const portfolioIncludeConfig = {
                 }
             },
             depots_github: true,
+            formations: {
+                orderBy: { date_debut: 'asc' }
+            },
             participations_projets: {
                 where: {
                     projet: {
@@ -98,7 +101,7 @@ const portfolioIncludeConfig = {
                         }
                     }
                 }
-            }   
+            }
         }
     }
 };
@@ -182,7 +185,7 @@ export const getMyPortfolios = async (id_etudiant) => {
 
 export const createPortfolio = async (id_etudiant, data) => {
     const { titre_personnalise, sous_titre, id_modele, est_publie } = data;
-    
+
     let url_publique = data.url_publique;
 
     if (!url_publique) {
@@ -191,7 +194,7 @@ export const createPortfolio = async (id_etudiant, data) => {
             where: { id_etudiant },
             include: { utilisateur: true }
         });
-        
+
         if (!etudiant || !etudiant.utilisateur) {
             throw new Error("Étudiant introuvable");
         }
@@ -199,7 +202,7 @@ export const createPortfolio = async (id_etudiant, data) => {
         const nom = etudiant.utilisateur.nom.toLowerCase().replace(/[^a-z0-9]/g, '-');
         const prenom = etudiant.utilisateur.prenom.toLowerCase().replace(/[^a-z0-9]/g, '-');
         const titre = titre_personnalise ? titre_personnalise.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'portfolio';
-        
+
         let base_url = `${prenom}-${nom}-${titre}`;
         url_publique = base_url;
         let counter = 1;
@@ -211,7 +214,7 @@ export const createPortfolio = async (id_etudiant, data) => {
             counter++;
         }
     }
-    
+
     return prisma.portfolio.create({
         data: {
             id_etudiant,
@@ -220,21 +223,31 @@ export const createPortfolio = async (id_etudiant, data) => {
             url_publique,
             id_modele,
             est_publie: est_publie || false,
+            sections_config: {
+                parcours: true,
+                projets: true,
+                competences: true,
+                stages: true,
+                activites: true,
+                badges: true,
+                recommandations: true,
+                lettres: true,
+                github: true,
+            },
             ...(est_publie ? { date_publication: new Date() } : {})
         }
     });
 };
 
 export const updatePortfolio = async (id_portfolio, id_etudiant, data) => {
-    const { titre_personnalise, sous_titre, url_publique, id_modele, est_publie } = data;
-    
+    const { titre_personnalise, sous_titre, url_publique, id_modele, est_publie, sections_config, projets_selectionnes, competences_selectionnees, stages_selectionnes, couleur_accent } = data;
     // First, verify the portfolio belongs to the student
     const existing = await prisma.portfolio.findFirst({
         where: { id_portfolio, id_etudiant }
     });
-    
+
     if (!existing) return null;
-    
+
     return prisma.portfolio.update({
         where: { id_portfolio },
         data: {
@@ -243,8 +256,12 @@ export const updatePortfolio = async (id_portfolio, id_etudiant, data) => {
             url_publique,
             id_modele,
             est_publie,
+            sections_config,
+            projets_selectionnes,
+            competences_selectionnees,
+            stages_selectionnes,
+            couleur_accent,
             date_derniere_maj: new Date(),
-            // Only update date_publication if est_publie is transitioning to true
             ...(est_publie !== undefined && est_publie !== existing.est_publie ? { date_publication: est_publie ? new Date() : null } : {})
         }
     });
@@ -255,7 +272,7 @@ export const publishPortfolio = async (id_portfolio, id_etudiant, est_publie) =>
     const existing = await prisma.portfolio.findFirst({
         where: { id_portfolio, id_etudiant }
     });
-    
+
     if (!existing) return null;
 
     return prisma.portfolio.update({
@@ -278,4 +295,96 @@ export const getPortfolioStats = async (id_portfolio, id_etudiant) => {
             est_publie: true
         }
     });
+};
+
+export const deletePortfolio = async (id_portfolio) => {
+    return prisma.portfolio.delete({
+        where: { id_portfolio }
+    })
+}
+
+// ==========================================
+// IA: PORTFOLIO ADAPTATIF
+// ==========================================
+
+export const genererSelectionAdaptative = async (id_utilisateur, objectif) => {
+    const etudiant = await prisma.etudiant.findFirst({
+        where: { id_etudiant: id_utilisateur },
+        include: {
+            participations_projets: {
+                where: { projet: { status_validation: 'VALIDE' } },
+                include: { projet: true }
+            },
+            competences: {
+                include: { competence: true }
+            },
+            stages: {
+                where: { status_validation: 'VALIDE' }
+            }
+        }
+    });
+
+    if (!etudiant) throw new Error("Étudiant introuvable");
+
+    const dataForPrompt = {
+        projets: etudiant.participations_projets.map(p => ({
+            id: p.id_projet,
+            titre: p.projet.titre,
+            description: p.projet.description
+        })),
+        competences: etudiant.competences.map(c => ({
+            id: c.id_competence,
+            nom: c.competence.nom,
+            niveau: c.niveau_maitrise
+        })),
+        stages: etudiant.stages.map(s => ({
+            id: s.id_stage,
+            titre: s.poste,        // ✅
+            entreprise: s.entreprise,
+            description: s.missions  // ✅
+        }))
+    };
+
+    const promptText = `Voici les projets, compétences et stages de cet étudiant. 
+Son objectif professionnel est : ${objectif}. 
+Analyse et sélectionne uniquement les IDs des éléments les plus pertinents pour atteindre cet objectif. 
+Renvoie le résultat STRICTEMENT sous forme de JSON (sans markdown ni backticks).
+
+Données de l'étudiant:
+${JSON.stringify(dataForPrompt, null, 2)}
+
+Format JSON attendu:
+{
+  "projets_selectionnes": ["id_projet_1", "id_projet_2"],
+  "competences_selectionnees": ["id_competence_1"],
+  "stages_selectionnes": ["id_stage_1"]
+}`;
+
+    // Import dynamique
+    let GoogleGenAI;
+    try {
+        const genaiLib = await import('@google/genai');
+        GoogleGenAI = genaiLib.GoogleGenAI;
+    } catch (e) {
+        throw new Error("La librairie @google/genai n'est pas installée. Exécutez 'npm install @google/genai'");
+    }
+
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: promptText,
+        config: {
+            responseMimeType: "application/json",
+            temperature: 0.2
+        }
+    });
+
+    const resultText = response.text;
+
+    try {
+        return JSON.parse(resultText);
+    } catch (e) {
+        throw new Error("L'IA n'a pas renvoyé un format JSON valide: " + resultText);
+    }
 };

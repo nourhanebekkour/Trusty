@@ -6,35 +6,28 @@
         <p class="page__subtitle">Liste des étudiants inscrits et suivi de leurs portfolios.</p>
       </div>
       <div class="page__actions">
-        <button class="btn btn--secondary" @click="load" :disabled="admin.loading">🔄 Rafraîchir</button>
+        <button class="btn btn--secondary" @click="load"><AppIcon name="refresh" /> Rafraîchir</button>
       </div>
     </div>
 
-    <div v-if="admin.error" class="error-banner">{{ sanitizeText(admin.error) }}</div>
+    <div v-if="admin.error" class="error-banner">{{ admin.error }}</div>
 
     <div class="stats-row">
       <StatCard label="Total Étudiants" :value="admin.loading ? '…' : String(admin.students.length)">
-        <template #icon>🎓</template>
+        <template #icon><AppIcon name="graduation" /></template>
       </StatCard>
       <StatCard label="Actifs" :value="admin.loading ? '…' : String(activeCount)">
-        <template #icon>✅</template>
+        <template #icon><AppIcon name="check-circle" /></template>
       </StatCard>
       <StatCard label="En attente" :value="admin.loading ? '…' : String(admin.verificationQueue.length)">
-        <template #icon>🕐</template>
+        <template #icon><AppIcon name="clock" /></template>
       </StatCard>
     </div>
 
     <div class="card">
       <div class="table-toolbar">
         <div class="search-box">
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Rechercher un étudiant..."
-            @input="currentPage = 1"
-            maxlength="100"
-            autocomplete="off"
-          />
+          <input v-model="searchQuery" type="text" placeholder="Rechercher un étudiant..." @input="currentPage = 1" />
         </div>
       </div>
 
@@ -44,6 +37,7 @@
         <thead>
           <tr>
             <th>Étudiant</th>
+            <th v-if="authStore.isSuperAdmin">Établissement</th>
             <th>Email</th>
             <th>Statut</th>
             <th>Inscription</th>
@@ -56,15 +50,13 @@
               <div class="user-cell">
                 <div class="avatar">{{ initials(s.prenom, s.nom) }}</div>
                 <div>
-                  <div class="user-cell__name">
-                    {{ sanitizeText(s.prenom || s.utilisateur?.prenom) }}
-                    {{ sanitizeText(s.nom || s.utilisateur?.nom) }}
-                  </div>
+                  <div class="user-cell__name">{{ s.prenom || s.utilisateur?.prenom }} {{ s.nom || s.utilisateur?.nom }}</div>
                   <div class="user-cell__id">ID: {{ shortId(s.id_etudiant || s.id_utilisateur) }}</div>
                 </div>
               </div>
             </td>
-            <td class="text-muted">{{ sanitizeText(s.email || s.utilisateur?.email) }}</td>
+            <td v-if="authStore.isSuperAdmin" class="text-muted">{{ s.utilisateur?.ecole || s.ecole || '—' }}</td>
+            <td class="text-muted">{{ s.email || s.utilisateur?.email }}</td>
             <td>
               <span :class="['statut', (s.status_compte || s.utilisateur?.status_compte) === 'ACTIF' ? 'statut--ok' : 'statut--pending']">
                 {{ formatStatus(s.status_compte || s.utilisateur?.status_compte) }}
@@ -75,14 +67,15 @@
               <div class="action-btns">
                 <button
                   class="btn btn--icon btn--sm"
-                  title="Voir le profil"
-                  @click="navigateToProfil(s)"
-                >👁</button>
+                  :disabled="!portfolioSlug(s)"
+                  :title="portfolioSlug(s) ? 'Voir le portfolio public' : 'Portfolio non publié'"
+                  @click="openPortfolio(s)"
+                ><AppIcon name="eye" /></button>
               </div>
             </td>
           </tr>
           <tr v-if="!admin.loading && paginated.length === 0">
-            <td colspan="5" class="state-msg">Aucun étudiant trouvé</td>
+            <td :colspan="authStore.isSuperAdmin ? 6 : 5" class="state-msg">Aucun étudiant trouvé</td>
           </tr>
         </tbody>
       </table>
@@ -93,7 +86,7 @@
         :total-items="filtered.length"
         :per-page="perPage"
         item-label="étudiants"
-        @page-change="onPageChange"
+        @page-change="currentPage = $event"
       />
     </div>
   </div>
@@ -111,41 +104,14 @@ const admin = useAdminStore()
 const authStore = useAuthStore()
 const router = useRouter()
 
-const ALLOWED_STATUTS = ['ACTIF', 'INACTIF', 'EN_ATTENTE', 'SUSPENDU']
-const MAX_SEARCH_LENGTH = 100
-const MIN_PAGE = 1
-
-function sanitizeText(value) {
-  if (!value) return ''
-  return String(value)
-    .replace(/<[^>]*>/g, '')
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .trim()
-    .slice(0, 200)
-}
-
-function isValidStudent(s) {
-  return s && (s.id_etudiant != null || s.id_utilisateur != null)
-}
-
-function navigateToProfil(s) {
-  if (!isValidStudent(s)) return
-  router.push('/admin/profil')
-}
-
-function onPageChange(page) {
-  const p = Number(page)
-  if (!Number.isInteger(p) || p < MIN_PAGE || p > totalPages.value) return
-  currentPage.value = p
-}
+const scope = computed(() =>
+  authStore.isSuperAdmin ? 'global' : (authStore.user?.ecole || '')
+)
 
 const activeCount = computed(() =>
-  (admin.students || []).filter(s => {
-    const status = s.status_compte || s.utilisateur?.status_compte
-    return ALLOWED_STATUTS.includes(status) && status === 'ACTIF'
-  }).length
+  (admin.students || []).filter(s =>
+    (s.status_compte || s.utilisateur?.status_compte) === 'ACTIF'
+  ).length
 )
 
 const searchQuery = ref('')
@@ -153,8 +119,7 @@ const currentPage = ref(1)
 const perPage = 10
 
 const filtered = computed(() => {
-  const raw = searchQuery.value.slice(0, MAX_SEARCH_LENGTH)
-  const q = raw.toLowerCase().trim()
+  const q = searchQuery.value.toLowerCase().trim()
   if (!q) return admin.students
   return (admin.students || []).filter(s => {
     const name = `${s.prenom || s.utilisateur?.prenom || ''} ${s.nom || s.utilisateur?.nom || ''}`.toLowerCase()
@@ -168,37 +133,46 @@ const totalPages = computed(() =>
 )
 
 const paginated = computed(() => {
-  const page = Math.min(Math.max(currentPage.value, MIN_PAGE), totalPages.value)
-  const start = (page - 1) * perPage
+  const start = (currentPage.value - 1) * perPage
   return filtered.value.slice(start, start + perPage)
 })
 
+function portfolioSlug(student) {
+  return student.portfolioUrl
+    || student.portfolio?.url_publique
+    || student.portfolios?.find(portfolio => portfolio.est_publie)?.url_publique
+    || null
+}
+
+function openPortfolio(student) {
+  const slug = portfolioSlug(student)
+  if (slug) {
+    router.push({ name: 'portfolio-template1', params: { url_publique: slug } })
+  }
+}
+
 function initials(prenom, nom) {
-  const p = prenom?.[0]?.replace(/[^A-Za-zÀ-ÿ]/g, '') || ''
-  const n = nom?.[0]?.replace(/[^A-Za-zÀ-ÿ]/g, '') || ''
+  const p = prenom?.[0] || ''
+  const n = nom?.[0] || ''
   return (p + n).toUpperCase() || '?'
 }
 
 function shortId(id) {
   if (!id) return '—'
-  return String(id).replace(/[^a-zA-Z0-9\-_]/g, '').slice(0, 8)
+  return String(id).slice(0, 8)
 }
 
 function formatStatus(status) {
-  if (!ALLOWED_STATUTS.includes(status)) return '—'
   const map = { ACTIF: 'Actif', INACTIF: 'Inactif', EN_ATTENTE: 'En attente', SUSPENDU: 'Suspendu' }
-  return map[status] || '—'
+  return map[status] || status || '—'
 }
 
 function formatDate(dateStr) {
   if (!dateStr) return '—'
-  const d = new Date(dateStr)
-  if (isNaN(d.getTime())) return '—'
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+  return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
 }
 
 async function load() {
-  if (admin.loading) return
   await Promise.all([
     admin.fetchStudents(),
     admin.fetchVerificationQueue(),
@@ -272,8 +246,8 @@ onMounted(async () => {
 .btn--primary:hover   { background: var(--color-accent-hover); }
 .btn--secondary       { background: var(--color-surface); border: 1px solid var(--color-border); color: var(--color-text-secondary); }
 .btn--secondary:hover { background: var(--color-surface-hover); }
-.btn--secondary:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn--sm   { padding: 6px 12px; font-size: 12px; }
 .btn--icon { background: transparent; border: 1px solid var(--color-border); color: var(--color-text-tertiary); padding: 5px 9px; }
 .btn--icon:hover { background: var(--color-surface-hover); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
 </style>

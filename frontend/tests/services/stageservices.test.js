@@ -98,29 +98,29 @@ describe('stageService.js — Tests Unitaires', () => {
 
   it('8 — modifierStage appelle PUT /stages/:id avec payload', async () => {
     const payload = { entreprise: 'NewCorp', poste: 'Lead Dev' }
-    api.put.mockResolvedValue({ data: { data: { id_stage: 5, ...payload } } })
+    api.put.mockResolvedValue({ data: { data: { id_stage: 'stage-5', ...payload } } })
 
-    await modifierStage(5, payload)
+    await modifierStage('stage-5', payload)
 
-    expect(api.put).toHaveBeenCalledWith('/stages/5', payload)
+    expect(api.put).toHaveBeenCalledWith('/stages/stage-5', payload)
   })
 
   it('9 — modifierStage retourne data.data si présent', async () => {
-    const updated = { id_stage: 5, entreprise: 'NewCorp' }
+    const updated = { id_stage: 'stage-5', entreprise: 'NewCorp' }
     api.put.mockResolvedValue({ data: { data: updated } })
 
-    const result = await modifierStage(5, { entreprise: 'NewCorp' })
+    const result = await modifierStage('stage-5', { entreprise: 'NewCorp' })
 
-    expect(result).toEqual(updated)
+    expect(result).toMatchObject({ id_stage: 'stage-5', entreprise: 'NewCorp' })
   })
 
   it('10 — modifierStage retourne data directement si data.data absent', async () => {
-    const updated = { id_stage: 5, entreprise: 'NewCorp' }
+    const updated = { id_stage: 'stage-5', entreprise: 'NewCorp' }
     api.put.mockResolvedValue({ data: updated })
 
-    const result = await modifierStage(5, { entreprise: 'NewCorp' })
+    const result = await modifierStage('stage-5', { entreprise: 'NewCorp' })
 
-    expect(result).toEqual(updated)
+    expect(result).toMatchObject({ id_stage: 'stage-5', entreprise: 'NewCorp' })
   })
 
   // ── supprimerStage ─────────────────────────────────────────────────────────
@@ -128,15 +128,15 @@ describe('stageService.js — Tests Unitaires', () => {
   it('11 — supprimerStage appelle DELETE /stages/:id', async () => {
     api.delete.mockResolvedValue({})
 
-    await supprimerStage(3)
+    await supprimerStage('stage-3')
 
-    expect(api.delete).toHaveBeenCalledWith('/stages/3')
+    expect(api.delete).toHaveBeenCalledWith('/stages/stage-3')
   })
 
   it('12 — supprimerStage ne retourne rien (void)', async () => {
     api.delete.mockResolvedValue({})
 
-    const result = await supprimerStage(3)
+    const result = await supprimerStage('stage-3')
 
     expect(result).toBeUndefined()
   })

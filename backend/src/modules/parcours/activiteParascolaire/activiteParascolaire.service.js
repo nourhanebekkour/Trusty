@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import * as notificationsService from '#Modules/systeme/notifications/notifications.service.js';
 import * as minioService from '#Services/minio.service.js';
+import { calculerEtMettreAJourScoreCredibilite } from '#Modules/identite/etudiant/etudiant.service.js';
 
 const prisma = new PrismaClient();
 
@@ -126,6 +127,10 @@ export const validerActivite = async (id_activite, id_validateur, decision, comm
             id_validateur: id_validateur
         }
     });
+
+    if (decision === 'VALIDE') {
+        await calculerEtMettreAJourScoreCredibilite(activite.id_etudiant);
+    }
 
     return activiteMisAJour;
 };

@@ -1,5 +1,5 @@
 <template>
-    <div class="pf2" :style="fontStyle">
+    <div class="pf2" :class="{ 'pf2--panel-open': panelOpen }" :style="fontStyle">
 
         <div v-if="loading" style="min-height:100vh;background:#0F2040;display:flex;align-items:center;justify-content:center;">
             <div class="pf2-spinner"></div>
@@ -12,7 +12,7 @@
         <!-- ── STICKY NAV ────────────────────────────────────────────── -->
         <nav class="pf2-nav" :class="{ 'pf2-nav--scrolled': isScrolled }">
             <div class="pf2-nav__inner">
-                <a href="/" class="pf2-back">
+                <a href="/portfolio" class="pf2-back">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M19 12H5M5 12l7 7M5 12l7-7" />
                     </svg>
@@ -25,14 +25,14 @@
                     </button>
                 </div>
                 <div class="pf2-nav__actions">
-                    <button class="pf2-btn-ghost" @click="share" :disabled="isShareLimited">
+                    <button class="pf2-btn-ghost" @click="share">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" />
                         </svg>
                         Partager
                     </button>
-                    <button class="pf2-btn-accent" @click="downloadPDF" :disabled="isPdfLimited">
+                    <button class="pf2-btn-accent" @click="downloadPDF">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
@@ -49,12 +49,12 @@
             <!-- ── HERO ───────────────────────────────────────────────── -->
             <section id="hero" class="pf2-hero">
                 <div class="pf2-hero__left">
-                    <h1 class="pf2-name">{{ sanitizeText(student.prenom) }}<br>{{ sanitizeText(student.nom) }}</h1>
-                    <p class="pf2-role">{{ sanitizeText(student.specialization) }} · {{ sanitizeText(student.year) }}</p>
-                    <p class="pf2-school">{{ sanitizeText(student.school) }}</p>
+                    <h1 class="pf2-name">{{ student.prenom }}<br>{{ student.nom }}</h1>
+                    <p class="pf2-role">{{ student.specialization }} · {{ student.year }}</p>
+                    <p class="pf2-school">{{ student.school }}</p>
 
                     <div class="pf2-hero__badges">
-                        <span class="pf2-badge-obj">{{ sanitizeText(student.objective) }}</span>
+                        <span class="pf2-badge-obj">{{ student.objective }}</span>
                         <span class="pf2-badge-cert">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2.5">
@@ -65,18 +65,17 @@
                         </span>
                     </div>
 
-                    <p class="pf2-bio">{{ sanitizeText(student.bio) }}</p>
+                    <p class="pf2-bio">{{ student.bio }}</p>
 
                     <div class="pf2-stats">
                         <div v-for="stat in studentStats" :key="stat.label" class="pf2-stat">
                             <span class="pf2-stat__val">{{ stat.value }}</span>
-                            <span class="pf2-stat__lbl">{{ sanitizeText(stat.label) }}</span>
+                            <span class="pf2-stat__lbl">{{ stat.label }}</span>
                         </div>
                     </div>
 
                     <div class="pf2-social">
-                        <!-- open redirect : URLs validées avant d'être rendues -->
-                        <a :href="safeUrl(student.linkedin)" target="_blank" rel="noopener noreferrer" class="pf2-social-btn">
+                        <a :href="student.linkedin" target="_blank" class="pf2-social-btn">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                                 <path
                                     d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z" />
@@ -84,14 +83,14 @@
                             </svg>
                             LinkedIn
                         </a>
-                        <a :href="safeUrl(student.github)" target="_blank" rel="noopener noreferrer" class="pf2-social-btn">
+                        <a :href="student.github" target="_blank" class="pf2-social-btn">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                                 <path
                                     d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
                             </svg>
                             GitHub
                         </a>
-                        <a :href="safeMailto(student.email)" class="pf2-social-btn">
+                        <a :href="`mailto:${student.email}`" class="pf2-social-btn">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
@@ -104,27 +103,27 @@
 
                 <div class="pf2-hero__right">
                     <div class="pf2-avatar-wrap">
-                        <div class="pf2-avatar">{{ sanitizeText(student.initials) }}</div>
+                        <div class="pf2-avatar">{{ student.initials }}</div>
                     </div>
                     <div class="pf2-score-card">
                         <p class="pf2-score-label">Score de crédibilité</p>
                         <div class="pf2-score-ring-wrap">
                             <svg class="pf2-score-svg" viewBox="0 0 120 120">
                                 <circle cx="60" cy="60" r="52" fill="none" stroke="#1A3055" stroke-width="8" />
-                                <circle cx="60" cy="60" r="52" fill="none" :stroke="safeAccentColor" stroke-width="8"
+                                <circle cx="60" cy="60" r="52" fill="none" :stroke="accentColor" stroke-width="8"
                                     stroke-linecap="round" stroke-dasharray="327"
-                                    :stroke-dashoffset="327 - (327 * safeScore / 100)"
+                                    :stroke-dashoffset="327 - (327 * student.score / 100)"
                                     transform="rotate(-90 60 60)" />
                             </svg>
                             <div class="pf2-score-inner">
-                                <span class="pf2-score-num">{{ safeScore }}</span>
+                                <span class="pf2-score-num">{{ student.score }}</span>
                                 <span class="pf2-score-denom">/100</span>
                             </div>
                         </div>
                         <div class="pf2-score-breakdown">
                             <div v-for="item in scoreBreakdown" :key="item.label" class="pf2-score-item">
-                                <span>{{ sanitizeText(item.label) }}</span>
-                                <span class="pf2-score-pts">{{ sanitizeText(item.pts) }}</span>
+                                <span>{{ item.label }}</span>
+                                <span class="pf2-score-pts">{{ item.pts }}</span>
                             </div>
                         </div>
                     </div>
@@ -132,18 +131,18 @@
             </section>
 
             <!-- ── PARCOURS ACADÉMIQUE ────────────────────────────────── -->
-            <section id="parcours" class="pf2-section pf2-section--mid">
+            <section v-if="editConfig.sections_visibles.parcours" id="parcours" class="pf2-section pf2-section--mid">
                 <div class="pf2-section__header">
                     <p class="pf2-section__label">Mon parcours</p>
                     <h2 class="pf2-section__title">Parcours Académique</h2>
                 </div>
                 <div class="pf2-parcours-layout">
                     <div class="pf2-parcours__left">
-                        <p class="pf2-parcours__about">{{ sanitizeText(student.about) }}</p>
+                        <p class="pf2-parcours__about">{{ student.about }}</p>
                         <div class="pf2-key-numbers">
                             <div v-for="kn in keyNumbers" :key="kn.label" class="pf2-kn">
                                 <span class="pf2-kn__val">{{ kn.value }}</span>
-                                <span class="pf2-kn__lbl">{{ sanitizeText(kn.label) }}</span>
+                                <span class="pf2-kn__lbl">{{ kn.label }}</span>
                             </div>
                         </div>
                     </div>
@@ -152,10 +151,10 @@
                             <div class="pf2-timeline__dot"></div>
                             <div v-if="i < parcours.length - 1" class="pf2-timeline__line"></div>
                             <div class="pf2-timeline__content">
-                                <span class="pf2-timeline__year">{{ sanitizeText(step.year) }}</span>
-                                <h4 class="pf2-timeline__title">{{ sanitizeText(step.title) }}</h4>
-                                <p class="pf2-timeline__school">{{ sanitizeText(step.school) }}</p>
-                                <div v-if="step.mention" class="pf2-timeline__badge">{{ sanitizeText(step.mention) }}</div>
+                                <span class="pf2-timeline__year">{{ step.year }}</span>
+                                <h4 class="pf2-timeline__title">{{ step.title }}</h4>
+                                <p class="pf2-timeline__school">{{ step.school }}</p>
+                                <div v-if="step.mention" class="pf2-timeline__badge">{{ step.mention }}</div>
                             </div>
                         </div>
                     </div>
@@ -163,7 +162,7 @@
             </section>
 
             <!-- ── PROJETS ────────────────────────────────────────────── -->
-            <section id="projets" class="pf2-section pf2-section--dark">
+            <section v-if="editConfig.sections_visibles.projets" id="projets" class="pf2-section pf2-section--dark">
                 <div class="pf2-section__header pf2-section__header--with-nav">
                     <div>
                         <p class="pf2-section__label">Mes réalisations</p>
@@ -203,14 +202,14 @@
                         </div>
                         <div class="pf2-project-body">
                             <div class="pf2-project-meta">
-                                <span class="pf2-project-cat">{{ sanitizeText(project.category) }}</span>
-                                <span v-if="project.certified" class="pf2-cert-badge">✦ Certifié {{ sanitizeText(project.institution) }}</span>
+                                <span class="pf2-project-cat">{{ project.category }}</span>
+                                <span v-if="project.certified" class="pf2-cert-badge"><AppIcon name="shield" /> Certifié {{ project.institution }}</span>
                                 <span v-else class="pf2-pending-badge">En attente</span>
                             </div>
-                            <h3 class="pf2-project-title">{{ sanitizeText(project.title) }}</h3>
-                            <p class="pf2-project-desc">{{ sanitizeText(project.description) }}</p>
+                            <h3 class="pf2-project-title">{{ project.title }}</h3>
+                            <p class="pf2-project-desc">{{ project.description }}</p>
                             <div class="pf2-project-tags">
-                                <span v-for="tech in project.tech.slice(0,3)" :key="tech" class="pf2-tech-tag">{{ sanitizeText(tech) }}</span>
+                                <span v-for="tech in project.tech.slice(0,3)" :key="tech" class="pf2-tech-tag">{{ tech }}</span>
                             </div>
                         </div>
                     </div>
@@ -218,7 +217,7 @@
             </section>
 
             <!-- ── COMPÉTENCES ────────────────────────────────────────── -->
-            <section id="competences" class="pf2-section pf2-section--light">
+            <section v-if="editConfig.sections_visibles.competences" id="competences" class="pf2-section pf2-section--light">
                 <div class="pf2-section__header">
                     <p class="pf2-section__label">Expertise</p>
                     <h2 class="pf2-section__title">Compétences</h2>
@@ -229,67 +228,66 @@
                         <div class="pf2-skills-list">
                             <div v-for="skill in skills.technical" :key="skill.name" class="pf2-skill-row">
                                 <div class="pf2-skill-info">
-                                    <span class="pf2-skill-name">{{ sanitizeText(skill.name) }}</span>
-                                    <span class="pf2-skill-level">{{ sanitizeText(skill.level) }}</span>
-                                    <span class="pf2-skill-pct">{{ safePct(skill.pct) }}%</span>
+                                    <span class="pf2-skill-name">{{ skill.name }}</span>
+                                    <span class="pf2-skill-level">{{ skill.level }}</span>
+                                    <span class="pf2-skill-pct">{{ skill.pct }}%</span>
                                 </div>
                                 <div class="pf2-skill-bar">
                                     <div class="pf2-skill-fill"
-                                        :style="{ width: safePct(skill.pct) + '%', background: safeAccentColor }"></div>
+                                        :style="{ width: skill.pct + '%', background: accentColor }"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="pf2-skills__radar">
                         <h3 class="pf2-skills__subtitle">Vue d'ensemble par domaine</h3>
-                        <svg class="pf2-radar-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
-                            <polygon points="150,30 255,97.5 255,202.5 150,270 45,202.5 45,97.5" fill="none" stroke="#E5E8ED" stroke-width="1"/>
-                            <polygon points="150,60 232.5,112.5 232.5,187.5 150,240 67.5,187.5 67.5,112.5" fill="none" stroke="#E5E8ED" stroke-width="1"/>
-                            <polygon points="150,90 210,127.5 210,172.5 150,210 90,172.5 90,127.5" fill="none" stroke="#E5E8ED" stroke-width="1"/>
-                            <polygon points="150,120 187.5,142.5 187.5,157.5 150,180 112.5,157.5 112.5,142.5" fill="none" stroke="#E5E8ED" stroke-width="1"/>
-                            <line x1="150" y1="150" x2="150" y2="30"   stroke="#D1D5DB" stroke-width="1"/>
-                            <line x1="150" y1="150" x2="255" y2="97.5" stroke="#D1D5DB" stroke-width="1"/>
-                            <line x1="150" y1="150" x2="255" y2="202.5" stroke="#D1D5DB" stroke-width="1"/>
-                            <line x1="150" y1="150" x2="150" y2="270"  stroke="#D1D5DB" stroke-width="1"/>
-                            <line x1="150" y1="150" x2="45" y2="202.5" stroke="#D1D5DB" stroke-width="1"/>
-                            <line x1="150" y1="150" x2="45" y2="97.5"  stroke="#D1D5DB" stroke-width="1"/>
-                            <polygon
-                                points="150,36 245.4,105.6 233.4,201 150,246 66.6,195 82.8,100.2"
-                                fill="rgba(90,137,216,0.18)"
-                                stroke="#5A89D8"
-                                stroke-width="2"
-                                stroke-linejoin="round"/>
-                            <circle cx="150"  cy="36"   r="4" fill="#5A89D8"/>
-                            <circle cx="245.4" cy="105.6" r="4" fill="#5A89D8"/>
-                            <circle cx="233.4" cy="201"  r="4" fill="#5A89D8"/>
-                            <circle cx="150"  cy="246"  r="4" fill="#5A89D8"/>
-                            <circle cx="66.6" cy="195"  r="4" fill="#5A89D8"/>
-                            <circle cx="82.8" cy="100.2" r="4" fill="#5A89D8"/>
-                            <text x="150"  y="22"   text-anchor="middle" font-size="11" font-family="Inter,sans-serif" font-weight="600" fill="#0F2040">DevOps</text>
-                            <text x="268"  y="100"  text-anchor="start"  font-size="11" font-family="Inter,sans-serif" font-weight="600" fill="#0F2040">Cloud</text>
-                            <text x="268"  y="212"  text-anchor="start"  font-size="11" font-family="Inter,sans-serif" font-weight="600" fill="#0F2040">Sécurité</text>
-                            <text x="150"  y="286"  text-anchor="middle" font-size="11" font-family="Inter,sans-serif" font-weight="600" fill="#0F2040">Web</text>
-                            <text x="32"   y="212"  text-anchor="end"    font-size="11" font-family="Inter,sans-serif" font-weight="600" fill="#0F2040">Data</text>
-                            <text x="32"   y="100"  text-anchor="end"    font-size="11" font-family="Inter,sans-serif" font-weight="600" fill="#0F2040">IaC</text>
-                            <text x="156"  y="34"   font-size="9" fill="#2B5090" font-family="Inter,sans-serif">95%</text>
-                            <text x="248"  y="103"  font-size="9" fill="#2B5090" font-family="Inter,sans-serif">82%</text>
-                            <text x="236"  y="209"  font-size="9" fill="#2B5090" font-family="Inter,sans-serif">70%</text>
-                            <text x="140"  y="258"  font-size="9" fill="#2B5090" font-family="Inter,sans-serif">65%</text>
-                            <text x="46"   y="200"  font-size="9" fill="#2B5090" font-family="Inter,sans-serif">55%</text>
-                            <text x="60"   y="100"  font-size="9" fill="#2B5090" font-family="Inter,sans-serif">80%</text>
-                        </svg>
+<svg class="pf2-radar-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+    <!-- grille -->
+    <polygon points="150,30 255,97.5 255,202.5 150,270 45,202.5 45,97.5"   fill="none" stroke="#E5E8ED" stroke-width="1"/>
+    <polygon points="150,60 232.5,112.5 232.5,187.5 150,240 67.5,187.5 67.5,112.5" fill="none" stroke="#E5E8ED" stroke-width="1"/>
+    <polygon points="150,90 210,127.5 210,172.5 150,210 90,172.5 90,127.5"  fill="none" stroke="#E5E8ED" stroke-width="1"/>
+    <polygon points="150,120 187.5,142.5 187.5,157.5 150,180 112.5,157.5 112.5,142.5" fill="none" stroke="#E5E8ED" stroke-width="1"/>
+    <!-- axes -->
+    <line v-for="ax in radarData.axes" :key="ax.i"
+        x1="150" y1="150" :x2="ax.x2" :y2="ax.y2"
+        stroke="#D1D5DB" stroke-width="1"/>
+    <!-- polygone données -->
+    <polygon
+        v-if="radarData.polyPoints"
+        :points="radarData.polyPoints"
+        fill="rgba(90,137,216,0.18)"
+        stroke="#5A89D8"
+        stroke-width="2"
+        stroke-linejoin="round"/>
+    <!-- points -->
+    <circle v-for="pt in radarData.points" :key="'d'+pt.i"
+        :cx="pt.x" :cy="pt.y" r="4" fill="#5A89D8"/>
+    <!-- labels -->
+    <text v-for="pt in radarData.points" :key="'l'+pt.i"
+        :x="pt.lx" :y="pt.ly"
+        :text-anchor="pt.anchor"
+        font-size="11" font-family="Inter,sans-serif" font-weight="600" fill="#0F2040">
+        {{ pt.label }}
+    </text>
+    <!-- valeurs -->
+    <text v-for="pt in radarData.points" :key="'v'+pt.i"
+        :x="pt.vx" :y="pt.vy"
+        font-size="9" fill="#2B5090" font-family="Inter,sans-serif">
+        {{ pt.valLabel }}
+    </text>
+</svg>
                     </div>
                 </div>
                 <div class="pf2-soft-section">
                     <h3 class="pf2-skills__subtitle">Soft Skills</h3>
                     <div class="pf2-soft-tags">
-                        <span v-for="s in skills.soft" :key="s" class="pf2-soft-tag">{{ sanitizeText(s) }}</span>
+                        <span v-for="s in skills.soft" :key="s" class="pf2-soft-tag">{{ s }}</span>
                     </div>
                 </div>
             </section>
 
             <!-- ── STAGES ─────────────────────────────────────────────── -->
-            <section id="stages" class="pf2-section pf2-section--dark">
+            <section v-if="editConfig.sections_visibles.stages" id="stages" class="pf2-section pf2-section--dark">
                 <div class="pf2-section__header">
                     <p class="pf2-section__label">Expériences</p>
                     <h2 class="pf2-section__title">Stages et Expériences</h2>
@@ -297,34 +295,34 @@
                 <div class="pf2-stages-list">
                     <div v-for="(stage, i) in stages" :key="stage.id" class="pf2-stage">
                         <div class="pf2-stage__timeline">
-                            <div class="pf2-stage__dot" :style="{ background: safeAccentColor }"></div>
+                            <div class="pf2-stage__dot" :style="{ background: accentColor }"></div>
                             <div v-if="i < stages.length - 1" class="pf2-stage__line"></div>
                         </div>
                         <div class="pf2-stage__content">
                             <div class="pf2-stage__header">
                                 <div>
-                                    <h3 class="pf2-stage__role">{{ sanitizeText(stage.role) }}</h3>
-                                    <p class="pf2-stage__company" :style="{ color: safeAccentColor }">{{ sanitizeText(stage.company) }}</p>
-                                    <p class="pf2-stage__duration">{{ sanitizeText(stage.duration) }}</p>
+                                    <h3 class="pf2-stage__role">{{ stage.role }}</h3>
+                                    <p class="pf2-stage__company" :style="{ color: accentColor }">{{ stage.company }}</p>
+                                    <p class="pf2-stage__duration">{{ stage.duration }}</p>
                                 </div>
                                 <div class="pf2-stage__badges">
-                                    <span v-if="stage.certified" class="pf2-cert-badge">✦ Certifié {{ sanitizeText(stage.institution) }}</span>
+                                    <span v-if="stage.certified" class="pf2-cert-badge"><AppIcon name="shield" /> Certifié {{ stage.institution }}</span>
                                     <span v-else class="pf2-pending-badge">En attente</span>
-                                    <span class="pf2-duration-badge">{{ sanitizeText(stage.months) }}</span>
+                                    <span class="pf2-duration-badge">{{ stage.months }}</span>
                                 </div>
                             </div>
                             <ul class="pf2-stage__missions">
-                                <li v-for="m in stage.missions" :key="m">{{ sanitizeText(m) }}</li>
+                                <li v-for="m in stage.missions" :key="m">{{ m }}</li>
                             </ul>
                             <div class="pf2-stage__meta">
                                 <div class="pf2-stage__meta-row">
                                     <span class="pf2-stage__meta-label">Encadrant académique</span>
-                                    <span class="pf2-stage__meta-val">{{ sanitizeText(stage.encadrant) }}</span>
+                                    <span class="pf2-stage__meta-val">{{ stage.encadrant }}</span>
                                 </div>
                                 <div class="pf2-stage__tech-row">
                                     <span class="pf2-stage__meta-label">Technologies</span>
                                     <div class="pf2-stage__tech-tags">
-                                        <span v-for="t in stage.tech" :key="t" class="pf2-tech-tag">{{ sanitizeText(t) }}</span>
+                                        <span v-for="t in stage.tech" :key="t" class="pf2-tech-tag">{{ t }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -348,7 +346,7 @@
             </section>
 
             <!-- ── ACTIVITÉS ──────────────────────────────────────────── -->
-            <section id="activites" class="pf2-section pf2-section--light">
+            <section v-if="editConfig.sections_visibles.activites" id="activites" class="pf2-section pf2-section--light">
                 <div class="pf2-section__header">
                     <p class="pf2-section__label">Engagement</p>
                     <h2 class="pf2-section__title">Activités Parascolaires</h2>
@@ -371,9 +369,9 @@
                             <span v-else class="pf2-activity-pending">En attente</span>
                         </div>
                         <div class="pf2-activity-body">
-                            <span class="pf2-activity-cat">{{ sanitizeText(act.category) }}</span>
-                            <h4 class="pf2-activity-title">{{ sanitizeText(act.title) }}</h4>
-                            <p class="pf2-activity-desc">{{ sanitizeText(act.description) }}</p>
+                            <span class="pf2-activity-cat">{{ act.category }}</span>
+                            <h4 class="pf2-activity-title">{{ act.title }}</h4>
+                            <p class="pf2-activity-desc">{{ act.description }}</p>
                             <div class="pf2-activity-footer">
                                 <button v-if="act.attestation" class="pf2-attach-btn pf2-attach-btn--light">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -382,7 +380,7 @@
                                     Attestation
                                 </button>
                                 <span v-else class="pf2-activity-no-att">Pas d'attestation</span>
-                                <span class="pf2-activity-date">{{ sanitizeText(act.date) }}</span>
+                                <span class="pf2-activity-date">{{ act.date }}</span>
                             </div>
                         </div>
                     </div>
@@ -390,27 +388,27 @@
             </section>
 
             <!-- ── BADGES ─────────────────────────────────────────────── -->
-            <section id="badges" class="pf2-section pf2-section--dark">
+            <section v-if="editConfig.sections_visibles.badges" id="badges" class="pf2-section pf2-section--dark">
                 <div class="pf2-section__header">
                     <p class="pf2-section__label">Distinctions</p>
                     <h2 class="pf2-section__title">Badges & Accomplissements</h2>
                 </div>
                 <div class="pf2-badges-grid">
                     <div v-for="badge in badges" :key="badge.id" class="pf2-badge-card">
-                        <div class="pf2-badge-icon" :style="{ color: safeAccentColor }">
+                        <div class="pf2-badge-icon" :style="{ color: accentColor }">
                             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                             </svg>
                         </div>
-                        <h4 class="pf2-badge-name">{{ sanitizeText(badge.name) }}</h4>
-                        <p class="pf2-badge-desc">{{ sanitizeText(badge.description) }}</p>
-                        <span class="pf2-badge-date">{{ sanitizeText(badge.date) }}</span>
+                        <h4 class="pf2-badge-name">{{ badge.name }}</h4>
+                        <p class="pf2-badge-desc">{{ badge.description }}</p>
+                        <span class="pf2-badge-date">{{ badge.date }}</span>
                     </div>
                 </div>
             </section>
 
             <!-- ── RECOMMANDATIONS ────────────────────────────────────── -->
-            <section id="recommandations" class="pf2-section pf2-section--mid">
+            <section v-if="editConfig.sections_visibles.recommandations" id="recommandations" class="pf2-section pf2-section--mid">
                 <div class="pf2-section__header pf2-section__header--with-nav">
                     <div>
                         <p class="pf2-section__label">Ce qu'on dit de moi</p>
@@ -433,15 +431,15 @@
                 <div class="pf2-recs-grid">
                     <div v-for="rec in visibleRecs" :key="rec.id" class="pf2-rec-card">
                         <div class="pf2-rec-quote">"</div>
-                        <p class="pf2-rec-message">{{ sanitizeText(rec.message) }}</p>
+                        <p class="pf2-rec-message">{{ rec.message }}</p>
                         <div class="pf2-rec-author">
-                            <div class="pf2-rec-avatar">{{ sanitizeText(rec.initials) }}</div>
+                            <div class="pf2-rec-avatar">{{ rec.initials }}</div>
                             <div>
-                                <p class="pf2-rec-name">{{ sanitizeText(rec.name) }}</p>
-                                <p class="pf2-rec-role">{{ sanitizeText(rec.company) }}</p>
+                                <p class="pf2-rec-name">{{ rec.name }}</p>
+                                <p class="pf2-rec-role">{{ rec.company }}</p>
                             </div>
-                            <span :class="['pf2-role-badge', safeRoleBadgeClass(rec.role)]">
-                                {{ sanitizeText(rec.role) }}
+                            <span :class="['pf2-role-badge', `pf2-role-badge--${rec.role.toLowerCase()}`]">
+                                {{ rec.role }}
                             </span>
                         </div>
                     </div>
@@ -449,7 +447,7 @@
             </section>
 
             <!-- ── LETTRES ────────────────────────────────────────────── -->
-            <section id="lettres" class="pf2-section pf2-section--dark">
+            <section v-if="editConfig.sections_visibles.lettres" id="lettres" class="pf2-section pf2-section--dark">
                 <div class="pf2-section__header">
                     <p class="pf2-section__label">Documents officiels</p>
                     <h2 class="pf2-section__title">Lettres de Recommandation</h2>
@@ -457,16 +455,16 @@
                 <div class="pf2-letters-grid">
                     <div v-for="letter in lettres" :key="letter.id" class="pf2-letter-card">
                         <div class="pf2-letter__author">
-                            <div class="pf2-letter__avatar">{{ sanitizeText(letter.initials) }}</div>
+                            <div class="pf2-letter__avatar">{{ letter.initials }}</div>
                             <div>
-                                <p class="pf2-letter__name">{{ sanitizeText(letter.author) }}</p>
-                                <p class="pf2-letter__title">{{ sanitizeText(letter.title) }}</p>
+                                <p class="pf2-letter__name">{{ letter.author }}</p>
+                                <p class="pf2-letter__title">{{ letter.title }}</p>
                             </div>
                         </div>
                         <div class="pf2-letter__details">
                             <div class="pf2-letter__row">
                                 <span>Objectif</span>
-                                <span>{{ sanitizeText(letter.purpose) }}</span>
+                                <span>{{ letter.purpose }}</span>
                             </div>
                             <div class="pf2-letter__row">
                                 <span>Visibilité</span>
@@ -477,11 +475,11 @@
                             </div>
                             <div class="pf2-letter__row">
                                 <span>Validée</span>
-                                <span class="pf2-cert-badge pf2-cert-badge--sm">✦ Validée par l'institution</span>
+                                <span class="pf2-cert-badge pf2-cert-badge--sm"><AppIcon name="shield" /> Validée par l'institution</span>
                             </div>
                         </div>
                         <button v-if="letter.visibility === 'public'" class="pf2-download-btn"
-                            :style="{ background: safeAccentColor }">
+                            :style="{ background: accentColor }">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
                             </svg>
@@ -499,7 +497,7 @@
             </section>
 
             <!-- ── GITHUB ─────────────────────────────────────────────── -->
-            <section id="github" class="pf2-section pf2-section--light">
+            <section v-if="student.github && editConfig.sections_visibles.github" id="github" class="pf2-section pf2-section--light">
                 <div class="pf2-section__header">
                     <p class="pf2-section__label">Open source</p>
                     <h2 class="pf2-section__title">Activité GitHub</h2>
@@ -510,8 +508,8 @@
                         <div class="pf2-heatmap">
                             <div v-for="(week, wi) in contributions" :key="wi" class="pf2-heatmap__week">
                                 <div v-for="(day, di) in week" :key="di"
-                                    :class="['pf2-heatmap__day', `pf2-heatmap__day--${safeHeatmapLevel(day)}`]"
-                                    :title="`${safeHeatmapLevel(day)} contributions`"></div>
+                                    :class="['pf2-heatmap__day', `pf2-heatmap__day--${day}`]"
+                                    :title="`${day} contributions`"></div>
                             </div>
                         </div>
                         <div class="pf2-heatmap__legend">
@@ -529,39 +527,96 @@
                         <div class="pf2-repos-list">
                             <div v-for="repo in github.repos" :key="repo.name" class="pf2-repo">
                                 <div>
-                                    <p class="pf2-repo__name">{{ sanitizeText(repo.name) }}</p>
+                                    <p class="pf2-repo__name">{{ repo.name }}</p>
                                     <div class="pf2-repo__meta">
                                         <span class="pf2-repo__lang">
                                             <span class="pf2-repo__dot" :style="{ background: langColor(repo.lang) }"></span>
-                                            {{ sanitizeText(repo.lang) }}
+                                            {{ repo.lang }}
                                         </span>
-                                        <span>{{ safeInt(repo.commits) }} commits</span>
+                                        <span>{{ repo.commits }} commits</span>
                                     </div>
                                 </div>
-                                <span class="pf2-repo__activity">{{ sanitizeText(repo.lastActivity) }}</span>
+                                <span class="pf2-repo__activity">{{ repo.lastActivity }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
+            <!-- ── COMMENTAIRES ───────────────────────────────────────── -->
+            <section id="comments" class="pf2-section pf2-section--comments">
+                <div class="pf2-section__header">
+                    <p class="pf2-section__label">Échanges</p>
+                    <h2 class="pf2-section__title">Commentaires</h2>
+                </div>
+
+                <div class="pf2-comments">
+                    <p v-if="commentsLoading" class="pf2-comments__state">Chargement des commentaires...</p>
+                    <p v-else-if="commentsError" class="pf2-comments__error">{{ commentsError }}</p>
+                    <p v-else-if="comments.length === 0" class="pf2-comments__state">
+                        Aucun commentaire pour le moment.
+                    </p>
+
+                    <div v-else class="pf2-comments__list">
+                        <article v-for="comment in comments" :key="comment.id" class="pf2-comment">
+                            <div class="pf2-comment__avatar">{{ commentInitials(comment.authorName) }}</div>
+                            <div class="pf2-comment__body">
+                                <div class="pf2-comment__meta">
+                                    <strong>{{ comment.authorName }}</strong>
+                                    <time :datetime="comment.createdAt">{{ formatCommentDate(comment.createdAt) }}</time>
+                                </div>
+                                <p>{{ comment.content }}</p>
+                                <span v-if="comment.status === 'EN_ATTENTE'" class="pf2-comment__pending">
+                                    En attente de validation
+                                </span>
+                            </div>
+                        </article>
+                    </div>
+
+                    <form v-if="authStore.isAuthenticated" class="pf2-comment-form" @submit.prevent="submitComment">
+                        <label for="portfolio-comment">Ajouter un commentaire</label>
+                        <textarea
+                            id="portfolio-comment"
+                            v-model="newComment"
+                            rows="4"
+                            maxlength="2000"
+                            placeholder="Écrivez votre commentaire..."
+                            :disabled="commentSending"
+                            @input="commentSubmitError = ''"
+                        ></textarea>
+                        <p v-if="commentSubmitError" class="pf2-comments__error">{{ commentSubmitError }}</p>
+                        <button
+                            type="submit"
+                            class="pf2-btn-accent pf2-comment-form__submit"
+                            :disabled="commentSending"
+                        >
+                            {{ commentSending ? 'Envoi en cours...' : 'Publier le commentaire' }}
+                        </button>
+                    </form>
+
+                    <p v-else class="pf2-comments__login">
+                        Connectez-vous pour ajouter un commentaire.
+                    </p>
+                </div>
+            </section>
+
             <!-- ── FOOTER ─────────────────────────────────────────────── -->
             <footer class="pf2-footer">
                 <div class="pf2-footer__cert">
-                    <div class="pf2-footer__seal" :style="{ background: safeAccentColor }">UAE</div>
+                    <div class="pf2-footer__seal" :style="{ background: accentColor }">UAE</div>
                     <div>
                         <p class="pf2-footer__cert-text">Portfolio certifié par l'Université Abdelmalek Essaâdi</p>
                         <p class="pf2-footer__cert-date">Vérifié le 15 Mars 2025</p>
                     </div>
                 </div>
                 <div class="pf2-footer__actions">
-                    <button class="pf2-btn-ghost" @click="share" :disabled="isShareLimited">
+                    <button class="pf2-btn-ghost" @click="share">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" />
                         </svg>
                         Partager le lien
                     </button>
-                    <button class="pf2-btn-accent" @click="downloadPDF" :disabled="isPdfLimited">
+                    <button class="pf2-btn-accent" @click="downloadPDF">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
                         </svg>
@@ -569,7 +624,7 @@
                     </button>
                 </div>
                 <div class="pf2-footer__brand">
-                    <div class="pf2-footer__logo" :style="{ background: safeAccentColor }">T</div>
+                    <div class="pf2-footer__logo" :style="{ background: accentColor }">T</div>
                     <span>Portfolio généré par Trusty</span>
                 </div>
                 <p class="pf2-footer__copy">© 2025 Trusty. Plateforme de portfolio académique certifiée.</p>
@@ -592,41 +647,41 @@
                     </svg>
                 </div>
                 <div class="pf2-modal__body">
-                    <p class="pf2-modal__category">{{ sanitizeText(activeProject.category) }}</p>
-                    <h2 class="pf2-modal__title">{{ sanitizeText(activeProject.title) }}</h2>
-                    <p class="pf2-modal__desc">{{ sanitizeText(activeProject.description) }}</p>
+                    <p class="pf2-modal__category">{{ activeProject.category }}</p>
+                    <h2 class="pf2-modal__title">{{ activeProject.title }}</h2>
+                    <p class="pf2-modal__desc">{{ activeProject.description }}</p>
                     <div class="pf2-modal__grid">
-                        <div class="pf2-modal__cell"><span>Type</span><strong>{{ sanitizeText(activeProject.type) }}</strong></div>
-                        <div class="pf2-modal__cell"><span>Rôle</span><strong>{{ sanitizeText(activeProject.role) }}</strong></div>
-                        <div class="pf2-modal__cell"><span>Validateur</span><strong>{{ sanitizeText(activeProject.validator) }}</strong></div>
-                        <div class="pf2-modal__cell"><span>Équipe</span><strong>{{ sanitizeText(activeProject.team) }}</strong></div>
+                        <div class="pf2-modal__cell"><span>Type</span><strong>{{ activeProject.type }}</strong></div>
+                        <div class="pf2-modal__cell"><span>Rôle</span><strong>{{ activeProject.role }}</strong></div>
+                        <div class="pf2-modal__cell"><span>Validateur</span><strong>{{ activeProject.validator }}</strong></div>
+                        <div class="pf2-modal__cell"><span>Équipe</span><strong>{{ activeProject.team }}</strong></div>
                     </div>
                     <div v-if="activeProject.results" class="pf2-modal__results">
                         <p class="pf2-modal__results-label">Résultats obtenus</p>
-                        <p class="pf2-modal__results-text">{{ sanitizeText(activeProject.results) }}</p>
+                        <p class="pf2-modal__results-text">{{ activeProject.results }}</p>
                     </div>
                     <div v-if="activeProject.appreciation" class="pf2-modal__appreciation">
                         <div class="pf2-modal__appr-header">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                             </svg>
-                            <span>Appréciation — {{ sanitizeText(activeProject.validator) }}</span>
+                            <span>Appréciation — {{ activeProject.validator }}</span>
                         </div>
-                        <p class="pf2-modal__appr-text">« {{ sanitizeText(activeProject.appreciation) }} »</p>
+                        <p class="pf2-modal__appr-text">« {{ activeProject.appreciation }} »</p>
                     </div>
                     <div class="pf2-modal__tech">
-                        <span v-for="t in activeProject.tech" :key="t" class="pf2-tech-tag pf2-tech-tag--light">{{ sanitizeText(t) }}</span>
+                        <span v-for="t in activeProject.tech" :key="t" class="pf2-tech-tag pf2-tech-tag--light">{{ t }}</span>
                     </div>
                     <div class="pf2-modal__footer">
-                        <span v-if="activeProject.certified" class="pf2-cert-badge">✦ Certifié {{ sanitizeText(activeProject.institution) }}</span>
+                        <span v-if="activeProject.certified" class="pf2-cert-badge"><AppIcon name="shield" /> Certifié {{ activeProject.institution }}</span>
                         <span v-else class="pf2-pending-badge">En attente de validation</span>
-                        <a v-if="activeProject.github" :href="safeUrl(activeProject.github)" target="_blank" rel="noopener noreferrer" class="pf2-btn-accent">
+                        <a v-if="activeProject.github" :href="activeProject.github" target="_blank" class="pf2-btn-accent">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
                             </svg>
                             GitHub
                         </a>
-                        <a v-if="activeProject.youtube" :href="safeUrl(activeProject.youtube)" target="_blank" rel="noopener noreferrer" class="pf2-btn-youtube">
+                        <a v-if="activeProject.youtube" :href="activeProject.youtube" target="_blank" class="pf2-btn-youtube">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                             </svg>
@@ -637,15 +692,196 @@
             </div>
         </div>
         </template>
+<!-- ── EDIT PANEL ─────────────────────────────────────────────────── -->
+<template v-if="canEdit">
 
+  <!-- FAB -->
+  <button class="pf2-edit-fab" @click="panelOpen = !panelOpen">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
+    Modifier
+  </button>
+
+  <!-- PANEL -->
+  <div :class="['pf2-edit-panel', panelOpen && 'pf2-edit-panel--open']">
+
+    <div class="pf2-ep-header">
+      <h3>Personnalisation</h3>
+      <button aria-label="Fermer" @click="panelOpen = false"><AppIcon name="x" /></button>
+    </div>
+
+    <div class="pf2-ep-body">
+
+      <!-- Titre -->
+      <div class="pf2-ep-field">
+        <label>Titre du portfolio</label>
+        <input v-model="editConfig.titre_personnalise" placeholder="ex: Portfolio DevOps" />
+      </div>
+
+      <!-- Bio -->
+      <div class="pf2-ep-field">
+        <label>Sous-titre / Bio</label>
+        <textarea v-model="editConfig.sous_titre" rows="3" placeholder="Une phrase qui te décrit..."></textarea>
+      </div>
+
+      <!-- Couleur accent -->
+      <div class="pf2-ep-field">
+        <label>Couleur accent</label>
+        <div class="pf2-ep-color-row">
+          <input type="color" v-model="editConfig.couleur_accent" />
+          <span class="pf2-ep-color-val">{{ editConfig.couleur_accent }}</span>
+        </div>
+      </div>
+
+      <!-- Sections visibles -->
+      <div class="pf2-ep-field">
+        <label>Sections visibles</label>
+        <div class="pf2-ep-toggles">
+          <div v-for="(val, key) in editConfig.sections_visibles" :key="key" class="pf2-ep-toggle">
+            <span>{{ key.charAt(0).toUpperCase() + key.slice(1) }}</span>
+            <button
+              :class="['pf2-ep-toggle__btn', editConfig.sections_visibles[key] && 'pf2-ep-toggle__btn--on']"
+              @click="editConfig.sections_visibles[key] = !editConfig.sections_visibles[key]"
+            >
+              {{ editConfig.sections_visibles[key] ? 'Visible' : 'Cachée' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Projets -->
+      <div class="pf2-ep-field">
+        <label>Projets affichés</label>
+        <div class="pf2-ep-checks">
+          <div v-for="p in portfolioData?.etudiant?.participations_projets" :key="p.projet.id_projet" class="pf2-ep-check">
+            <input type="checkbox" :value="p.projet.id_projet" v-model="editConfig.projets_selectionnes" :id="'pr-'+p.projet.id_projet" />
+            <label :for="'pr-'+p.projet.id_projet">{{ p.projet.titre }}</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stages -->
+      <div class="pf2-ep-field">
+        <label>Stages affichés</label>
+        <div class="pf2-ep-checks">
+          <div v-for="s in portfolioData?.etudiant?.stages" :key="s.id_stage" class="pf2-ep-check">
+            <input type="checkbox" :value="s.id_stage" v-model="editConfig.stages_selectionnes" :id="'st-'+s.id_stage" />
+            <label :for="'st-'+s.id_stage">{{ s.poste }} — {{ s.entreprise }}</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compétences -->
+      <div class="pf2-ep-field">
+        <label>Compétences affichées</label>
+        <div class="pf2-ep-checks">
+          <div v-for="c in portfolioData?.etudiant?.competences?.filter(c => c.competence.type === 'TECHNIQUE')" :key="c.id_competence" class="pf2-ep-check">
+            <input type="checkbox" :value="c.id_competence" v-model="editConfig.competences_selectionnees" :id="'cp-'+c.id_competence" />
+            <label :for="'cp-'+c.id_competence">{{ c.competence.nom }}</label>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="pf2-ep-footer">
+      <button class="pf2-btn-accent" :disabled="saving" @click="saveEdit" style="width:100%;justify-content:center;padding:12px;">
+        {{ saving ? 'Enregistrement...' : 'Enregistrer les modifications' }}
+      </button>
+    </div>
+
+  </div>
+
+</template>
     </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted, watch, reactive } from 'vue'
 import { useRoute } from 'vue-router'
+import api from '@/api'
+import { useAuthStore } from '@/stores/authstore'
+import {
+    createPortfolioComment,
+    getPortfolioComments,
+} from '@/services/portfolioComments'
 
-const accentColor = '#5A89D8'
+const route = useRoute()
+const authStore = useAuthStore()
+const portfolioData = ref(null)
+const loading = ref(true)
+const error = ref(null)
+const comments = ref([])
+const commentsLoading = ref(false)
+const commentsError = ref('')
+const newComment = ref('')
+const commentSending = ref(false)
+const commentSubmitError = ref('')
+
+const accentColor = computed(() => portfolioData.value?.couleur_accent || '#5A89D8')
+const isEditMode = computed(() => route.query.edit === 'true')
+const canEdit = computed(() => isEditMode.value && authStore.isEtudiant)
+const panelOpen = ref(false)
+const saving = ref(false)
+const portfolioId = computed(() => portfolioData.value?.id_portfolio)
+const editConfig = reactive({
+  titre_personnalise: '',
+  sous_titre: '',
+  couleur_accent: '#5A89D8',
+  projets_selectionnes: [],
+  competences_selectionnees: [],
+  stages_selectionnes: [],
+  sections_visibles: {
+    parcours: true,
+    projets: true,
+    competences: true,
+    stages: true,
+    activites: true,
+    badges: true,
+    recommandations: true,
+    lettres: true,
+    github: true,
+  }
+})
+watch(portfolioData, (val) => {
+  if (!val) return
+  editConfig.titre_personnalise = val.titre_personnalise || ''
+  editConfig.sous_titre = val.sous_titre || ''
+  editConfig.couleur_accent = val.couleur_accent || '#5A89D8'
+  editConfig.projets_selectionnes = val.projets_selectionnes || []
+  editConfig.competences_selectionnees = val.competences_selectionnees || []
+  editConfig.stages_selectionnes = val.stages_selectionnes || []
+  editConfig.sections_visibles = val.sections_config || editConfig.sections_visibles
+})
+async function saveEdit() {
+  saving.value = true
+  try {
+    await api.put(`/portfolio/me/${portfolioId.value}`, {
+      titre_personnalise: editConfig.titre_personnalise,
+      sous_titre: editConfig.sous_titre,
+      couleur_accent: editConfig.couleur_accent,
+      projets_selectionnes: editConfig.projets_selectionnes,
+      competences_selectionnees: editConfig.competences_selectionnees,
+      stages_selectionnes: editConfig.stages_selectionnes,
+      sections_config: editConfig.sections_visibles,
+    })
+    // mise à jour locale sans reload
+    portfolioData.value.titre_personnalise = editConfig.titre_personnalise
+    portfolioData.value.sous_titre = editConfig.sous_titre
+    portfolioData.value.couleur_accent = editConfig.couleur_accent
+    portfolioData.value.projets_selectionnes = editConfig.projets_selectionnes
+    portfolioData.value.competences_selectionnees = editConfig.competences_selectionnees
+    portfolioData.value.stages_selectionnes = editConfig.stages_selectionnes
+    portfolioData.value.sections_config = editConfig.sections_visibles
+    panelOpen.value = false
+  } catch(e) {
+    console.error(e)
+  } finally {
+    saving.value = false
+  }
+}
 const isScrolled = ref(false)
 const activeTab = ref('hero')
 const projectsIdx = ref(0)
@@ -656,7 +892,7 @@ const fontStyle = computed(() => ({
     fontFamily: "'Inter', system-ui, -apple-system, sans-serif"
 }))
 
-const tabs = [
+const tabs = computed(() => [
     { id: 'parcours',        label: 'À propos' },
     { id: 'projets',         label: 'Projets' },
     { id: 'competences',     label: 'Compétences' },
@@ -665,146 +901,43 @@ const tabs = [
     { id: 'badges',          label: 'Badges' },
     { id: 'recommandations', label: 'Recommandations' },
     { id: 'lettres',         label: 'Lettres' },
-    { id: 'github',          label: 'GitHub' },
-]
+    ...(student.value.github ? [{ id: 'github', label: 'GitHub' }] : []),
+    { id: 'comments',        label: 'Commentaires' },
+])
 
-const route = useRoute()
-const portfolioData = ref(null)
-const loading = ref(true)
-const error = ref(null)
+async function loadComments() {
+    const studentId = portfolioData.value?.id_etudiant
+    if (!studentId) return
 
-// --- XSS : encodage de toutes les chaînes affichées depuis l'API ---
-const sanitizeText = (value) => {
-    if (value === null || value === undefined) return ''
-    return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#x27;')
-}
-
-// --- CSS injection : seules les valeurs de couleur valides sont acceptées ---
-const SAFE_COLOR_RE = /^(#[0-9a-fA-F]{3,8}|rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)|rgba\(\s*\d+\s*,\s*\d+\s*,\s*[\d.]+\s*\)|hsl\(\s*\d+\s*,\s*[\d.]+%\s*,\s*[\d.]+%\s*\)|[a-zA-Z]{2,30})$/
-
-const safeColor = (color, fallback = '#5A89D8') => {
-    if (!color || typeof color !== 'string') return fallback
-    return SAFE_COLOR_RE.test(color.trim()) ? color.trim() : fallback
-}
-
-const safeAccentColor = safeColor(accentColor)
-
-// --- Valeur numérique bornée pour le score (0–100) ---
-const safeScore = computed(() => {
-    const s = Number(student.value.score)
-    if (!Number.isFinite(s)) return 0
-    return Math.min(100, Math.max(0, Math.round(s)))
-})
-
-// --- Pourcentage borné pour les barres de compétences ---
-const safePct = (pct) => {
-    const n = Number(pct)
-    if (!Number.isFinite(n)) return 0
-    return Math.min(100, Math.max(0, Math.round(n)))
-}
-
-// --- Entier positif sûr (commits, etc.) ---
-const safeInt = (value) => {
-    const n = Number(value)
-    if (!Number.isInteger(n) || n < 0) return 0
-    return n
-}
-
-// --- Open redirect : seules les URLs http/https et github/linkedin sont autorisées ---
-const ALLOWED_URL_ORIGINS = [
-    'https://github.com',
-    'https://www.linkedin.com',
-    'https://linkedin.com',
-    'https://youtube.com',
-    'https://www.youtube.com',
-]
-
-const safeUrl = (url) => {
-    if (!url || typeof url !== 'string') return '#'
+    commentsLoading.value = true
+    commentsError.value = ''
     try {
-        const parsed = new URL(url)
-        if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return '#'
-        const origin = parsed.origin
-        if (!ALLOWED_URL_ORIGINS.some(allowed => origin === allowed || origin.endsWith('.' + allowed.replace('https://', '')))) {
-            return '#'
-        }
-        return url
+        comments.value = await getPortfolioComments(studentId)
     } catch {
-        return '#'
+        comments.value = []
+        commentsError.value = 'Impossible de charger les commentaires.'
+    } finally {
+        commentsLoading.value = false
     }
 }
-
-// --- mailto : validation basique de l'adresse email ---
-const safeMailto = (email) => {
-    if (!email || typeof email !== 'string') return '#'
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return '#'
-    return `mailto:${email.trim()}`
-}
-
-// --- Niveau heatmap borné à [0–4] pour éviter des classes CSS arbitraires ---
-const safeHeatmapLevel = (level) => {
-    const n = Number(level)
-    if (!Number.isFinite(n)) return 0
-    return Math.min(4, Math.max(0, Math.floor(n)))
-}
-
-// --- Classe CSS du badge de rôle : whitelist stricte ---
-const ALLOWED_ROLE_CLASSES = {
-    'Professeur':     'pf2-role-badge--professeur',
-    'Professionnel':  'pf2-role-badge--professionnel',
-    'Étudiant':       'pf2-role-badge--étudiant',
-}
-
-const safeRoleBadgeClass = (role) => {
-    return ALLOWED_ROLE_CLASSES[role] || 'pf2-role-badge--étudiant'
-}
-
-// --- URL de l'API : validation du paramètre de route avant le fetch ---
-const isValidRouteParam = (param) => {
-    if (!param || typeof param !== 'string') return false
-    // Accepte uniquement des slugs alphanumériques (lettres, chiffres, tirets, underscores)
-    return /^[a-zA-Z0-9_-]{1,100}$/.test(param.trim())
-}
-
-// --- Rate limiting : share() max 5/min, downloadPDF() max 3/min ---
-const shareTimestamps  = ref([])
-const pdfTimestamps    = ref([])
-const RL_WINDOW_MS     = 60_000
-
-const isShareLimited = computed(() => {
-    const now = Date.now()
-    return shareTimestamps.value.filter(ts => now - ts < RL_WINDOW_MS).length >= 5
-})
-
-const isPdfLimited = computed(() => {
-    const now = Date.now()
-    return pdfTimestamps.value.filter(ts => now - ts < RL_WINDOW_MS).length >= 3
-})
 
 onMounted(async () => {
     window.addEventListener('scroll', handleScroll)
     try {
-        const raw = route.params.url_publique || route.params.username
-        // Validation du paramètre de route avant utilisation dans le fetch
-        if (!isValidRouteParam(raw)) {
-            error.value = 'Portfolio introuvable'
-            return
-        }
-        const url = encodeURIComponent(String(raw).trim())
+        const url = route.params.url_publique || route.params.username
         const res = await fetch(`/api/portfolio/${url}`)
         const json = await res.json()
         if (!res.ok || !json.success) {
-            error.value = 'Portfolio introuvable'
+            error.value = json.message || 'Portfolio introuvable'
             return
         }
         portfolioData.value = json.data
+        await loadComments()
+        await nextTick()
+        if (route.hash === '#comments') {
+            document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' })
+        }
     } catch (e) {
-        console.error('[PortfolioTemplate1] fetch error:', e)
         error.value = 'Erreur de connexion'
     } finally {
         loading.value = false
@@ -815,18 +948,62 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 
 function formatDate(dateStr) {
     if (!dateStr) return ''
-    const parsed = new Date(dateStr)
-    if (isNaN(parsed.getTime())) return ''
-    return parsed.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })
+    return new Date(dateStr).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })
+}
+
+function formatCommentDate(dateStr) {
+    if (!dateStr) return ''
+    const date = new Date(dateStr)
+    if (Number.isNaN(date.getTime())) return ''
+
+    return date.toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    })
+}
+
+function commentInitials(name) {
+    return String(name || '')
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(part => part[0])
+        .join('')
+        .toUpperCase() || '?'
+}
+
+async function submitComment() {
+    const content = newComment.value.trim()
+    commentSubmitError.value = ''
+
+    if (!authStore.isAuthenticated) {
+        commentSubmitError.value = 'Vous devez être connecté pour commenter.'
+        return
+    }
+    if (!content) {
+        commentSubmitError.value = 'Le commentaire ne peut pas être vide.'
+        return
+    }
+
+    commentSending.value = true
+    try {
+        const comment = await createPortfolioComment(portfolioData.value.id_etudiant, content)
+        comments.value = [comment, ...comments.value]
+        newComment.value = ''
+    } catch (err) {
+        commentSubmitError.value =
+            err.response?.data?.message || 'Impossible d’ajouter le commentaire.'
+    } finally {
+        commentSending.value = false
+    }
 }
 
 function calcDuration(start, end) {
     if (!start || !end) return ''
-    const startDate = new Date(start)
-    const endDate   = new Date(end)
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return ''
-    const months = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24 * 30))
-    if (months < 0 || months > 120) return ''
+    const months = Math.round((new Date(end) - new Date(start)) / (1000 * 60 * 60 * 24 * 30))
     return `${months} mois`
 }
 
@@ -843,7 +1020,7 @@ const student = computed(() => {
         specialization: e.filiere || 'Génie Informatique',
         objective: e.objectif_professionnel || '',
         score: e.score_credibilite || 0,
-        bio: e.biographie || '',
+        bio: portfolioData.value.sous_titre || e.biographie || '',
         about: e.biographie || '',
         linkedin: e.linkedin_url || '#',
         github: e.github_username ? `https://github.com/${e.github_username}` : '#',
@@ -866,7 +1043,10 @@ const studentStats = computed(() => [
 
 const projects = computed(() => {
     if (!portfolioData.value) return []
-    return (portfolioData.value.etudiant.participations_projets || []).map(p => ({
+    const selected = portfolioData.value.projets_selectionnes
+    return (portfolioData.value.etudiant.participations_projets || [])
+    .filter(p => !selected?.length || selected.includes(p.projet.id_projet))
+    .map(p => ({
         id: p.projet.id_projet,
         category: p.projet.type_projet || 'Projet',
         title: p.projet.titre,
@@ -895,7 +1075,10 @@ const skills = computed(() => {
     const competences = portfolioData.value.etudiant.competences || []
     return {
         technical: competences
-            .filter(c => c.competence.type === 'TECHNIQUE')
+            .filter(c => {
+            const selectedC = portfolioData.value.competences_selectionnees
+            return c.competence.type === 'TECHNIQUE' && (!selectedC?.length || selectedC.includes(c.id_competence))
+            })
             .map(c => ({
                 name: c.competence.nom,
                 level: c.niveau_maitrise,
@@ -907,9 +1090,49 @@ const skills = computed(() => {
     }
 })
 
+const RADAR_AXES = [
+    { dx: 0,    dy: -120, anchor: 'middle', ldx: 0,    ldy: -140 },
+    { dx: 105,  dy: -52.5, anchor: 'start', ldx: 122,  ldy: -58  },
+    { dx: 105,  dy:  52.5, anchor: 'start', ldx: 122,  ldy:  65  },
+    { dx: 0,    dy:  120, anchor: 'middle', ldx: 0,    ldy:  140 },
+    { dx: -105, dy:  52.5, anchor: 'end',   ldx: -122, ldy:  65  },
+    { dx: -105, dy: -52.5, anchor: 'end',   ldx: -122, ldy: -58  },
+]
+
+const radarData = computed(() => {
+    const techSkills = [...skills.value.technical.slice(0, 6)]
+    while (techSkills.length < 6) techSkills.push({ name: '', pct: 0 })
+
+    const points = techSkills.map((s, i) => {
+        const ax = RADAR_AXES[i]
+        const pct = s.pct / 100
+        return {
+            i,
+            x:      150 + pct * ax.dx,
+            y:      150 + pct * ax.dy,
+            lx:     150 + ax.ldx,
+            ly:     150 + ax.ldy,
+            anchor: ax.anchor,
+            label:  s.name,
+            valLabel: s.pct > 0 ? `${s.pct}%` : '',
+            vx:     150 + pct * ax.dx + (ax.dx > 0 ? 6 : ax.dx < 0 ? -6 : 0),
+            vy:     150 + pct * ax.dy + (ax.dy > 0 ? 10 : -4),
+        }
+    })
+
+    return {
+        points,
+        axes: RADAR_AXES.map((ax, i) => ({ i, x2: 150 + ax.dx, y2: 150 + ax.dy })),
+        polyPoints: points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+    }
+})
+
 const stages = computed(() => {
     if (!portfolioData.value) return []
-    return (portfolioData.value.etudiant.stages || []).map(s => ({
+    const selectedS = portfolioData.value.stages_selectionnes
+    return (portfolioData.value.etudiant.stages || [])
+    .filter(s => !selectedS?.length || selectedS.includes(s.id_stage))
+    .map(s => ({
         id: s.id_stage,
         company: s.entreprise,
         role: s.poste,
@@ -964,7 +1187,17 @@ const visibleRecs = computed(() => recommandations.value.slice(recsIdx.value, re
 function nextRecs() { if (recsIdx.value < recommandations.value.length - 3) recsIdx.value++ }
 function prevRecs() { if (recsIdx.value > 0) recsIdx.value-- }
 
-const lettres = computed(() => [])
+const lettres = computed(() => {
+  if (!portfolioData.value) return []
+  return (portfolioData.value.etudiant.lettres_recommandation || []).map(l => ({
+    id: l.id_lettre,
+    initials: `${l.redacteur?.utilisateur?.prenom?.[0] || ''}${l.redacteur?.utilisateur?.nom?.[0] || ''}`.toUpperCase(),
+    author:   `${l.redacteur?.utilisateur?.prenom || ''} ${l.redacteur?.utilisateur?.nom || ''}`.trim(),
+    title:    l.type_lettre || '',
+    purpose:  l.destinataire || '',
+    visibility: 'public'
+  }))
+})
 
 const github = computed(() => {
     if (!portfolioData.value) return { repos: [] }
@@ -990,42 +1223,48 @@ const keyNumbers = computed(() => [
     { value: stages.value.length || 0, label: 'Stages' },
 ])
 
-const parcours = [
-    { year: '2022',      title: 'Baccalauréat Sciences Maths', school: 'Lycée Mohamed V',  mention: 'Mention Très Bien' },
-    { year: '2022-2024', title: 'Cycle Préparatoire',          school: 'CPGE Tanger',       mention: null },
-    { year: '2024-2025', title: 'Génie Informatique — 1ère année', school: 'ENSA Tanger',  mention: null },
-]
+const parcours = computed(() => {
+    const formations = portfolioData.value?.etudiant?.formations || []
+    if (!formations.length) return []
+    return formations.map(f => ({
+        year: f.date_fin
+            ? `${new Date(f.date_debut).getFullYear()}–${new Date(f.date_fin).getFullYear()}`
+            : `${new Date(f.date_debut).getFullYear()}–présent`,
+        title:   f.diplome,
+        school:  f.etablissement,
+        mention: f.mention || null
+    }))
+})
 
-const contributions = Array.from({ length: 52 }, () =>
-    Array.from({ length: 7 }, () => Math.floor(Math.random() * 5))
-)
+const contributions = computed(() => {
+    const seed = [...(portfolioData.value?.etudiant?.github_username || 'trusty')]
+        .reduce((acc, c) => acc + c.charCodeAt(0), 0)
+    let s = seed
+    function rand() {
+        s = (s * 1103515245 + 12345) & 0x7fffffff
+        return s % 5
+    }
+    return Array.from({ length: 52 }, () =>
+        Array.from({ length: 7 }, () => rand())
+    )
+})
 
 function langColor(lang) {
     const map = { TypeScript: '#3178C6', JavaScript: '#F7DF1E', Python: '#3776AB', Go: '#00ADD8', Rust: '#CE422B' }
-    const color = map[String(lang)] || '#888'
-    return safeColor(color, '#888888')
+    return map[lang] || '#888'
 }
 
 function scrollTo(id) { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }) }
-
-function share() {
-    if (isShareLimited.value) return
-    const now = Date.now()
-    shareTimestamps.value = [...shareTimestamps.value.filter(ts => now - ts < RL_WINDOW_MS), now]
-    navigator.clipboard?.writeText(window.location.href)
-    alert('Lien copié !')
-}
+function share() { navigator.clipboard?.writeText(window.location.href); alert('Lien copié !') }
 
 function downloadPDF() {
-    if (isPdfLimited.value) return
-    const now = Date.now()
-    pdfTimestamps.value = [...pdfTimestamps.value.filter(ts => now - ts < RL_WINDOW_MS), now]
-    window.print()
+    const url = route.params.url_publique || route.params.username
+    window.open(`/api/portfolio/${url}/pdf`, '_blank')
 }
 
 function handleScroll() {
     isScrolled.value = window.scrollY > 80
-    const ids = ['hero', ...tabs.map(t => t.id)]
+    const ids = ['hero', ...tabs.value.map(t => t.id)]
     for (const id of ids) {
         const el = document.getElementById(id)
         if (el) {
@@ -1037,20 +1276,37 @@ function handleScroll() {
 </script>
 
 <style scoped>
+/* ── GOOGLE FONTS ────────────────────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,600;1,400&display=swap');
+
+/* ── DESIGN TOKENS ───────────────────────────────────────────────────── */
+/* Navy scale */
+/* --navy-950: #0A1628  --navy-900: #0F2040  --navy-800: #1A3055
+   --navy-700: #1E3D6B  --navy-600: #2B5090  --navy-500: #3B6BC4
+   --navy-400: #5A89D8  --navy-300: #8AAEE8  --navy-200: #BCCFF3
+   --navy-100: #DCE8FA  --navy-50:  #F0F5FD                       */
+
+/* Slate scale */
+/* --slate-900: #1A1D2E  --slate-700: #374151  --slate-500: #6B7280
+   --slate-400: #9CA3AF  --slate-300: #D1D5DB  --slate-200: #E5E8ED
+   --slate-100: #F1F3F6  --slate-50:  #F8FAFC                       */
+
+/* Gold (accent on dark backgrounds) */
+/* --gold-400: #D4A843  --gold-300: #E8C570  --gold-100: #FDF3DC   */
 
 *,
 *::before,
 *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 .pf2 {
-    background: #F8FAFC;
+    background: #0F2040;
     min-height: 100vh;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     color: #1A1D2E;
     -webkit-font-smoothing: antialiased;
 }
 
+/* ── NAV ─────────────────────────────────────────────────────────────── */
 .pf2-nav {
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -1108,6 +1364,7 @@ function handleScroll() {
 
 .pf2-nav__actions { display: flex; gap: 8px; flex-shrink: 0; }
 
+/* ── BUTTONS ─────────────────────────────────────────────────────────── */
 .pf2-btn-ghost {
     display: flex;
     align-items: center;
@@ -1123,8 +1380,7 @@ function handleScroll() {
     transition: all 0.2s;
     font-family: inherit;
 }
-.pf2-btn-ghost:hover:not(:disabled) { border-color: rgba(255,255,255,0.5); color: #fff; }
-.pf2-btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }
+.pf2-btn-ghost:hover { border-color: rgba(255,255,255,0.5); color: #fff; }
 .pf2-btn-ghost--light { border-color: rgba(26,29,46,0.2); color: rgba(26,29,46,0.6); }
 .pf2-btn-ghost--light:hover { border-color: rgba(26,29,46,0.5); color: #1A1D2E; }
 
@@ -1143,11 +1399,12 @@ function handleScroll() {
     transition: all 0.2s;
     font-family: inherit;
 }
-.pf2-btn-accent:hover:not(:disabled) { background: #3B6BC4; }
-.pf2-btn-accent:disabled { opacity: 0.4; cursor: not-allowed; }
+.pf2-btn-accent:hover { background: #3B6BC4; }
 
-.pf2-doc { max-width: 1100px; margin: 0 auto; background: #FFFFFF; }
+/* ── DOCUMENT ────────────────────────────────────────────────────────── */
+.pf2-doc { max-width: 100%; margin: 0; background: #FFFFFF; }
 
+/* ── HERO ────────────────────────────────────────────────────────────── */
 .pf2-hero {
     display: grid;
     grid-template-columns: 1fr auto;
@@ -1228,6 +1485,7 @@ function handleScroll() {
 }
 .pf2-social-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
 
+/* HERO RIGHT */
 .pf2-hero__right { display: flex; flex-direction: column; gap: 20px; align-items: center; }
 .pf2-avatar {
     width: 140px; height: 140px;
@@ -1270,6 +1528,7 @@ function handleScroll() {
 .pf2-score-item { display: flex; justify-content: space-between; font-size: 11.5px; color: rgba(255,255,255,0.4); }
 .pf2-score-pts { color: #8AAEE8; font-weight: 600; }
 
+/* ── SECTIONS ────────────────────────────────────────────────────────── */
 .pf2-section { padding: 80px 64px; }
 .pf2-section--light { background: #FFFFFF; }
 .pf2-section--mid   { background: #F1F3F6; }
@@ -1304,6 +1563,7 @@ function handleScroll() {
 .pf2-section--mid   .pf2-section__title { color: #0F2040; }
 .pf2-section--dark  .pf2-section__title { color: #FFFFFF; }
 
+/* ── CAROUSEL NAV ────────────────────────────────────────────────────── */
 .pf2-carousel-nav { display: flex; gap: 8px; }
 .pf2-nav-btn {
     width: 40px; height: 40px;
@@ -1320,6 +1580,7 @@ function handleScroll() {
 .pf2-nav-btn--dark { border-color: #D1D5DB; color: #9CA3AF; }
 .pf2-nav-btn--dark:hover:not(:disabled) { border-color: #2B5090; color: #2B5090; }
 
+/* ── PARCOURS ────────────────────────────────────────────────────────── */
 .pf2-parcours-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; }
 .pf2-parcours__about {
     font-family: 'Lora', Georgia, serif;
@@ -1376,6 +1637,7 @@ function handleScroll() {
     border-radius: 20px;
 }
 
+/* ── PROJECTS ────────────────────────────────────────────────────────── */
 .pf2-projects-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
 .pf2-project-card {
     border: 1px solid rgba(255,255,255,0.07);
@@ -1439,6 +1701,7 @@ function handleScroll() {
     border-color: #E5E8ED;
 }
 
+/* ── BADGES / STATUS ─────────────────────────────────────────────────── */
 .pf2-cert-badge {
     display: inline-flex;
     align-items: center;
@@ -1462,6 +1725,7 @@ function handleScroll() {
     border-radius: 20px;
 }
 
+/* ── SKILLS ──────────────────────────────────────────────────────────── */
 .pf2-skills-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; }
 .pf2-skills__subtitle { font-size: 17px; font-weight: 600; color: #0F2040; margin-bottom: 24px; }
 .pf2-skills-list { display: flex; flex-direction: column; gap: 18px; }
@@ -1485,6 +1749,7 @@ function handleScroll() {
 }
 .pf2-soft-tag:hover { background: #0F2040; color: #fff; border-color: #0F2040; }
 
+/* ── STAGES ──────────────────────────────────────────────────────────── */
 .pf2-stages-list { display: flex; flex-direction: column; gap: 0; }
 .pf2-stage { display: flex; gap: 24px; }
 .pf2-stage__timeline { display: flex; flex-direction: column; align-items: center; padding-top: 8px; }
@@ -1534,6 +1799,7 @@ function handleScroll() {
 }
 .pf2-attach-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
 
+/* ── ACTIVITIES ──────────────────────────────────────────────────────── */
 .pf2-activities-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; }
 .pf2-activity-card { border: 1px solid #E5E8ED; border-radius: 12px; overflow: hidden; background: #fff; }
 .pf2-activity-img {
@@ -1591,7 +1857,10 @@ function handleScroll() {
     font-size: 11.5px;
     color: #9CA3AF;
 }
+.pf2-activity-attachments { display: flex; align-items: center; gap: 5px; }
+.pf2-activity-date {}
 
+/* ── BADGES ──────────────────────────────────────────────────────────── */
 .pf2-badges-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
 .pf2-badge-card {
     background: #1A3055;
@@ -1614,6 +1883,7 @@ function handleScroll() {
 }
 .pf2-badge-date { font-size: 11px; font-weight: 500; color: #8AAEE8; }
 
+/* ── RECOMMANDATIONS ─────────────────────────────────────────────────── */
 .pf2-recs-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
 .pf2-rec-card {
     background: #FFFFFF;
@@ -1654,6 +1924,7 @@ function handleScroll() {
 .pf2-role-badge--professionnel { background: #EAF3DE; color: #3B6D11; border: 1px solid #C0DD97; }
 .pf2-role-badge--étudiant    { background: #EEEDFE; color: #534AB7; border: 1px solid #AFA9EC; }
 
+/* ── LETTRES ─────────────────────────────────────────────────────────── */
 .pf2-letters-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
 .pf2-letter-card {
     background: #1A3055;
@@ -1703,6 +1974,7 @@ function handleScroll() {
     cursor: not-allowed; font-family: inherit;
 }
 
+/* ── GITHUB ──────────────────────────────────────────────────────────── */
 .pf2-github-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
 .pf2-github__subtitle { font-size: 17px; font-weight: 600; color: #0F2040; margin-bottom: 20px; }
 .pf2-heatmap { display: flex; gap: 3px; overflow-x: auto; padding-bottom: 8px; }
@@ -1727,6 +1999,89 @@ function handleScroll() {
 .pf2-repo__dot { width: 10px; height: 10px; border-radius: 50%; }
 .pf2-repo__activity { font-size: 12px; color: #9CA3AF; white-space: nowrap; }
 
+/* ── COMMENTAIRES ────────────────────────────────────────────────────── */
+.pf2-section--comments { background: #F8FAFC; }
+.pf2-comments { max-width: 820px; }
+.pf2-comments__list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
+.pf2-comments__state,
+.pf2-comments__login {
+    color: #6B7280;
+    font-size: 14px;
+    padding: 18px;
+    background: #FFFFFF;
+    border: 1px solid #E5E8ED;
+    border-radius: 10px;
+}
+.pf2-comments__error {
+    color: #B42318;
+    font-size: 13px;
+    margin: 0;
+}
+.pf2-comment {
+    display: flex;
+    gap: 12px;
+    padding: 18px;
+    background: #FFFFFF;
+    border: 1px solid #E5E8ED;
+    border-radius: 12px;
+}
+.pf2-comment__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #E8EFFA;
+    color: #2B5090;
+    font-size: 13px;
+    font-weight: 700;
+}
+.pf2-comment__body { flex: 1; min-width: 0; }
+.pf2-comment__meta { display: flex; align-items: baseline; gap: 12px; margin-bottom: 7px; }
+.pf2-comment__meta strong { color: #0F2040; font-size: 14px; }
+.pf2-comment__meta time { color: #9CA3AF; font-size: 11px; margin-left: auto; }
+.pf2-comment__body > p { color: #4B5563; font-size: 14px; line-height: 1.65; white-space: pre-wrap; }
+.pf2-comment__pending {
+    display: inline-block;
+    margin-top: 8px;
+    color: #946200;
+    background: #FFF4D8;
+    border-radius: 20px;
+    padding: 3px 9px;
+    font-size: 10.5px;
+    font-weight: 600;
+}
+.pf2-comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 24px;
+    padding: 20px;
+    background: #FFFFFF;
+    border: 1px solid #E5E8ED;
+    border-radius: 12px;
+}
+.pf2-comment-form label { color: #0F2040; font-size: 13px; font-weight: 700; }
+.pf2-comment-form textarea {
+    width: 100%;
+    border: 1px solid #D1D5DB;
+    border-radius: 9px;
+    padding: 12px;
+    color: #1F2937;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+    box-sizing: border-box;
+}
+.pf2-comment-form textarea:focus { border-color: #5A89D8; box-shadow: 0 0 0 3px rgba(90,137,216,0.12); }
+.pf2-comment-form textarea:disabled { background: #F3F4F6; cursor: wait; }
+.pf2-comment-form__submit { align-self: flex-end; }
+
+/* ── FOOTER ──────────────────────────────────────────────────────────── */
 .pf2-footer {
     background: #0A1628;
     padding: 56px 64px;
@@ -1754,6 +2109,7 @@ function handleScroll() {
 .pf2-footer__brand span { font-size: 13px; color: rgba(255,255,255,0.35); }
 .pf2-footer__copy { font-size: 12px; color: rgba(255,255,255,0.18); }
 
+/* ── MODAL ───────────────────────────────────────────────────────────── */
 .pf2-modal-overlay {
     position: fixed; inset: 0;
     background: rgba(10,22,40,0.75);
@@ -1815,6 +2171,7 @@ function handleScroll() {
 .pf2-modal__tech { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
 .pf2-modal__footer { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
+/* ── MODAL RESULTS ───────────────────────────────────────────────────── */
 .pf2-modal__results {
     background: #F0F5FD;
     border-left: 3px solid #5A89D8;
@@ -1838,6 +2195,7 @@ function handleScroll() {
     font-family: 'Lora', Georgia, serif;
 }
 
+/* ── YOUTUBE BUTTON ──────────────────────────────────────────────────── */
 .pf2-btn-youtube {
     display: flex;
     align-items: center;
@@ -1856,15 +2214,18 @@ function handleScroll() {
 }
 .pf2-btn-youtube:hover { background: #E00000; }
 
+/* ── RADAR ───────────────────────────────────────────────────────────── */
 .pf2-skills__radar { display: flex; flex-direction: column; }
 .pf2-radar-svg { width: 100%; max-width: 300px; margin: 0 auto; }
 
+/* ── SOFT SECTION ────────────────────────────────────────────────────── */
 .pf2-soft-section {
     margin-top: 48px;
     padding-top: 40px;
     border-top: 1px solid #E5E8ED;
 }
 
+/* ── MODAL APPRECIATION ──────────────────────────────────────────────── */
 .pf2-modal__appreciation {
     background: #F0F5FD;
     border-left: 3px solid #D4A843;
@@ -1891,6 +2252,7 @@ function handleScroll() {
     line-height: 1.65;
 }
 
+/* ── STAGE META (encadrant + technologies) ───────────────────────────── */
 .pf2-stage__meta {
     display: flex;
     flex-direction: column;
@@ -1938,6 +2300,7 @@ function handleScroll() {
 .pf2-attach-btn--light:hover { background: #DCE8FA; color: #1E3D6B; }
 .pf2-activity-no-att { font-size: 11.5px; color: #9CA3AF; }
 
+/* ── LOADING SPINNER ─────────────────────────────────────────────────── */
 @keyframes pf2spin { to { transform: rotate(360deg); } }
 .pf2-spinner {
     width: 40px; height: 40px;
@@ -1945,5 +2308,94 @@ function handleScroll() {
     border-top-color: #5A89D8;
     border-radius: 50%;
     animation: pf2spin 0.8s linear infinite;
+}
+
+/* ── EDIT FAB ────────────────────────────────────────────────────────── */
+.pf2-edit-fab {
+  position: fixed; bottom: 28px; right: 28px; z-index: 300;
+  display: flex; align-items: center; gap: 8px;
+  background: #2B5090; color: #fff; border: none;
+  padding: 12px 20px; border-radius: 30px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(43,80,144,0.4);
+  font-family: inherit; transition: background 0.2s;
+}
+.pf2-edit-fab:hover { background: #3B6BC4; }
+
+/* ── EDIT PANEL ──────────────────────────────────────────────────────── */
+.pf2-edit-panel {
+  position: fixed; top: 0; right: -400px; bottom: 0; width: 360px;
+  background: #fff; border-left: 1px solid #E5E8ED;
+  z-index: 400; display: flex; flex-direction: column;
+  transition: right 0.3s ease;
+  box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+}
+.pf2-edit-panel--open { right: 0; }
+
+.pf2-ep-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px; border-bottom: 1px solid #E5E8ED; flex-shrink: 0;
+}
+.pf2-ep-header h3 { font-size: 16px; font-weight: 700; color: #0F2040; margin: 0; }
+.pf2-ep-header button { background: none; border: none; font-size: 18px; cursor: pointer; color: #6B7280; }
+
+.pf2-ep-body {
+  flex: 1; overflow-y: auto; padding: 20px 24px;
+  display: flex; flex-direction: column; gap: 24px;
+}
+
+.pf2-ep-field { display: flex; flex-direction: column; gap: 8px; }
+.pf2-ep-field > label {
+  font-size: 11px; font-weight: 700; color: #6B7280;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.pf2-ep-field input:not([type="checkbox"]):not([type="color"]),
+.pf2-ep-field textarea {
+  border: 1px solid #D1D5DB; border-radius: 8px; padding: 8px 12px;
+  font-size: 13px; color: #1A1D2E; font-family: inherit;
+  outline: none; transition: border-color 0.2s; resize: vertical;
+}
+.pf2-ep-field input:focus,
+.pf2-ep-field textarea:focus { border-color: #2B5090; }
+
+.pf2-ep-color-row { display: flex; align-items: center; gap: 12px; }
+.pf2-ep-field input[type="color"] {
+  width: 48px; height: 36px; border-radius: 8px;
+  border: 1px solid #D1D5DB; cursor: pointer; padding: 2px;
+}
+.pf2-ep-color-val { font-size: 13px; color: #374151; font-weight: 500; }
+
+.pf2-ep-toggles { display: flex; flex-direction: column; gap: 8px; }
+.pf2-ep-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; background: #F8FAFC; border-radius: 8px;
+  border: 1px solid #E5E8ED;
+}
+.pf2-ep-toggle span { font-size: 13px; color: #374151; font-weight: 500; }
+.pf2-ep-toggle__btn {
+  font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px;
+  border: 1px solid #D1D5DB; background: #fff; color: #9CA3AF;
+  cursor: pointer; transition: all 0.15s; font-family: inherit;
+}
+.pf2-ep-toggle__btn--on {
+  background: rgba(43,80,144,0.1); color: #2B5090;
+  border-color: rgba(43,80,144,0.3);
+}
+
+.pf2-ep-checks { display: flex; flex-direction: column; gap: 8px; }
+.pf2-ep-check { display: flex; align-items: center; gap: 10px; }
+.pf2-ep-check input[type="checkbox"] { accent-color: #2B5090; width: 15px; height: 15px; cursor: pointer; }
+.pf2-ep-check label { font-size: 13px; color: #374151; cursor: pointer; }
+
+.pf2-ep-footer {
+  padding: 16px 24px; border-top: 1px solid #E5E8ED; flex-shrink: 0;
+}
+
+.pf2-doc, .pf2-nav {
+  transition: margin-right 0.3s ease;
+}
+.pf2--panel-open .pf2-doc,
+.pf2--panel-open .pf2-nav {
+  margin-right: 360px;
 }
 </style>

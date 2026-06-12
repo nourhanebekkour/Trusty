@@ -8,6 +8,10 @@
           <line x1="3" y1="18" x2="21" y2="18"></line>
         </svg>
       </button>
+      <div v-show="!isCollapsed" class="sidebar-badge">
+        <span v-if="authStore.isSuperAdmin" class="badge badge--super">Super Admin</span>
+        <span v-else class="badge badge--admin">Admin</span>
+      </div>
     </div>
 
     <nav class="sidebar-nav">
@@ -46,7 +50,7 @@
     </nav>
 
     <div class="sidebar-bottom">
-      <router-link to="/settings" class="nav-item">
+      <router-link to="/admin/settings" class="nav-item">
         <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.06V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-.33-1.06 1.65 1.65 0 0 0-1-.6 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.06-.33H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.15 9a1.65 1.65 0 0 0 .6-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 7.19 3.3l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.06V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.15a1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.24.36.6.6 1 .6h.09a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1 .6z"/></svg>
         <span class="nav-label" v-show="!isCollapsed">Paramètres</span>
       </router-link>
@@ -93,7 +97,31 @@ async function handleLogout() {
 .sidebar-header {
   padding: 16px 16px 0 16px;
   display: flex;
-  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-badge { flex-shrink: 0; }
+
+.badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.badge--super {
+  background: #EAB308 !important;
+  color: #000000 !important;
+  box-shadow: 0 0 8px rgba(234, 179, 8, 0.5);
+}
+
+.badge--admin {
+  background: var(--color-accent-light);
+  color: var(--color-accent);
 }
 
 .sidebar.collapsed .sidebar-header {

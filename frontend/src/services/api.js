@@ -1,17 +1,14 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',  // ✅ reste '/api'
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 })
 
 // Intercepteur de requête
 api.interceptors.request.use(
   (config) => {
-    // ✅ Supprimé complètement — new URL('/api') est invalide avec une URL relative
+    // Une base relative est resolue par le proxy Vite.
     // La sécurité d'origine est déjà gérée par le proxy Vite dans vite.config.js
 
     delete config.headers['Authorization']
@@ -25,7 +22,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
-// Intercepteur de réponse — inchangé
+// Intercepteur de réponse — avec refresh token automatique
 api.interceptors.response.use(
   (response) => {
     const contentType = response.headers?.['content-type'] || ''
@@ -34,21 +31,23 @@ api.interceptors.response.use(
     }
     return response
   },
-  (error) => {
+  async (error) => {
     const status = error.response?.status
+    const originalRequest = error.config
 
-    if (status === 401 && window.location.pathname !== '/login') {
-      window.location.href = '/login'
+    if (status === 401 && !originalRequest?._retry && window.location.pathname !== '/login') {
+      originalRequest._retry = true
+      try {
+        await api.post('/auth/refresh-token')
+        return api(originalRequest)
+      } catch {
+        window.location.href = '/login'
+      }
     }
-    if (status === 403) {
-      console.warn('[API] Accès interdit (403)')
-    }
-    if (status === 429) {
-      console.warn('[API] Trop de requêtes envoyées.')
-    }
-    if (!error.response) {
-      console.error('[API] Erreur réseau ou timeout')
-    }
+
+    if (status === 403) console.warn('[API] Accès interdit (403)')
+    if (status === 429) console.warn('[API] Trop de requêtes envoyées.')
+    if (!error.response) console.error('[API] Erreur réseau ou timeout')
 
     return Promise.reject(error)
   }

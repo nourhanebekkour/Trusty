@@ -3,8 +3,8 @@
     <div class="section__header">
       <h2 class="section__title">Mon Portfolio Numérique</h2>
       <div class="section__actions">
-        <button class="btn btn--ghost">Filtres</button>
-        <button class="btn btn--ghost btn--ghost-accent">Trier par date</button>
+        <button class="btn btn--ghost" @click="$router.push({ path: '/projets', query: { filters: '1' } })">Filtres</button>
+        <button class="btn btn--ghost btn--ghost-accent" @click="$router.push('/projets')">Trier par date</button>
       </div>
     </div>
 
@@ -52,7 +52,7 @@
               {{ tag }}
             </span>
           </div>
-          <button class="btn btn--link" @click.stop="$router.push('/projets')">
+          <button class="btn btn--link" @click.stop="$router.push(`/projets/${projectId(project)}`)">
             Détails ↗
           </button>
         </div>

@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import * as notificationsService from '#Modules/systeme/notifications/notifications.service.js';
 import * as minioService from '#Services/minio.service.js';
+import { calculerEtMettreAJourScoreCredibilite } from '#Modules/identite/etudiant/etudiant.service.js';
 
 const prisma = new PrismaClient();
 
@@ -117,6 +118,10 @@ export const validerStage = async (id_stage, id_validateur, decision, commentair
         }
     });
 
+    if (decision === 'VALIDE') {
+        await calculerEtMettreAJourScoreCredibilite(stageMisAJour.id_etudiant);
+    }
+
     return stageMisAJour;
 };
 
@@ -124,7 +129,10 @@ export const recupererTousLesStages = async (filtres = {}) => {
     const stages = await prisma.stage.findMany({
         where: filtres,
         include: {
-            etudiant: true,
+            // [FRONTEND] include utilisateur pour récupérer nom/prénom (génération URL portfolio)
+            etudiant: {
+                include: { utilisateur: true }
+            },
             technologies: {
                 include: {
                     technologie: true
