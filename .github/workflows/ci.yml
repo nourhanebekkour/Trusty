@@ -137,7 +137,7 @@ jobs:
       - run: npm ci
       - name: Lancer Vitest (JSON output)
         run: npm run test:ci
-        continue-on-error: true
+        
       - name: Générer le rapport HTML
         run: npm run report:generate
       - name: Envoyer le rapport (email + Jira)
