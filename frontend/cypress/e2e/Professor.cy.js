@@ -105,8 +105,22 @@ describe('E2E – Professor – Notifications', () => {
   })
 
   it('marque une notification comme lue via PUT /notifications/:id/lire', () => {
+    cy.intercept('GET', '**/notifications**', {
+      statusCode: 200,
+      body: [{
+        id_notification: 999,
+        titre: 'Test notification',
+        message: 'Notification de test non lue',
+        type_notification: 'SYSTEME',
+        est_lue: false,
+        date_creation: new Date().toISOString(),
+        lien_action: null,
+      }]
+    }).as('notifsList')
     cy.intercept('PUT', '**/notifications/**/lire**').as('markRead')
-    cy.get('[class*="notif"], .notification-item').first().click()
+    cy.reload()
+    cy.wait('@notifsList')
+    cy.get('.btn-mark-read').first().click()
     cy.wait('@markRead').its('response.statusCode').should('be.oneOf', [200, 201, 204])
   })
 })

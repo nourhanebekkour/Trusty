@@ -25,7 +25,7 @@ describe('E2E – Stages – Rendu UI', () => {
   })
 
   it('affiche le titre "Gestion des Stages"', () => {
-    cy.contains('Gestion des Stages').should('be.visible')
+    cy.contains('Gestion des stages').should('be.visible')
   })
 
   it('affiche le sous-titre', () => {

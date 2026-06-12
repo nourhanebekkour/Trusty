@@ -22,18 +22,18 @@
             </div>
             <div class="form-group">
               <label>Nom de l'activité *</label>
-              <input v-model="form.nom_activite" placeholder="Ex: Hackathon IA Maroc" />
+              <input type="text" v-model="form.nom_activite" placeholder="Ex: Hackathon IA Maroc" />
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
               <label>Organisation *</label>
-              <input v-model="form.organisation" placeholder="Ex: ENSA Tanger" />
+              <input type="text" v-model="form.organisation" placeholder="Ex: ENSA Tanger" />
             </div>
             <div class="form-group">
               <label>Rôle *</label>
-              <input v-model="form.role" placeholder="Ex: Participant" />
+              <input type="text" v-model="form.role" placeholder="Ex: Participant" />
             </div>
           </div>
 
