@@ -2,7 +2,7 @@
   <div class="card">
     <div class="section-header">
       <h3>Projets Académiques</h3>
-      <button class="add-btn" @click="router.push('/projets/nouveau')">+ Ajouter</button>
+      <button class="add-btn" @click="router.push({ path: '/projets', query: { action: 'new' } })">+ Ajouter</button>
     </div>
 
     <!-- Chargement -->

@@ -64,7 +64,7 @@
     </nav>
     
     <div class="sidebar-bottom">
-      <router-link to="/Settings" class="nav-item">
+      <router-link to="/settings" class="nav-item">
         <img :src="iconSettings" class="nav-icon" />
         <span class="nav-label" v-show="!isCollapsed">Paramètres</span>
       </router-link>

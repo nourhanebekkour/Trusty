@@ -65,8 +65,12 @@
             <td class="text-muted">{{ formatDate(s.date_creation || s.utilisateur?.date_creation) }}</td>
             <td>
               <div class="action-btns">
-                <button class="btn btn--icon btn--sm" title="Voir le profil"
-                        @click="$router.push('/admin/profil')">👁</button>
+                <button
+                  class="btn btn--icon btn--sm"
+                  :disabled="!portfolioSlug(s)"
+                  :title="portfolioSlug(s) ? 'Voir le portfolio public' : 'Portfolio non publié'"
+                  @click="openPortfolio(s)"
+                >👁</button>
               </div>
             </td>
           </tr>
@@ -132,6 +136,20 @@ const paginated = computed(() => {
   const start = (currentPage.value - 1) * perPage
   return filtered.value.slice(start, start + perPage)
 })
+
+function portfolioSlug(student) {
+  return student.portfolioUrl
+    || student.portfolio?.url_publique
+    || student.portfolios?.find(portfolio => portfolio.est_publie)?.url_publique
+    || null
+}
+
+function openPortfolio(student) {
+  const slug = portfolioSlug(student)
+  if (slug) {
+    router.push({ name: 'portfolio-template1', params: { url_publique: slug } })
+  }
+}
 
 function initials(prenom, nom) {
   const p = prenom?.[0] || ''
@@ -231,4 +249,5 @@ onMounted(async () => {
 .btn--sm   { padding: 6px 12px; font-size: 12px; }
 .btn--icon { background: transparent; border: 1px solid var(--color-border); color: var(--color-text-tertiary); padding: 5px 9px; }
 .btn--icon:hover { background: var(--color-surface-hover); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
 </style>

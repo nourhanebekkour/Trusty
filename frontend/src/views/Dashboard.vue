@@ -11,8 +11,8 @@
 
     <section class="cta-banner">
       <h2 class="cta-banner__title">Prêt à partager ?</h2>
-      <button class="btn btn--outline-accent" @click="router.push('/portfolio/apercu')">Aperçu Public</button>
-      <button class="btn btn--outline-accent">Générer mon URL Certifiée</button>
+      <button class="btn btn--outline-accent" @click="router.push('/portfolio')">Aperçu Public</button>
+      <button class="btn btn--outline-accent" @click="router.push('/portfolio')">Générer mon URL Certifiée</button>
     </section>
   </section>
 </template>

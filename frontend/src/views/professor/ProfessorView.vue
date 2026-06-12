@@ -26,6 +26,7 @@
         <ProfessorProjects
           :projets="store.projets"
           @valider="store.validerProjet"
+          @details="router.push('/professor/validations')"
         />
       </div>
       <aside class="content-grid__sidebar">
@@ -46,6 +47,7 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useProfessorStore } from '@/stores/professorStore'
 
 import ProfessorStats         from '@/components/professor/ProfessorStats.vue'
@@ -56,6 +58,7 @@ import ProfessorNotifications from '@/components/professor/ProfessorNotification
 import ProfessorStudentDetail from '@/components/professor/ProfessorStudentDetail.vue'
 
 const store = useProfessorStore()
+const router = useRouter()
 
 const selectedStudent = ref(null)
 

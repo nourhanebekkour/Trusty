@@ -128,13 +128,13 @@ const router = createRouter({
       path: '/profile',
       name: 'profile',
       component: Profile,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
       path: '/projets',
       name: 'projets',
       component: ProjectList,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
       path: '/projets/:id',
@@ -147,7 +147,7 @@ const router = createRouter({
       path: '/settings',
       name: 'settings',
       component: Settings,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
       path: '/recommendations',
@@ -171,6 +171,7 @@ const router = createRouter({
       path: '/parcours',
       name: 'parcours',
       component: Parcours,
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
       path: '/portfolio',
@@ -187,6 +188,7 @@ const router = createRouter({
       path: '/activites',
       name: 'activites',
       component: activites,
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
 
     // ── Professional ─────────────────────────────────────

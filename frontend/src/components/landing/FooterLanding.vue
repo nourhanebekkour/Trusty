@@ -23,14 +23,14 @@
         </div>
         <div class="footer-col">
           <h4>Légal</h4>
-          <a href="#">Mentions légales</a>
-          <a href="#">CGU</a>
-          <a href="#">Confidentialité</a>
+          <span>Mentions légales</span>
+          <span>CGU</span>
+          <span>Confidentialité</span>
         </div>
         <div class="footer-col">
           <h4>Contact</h4>
           <a href="mailto:contact@trusty.fr">contact@trusty.fr</a>
-          <a href="#">Support</a>
+          <a href="mailto:contact@trusty.fr?subject=Support%20TRUSTY">Support</a>
         </div>
       </div>
     </div>
@@ -97,7 +97,8 @@
   margin-bottom: 16px;
 }
 
-.footer-col a {
+.footer-col a,
+.footer-col span {
   display: block;
   color: var(--landing-text-secondary);
   text-decoration: none;
