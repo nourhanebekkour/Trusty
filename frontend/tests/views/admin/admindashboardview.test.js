@@ -4,11 +4,14 @@ import { createPinia, setActivePinia } from 'pinia'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import AdminDashboard from '@/views/admin/AdminDashboard.vue'
 import { useAdminStore } from '@/stores/adminStore'
+import { useAuthStore } from '@/stores/authstore'
 
 // ── Stubs des composants UI ───────────────────────────────
-const StatCard    = { template: '<div class="stat-card"><slot name="icon"/><span>{{ label }}</span><span>{{ value }}</span></div>', props: ['label','value','trend','trendColor','sub'] }
-const StatusBadge = { template: '<span class="status-badge">{{ status }}</span>', props: ['status'] }
-const AppModal    = { template: '<div v-if="show" class="modal"><slot/><button @click="$emit(\'confirm\')">Confirmer</button><button @click="$emit(\'close\')">Fermer</button></div>', props: ['show','title','subtitle'], emits: ['confirm','close'] }
+const { StatCard, StatusBadge, AppModal } = vi.hoisted(() => ({
+  StatCard:    { template: '<div class="stat-card"><slot name="icon"/><span>{{ label }}</span><span>{{ value }}</span></div>', props: ['label','value','trend','trendColor','sub'] },
+  StatusBadge: { template: '<span class="status-badge">{{ status }}</span>', props: ['status'] },
+  AppModal:    { template: '<div v-if="show" class="modal"><slot/><button @click="$emit(\'confirm\')">Confirmer</button><button @click="$emit(\'close\')">Fermer</button></div>', props: ['show','title','subtitle'], emits: ['confirm','close'] },
+}))
 
 vi.mock('../../../src/components/ui/StatCard.vue',    () => ({ default: StatCard    }))
 vi.mock('../../../src/components/ui/StatusBadge.vue', () => ({ default: StatusBadge }))
@@ -69,8 +72,8 @@ describe('AdminDashboard.vue', () => {
     it('affiche les items de la file de vérification', async () => {
       const { wrapper, store } = buildWrapper()
       store.verificationQueue = [
-        { id: '1', studentName: 'Jean Dupont', type: 'PROJET', description: 'Projet IA', createdAt: new Date().toISOString() },
-        { id: '2', studentName: 'Marie Martin', type: 'STAGE', description: 'Stage Dev', createdAt: new Date().toISOString() },
+        { id: '1', author: 'Jean Dupont',  type: 'ACTIVITE',     title: 'Projet IA', date: new Date().toISOString() },
+        { id: '2', author: 'Marie Martin', type: 'PROFESSIONNEL', title: 'Stage Dev', date: new Date().toISOString() },
       ]
       store.loading = false
       await flushPromises()
@@ -137,8 +140,8 @@ describe('AdminDashboard.vue', () => {
     it('affiche la liste des utilisateurs', async () => {
       const { wrapper, store } = buildWrapper()
       store.users = [
-        { id_administrateur: 'u1', niveau_acces: 'ADMIN', utilisateur: { nom: 'Dupont', prenom: 'Jean', email: 'j@e.fr', date_creation: '2024-01-01', status_compte: 'ACTIF' } },
-        { id_administrateur: 'u2', niveau_acces: 'ADMIN', utilisateur: { nom: 'Martin', prenom: 'Marie', email: 'm@e.fr', date_creation: '2024-02-01', status_compte: 'INACTIF' } },
+        { id_utilisateur: 'u1', prenom: 'Jean',  nom: 'Dupont', email: 'j@e.fr', role: 'ADMIN',    status_compte: 'ACTIF',   date_creation: '2024-01-01' },
+        { id_utilisateur: 'u2', prenom: 'Marie', nom: 'Martin', email: 'm@e.fr', role: 'ETUDIANT', status_compte: 'INACTIF', date_creation: '2024-02-01' },
       ]
       store.loading = false
       await flushPromises()
@@ -149,8 +152,8 @@ describe('AdminDashboard.vue', () => {
     it('filtre les utilisateurs selon la recherche', async () => {
       const { wrapper, store } = buildWrapper()
       store.users = [
-        { id_administrateur: 'u1', utilisateur: { nom: 'Dupont', prenom: 'Jean', email: 'jean@e.fr', status_compte: 'ACTIF', date_creation: '2024-01-01' } },
-        { id_administrateur: 'u2', utilisateur: { nom: 'Martin', prenom: 'Sophie', email: 'sophie@e.fr', status_compte: 'ACTIF', date_creation: '2024-01-01' } },
+        { id_utilisateur: 'u1', prenom: 'Jean',   nom: 'Dupont', email: 'jean@e.fr',   role: 'ADMIN',    status_compte: 'ACTIF', date_creation: '2024-01-01' },
+        { id_utilisateur: 'u2', prenom: 'Sophie', nom: 'Martin', email: 'sophie@e.fr', role: 'ETUDIANT', status_compte: 'ACTIF', date_creation: '2024-01-01' },
       ]
       store.loading = false
       await flushPromises()
@@ -171,12 +174,11 @@ describe('AdminDashboard.vue', () => {
     it('affiche les items de l\'historique', async () => {
       const { wrapper, store } = buildWrapper()
       store.certHistory = [
-        { id: 'c1', validatorName: 'Admin A', actionLabel: 'certifié', entityType: 'projet', entityTitle: 'Mon Projet', targetName: 'Jean Dupont', createdAt: '2024-05-01' },
+        { id: 'c1', utilisateur: { prenom: 'Admin', nom: 'A' }, action: 'certifié', type_entite: 'projet', date_action: '2024-05-01' },
       ]
       store.loading = false
       await flushPromises()
-      expect(wrapper.text()).toContain('Admin A')
-      expect(wrapper.text()).toContain('Mon Projet')
+      expect(wrapper.text()).toContain('certifié')
     })
 
     it('affiche "Aucune certification récente" si l\'historique est vide', async () => {
@@ -215,13 +217,17 @@ describe('AdminDashboard.vue', () => {
     it('appelle les 4 actions du store au montage', async () => {
       const pinia = createPinia()
       setActivePinia(pinia)
+
+      const authStore = useAuthStore()
+      authStore.user = { id_utilisateur: 'admin1', role: 'ADMINISTRATEUR' }
+
       const store = useAdminStore()
       store.fetchDashboardStats    = vi.fn().mockResolvedValue(undefined)
       store.fetchUsers             = vi.fn().mockResolvedValue(undefined)
       store.fetchVerificationQueue = vi.fn().mockResolvedValue(undefined)
       store.fetchCertHistory       = vi.fn().mockResolvedValue(undefined)
 
-      const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', component: AdminDashboard }] })
+      const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', component: AdminDashboard }, { path: '/login', component: { template: '<div/>' } }] })
       mount(AdminDashboard, {
         global: { plugins: [pinia, router], stubs: { StatCard, StatusBadge, AppModal } },
       })

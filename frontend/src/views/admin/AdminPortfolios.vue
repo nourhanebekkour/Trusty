@@ -44,6 +44,7 @@
         <thead>
           <tr>
             <th>Étudiant</th>
+            <th v-if="authStore.isSuperAdmin">Établissement</th>
             <th>Email</th>
             <th>Statut</th>
             <th>Inscription</th>
@@ -65,6 +66,7 @@
               </div>
             </td>
             <td class="text-muted">{{ sanitizeText(s.email || s.utilisateur?.email) }}</td>
+            <td v-if="authStore.isSuperAdmin" class="text-muted">{{ s.utilisateur?.ecole || s.ecole || '—' }}</td>
             <td>
               <span :class="['statut', (s.status_compte || s.utilisateur?.status_compte) === 'ACTIF' ? 'statut--ok' : 'statut--pending']">
                 {{ formatStatus(s.status_compte || s.utilisateur?.status_compte) }}
@@ -82,7 +84,7 @@
             </td>
           </tr>
           <tr v-if="!admin.loading && paginated.length === 0">
-            <td colspan="5" class="state-msg">Aucun étudiant trouvé</td>
+            <td :colspan="authStore.isSuperAdmin ? 6 : 5" class="state-msg">Aucun étudiant trouvé</td>
           </tr>
         </tbody>
       </table>
@@ -140,6 +142,9 @@ function onPageChange(page) {
   if (!Number.isInteger(p) || p < MIN_PAGE || p > totalPages.value) return
   currentPage.value = p
 }
+const scope = computed(() =>
+  authStore.isSuperAdmin ? 'global' : (authStore.user?.ecole || '')
+)
 
 const activeCount = computed(() =>
   (admin.students || []).filter(s => {

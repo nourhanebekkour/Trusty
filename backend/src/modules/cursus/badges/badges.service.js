@@ -1,5 +1,6 @@
 import prisma from '#Config/prismaClient.js';
 import * as minioService from '#Services/minio.service.js';
+import { calculerEtMettreAJourScoreCredibilite } from '#Modules/identite/etudiant/etudiant.service.js';
 
 // ============================================================================
 // HELPERS
@@ -167,13 +168,21 @@ export const attribuerBadge = async (id_etudiant, id_badge) => {
         attribution.badge = await enrichirBadge(attribution.badge);
     }
 
+    // Mise à jour du score
+    await calculerEtMettreAJourScoreCredibilite(id_etudiant);
+
     return attribution;
 };
 
 export const retirerBadge = async (id_etudiant, id_badge) => {
-    return await prisma.etudiantBadge.delete({
+    const res = await prisma.etudiantBadge.delete({
         where: { id_etudiant_id_badge: { id_etudiant, id_badge } },
     });
+
+    // Mise à jour du score
+    await calculerEtMettreAJourScoreCredibilite(id_etudiant);
+
+    return res;
 };
 
 export const recupererBadgesEtudiant = async (id_etudiant) => {

@@ -16,11 +16,13 @@ import technologieRoutes from "./cursus/technologie/technologie.routes.js";
 import projetRoutes from "./parcours/projet/projet.routes.js";
 import stageRoutes from "./parcours/stage/stage.routes.js";
 import activiteParascolaireRoutes from "./parcours/activiteParascolaire/activiteParascolaire.routes.js";
+import lettreRecommandationRoutes from "./parcours/lettreRecommandation/lettre.routes.js";
 import historiqueActionRoutes from "./systeme/historiqueAction/historiqueAction.routes.js";
 import badgesRoutes from "./cursus/badges/badges.routes.js";
 import commentaireRoutes from "./systeme/commentaire/commentaire.routes.js";
 import recommandationRoutes from "./systeme/recommandation/recommandation.routes.js";
 import portfolioRoutes from "./portfolio/portfolio.routes.js";
+import suggestionRoutes from "./systeme/suggestionSysteme/suggestion.routes.js";
 import { authMiddleware } from '#Middlewares/auth.middleware.js';
 
 
@@ -44,11 +46,13 @@ router.use('/technologies', technologieRoutes);
 router.use('/projets', projetRoutes);
 router.use('/stages', stageRoutes);
 router.use('/activites', activiteParascolaireRoutes);
+router.use('/lettres-recommandation', lettreRecommandationRoutes);
 router.use('/notifications', notificationsRoutes);
 router.use('/historique-actions', historiqueActionRoutes);
 router.use('/badges', badgesRoutes);
 router.use('/commentaires', commentaireRoutes);
 router.use('/recommandations', recommandationRoutes);
+router.use('/suggestions', suggestionRoutes);
 
 
 router.use('/etudiants', etudiantRoutes);

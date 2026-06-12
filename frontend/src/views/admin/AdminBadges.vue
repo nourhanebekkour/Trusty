@@ -76,6 +76,20 @@
           <input v-model="form.nom" type="text" placeholder="Ex: Portfolio Certifié" maxlength="100" autocomplete="off" />
           <span class="char-counter">{{ form.nom.length }} / 100</span>
         </div>
+        <div class="field">
+          <label>Catégorie <span class="required">*</span></label>
+          <select v-model="form.categorie">
+            <option value="">-- Sélectionner --</option>
+            <option value="CERTIFICATION">Certification</option>
+            <option value="DISTINCTION">Distinction</option>
+            <option value="RECOMPENSE">Récompense</option>
+            <option value="PARTICIPATION">Participation</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Condition d'attribution</label>
+          <input v-model="form.condition_attribution" type="text" placeholder="ex: Avoir complété un portfolio" maxlength="200" />
+        </div>
         <div class="field" style="grid-column: span 2;">
           <label>Description</label>
           <textarea v-model="form.description" placeholder="Description optionnelle du badge" maxlength="500" rows="3"></textarea>
@@ -105,7 +119,7 @@ const students    = ref([])
 const formErrors  = ref([])
 const actionLoading = ref(false)
 
-const form = ref({ id_etudiant: '', nom: '', description: '' })
+const form = ref({ id_etudiant: '', nom: '', description: '', categorie: '', condition_attribution: '' })
 
 const ALLOWED_STUDENT_ID_PATTERN = /^[a-zA-Z0-9\-_]+$/
 
@@ -173,13 +187,20 @@ async function handleCreate() {
   actionLoading.value = true
 
   try {
-    await api.post('/badges', {
-      id_etudiant:  form.value.id_etudiant,
-      nom:          sanitizeText(form.value.nom),
-      description:  sanitizeText(form.value.description),
+    const res = await api.post('/badges', {
+      nom: form.value.nom,
+      description: form.value.description || '',
+      categorie: form.value.categorie,
+      icone: '',
+      condition_attribution: form.value.condition_attribution || '',
     })
-    closeModal()
-    successMsg.value = 'Badge créé avec succès'
+    const badge = res?.data?.data || res?.data
+    await api.post(`/badges/${badge.id_badge}/attribuer`, {
+      id_etudiant: form.value.id_etudiant,
+    })
+    showModal.value = false
+    successMsg.value = 'Badge créé et attribué avec succès'
+    form.value = { id_etudiant: '', nom: '', description: '', categorie: '', condition_attribution: '' }
     await admin.fetchCertHistory()
     setTimeout(() => { successMsg.value = '' }, 3000)
   } catch (e) {

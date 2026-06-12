@@ -37,6 +37,7 @@
         <section class="prof-card">
           <div class="prof-card-title">Identité</div>
           <div class="profile-field"><span class="profile-label">Email</span><span>{{ profile.utilisateur?.email || '—' }}</span></div>
+          <div class="profile-field"><span class="profile-label">Établissement</span><span>{{ auth.user?.ecole || 'Établissement non renseigné' }}</span></div>
           <div class="profile-field"><span class="profile-label">Nom</span><span>{{ profile.utilisateur?.nom || '—' }}</span></div>
           <div class="profile-field"><span class="profile-label">Prénom</span><span>{{ profile.utilisateur?.prenom || '—' }}</span></div>
           <div class="profile-field"><span class="profile-label">Téléphone</span><span>{{ profile.utilisateur?.telephone || '—' }}</span></div>

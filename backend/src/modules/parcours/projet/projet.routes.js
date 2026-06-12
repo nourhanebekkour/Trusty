@@ -9,6 +9,7 @@ const routeur = express.Router();
 routeur.post('/', projetController.creerProjet);
 routeur.get('/', projetController.listerProjets);
 routeur.get('/a-valider', requireRole('PROFESSEUR'), projetController.listerProjetsAValider);
+routeur.get('/etudiant/:id_etudiant', projetController.listerProjetsParEtudiant);
 routeur.get('/:id', projetController.obtenirProjet);
 routeur.put('/:id', projetController.modifierProjet);
 routeur.delete('/:id', projetController.supprimerProjet);

@@ -8,7 +8,7 @@
     <div class="badges-grid" v-if="badges.length">
       <div class="badge-card" v-for="eb in badges" :key="eb.badge.id_badge">
         <div class="badge-icon-wrap" :style="{ background: categoryColor(eb.badge.categorie).bg }">
-          <span>{{ eb.badge.icone ?? '🏅' }}</span>
+          <span>{{ eb.badge.icone_url ?? '🏅' }}</span>
         </div>
         <div class="badge-info">
           <p class="badge-title">{{ eb.badge.nom }}</p>

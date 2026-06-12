@@ -61,7 +61,7 @@ function assembleUser(me, etudiant, competences = [], badges = [], projets = [],
     nom:            me.nom,
     prenom:         me.prenom,
     telephone:      me.telephone ?? null,
-    photo:          me.photo     ?? null,
+    photo:          me.photo_url    ?? null,
     role:           me.role,
     date_creation:  me.date_creation ?? null,
     etudiant: {
@@ -84,12 +84,10 @@ export async function getProfile() {
     const id    = me.id_utilisateur
 
     // 2. Récupérer profil étudiant, compétences, badges en parallèle
-    const [etudiantRes, competencesRes, badgesRes, projetsRes] = await Promise.allSettled([
+    const [etudiantRes, competencesRes, badgesRes] = await Promise.allSettled([
       api.get(`/etudiants/${id}`),
       api.get(`/competences/etudiant/${id}`),
       api.get(`/badges/etudiant/${id}`),
-      // Projets via participations — l'étudiant est identifié par son id utilisateur
-      api.get(`/projets/`), // on filtrera côté client ou via un endpoint dédié
     ])
 
     const etudiant = etudiantRes.status    === 'fulfilled' ? extractData(etudiantRes.value)    : {}
@@ -104,9 +102,8 @@ export async function getProfile() {
     // 4. Récupérer les participations projets de l'étudiant
     let projets = []
     try {
-      const ppRes = await api.get(`/projets/`) // adapter si endpoint dédié existe
+      const ppRes = await api.get(`/projets/etudiant/${id}`)
       const allProjets = extractData(ppRes) ?? []
-      // Filtrer les projets où l'étudiant participe (selon la structure de l'API)
       projets = Array.isArray(allProjets) ? allProjets : []
     } catch {
       projets = []
@@ -166,10 +163,8 @@ export async function saveProfile(id, formData) {
 
 export async function uploadAvatar(id, file) {
   const form = new FormData()
-  form.append('file', file)
-  const res = await api.post(`/etudiants/${id}/avatar`, form, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
+  form.append('fichier', file)
+  const res = await api.post(`/etudiants/${id}/avatar`, form)
   return { data: extractData(res) }
 }
 

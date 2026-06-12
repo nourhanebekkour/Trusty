@@ -11,6 +11,7 @@ import StageList from '@/views/Etudiant/StageList.vue'
 import Recommendations from '@/views/Etudiant/Recommendations.vue'
 import Notification from '@/views/Etudiant/Notification.vue'
 import Profile from '@/views/Etudiant/Profile.vue'
+import Suggestions from '@/views/Etudiant/Suggestions.vue'
 import activites from '@/views/Etudiant/activites.vue'
 import Portfolio from '@/views/portfolio/PortfolioManagement.vue'
 import ProfessionalView from '@/views/Professional/ProfessionalView.vue'
@@ -23,7 +24,6 @@ import VerifyEmailView from '@/views/VerifyEmailView.vue'
 import LettresRecommandation from '@/views/Etudiant/LettresRecommandation.vue'
 import PortfolioTemplate1 from '@/views/portfolio/PortfolioTemplate1.vue'
 
-// ── Roles autorisés ──────────────────────────────
 const ROLES = {
   ADMIN:        'ADMINISTRATEUR',
   STUDENT:      'ETUDIANT',
@@ -39,7 +39,6 @@ const router = createRouter({
       name: 'home',
       component: HomeView,
     },
-   
     {
       path: '/register',
       name: 'register',
@@ -104,6 +103,12 @@ const router = createRouter({
           name: 'admin-profile',
           component: () => import('../views/admin/AdminProfile.vue'),
         },
+        {
+          path: 'settings',
+          name: 'admin-settings',
+          component: () => import('../views/admin/AdminSettings.vue'),
+          meta: { requiresAuth: true, roles: [ROLES.ADMIN] },
+        },
       ],
     },
 
@@ -136,7 +141,6 @@ const router = createRouter({
       path: '/projets/:id',
       name: 'project-detail',
       component: ProjectDetail,
-      meta: { requiresAuth: true },
       props: true,
       meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
@@ -153,9 +157,16 @@ const router = createRouter({
       meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
+      path: '/suggestions',
+      name: 'suggestions',
+      component: Suggestions,
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
+    },
+    {
       path: '/lettres',
       name: 'lettres',
       component: LettresRecommandation,
+      meta: { requiresAuth: true, roles: [ROLES.STUDENT] },
     },
     {
       path: '/stage',
@@ -193,12 +204,12 @@ const router = createRouter({
       children: [
         {
           path: '',
-          redirect: '/professional/dashboard',
+          redirect: '/professional/profile',
         },
         {
-          path: 'dashboard',
-          name: 'professional-dashboard',
-          component: ProfessionalView,
+          path: 'profile',
+          name: 'professional-profile',
+          component: () => import('@/views/Professional/ProfessionalProfile.vue'),
           meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
         },
         {
@@ -208,9 +219,9 @@ const router = createRouter({
           meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
         },
         {
-          path: 'commentaires',
-          name: 'professional-commentaires',
-          component: () => import('@/views/Professional/ProfessionalCommentaires.vue'),
+          path: 'portfolios',
+          name: 'professional-portfolios',
+          component: () => import('@/views/Professional/ProfessionalPortfolios.vue'),
           meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
         },
         {
@@ -220,43 +231,19 @@ const router = createRouter({
           meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
         },
         {
-          path: 'historique',
-          name: 'professional-historique',
-          component: () => import('@/views/Professional/ProfessionalHistorique.vue'),
-          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
-        },
-        {
-          path: 'stages',
-          name: 'professional-stages',
-          component: () => import('@/views/Professional/ProfessionalInternships.vue'),
-          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
-        },
-        {
-          path: 'projets',
-          name: 'professional-projets',
-          component: () => import('@/views/Professional/ProfessionalProjects.vue'),
-          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
-        },
-        {
-          path: 'etudiants',
-          name: 'professional-etudiants',
-          component: () => import('@/views/Professional/ProfessionalStudents.vue'),
-          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
-        },
-        {
-          path: 'portfolios',
-          name: 'professional-portfolios',
-          component: () => import('@/views/Professional/ProfessionalPortfolios.vue'),
-          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
-        },
-        {
-          path: 'profile',
-          name: 'professional-profile',
-          component: () => import('@/views/Professional/ProfessionalProfile.vue'),
-          meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
-        },
-      ],
+      path: 'settings',
+      name: 'professional-settings',
+      component: () => import('@/views/Professional/ProfessionalSettings.vue'),
+      meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
     },
+  ],
+},
+{
+  path: '/professional/students/:id/portfolio',
+  name: 'professional-portfolio-consultation',
+  component: () => import('@/views/Professional/ProfessionalPortfolioConsultation.vue'),
+  meta: { requiresAuth: true, roles: [ROLES.PROFESSIONAL] },
+},
 
     // ── Professor ────────────────────────────────────────
     {
@@ -290,47 +277,28 @@ const router = createRouter({
            meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
         },
         {
-          path: 'commentaires',
-          name: 'professor-commentaires',
-          component: () => import('../views/professor/ProfessorMessages.vue'), 
-          meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
-        },
-        {
           path: 'recommandations',
           name: 'professor-recommandations',
           component: () => import('../views/professor/ProfessorRecommendations.vue'),
            meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
         },
         {
-          path: 'historique',
-          name: 'professor-historique',
-          component: () => import('../views/professor/ProfessorHistorique.vue'),
-          meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
-        },
-        {
           path: 'profile',
           name: 'professor-profile',
           component: () => import('../views/professor/ProfessorProfile.vue'),
+           meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
+        },
+        {
+          path: 'settings',
+          name: 'professor-settings',
+          component: () => import('../views/professor/ProfessorSettings.vue'),
           meta: { requiresAuth: true, roles: [ROLES.PROFESSOR] },
         },
       ],
     },
-
-    // ── Pages d'erreur ────────────────────────────────────
-    //{
-    //   path: '/403',
-    //   name: 'forbidden',
-    //   component: () => import('../views/ForbiddenView.vue'),
-    // },
-    // {
-    //   path: '/:pathMatch(.*)*',
-    //   name: 'not-found',
-    //   component: () => import('../views/NotFoundView.vue'),
-    // },
   ],
 })
 
-// ── Guard principal ────────────────────────────────────────────
 router.beforeEach(async (to) => {
   const authStore = useAuthStore()
   const PUBLIC_ROUTES = ['home', 'login', 'register', 'about', 'verify-email']
@@ -342,7 +310,6 @@ router.beforeEach(async (to) => {
     return true
   }
 
-  // Initialisation session
   if (!authStore.isInitialized) {
     try {
       await authStore.fetchUser()
@@ -351,11 +318,9 @@ router.beforeEach(async (to) => {
     }
   }
 
-  // ── Utilise to.matched pour hériter du meta des parents ──
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const allowedRoles = to.matched.flatMap(record => record.meta.roles ?? [])
 
-  // Redirection automatique selon rôle
   if (authStore.isAuthenticated) {
     if (authStore.isAdmin && !to.path.startsWith('/admin')) {
       return '/admin/dashboard'
@@ -366,17 +331,14 @@ router.beforeEach(async (to) => {
     }
   }
 
-  // Pages publiques (après la redirection par rôle)
   if (['home', 'login', 'register', 'about', 'verify-email', 'portfolio-template1'].includes(to.name)) {
     return true
   }
 
-  // Pages invité uniquement
   if (to.meta.guestOnly && authStore.isAuthenticated) {
     return redirectByRole(authStore.user?.role)
   }
 
-  // Routes protégées
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
@@ -391,7 +353,6 @@ router.beforeEach(async (to) => {
   return true
 })
 
-// ── Redirection selon rôle après login ────────────────────────
 function redirectByRole(role) {
   switch (role?.toUpperCase()) {
     case ROLES.ADMIN:        return '/admin/dashboard'

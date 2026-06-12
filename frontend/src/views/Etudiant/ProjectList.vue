@@ -166,7 +166,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useAuthStore } from '@/stores/authstore'
 import { useProjetStore } from '@/stores/projetStore'
 import {
   nomComplet, formatType, formatStatut, formatDate, emptyForm,
@@ -179,7 +180,9 @@ import ProjetDetailModal  from '@/components/projets/projetDetailModal.vue'
 import ProjetRapportModal from '@/components/projets/ProjetRapportModal.vue'
 import ConfirmModal       from '@/components/stages/ConfirmModal.vue'
 
+const authStore = useAuthStore()
 const store = useProjetStore()
+const idEtudiant = authStore.user?.id_utilisateur ?? null
 
 const showModal   = ref(false)
 const editMode    = ref(false)
@@ -373,11 +376,7 @@ async function handleDeleteConfirmed() {
   }
 }
 
-onMounted(() => store.fetchProjets())
-
-onUnmounted(() => {
-  submitting.value = false
-})
+onMounted(() => store.fetchProjets(idEtudiant))
 </script>
 
 <style scoped>

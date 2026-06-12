@@ -4,12 +4,15 @@ import { createPinia, setActivePinia } from 'pinia'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import AdminUsers from '@/views/admin/AdminUsers.vue'
 import { useAdminStore } from '@/stores/adminStore'
+import { useAuthStore } from '@/stores/authstore'
 
 // ── Stubs ─────────────────────────────────────────────────
-const StatCard      = { template: '<div class="stat-card">{{ label }}:{{ value }}</div>', props: ['label','value','sub'] }
-const StatusBadge   = { template: '<span class="status-badge">{{ status }}</span>', props: ['status'] }
-const AppPagination = { template: '<div class="pagination"/>', props: ['currentPage','totalPages','totalItems','perPage','itemLabel'], emits: ['page-change'] }
-const AppModal      = { template: '<div v-if="show" class="modal"><slot/><button @click="$emit(\'confirm\')">OK</button><button @click="$emit(\'close\')">Annuler</button></div>', props: ['show','title','subtitle'], emits: ['confirm','close'] }
+const { StatCard, StatusBadge, AppPagination, AppModal } = vi.hoisted(() => ({
+  StatCard:      { template: '<div class="stat-card">{{ label }}:{{ value }}</div>', props: ['label','value','sub'] },
+  StatusBadge:   { template: '<span class="status-badge">{{ status }}</span>', props: ['status'] },
+  AppPagination: { template: '<div class="pagination"/>', props: ['currentPage','totalPages','totalItems','perPage','itemLabel'], emits: ['page-change'] },
+  AppModal:      { template: '<div v-if="show" class="modal"><slot/><button @click="$emit(\'confirm\')">OK</button><button @click="$emit(\'close\')">Annuler</button></div>', props: ['show','title','subtitle'], emits: ['confirm','close'] },
+}))
 
 vi.mock('../../../src/components/ui/StatCard.vue',      () => ({ default: StatCard      }))
 vi.mock('../../../src/components/ui/StatusBadge.vue',   () => ({ default: StatusBadge   }))
@@ -19,14 +22,14 @@ vi.mock('../../../src/services/api', () => ({
   default: { get: vi.fn(), post: vi.fn(), delete: vi.fn() },
 }))
 
-// ── Dataset de test ───────────────────────────────────────
+// ── Dataset de test (structure plate correspondant à adminStore) ──────────────
 const mockUsers = [
-  { id_administrateur: 'u1', niveau_acces: 'ADMIN',     utilisateur: { nom: 'Dupont',  prenom: 'Jean',   email: 'jean@e.fr',   status_compte: 'ACTIF',      date_creation: '2024-01-10' } },
-  { id_administrateur: 'u2', niveau_acces: 'PROFESSEUR', utilisateur: { nom: 'Martin',  prenom: 'Sophie', email: 'sophie@e.fr', status_compte: 'ACTIF',      date_creation: '2024-02-15' } },
-  { id_administrateur: 'u3', niveau_acces: 'ETUDIANT',  utilisateur: { nom: 'Bernard', prenom: 'Lucas',  email: 'lucas@e.fr',  status_compte: 'INACTIF',    date_creation: '2024-03-01' } },
-  { id_administrateur: 'u4', niveau_acces: 'ETUDIANT',  utilisateur: { nom: 'Petit',   prenom: 'Emma',   email: 'emma@e.fr',   status_compte: 'EN_ATTENTE', date_creation: '2024-04-05' } },
-  { id_administrateur: 'u5', niveau_acces: 'ETUDIANT',  utilisateur: { nom: 'Moreau',  prenom: 'Paul',   email: 'paul@e.fr',   status_compte: 'ACTIF',      date_creation: '2024-05-20' } },
-  { id_administrateur: 'u6', niveau_acces: 'ETUDIANT',  utilisateur: { nom: 'Girard',  prenom: 'Léa',    email: 'lea@e.fr',    status_compte: 'ACTIF',      date_creation: '2024-06-01' } },
+  { id_utilisateur: 'u1', prenom: 'Jean',   nom: 'Dupont',  email: 'jean@e.fr',   role: 'ADMIN',      status_compte: 'ACTIF',      date_creation: '2024-01-10' },
+  { id_utilisateur: 'u2', prenom: 'Sophie', nom: 'Martin',  email: 'sophie@e.fr', role: 'PROFESSEUR', status_compte: 'ACTIF',      date_creation: '2024-02-15' },
+  { id_utilisateur: 'u3', prenom: 'Lucas',  nom: 'Bernard', email: 'lucas@e.fr',  role: 'ETUDIANT',   status_compte: 'INACTIF',    date_creation: '2024-03-01' },
+  { id_utilisateur: 'u4', prenom: 'Emma',   nom: 'Petit',   email: 'emma@e.fr',   role: 'ETUDIANT',   status_compte: 'EN_ATTENTE', date_creation: '2024-04-05' },
+  { id_utilisateur: 'u5', prenom: 'Paul',   nom: 'Moreau',  email: 'paul@e.fr',   role: 'ETUDIANT',   status_compte: 'ACTIF',      date_creation: '2024-05-20' },
+  { id_utilisateur: 'u6', prenom: 'Léa',    nom: 'Girard',  email: 'lea@e.fr',    role: 'ETUDIANT',   status_compte: 'ACTIF',      date_creation: '2024-06-01' },
 ]
 
 function buildWrapper(storeOverrides = {}) {
@@ -75,18 +78,15 @@ describe('AdminUsers.vue', () => {
   describe('stats calculées', () => {
     it('compte correctement les étudiants actifs', async () => {
       const { wrapper, store } = buildWrapper()
-      // 3 utilisateurs avec status ACTIF parmi les 6
       await flushPromises()
-      const statCards = wrapper.findAll('.stat-card')
-      // Le 2e StatCard = Étudiants Actifs (status ACTIF)
       // mockUsers: u1(ACTIF), u2(ACTIF), u5(ACTIF), u6(ACTIF) = 4 ACTIF
-      expect(store.users.filter(u => u.utilisateur?.status_compte === 'ACTIF').length).toBe(4)
+      expect(store.users.filter(u => u.status_compte === 'ACTIF').length).toBe(4)
     })
 
     it('compte correctement les professeurs', async () => {
       const { wrapper, store } = buildWrapper()
       await flushPromises()
-      const profs = store.users.filter(u => u.niveau_acces === 'PROFESSEUR')
+      const profs = store.users.filter(u => u.role === 'PROFESSEUR')
       expect(profs.length).toBe(1)
     })
   })
@@ -207,15 +207,15 @@ describe('AdminUsers.vue', () => {
       expect(store.deleteUser).toHaveBeenCalledWith('u1')
     })
 
-    it('n\'appelle pas deleteUser si l\'utilisateur annule', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(false)
+    it('appelle deleteUser directement (pas de confirm dialog)', async () => {
       const { wrapper, store } = buildWrapper()
-      store.deleteUser = vi.fn()
+      store.deleteUser = vi.fn().mockResolvedValue(undefined)
       store.loading = false
       await flushPromises()
 
-      await wrapper.find('button[title="Supprimer"]').trigger('click')
-      expect(store.deleteUser).not.toHaveBeenCalled()
+      const deleteBtn = wrapper.find('button[title="Supprimer"]')
+      await deleteBtn.trigger('click')
+      expect(store.deleteUser).toHaveBeenCalledWith('u1')
     })
   })
 
@@ -239,11 +239,15 @@ describe('AdminUsers.vue', () => {
     it('appelle fetchUsers et fetchVerificationQueue au montage', async () => {
       const pinia = createPinia()
       setActivePinia(pinia)
+
+      const authStore = useAuthStore()
+      authStore.user = { id_utilisateur: 'admin1', role: 'ADMINISTRATEUR' }
+
       const store = useAdminStore()
       store.fetchUsers             = vi.fn().mockResolvedValue(undefined)
       store.fetchVerificationQueue = vi.fn().mockResolvedValue(undefined)
 
-      const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', component: AdminUsers }] })
+      const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', component: AdminUsers }, { path: '/login', component: { template: '<div/>' } }] })
       mount(AdminUsers, {
         global: { plugins: [pinia, router], stubs: { StatCard, StatusBadge, AppPagination, AppModal } },
       })

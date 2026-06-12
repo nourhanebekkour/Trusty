@@ -34,10 +34,10 @@ describe('ProfessorSidebar.vue — rendu', () => {
 
   it('affiche les liens de navigation', () => {
     const wrapper = mountSidebar()
-    expect(wrapper.text()).toContain('Projets à valider')
-    expect(wrapper.text()).toContain('Stages à valider')
-    expect(wrapper.text()).toContain('Mes étudiants')
+    expect(wrapper.text()).toContain('Validations')
+    expect(wrapper.text()).toContain('Portfolios')
     expect(wrapper.text()).toContain('Notifications')
+    expect(wrapper.text()).toContain('Recommandation')
   })
 
   it('affiche le bouton Déconnexion', () => {

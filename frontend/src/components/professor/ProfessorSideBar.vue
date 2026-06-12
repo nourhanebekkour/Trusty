@@ -37,19 +37,6 @@
         <span class="nav-label" v-show="!isCollapsed">Recommandation</span>
       </router-link>
 
-      <router-link to="/professor/commentaires" class="nav-item">
-        <img :src="iconShare" class="nav-icon" />
-        <span class="nav-label" v-show="!isCollapsed">Commentaires</span>
-      </router-link>
-
-      <router-link to="/professor/historique" class="nav-item">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="nav-icon">
-          <circle cx="12" cy="12" r="10"/>
-          <polyline points="12 6 12 12 16 14"/>
-        </svg>
-        <span class="nav-label" v-show="!isCollapsed">Historique</span>
-      </router-link>
-
       <router-link to="/professor/profile" class="nav-item">
         <img :src="iconProfile" class="nav-icon" />
         <span class="nav-label" v-show="!isCollapsed">Mon Profil</span>
@@ -57,7 +44,7 @@
     </nav>
 
     <div class="sidebar-bottom">
-      <router-link to="/professor" class="nav-item">
+      <router-link to="/professor/settings" class="nav-item">
         <img :src="iconSettings" class="nav-icon" />
         <span class="nav-label" v-show="!isCollapsed">Paramètres</span>
       </router-link>
@@ -81,7 +68,6 @@ import iconCertifie        from '@/assets/icons/certifie.svg'
 import iconPortfolio       from '@/assets/icons/portfoliocomplet.svg'
 import iconNotifications   from '@/assets/icons/notifications.svg'
 import iconRecommandations from '@/assets/icons/recommandations.svg'
-import iconShare           from '@/assets/icons/share.svg'
 import iconProfile         from '@/assets/icons/profile.svg'
 import iconSettings        from '@/assets/icons/settings.svg'
 import iconLogout          from '@/assets/icons/logout.svg'

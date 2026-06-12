@@ -5,11 +5,18 @@ import { defineComponent } from 'vue'
 
 vi.mock('@/stores/stageStore', () => ({
   useStageStore: vi.fn(),
+  initiales:   vi.fn(str => str ? str.split(' ').map(s => s[0]).join('').toUpperCase() : '??'),
+  logoColor:   vi.fn(() => '#000'),
+  avatarColor: vi.fn(() => '#000'),
+  formatDate:  vi.fn(d => d || ''),
+  badgeClass:  vi.fn(() => ''),
+  labelStatut: vi.fn(() => ''),
+  formDefault: vi.fn(() => ({})),
 }))
 
 vi.mock('@/components/stages/StageStats.vue',      () => ({ default: defineComponent({ name: 'StageStats',      props: ['stats'],   template: '<div class="mock-stats" />' }) }))
 vi.mock('@/components/stages/StageTable.vue',      () => ({ default: defineComponent({ name: 'StageTable',                         template: '<div class="mock-table" />' }) }))
-vi.mock('@/components/stages/StageModal.vue',      () => ({ default: defineComponent({ name: 'StageModal',                         template: '<div class="mock-modal" />' }) }))
+vi.mock('@/components/stages/StageModal.vue',      () => ({ default: defineComponent({ name: 'StageModal', props: ['modelValue'], template: '<div v-if="modelValue" class="mock-modal" />' }) }))
 vi.mock('@/components/stages/StageBottomGrid.vue', () => ({ default: defineComponent({ name: 'StageBottomGrid',                    template: '<div class="mock-bottomgrid" />' }) }))
 
 import { useStageStore } from '@/stores/stageStore'
@@ -45,9 +52,9 @@ describe('StageList.vue (view) — Tests Unitaires', () => {
     vi.clearAllMocks()
   })
 
-  it('1 — affiche le titre "Gestion des Stages"', () => {
+  it('1 — affiche le titre "Gestion des stages"', () => {
     const { wrapper } = mountView()
-    expect(wrapper.text()).toContain('Gestion des Stages')
+    expect(wrapper.text()).toContain('Gestion des stages')
   })
 
   it('2 — affiche le sous-titre descriptif', () => {
@@ -70,8 +77,9 @@ describe('StageList.vue (view) — Tests Unitaires', () => {
     expect(wrapper.find('.mock-table').exists()).toBe(true)
   })
 
-  it('6 — monte le composant StageModal', () => {
+  it('6 — monte le composant StageModal quand le modal est ouvert', async () => {
     const { wrapper } = mountView()
+    await wrapper.find('.add-btn').trigger('click')
     expect(wrapper.find('.mock-modal').exists()).toBe(true)
   })
 
@@ -80,10 +88,11 @@ describe('StageList.vue (view) — Tests Unitaires', () => {
     expect(wrapper.find('.mock-bottomgrid').exists()).toBe(true)
   })
 
-  it('8 — clic "Nouveau stage" appelle store.openModal("create")', async () => {
-    const { wrapper, store } = mountView()
-    await wrapper.find('.btn-new').trigger('click')
-    expect(store.openModal).toHaveBeenCalledWith('create')
+  it('8 — clic "Nouveau stage" ouvre le modal (showModal local)', async () => {
+    const { wrapper } = mountView()
+    expect(wrapper.find('.mock-modal').exists()).toBe(false)
+    await wrapper.find('.add-btn').trigger('click')
+    expect(wrapper.find('.mock-modal').exists()).toBe(true)
   })
 
   it('9 — affiche le toast si store.toast.show est true', () => {

@@ -52,6 +52,7 @@
           <tr>
             <th>Nom</th>
             <th>Rôle</th>
+            <th v-if="authStore.isSuperAdmin">Établissement</th>
             <th>Email</th>
             <th>Statut</th>
             <th>Date d'inscription</th>
@@ -72,6 +73,7 @@
               </div>
             </td>
             <td><StatusBadge :status="user.role || '—'" /></td>
+            <td v-if="authStore.isSuperAdmin" class="text-muted">{{ user.ecole || '—' }}</td>
             <td class="text-muted">{{ user.email }}</td>
             <td>
               <span :class="['statut', isOk(user.status_compte) ? 'statut--ok' : 'statut--pending']">
@@ -91,7 +93,7 @@
             </td>
           </tr>
           <tr v-if="!admin.loading && paginatedUsers.length === 0">
-            <td colspan="6" class="state-msg">Aucun utilisateur trouvé</td>
+            <td :colspan="authStore.isSuperAdmin ? 7 : 6" class="state-msg">Aucun utilisateur trouvé</td>
           </tr>
         </tbody>
       </table>
