@@ -32,7 +32,8 @@ describe('Integration API : Compétence', () => {
                 nom: 'Admin',
                 prenom: 'Test',
                 role: 'ADMINISTRATEUR',
-                status_compte: 'ACTIF'
+                status_compte: 'ACTIF',
+                email_verifie: true
             }
         });
 
@@ -53,7 +54,8 @@ describe('Integration API : Compétence', () => {
                 nom: 'Student',
                 prenom: 'Test',
                 role: 'ETUDIANT',
-                status_compte: 'ACTIF'
+                status_compte: 'ACTIF',
+                email_verifie: true
             }
         });
 

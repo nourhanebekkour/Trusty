@@ -38,7 +38,8 @@ describe('Integration API : Stage', () => {
                 nom: 'Admin',
                 prenom: 'Stage',
                 role: 'ADMINISTRATEUR',
-                status_compte: 'ACTIF'
+                status_compte: 'ACTIF',
+                email_verifie: true
             }
         });
         adminId = admin.id_utilisateur;
@@ -52,7 +53,8 @@ describe('Integration API : Stage', () => {
                 nom: 'Etudiant',
                 prenom: 'Stage',
                 role: 'ETUDIANT',
-                status_compte: 'ACTIF'
+                status_compte: 'ACTIF',
+                email_verifie: true
             }
         });
         etudiantId = etudiantUser.id_utilisateur;
@@ -68,7 +70,8 @@ describe('Integration API : Stage', () => {
                 nom: 'Prof',
                 prenom: 'Stage',
                 role: 'PROFESSEUR',
-                status_compte: 'ACTIF'
+                status_compte: 'ACTIF',
+                email_verifie: true
             }
         });
         professeurId = profUser.id_utilisateur;

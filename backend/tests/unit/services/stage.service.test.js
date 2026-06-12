@@ -6,12 +6,18 @@ const mockStageModel = {
     findUnique: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
-    delete: jest.fn()
+    delete: jest.fn(),
+    count: jest.fn()
 };
-const mockEtudiantModel = { findUnique: jest.fn() };
+const mockEtudiantModel = { findUnique: jest.fn(), update: jest.fn() };
 const mockProfesseurModel = { findUnique: jest.fn() };
 const mockStageTechnologieModel = { create: jest.fn(), update: jest.fn(), delete: jest.fn() };
 const mockHistoriqueValidationModel = { create: jest.fn() };
+const mockParticipationProjetModel = { count: jest.fn() };
+const mockRecommandationModel = { count: jest.fn() };
+const mockLettreRecommandationModel = { count: jest.fn() };
+const mockEtudiantBadgeModel = { count: jest.fn() };
+const mockActiviteParascolaireModel = { count: jest.fn() };
 
 // L'instance mockée que PrismaClient() retournera
 const mockPrismaInstance = {
@@ -19,7 +25,12 @@ const mockPrismaInstance = {
     etudiant: mockEtudiantModel,
     professeur: mockProfesseurModel,
     stageTechnologie: mockStageTechnologieModel,
-    historiqueValidation: mockHistoriqueValidationModel
+    historiqueValidation: mockHistoriqueValidationModel,
+    participationProjet: mockParticipationProjetModel,
+    recommandation: mockRecommandationModel,
+    lettreRecommandation: mockLettreRecommandationModel,
+    etudiantBadge: mockEtudiantBadgeModel,
+    activiteParascolaire: mockActiviteParascolaireModel
 };
 
 await jest.unstable_mockModule('@prisma/client', () => ({
@@ -268,6 +279,15 @@ describe('Service Stage', () => {
             const mockUpdated = { ...mockStage, status_validation: 'VALIDE' };
             mockStageModel.update.mockResolvedValue(mockUpdated);
             mockHistoriqueValidationModel.create.mockResolvedValue({});
+            // mocks pour calculerEtMettreAJourScoreCredibilite appelé lors d'une validation VALIDE
+            mockEtudiantModel.findUnique.mockResolvedValue({ id_etudiant: 'etud-1' });
+            mockEtudiantModel.update.mockResolvedValue({});
+            mockStageModel.count.mockResolvedValue(1);
+            mockParticipationProjetModel.count.mockResolvedValue(0);
+            mockRecommandationModel.count.mockResolvedValue(0);
+            mockLettreRecommandationModel.count.mockResolvedValue(0);
+            mockEtudiantBadgeModel.count.mockResolvedValue(0);
+            mockActiviteParascolaireModel.count.mockResolvedValue(0);
 
             const result = await validerStage('s-1', 'prof-1', 'VALIDE', 'Bon travail');
 

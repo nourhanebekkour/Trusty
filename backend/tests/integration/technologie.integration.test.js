@@ -37,6 +37,7 @@ describe('Integration API : Technologies', () => {
                 prenom: 'Techno',
                 role: 'ADMINISTRATEUR',
                 status_compte: 'ACTIF',
+                email_verifie: true,
             },
         });
         adminId = admin.id_utilisateur;
@@ -51,6 +52,7 @@ describe('Integration API : Technologies', () => {
                 prenom: 'Techno',
                 role: 'ETUDIANT',
                 status_compte: 'ACTIF',
+                email_verifie: true,
             },
         });
         etudiantId = etudiant.id_utilisateur;
