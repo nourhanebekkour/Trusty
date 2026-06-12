@@ -35,7 +35,7 @@ import { useAuthStore }  from '@/stores/authstore'
 import DashboardStats    from '@/components/dashboard/DashboardStats.vue'
 import DashboardProjects from '@/components/dashboard/DashboardProjects.vue'
 import DashboardRecos    from '@/components/dashboard/DashboardRecos.vue'
-import { fetchStats, fetchProjects, fetchRecos } from '@/services/dashboardservices'
+import { fetchStats, fetchProjects, fetchRecos, recalculerScore } from '@/services/dashboardservices'
 
 const authStore  = useAuthStore()
 const idEtudiant = authStore.user?.id_utilisateur ?? null
@@ -54,7 +54,10 @@ onMounted(async () => {
     return
   }
 
-  // Appels en parallèle — chaque service gère son propre fallback mock
+  // 1. Recalculer le score de crédibilité avant d'afficher les stats
+  await recalculerScore(idEtudiant)
+
+  // 2. Charger les données en parallèle
   const [statsData, projectsData, recosData] = await Promise.all([
     fetchStats(idEtudiant),
     fetchProjects(idEtudiant),

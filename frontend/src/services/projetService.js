@@ -6,6 +6,11 @@ const projetService = {
     return Array.isArray(data.data) ? data.data : []
   },
 
+  async getByEtudiant(idEtudiant) {
+    const { data } = await api.get(`/projets/etudiant/${idEtudiant}`)
+    return Array.isArray(data.data) ? data.data : []
+  },
+
   async getById(id) {
     const { data } = await api.get(`/projets/${id}`)
     return data.data ?? null

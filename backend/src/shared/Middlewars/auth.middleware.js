@@ -36,9 +36,9 @@ const authMiddleware = async (req, res, next) => {
     }
 
     // 4. Attacher les infos à la requête
-    req.user = { 
+    req.user = {
       id: user.id_utilisateur,
-      role: user.role 
+      role: user.role
     };
     next();
 
@@ -51,3 +51,24 @@ const authMiddleware = async (req, res, next) => {
 };
 
 export { authMiddleware };
+
+export const optionalAuth = (req, res, next) => {
+  let token = req.cookies?.accessToken
+  if (!token) {
+    const authHeader = req.headers.authorization
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1]
+    }
+  }
+  if (!token) {
+    req.user = null
+    return next()
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key_123')
+    req.user = { id: decoded.userId, role: decoded.role }
+  } catch (e) {
+    req.user = null
+  }
+  next()
+}

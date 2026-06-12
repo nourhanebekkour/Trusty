@@ -852,11 +852,13 @@ export default {
       this.createError = null
       this.projectCreated = false
 
+      const today = new Date().toISOString().split('T')[0]
+
       const payload = {
-        titre:                 this.localForm.titre,
+        titre:                 this.localForm.titre || 'Projet sans titre',
         description:           this.localForm.description,
-        type_projet:           this.localForm.type_projet,
-        date_debut:            this.localForm.date_debut,
+        type_projet:           this.localForm.type_projet || 'AUTRE',
+        date_debut:            this.localForm.date_debut || today,
         date_fin:              this.localForm.date_fin        || null,
         lien_github:           this.localForm.lien_github     || null,
         lien_youtube:          this.localForm.lien_youtube    || null,
@@ -880,9 +882,10 @@ export default {
           await Promise.all(this.localForm.collaborateurs.map(c => {
             c.posting = true
             return api.post(`/projets/${projetId}/participants/${c.id_etudiant}`, {
-              role_joue:             c.role_joue             || '',
+              role_joue:             c.role_joue             || 'Membre',
               est_createur:          c.est_createur          ?? false,
               est_visible_portfolio: c.est_visible_portfolio ?? true,
+              date_debut:            this.localForm.date_debut || today,
             }).then(() => { c.posted = true })
               .catch(e => { console.error(`Erreur ajout participant ${c.id_etudiant}`, e) })
               .finally(() => { c.posting = false })

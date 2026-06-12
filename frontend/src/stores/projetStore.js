@@ -18,11 +18,13 @@ export const useProjetStore = defineStore('projets', {
   },
 
   actions: {
-    async fetchProjets() {
+    async fetchProjets(idEtudiant) {
       this.loading = true
       this.error   = null
       try {
-        this.projets = await projetService.getAll()
+        this.projets = idEtudiant
+          ? await projetService.getByEtudiant(idEtudiant)
+          : await projetService.getAll()
       } catch (e) {
         this.error = e.response?.data?.message ?? e.message ?? 'Erreur lors du chargement'
       } finally {

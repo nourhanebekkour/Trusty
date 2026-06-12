@@ -4,7 +4,7 @@ import { RouterView, useRoute, useRouter } from 'vue-router'
 import SideBar from './components/laayout/SideBar.vue'
 import NavBar from './components/laayout/NavBar.vue'
 import Footer from './components/laayout/Footer.vue'
-import ProfessionalSideBar from './components/Professional/ProfessionalSidebar.vue'
+
 import { useAuthStore } from './stores/authstore'
 import { useThemeStore } from './stores/themeStore'
 
@@ -32,7 +32,7 @@ const isPublicPage = computed(() =>
   PUBLIC_ROUTES.includes(route.name)
 )
 
-const isProfessionalPage = computed(() => route.name === 'professional')
+const isProfessionalPage = computed(() => route.path.startsWith('/professional'))
 const isProfessorPage = computed(() => route.path.startsWith('/professor'))
 const isAdminPage = computed(() => route.path.startsWith('/admin'))
 
@@ -73,16 +73,7 @@ const isStudentPage = computed(() => {
     <Footer />
   </div>
 
-  <!-- ── Pages Professionnel ── -->
-  <div v-else-if="isProfessionalPage" class="app">
-    <NavBar />
-    <div class="layout">
-      <ProfessionalSideBar />
-      <main class="content">
-        <RouterView />
-      </main>
-    </div>
-  </div>
+  <RouterView v-else-if="isProfessionalPage"/>
 
   <!-- ── Fallback ── -->
   <div v-else>

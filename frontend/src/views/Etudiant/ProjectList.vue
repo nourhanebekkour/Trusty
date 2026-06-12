@@ -153,6 +153,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useAuthStore } from '@/stores/authstore'
 import { useProjetStore } from '@/stores/projetStore'
 import {
   nomComplet, formatType, formatStatut, formatDate, emptyForm,
@@ -165,7 +166,9 @@ import ProjetDetailModal  from '@/components/projets/projetDetailModal.vue'
 import ProjetRapportModal from '@/components/projets/ProjetRapportModal.vue'
 import ConfirmModal       from '@/components/stages/ConfirmModal.vue'
 
+const authStore = useAuthStore()
 const store = useProjetStore()
+const idEtudiant = authStore.user?.id_utilisateur ?? null
 
 // Modal state
 const showModal   = ref(false)
@@ -322,7 +325,7 @@ async function handleDeleteConfirmed() {
   }
 }
 
-onMounted(() => store.fetchProjets())
+onMounted(() => store.fetchProjets(idEtudiant))
 </script>
 
 <style scoped>
