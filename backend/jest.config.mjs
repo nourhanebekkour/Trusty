@@ -5,7 +5,8 @@ export default {
     testEnvironment: "node",
     testPathIgnorePatterns: [
         "/node_modules/",
-        "/Tests/performance/"
+        "/Tests/performance/",
+        "/tests/performance/"
     ],
     transformIgnorePatterns: [
         "node_modules/(?!(.prisma|@prisma)/)"
