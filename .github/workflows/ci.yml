@@ -1,7 +1,5 @@
 name: CI
 
-# Permissions globales minimales — Least Privilege
-# Par défaut GitHub donne write-all, on restreint à read uniquement
 permissions:
   contents: read
 
@@ -64,7 +62,6 @@ jobs:
     defaults:
       run:
         working-directory: ./backend
-
     services:
       postgres:
         image: postgres:15-alpine
@@ -87,7 +84,6 @@ jobs:
       MINIO_ACCESS_KEY: minioadmin
       MINIO_SECRET_KEY: minioadmin
       MINIO_USE_SSL: "false"
-
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -95,9 +91,7 @@ jobs:
           node-version: '20.x'
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
-
       - run: npm ci
-
       - name: Start MinIO
         run: |
           docker run -d \
@@ -113,13 +107,52 @@ jobs:
           echo "MinIO ready ✓"
       - name: Run Prisma migrations
         run: npx prisma migrate deploy
-
       - name: Generate Swagger
         run: npm run swagger
-
       - name: Run backend tests
         run: npm test
         continue-on-error: true
+
+  frontend-test:
+    name: Frontend — Tests & Rapport (Vitest + Jira)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: frontend-lint
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Lancer Vitest (JSON output)
+        run: npm run test:ci
+        continue-on-error: true
+      - name: Générer le rapport HTML
+        run: npm run report:generate
+      - name: Envoyer le rapport (email + Jira)
+        run: npm run report:send
+        env:
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_TO:   ${{ secrets.SMTP_TO }}
+          JIRA_BASE_URL:    ${{ secrets.JIRA_BASE_URL }}
+          JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
+          JIRA_USER_EMAIL:  ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN:   ${{ secrets.JIRA_API_TOKEN }}
+      - name: Archiver le rapport HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-report
+          path: frontend/test-report.html
+
+  # ════════════════════════════════════════════════════════
+  # PHASE 3 — RUN
+  # ════════════════════════════════════════════════════════
 
   backend-run:
     name: Backend — Run
@@ -143,51 +176,6 @@ jobs:
           SERVER_PID=$!
           sleep 8
           kill $SERVER_PID || true
-
-  frontend-test:
-    name: Frontend — Tests & Rapport (Vitest + Jira)
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: frontend-lint
-    defaults:
-      run:
-        working-directory: ./frontend
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-      - run: npm ci
-
-      - name: Lancer Vitest (JSON output)
-        run: npm run test:ci
-        continue-on-error: true
-
-      - name: Générer le rapport HTML
-        run: npm run report:generate
-
-      - name: Envoyer le rapport (email + Jira)
-        run: npm run report:send
-        env:
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          SMTP_TO:   ${{ secrets.SMTP_TO }}
-          JIRA_BASE_URL:    ${{ secrets.JIRA_BASE_URL }}
-          JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
-          JIRA_USER_EMAIL:  ${{ secrets.JIRA_USER_EMAIL }}
-          JIRA_API_TOKEN:   ${{ secrets.JIRA_API_TOKEN }}
-
-      - name: Archiver le rapport HTML
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-test-report
-          path: frontend/test-report.html
-
-  # ════════════════════════════════════════════════════════
-  # PHASE 3 — RUN TESTS
-  # ════════════════════════════════════════════════════════
 
   frontend-run:
     name: Frontend — Run
@@ -213,28 +201,6 @@ jobs:
           kill $SERVER_PID || true
 
   # ════════════════════════════════════════════════════════
-  # PHASE 4 — BUILD
-  # ════════════════════════════════════════════════════════
-
-  frontend-build:
-    name: Frontend — Build
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: frontend-run
-    defaults:
-      run:
-        working-directory: ./frontend
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-      - run: npm ci
-      - run: npm run build
-
-  # ════════════════════════════════════════════════════════
   # PHASE 5 — SÉCURITÉ & E2E (jobs parallèles)
   # ════════════════════════════════════════════════════════
 
@@ -242,7 +208,7 @@ jobs:
     name: Security — Trivy (deps + images Docker)
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [backend-run, frontend-build]
+    needs: [backend-run, frontend-run]
     permissions:
       security-events: write
       actions: read
@@ -360,7 +326,7 @@ jobs:
     name: Frontend — E2E (Cypress)
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [backend-run, frontend-build]
+    needs: [backend-run, frontend-run]
     services:
       postgres:
         image: postgres:15
@@ -453,3 +419,25 @@ jobs:
           name: cypress-videos
           path: frontend/cypress/videos
           if-no-files-found: ignore
+
+  # ════════════════════════════════════════════════════════
+  # PHASE 6 — BUILD
+  # ════════════════════════════════════════════════════════
+
+  frontend-build:
+    name: Frontend — Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [trivy-scan, cypress-e2e]
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
