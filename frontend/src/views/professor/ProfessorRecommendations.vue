@@ -65,16 +65,28 @@
           </button>
         </div>
         <div class="modal__body">
+          <div v-if="formErrors.length" class="form-errors">
+            <p v-for="err in formErrors" :key="err" class="form-error-msg">{{ err }}</p>
+          </div>
           <label class="form-field">
             <span class="form-label">Étudiant</span>
             <select v-model="form.studentId" class="form-select">
               <option value="">Sélectionner un étudiant</option>
-              <option v-for="s in students" :key="s.id" :value="s.id">{{ s.fullName }}</option>
+              <option v-for="s in students" :key="s.id" :value="s.id">
+                {{ sanitizeText(s.fullName) }}
+              </option>
             </select>
           </label>
           <label class="form-field">
             <span class="form-label">Message</span>
-            <textarea v-model="form.message" class="form-textarea" placeholder="Rédiger le message de recommandation" rows="4"></textarea>
+            <textarea
+              v-model="form.message"
+              class="form-textarea"
+              placeholder="Rédiger le message de recommandation"
+              rows="4"
+              maxlength="2000"
+            ></textarea>
+            <span class="char-counter">{{ form.message.length }} / 2000</span>
           </label>
         </div>
         <div class="modal__footer">
@@ -88,7 +100,7 @@
       </div>
     </div>
 
-    <div v-if="toast.show" class="toast">{{ toast.message }}</div>
+    <div v-if="toast.show" class="toast">{{ sanitizeText(toast.message) }}</div>
   </div>
 </template>
 
@@ -101,6 +113,41 @@ import {
   createProfessorRecommendationRequest,
 } from '@/services/professorApi'
 
+
+
+const MESSAGE_MIN  = 10
+const MESSAGE_MAX  = 2000
+
+function sanitizeText(value) {
+  if (!value) return ''
+  return String(value)
+    .replace(/<[^>]*>/g, '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .trim()
+    .slice(0, 500)
+}
+
+function isValidStudentId(id) {
+  return id != null && String(id).trim() !== ''
+}
+
+function validateForm() {
+  const errors = []
+  if (!isValidStudentId(form.value.studentId)) {
+    errors.push('Veuillez sélectionner un étudiant.')
+  }
+  const msg = form.value.message.trim()
+  if (!msg) {
+    errors.push('Le message est obligatoire.')
+  } else if (msg.length < MESSAGE_MIN) {
+    errors.push(`Le message doit comporter au moins ${MESSAGE_MIN} caractères.`)
+  } else if (msg.length > MESSAGE_MAX) {
+    errors.push(`Le message ne peut pas dépasser ${MESSAGE_MAX} caractères.`)
+  }
+  return errors
+}
 const auth = useAuthStore()
 
 const students = ref([])
@@ -136,6 +183,8 @@ async function loadStudents() {
   const ecole = auth.user?.ecole
   if (!ecole) return
   try {
+    const raw = Array.isArray(data) ? data : (data.students || [])
+    students.value = raw.filter(s => s && s.id != null)
     const data = await getStudentsByEcole(ecole)
     students.value = Array.isArray(data) ? data : []
   } catch {}
@@ -154,29 +203,36 @@ async function loadRecommendations() {
 }
 
 function openCreateModal() {
-  form.value = { studentId: '', message: '' }
-  showModal.value = true
+  form.value   = { studentId: '', message: '' }
+  formErrors.value = []
+  showModal.value  = true
 }
 
-function closeModal() { showModal.value = false }
+function closeModal() {
+  showModal.value  = false
+  formErrors.value = []
+}
 
 async function submitRec() {
-  if (!form.value.studentId || !form.value.message) {
-    showToast('Veuillez remplir tous les champs.')
-    return
-  }
+  formErrors.value = validateForm()
+  if (formErrors.value.length) return
+
+  if (sending.value) return
   sending.value = true
+
   try {
     await createProfessorRecommendationRequest({
       studentId: form.value.studentId,
-      message: form.value.message,
+      message:   sanitizeText(form.value.message),
     })
     closeModal()
     showToast('Recommandation créée avec succès.')
     await loadRecommendations()
   } catch (err) {
     showToast(err.response?.data?.message || 'Impossible de créer la recommandation.')
-  } finally { sending.value = false }
+  } finally {
+    sending.value = false
+  }
 }
 
 onMounted(() => {
@@ -347,6 +403,18 @@ onMounted(() => {
   border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-light);
 }
 .form-textarea { resize: vertical; min-height: 80px; }
+
+.char-counter {
+  font-size: 0.72rem; color: var(--color-text-tertiary);
+  text-align: right;
+}
+
+.form-errors { display: flex; flex-direction: column; gap: 0.3rem; }
+.form-error-msg {
+  font-size: 0.78rem; color: var(--color-danger);
+  background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 6px; padding: 0.35rem 0.65rem; margin: 0;
+}
 
 .toast {
   position: fixed; bottom: 24px; right: 24px;

@@ -39,7 +39,7 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label>Date de début</label>
+              <label>Date de début *</label>
               <input type="date" v-model="form.date_debut" />
             </div>
             <div class="form-group">
@@ -110,7 +110,7 @@ watch(() => props.activite, (val) => {
 }, { immediate: true });
 
 const isValid = computed(() =>
-  form.value.type_activite && form.value.nom_activite && form.value.organisation && form.value.role
+  form.value.type_activite && form.value.nom_activite && form.value.organisation && form.value.role && form.value.date_debut
 );
 
 function submit() {

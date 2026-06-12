@@ -1,10 +1,10 @@
 <template>
-  <div class="stages-page">
+  <div class="stages-page" @keydown.esc="handleEscape">
 
     <!-- Header -->
     <div class="page-header">
       <div class="header-left">
-        <div class="header-icon">
+        <div class="header-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
             <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
             <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
@@ -15,8 +15,8 @@
           <p class="page-subtitle">Suivez vos expériences professionnelles et gérez vos demandes de validation</p>
         </div>
       </div>
-      <button class="add-btn" @click="openNewModal">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+      <button class="add-btn" @click="openNewModal" :disabled="actionLocked">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true">
           <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
         Nouveau stage
@@ -55,14 +55,20 @@
     <ConfirmModal
       v-model="showConfirm"
       title="Supprimer ce stage ?"
-      :message="`Le stage chez « ${stageToDelete?.entreprise || ''} » sera définitivement supprimé. Cette action est irréversible.`"
+      :message="deleteMessage"
       confirm-text="Oui, supprimer"
       @confirm="handleDeleteConfirmed"
     />
 
     <!-- Toast -->
     <Teleport to="body">
-      <div v-if="store.toast.show" class="toast" :class="'toast--' + store.toast.type">
+      <div
+        v-if="store.toast.show"
+        class="toast"
+        :class="'toast--' + store.toast.type"
+        role="status"
+        aria-live="polite"
+      >
         {{ store.toast.message }}
       </div>
     </Teleport>
@@ -71,7 +77,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useStageStore } from '@/stores/stageStore'
 import { useAuthStore } from '@/stores/authstore'
 import { emptyForm } from '@/components/stages/stageHelpers'
@@ -87,25 +93,87 @@ import StageBottomGrid   from '@/components/stages/StageBottomGrid.vue'
 const store      = useStageStore()
 const authStore  = useAuthStore()
 
-// Modal state (local, props/events pattern)
 const showModal       = ref(false)
 const editMode        = ref(false)
 const viewMode        = ref(false)
 const form            = ref(emptyForm())
 const editStageId     = ref(null)
 
-// Detail modal state
 const showDetailModal = ref(false)
 const detailStageId   = ref(null)
 
-// Confirm delete state
 const showConfirm     = ref(false)
 const stageToDelete   = ref(null)
 const deleteLoading   = ref(false)
 
+/**
+ * Verrou global : empêche d'ouvrir plusieurs modals simultanément
+ * ou de déclencher des actions pendant qu'une opération est en cours.
+ */
+const actionLocked = ref(false)
+
+/**
+ * Message de confirmation de suppression construit à partir de données
+ * dont les balises HTML sont retirées avant affichage.
+ */
+const deleteMessage = computed(() => {
+  const entreprise = sanitizeText(stageToDelete.value?.entreprise || '')
+  return `Le stage chez « ${entreprise} » sera définitivement supprimé. Cette action est irréversible.`
+})
+
 const etudiantId = computed(() => authStore.user?.id_utilisateur ?? null)
 
+/**
+ * Supprime les balises HTML d'une valeur avant affichage ou envoi.
+ */
+function sanitizeText(value) {
+  if (!value) return ''
+  return String(value).replace(/<[^>]*>/g, '').trim().slice(0, 500)
+}
+
+/**
+ * Nettoie les champs texte libres d'un objet stage avant de
+ * peupler le formulaire d'édition.
+ */
+function sanitizeStageForm(stage) {
+  return {
+    entreprise:              sanitizeText(stage.entreprise ?? ''),
+    poste:                   sanitizeText(stage.poste ?? ''),
+    adresse_entreprise:      sanitizeText(stage.adresse_entreprise ?? ''),
+    date_debut:              stage.date_debut?.slice(0, 10) ?? '',
+    date_fin:                stage.date_fin?.slice(0, 10) ?? '',
+    duree_semaines:          stage.duree_semaines ?? null,
+    missions:                sanitizeText(stage.missions ?? ''),
+    encadrant_professionnel: sanitizeText(stage.encadrant_professionnel ?? ''),
+    encadrant_academique:    sanitizeText(stage.encadrant_academique ?? ''),
+    id_validateur:           stage.id_validateur ?? null,
+    est_public:              stage.est_public ?? true,
+    technologies:            (stage.technologies ?? []).map(t => ({
+      id_technologie:     t.id_technologie,
+      nom:                sanitizeText(t.nom ?? t.technologie?.nom ?? ''),
+      categorie:          sanitizeText(t.categorie ?? t.technologie?.categorie ?? ''),
+      sous_categorie:     sanitizeText(t.sous_categorie ?? t.technologie?.sous_categorie ?? ''),
+      version:            sanitizeText(t.version ?? ''),
+      niveau_utilisation: t.niveau_utilisation ?? 'INTERMEDIAIRE',
+    })),
+  }
+}
+
+/**
+ * Ferme la modal ou le dialogue ouvert lors d'un appui sur Escape.
+ */
+function handleEscape() {
+  if (showConfirm.value) {
+    showConfirm.value = false
+  } else if (showDetailModal.value) {
+    showDetailModal.value = false
+  } else if (showModal.value) {
+    showModal.value = false
+  }
+}
+
 function openNewModal() {
+  if (actionLocked.value) return
   editMode.value    = false
   viewMode.value    = false
   editStageId.value = null
@@ -114,31 +182,12 @@ function openNewModal() {
 }
 
 function openEditModal(stage) {
+  if (actionLocked.value) return
   editMode.value    = true
   viewMode.value    = false
   editStageId.value = stage.id_stage
-  form.value = {
-    entreprise:              stage.entreprise ?? '',
-    poste:                   stage.poste ?? '',
-    adresse_entreprise:      stage.adresse_entreprise ?? '',
-    date_debut:              stage.date_debut?.slice(0, 10) ?? '',
-    date_fin:                stage.date_fin?.slice(0, 10) ?? '',
-    duree_semaines:          stage.duree_semaines ?? null,
-    missions:                stage.missions ?? '',
-    encadrant_professionnel: stage.encadrant_professionnel ?? '',
-    encadrant_academique:    stage.encadrant_academique ?? '',
-    id_validateur:           stage.id_validateur ?? null,
-    est_public:              stage.est_public ?? true,
-    technologies:            stage.technologies?.map(t => ({
-      id_technologie:     t.id_technologie,
-      nom:                t.nom ?? t.technologie?.nom ?? '',
-      categorie:          t.categorie ?? t.technologie?.categorie ?? '',
-      sous_categorie:     t.sous_categorie ?? t.technologie?.sous_categorie ?? '',
-      version:            t.version ?? '',
-      niveau_utilisation: t.niveau_utilisation ?? 'INTERMEDIAIRE',
-    })) ?? [],
-  }
-  showModal.value = true
+  form.value        = sanitizeStageForm(stage)
+  showModal.value   = true
 }
 
 function handleCreated(stageId) {
@@ -152,19 +201,23 @@ function handleUpdated(stageId) {
 }
 
 function voirStage(stage) {
-  detailStageId.value = stage.id_stage
+  if (actionLocked.value) return
+  detailStageId.value   = stage.id_stage
   showDetailModal.value = true
 }
 
 function confirmDeleteStage(stage) {
+  if (actionLocked.value) return
   stageToDelete.value = stage
-  showConfirm.value = true
+  showConfirm.value   = true
 }
 
 async function handleDeleteConfirmed() {
   const stage = stageToDelete.value
   if (!stage) return
+  if (deleteLoading.value) return
   deleteLoading.value = true
+  actionLocked.value  = true
   try {
     await supprimerStage(stage.id_stage)
     store.chargerStages()
@@ -173,15 +226,20 @@ async function handleDeleteConfirmed() {
     store.showToast(e?.response?.data?.message || e.message, 'error')
   } finally {
     deleteLoading.value = false
+    actionLocked.value  = false
     stageToDelete.value = null
   }
 }
 
 function downloadResource(type) {
-  store.showToast(`Téléchargement de "${type}" en cours...`)
+  store.showToast(`Téléchargement de "${sanitizeText(type)}" en cours...`)
 }
 
 onMounted(() => store.init())
+
+onUnmounted(() => {
+  actionLocked.value = false
+})
 </script>
 
 <style scoped>
@@ -248,10 +306,16 @@ onMounted(() => store.init())
   flex-shrink: 0;
 }
 
-.add-btn:hover {
+.add-btn:hover:not(:disabled) {
   background: var(--color-accent-hover);
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(61, 107, 94, 0.3);
+}
+
+.add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .toast {
