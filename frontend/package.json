@@ -4,21 +4,40 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build",
-    "preview": "vite preview",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "preview": "vite preview --host",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:ci": "vitest run --reporter=verbose --reporter=json --outputFile=test-results.json",
+    "report:generate": "node scripts/generate-html-report.js",
+    "report:send": "node scripts/send-report.js"
   },
   "dependencies": {
+    "@vuelidate/core": "^2.0.3",
+    "@vuelidate/validators": "^2.0.4",
+    "axios": "^1.15.2",
+    "lucide-vue-next": "^1.0.0",
     "pinia": "^3.0.4",
     "vue": "^3.5.31",
     "vue-router": "^5.0.4"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^6.0.5",
-    "vite": "^8.0.3",
-    "vite-plugin-vue-devtools": "^8.1.1",
-    "eslint": "^8.0.0"
+    "@vitejs/plugin-vue": "^5.2.3",
+    "@vitest/ui": "^4.1.8",
+    "@vue/test-utils": "^2.4.9",
+    "bcryptjs": "^3.0.3",
+    "cypress": "^15.15.0",
+    "dotenv": "^17.4.2",
+    "eslint": "^8.0.0",
+    "eslint-plugin-vue": "^10.9.1",
+    "globals": "^17.6.0",
+    "jsdom": "^29.1.0",
+    "nodemailer": "^6.10.1",
+    "vite": "^6.3.0",
+    "vite-plugin-vue-devtools": "^7.7.2",
+    "vitest": "^4.1.5"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

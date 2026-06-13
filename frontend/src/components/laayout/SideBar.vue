@@ -1,0 +1,326 @@
+<template>
+  <Teleport to="body">
+    <div v-if="isMobileOpen" class="sidebar-overlay" @click="closeMobile"></div>
+  </Teleport>
+
+  <aside class="sidebar" :class="{ 'collapsed': isCollapsed, 'mobile-open': isMobileOpen }">
+    
+    <div class="sidebar-header">
+      <button class="toggle-btn" @click="toggleCollapsed">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+      <button class="mobile-close-btn" @click="closeMobile">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <router-link to="/dashboard" class="nav-item">
+        <img :src="iconDashboard" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Dashboard</span>
+      </router-link>
+
+      <router-link to="/profile" class="nav-item">
+         <img :src="iconProfile" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Mon Profil</span>
+      </router-link>
+
+      <router-link to="/parcours" class="nav-item">
+        <img :src="iconParcours" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Parcours</span>
+      </router-link>
+
+      <router-link to="/stage" class="nav-item">
+        <img :src="iconStages" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Stages</span>
+      </router-link>
+
+      <router-link to="/projets" class="nav-item">
+        <img :src="iconProjets" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Projets</span>
+      </router-link>
+
+      <router-link to="/recommendations" class="nav-item">
+        <img :src="iconRecommandations" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Recommandations</span>
+      </router-link>
+
+      <router-link to="/suggestions" class="nav-item">
+        <img :src="iconModeles" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Suggestions IA</span>
+      </router-link>
+
+      <router-link to="/lettres" class="nav-item">
+        <img :src="iconRecommandations" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Lettres de reco.</span>
+      </router-link>
+      
+      <router-link to="/notifications" class="nav-item">
+        <img :src="iconNotifications" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Notifications</span>
+      </router-link>
+
+      <router-link to="/activites" class="nav-item">
+        <img :src="iconModeles" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Activités parascolaires</span>
+      </router-link> 
+
+      <router-link to="/portfolio" class="nav-item">
+        <img :src="iconPortfolioComplet" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Portfolio Complet</span>
+      </router-link>
+    </nav>
+    
+    <div class="sidebar-bottom">
+      <router-link to="/settings" class="nav-item">
+        <img :src="iconSettings" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Paramètres</span>
+      </router-link>
+
+      <button class="nav-item logout-btn" @click="handleLogout">
+        <img :src="iconLogout" class="nav-icon" />
+        <span class="nav-label" v-show="!isCollapsed">Déconnexion</span>
+      </button>
+    </div>
+
+  </aside>
+</template>
+
+<script setup>
+import { getActivePinia } from 'pinia'
+import { useAuthStore } from '@/stores/authstore'
+import { useRouter } from 'vue-router'
+import { useSidebar } from '@/composables/useSidebar'
+
+import iconDashboard        from '@/assets/icons/dashboard.svg'
+import iconProfile          from '@/assets/icons/profile.svg'
+import iconParcours         from '@/assets/icons/parcours.svg'
+import iconStages           from '@/assets/icons/stages.svg'
+import iconProjets          from '@/assets/icons/projets.svg'
+import iconSettings         from '@/assets/icons/settings.svg'
+import iconLogout           from '@/assets/icons/logout.svg'
+import iconRecommandations  from '@/assets/icons/recommandations.svg'
+import iconNotifications    from '@/assets/icons/notifications.svg'
+import iconModeles          from '@/assets/icons/modeles.svg'
+import iconPortfolioComplet from '@/assets/icons/portfoliocomplet.svg'
+
+const { isCollapsed, isMobileOpen, toggleCollapsed, closeMobile } = useSidebar()
+const emit        = defineEmits(['logout'])
+const activePinia = getActivePinia()
+const authStore   = activePinia ? useAuthStore(activePinia) : null
+const router      = useRouter()
+
+async function handleLogout() {
+  emit('logout')
+
+  if (authStore?.logout) {
+    await authStore.logout()
+  }
+
+  router?.push?.('/login')
+}
+</script>
+
+<style scoped>
+/* Dans votre composant Sidebar.vue */
+/* Dans SideBar.vue */
+/* Dans SideBar.vue */
+.sidebar {
+  width: 235px;
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+  
+  /* MODIFIEZ CETTE LIGNE */
+  min-height: 100%; /* Au lieu de 100vh fixe */
+}
+/* Style de la sidebar quand elle est réduite */
+.sidebar.collapsed {
+  width: 70px; 
+}
+
+/* En-tête pour le bouton toggle */
+.sidebar-header {
+  padding: 16px 16px 0 16px;
+  display: flex;
+  justify-content: flex-start; /* <-- Changement ici : le bouton s'aligne à gauche */
+}
+
+.sidebar.collapsed .sidebar-header {
+  justify-content: center; 
+  padding: 16px 0 0 0;
+}
+
+.toggle-btn {
+  background: var(--color-surface-hover);
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-primary);
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left:14px ;
+  padding-right:14px ;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggle-btn:hover {
+  background-color: var(--color-surface-alt);
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%; 
+  box-sizing: border-box;
+  height: 40px; 
+  padding: 0 12px; 
+  color: var(--color-text-secondary);
+  background-color: transparent;
+  font-family: Inter, sans-serif; 
+  font-size: 14px; 
+  line-height: 22px; 
+  font-weight: 400;
+  border: none; 
+  border-radius: 10px; 
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 0;
+}
+
+.nav-item:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+  transform: translateX(3px);
+}
+
+.sidebar.collapsed .nav-item:hover {
+  transform: none;
+}
+
+.router-link-active {
+  background-color: var(--color-accent-light);
+  color: var(--color-accent);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+.sidebar.collapsed .router-link-active {
+  box-shadow: inset 0 -3px 0 var(--color-accent);
+}
+
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.sidebar-bottom {
+  padding: 10px 8px; 
+  border-top: 1px solid var(--color-border);  
+  display: flex;
+  flex-direction: column;
+  gap: 4px;  
+}
+
+.logout-btn {
+  cursor: pointer;
+  justify-content: flex-start;
+}
+
+.sidebar.collapsed .logout-btn {
+  justify-content: center;
+}
+
+.logout-btn:hover {
+  color: var(--color-danger);
+}
+
+.mobile-close-btn {
+  display: none;
+  background: var(--color-surface-hover);
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-primary);
+  padding: 8px;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 98;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 99;
+    height: 100vh;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .sidebar.collapsed {
+    width: 235px;
+  }
+
+  .sidebar-header {
+    justify-content: space-between;
+  }
+
+  .toggle-btn {
+    display: none;
+  }
+
+  .mobile-close-btn {
+    display: flex;
+  }
+
+  .sidebar-nav {
+    padding: 8px;
+  }
+}
+</style>

@@ -1,0 +1,151 @@
+import { mount } from '@vue/test-utils'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import ProfileBadges from '@/components/profile/ProfileBadges.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
+
+// ─── Mock du router ────────────────────────────────────────────────────────────
+const mockPush = vi.fn()
+vi.mock('vue-router', () => ({
+  useRouter: () => ({ push: mockPush }),
+}))
+
+// ─── Factories ─────────────────────────────────────────────────────────────────
+const makeBadge = (overrides = {}) => ({
+  badge: {
+    id_badge: 1,
+    nom: 'Badge Test',
+    icone: null,
+    ...overrides.badge,
+  },
+  date_attribution: '2024-03-15',
+  ...overrides,
+})
+
+const makeUser = (badges = []) => ({
+  etudiant: { badges },
+})
+
+// ─── Suite ────────────────────────────────────────────────────────────────────
+describe('ProfileBadges.vue', () => {
+  let wrapper
+
+  const mountComponent = (user = makeUser()) =>
+    mount(ProfileBadges, {
+      props: { user },
+      global: {
+        components: { AppIcon },
+        mocks: { $router: { push: mockPush } },
+        stubs: { RouterLink: true },
+      },
+    })
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  // ── Rendu de base ────────────────────────────────────────────────────────────
+  describe('Rendu de base', () => {
+    it('affiche le titre "Badges Certifiés"', () => {
+      wrapper = mountComponent()
+      expect(wrapper.find('.section-header h3').text()).toBe('Badges Certifiés')
+    })
+
+    it('affiche le bloc de génération de portfolio', () => {
+      wrapper = mountComponent()
+      expect(wrapper.find('.generate-box').exists()).toBe(true)
+      expect(wrapper.find('.generate-box h4').text()).toBe('Générer mon portfolio')
+    })
+
+    it('affiche le bouton "Lancer →"', () => {
+      wrapper = mountComponent()
+      const btn = wrapper.find('.btn-portfolio')
+      expect(btn.exists()).toBe(true)
+      expect(btn.text()).toContain('Lancer')
+    })
+  })
+
+  // ── État vide ────────────────────────────────────────────────────────────────
+  describe('État vide', () => {
+    it('affiche le message "Aucun badge certifié pour l\'instant." quand badges est vide', () => {
+      wrapper = mountComponent(makeUser([]))
+      expect(wrapper.find('.empty-badges').text()).toContain('Aucun badge certifié')
+    })
+
+    it('n\'affiche pas la grille de badges quand la liste est vide', () => {
+      wrapper = mountComponent(makeUser([]))
+      expect(wrapper.find('.badges-grid').exists()).toBe(false)
+    })
+
+    it('affiche le message vide quand etudiant est undefined', () => {
+      wrapper = mountComponent({ etudiant: undefined })
+      expect(wrapper.find('.empty-badges').exists()).toBe(true)
+    })
+
+    it('affiche le message vide quand badges est undefined', () => {
+      wrapper = mountComponent({ etudiant: {} })
+      expect(wrapper.find('.empty-badges').exists()).toBe(true)
+    })
+  })
+
+  // ── Affichage des badges ──────────────────────────────────────────────────────
+  describe('Affichage des badges', () => {
+    it('affiche la grille quand des badges existent', () => {
+      wrapper = mountComponent(makeUser([makeBadge()]))
+      expect(wrapper.find('.badges-grid').exists()).toBe(true)
+      expect(wrapper.find('.empty-msg').exists()).toBe(false)
+    })
+
+    it('affiche le bon nombre de badge-card', () => {
+      const badges = [makeBadge({ badge: { id_badge: 1, nom: 'A' } }), makeBadge({ badge: { id_badge: 2, nom: 'B' } })]
+      wrapper = mountComponent(makeUser(badges))
+      expect(wrapper.findAll('.badge-card')).toHaveLength(2)
+    })
+
+    it('affiche le nom du badge', () => {
+      wrapper = mountComponent(makeUser([makeBadge({ badge: { id_badge: 1, nom: 'Expert Vue' } })]))
+      expect(wrapper.find('.badge-title').text()).toBe('Expert Vue')
+    })
+
+    it('affiche une icône professionnelle pour le badge', () => {
+      wrapper = mountComponent(makeUser([makeBadge({ badge: { id_badge: 1, nom: 'Test' } })]))
+      expect(wrapper.find('.badge-icon-wrap svg').exists()).toBe(true)
+    })
+
+    it('affiche l\'icône de badge si icone est null', () => {
+      wrapper = mountComponent(makeUser([makeBadge({ badge: { id_badge: 1, nom: 'Test', icone: null } })]))
+      expect(wrapper.find('.badge-icon-wrap svg').exists()).toBe(true)
+    })
+
+    it('affiche l\'année d\'attribution dans .badge-year', () => {
+      wrapper = mountComponent(makeUser([makeBadge({ date_attribution: '2023-06-20' })]))
+      // Le composant affiche la date en format fr-FR (ex: "20 juin 2023")
+      expect(wrapper.find('.badge-year').text()).toContain('2023')
+    })
+
+    it('applique un style background au .badge-icon-wrap', () => {
+      wrapper = mountComponent(makeUser([makeBadge()]))
+      const iconWrap = wrapper.find('.badge-icon-wrap')
+      expect(iconWrap.exists()).toBe(true)
+      const style = iconWrap.attributes('style') ?? ''
+      expect(style).toContain('background')
+    })
+  })
+
+  // ── Navigation ────────────────────────────────────────────────────────────────
+  describe('Navigation vers /portfolio', () => {
+    it('appelle $router.push("/portfolio") au clic sur le bouton', async () => {
+      wrapper = mountComponent()
+      await wrapper.find('.btn-portfolio').trigger('click')
+      expect(mockPush).toHaveBeenCalledWith('/portfolio')
+    })
+  })
+
+  // ── Props ─────────────────────────────────────────────────────────────────────
+  describe('Props', () => {
+    it('accepte la prop user de type Object', () => {
+      const user = makeUser([makeBadge()])
+      wrapper = mountComponent(user)
+      expect(wrapper.props('user')).toEqual(user)
+    })
+  })
+})

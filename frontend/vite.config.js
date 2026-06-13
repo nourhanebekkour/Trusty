@@ -7,12 +7,27 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    vue(),
-    vueDevTools(),
+    vue()
+    
   ],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+        cookieDomainRewrite: 'localhost',
+        cookiePathRewrite: '/',
+}
+    }
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom'
   },
 })

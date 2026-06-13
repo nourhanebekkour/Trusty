@@ -1,0 +1,52 @@
+/* ── Professional space base styles ── */
+
+.professional-page {
+  padding: 24px 20px 60px;
+  color: var(--color-text-primary, #0F1B2D);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+}
+
+@media (max-width: 768px) {
+  .professional-page {
+    padding: 16px 14px 40px;
+  }
+}
+
+/* Legacy classes (kept for backwards compatibility) */
+.card {
+  background: var(--color-surface, #FFFFFF);
+  border: 1px solid var(--color-border, #D6D0C4);
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: var(--shadow-panel);
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--transition-base, 0.25s), box-shadow var(--transition-base, 0.25s), border-color var(--transition-base, 0.25s);
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary, #0F1B2D);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Status pills */
+.status-pill { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 3px 9px; border-radius: 20px; }
+.pill-pending { background: var(--color-waiting-bg, #FEF3E2); color: var(--color-waiting-text, #B45309); border: 1px solid var(--color-waiting-border, #FCD6A0); }
+.pill-valide  { background: var(--color-valid-bg, #ECFDF5); color: var(--color-valid-text, #065F46); border: 1px solid var(--color-valid-border, #A7F3D0); }
+.pill-refus   { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+
+/* Avatar */
+.avatar-sm { width: 30px; height: 30px; border-radius: 50%; background: var(--color-accent-light, #E8F2EF); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--color-accent, #3D6B5E); flex-shrink: 0; }
+
+/* Empty state */
+.empty-state { text-align: center; color: var(--color-text-secondary, #6B7280); font-size: 13px; padding: 20px; }

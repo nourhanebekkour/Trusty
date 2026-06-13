@@ -4,18 +4,66 @@
   "description": "",
   "license": "ISC",
   "author": "",
-  "type": "commonjs",
-  "main": "index.js",
+  "type": "module",
+  "main": "src/server.js",
+  "imports": {
+    "#Config/*": "./src/Config/*",
+    "#Middlewares/*": "./src/shared/Middlewars/*",
+    "#Utils/*": "./src/shared/Utils/*",
+    "#Services/*": "./src/shared/Services/*",
+    "#Modules/*": "./src/modules/*"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint ."
+    "dev": "cross-env NODE_ENV=development nodemon src/server.js",
+    "start": "cross-env NODE_ENV=production node src/server.js",
+    "swagger": "node src/swagger.js",
+    "test": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/.bin/jest --verbose --silent --runInBand",
+    "test:report": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/.bin/jest --verbose --silent=false 2>&1 | tee test-reports/test-output.log; echo 'Rapport généré dans test-reports/test-report.html' && node send-report.js",
+    "lint": "eslint .",
+    "prisma:generate": "prisma generate",
+    "db:migrate:dev": "dotenv -e .env -- prisma migrate dev",
+    "db:migrate:test": "dotenv -e .env.test -- prisma migrate dev",
+    "db:migrate:prod": "dotenv -e .env.production -- prisma migrate deploy",
+    "db:seed:dev": "dotenv -e .env -- prisma db seed",
+    "db:seed:test": "dotenv -e .env.test -- prisma db seed",
+    "db:studio:dev": "dotenv -e .env -- prisma studio",
+    "db:studio:test": "dotenv -e .env.test -- prisma studio"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "dependencies": {
+    "@google/genai": "^2.8.0",
+    "@google/generative-ai": "^0.24.1",
+    "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "cross-env": "^10.1.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "nodemon": "^3.1.14"
+    "express-rate-limit": "^8.5.1",
+    "jsonwebtoken": "^9.0.3",
+    "minio": "^8.0.7",
+    "multer": "^2.1.1",
+    "nodemailer": "^8.0.7",
+    "nodemon": "^3.1.14",
+    "puppeteer": "^25.1.0",
+    "swagger-autogen": "^2.23.7",
+    "swagger-ui-express": "^5.0.1",
+    "swot-node": "^2.0.1489",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "eslint": "^8.0.0"
+    "@faker-js/faker": "^10.4.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "dotenv-cli": "^11.0.0",
+    "eslint": "^8.0.0",
+    "jest": "^30.3.0",
+    "jest-html-reporter": "^4.4.0",
+    "nodemon": "^3.1.14",
+    "prisma": "^6.19.3",
+    "supertest": "^7.2.2"
   }
 }

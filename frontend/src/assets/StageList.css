@@ -1,0 +1,250 @@
+/* ════════════════════════════════════════════════════════════
+   STAGE LIST — Shared styles (imported by child components)
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Modal overlay ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 27, 45, 0.55);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+
+/* ── Spinner ── */
+.spinner {
+  width: 36px; height: 36px;
+  border: 2px solid var(--color-accent-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Fade up ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Badges (shared for detail modal) ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.22rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  border: 1px solid transparent;
+}
+
+.badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+}
+
+.badge--valide {
+  background: var(--color-valid-bg);
+  color: var(--color-valid-text);
+  border-color: var(--color-valid-border);
+}
+.badge--valide .badge-dot { background: var(--color-valid-text); }
+
+.badge--attente {
+  background: var(--color-waiting-bg);
+  color: var(--color-waiting-text);
+  border-color: var(--color-waiting-border);
+}
+.badge--attente .badge-dot { background: var(--color-waiting-text); }
+
+.badge--cours {
+  background: #EFF6FF;
+  color: #1D4ED8;
+  border-color: #BFDBFE;
+}
+.badge--cours .badge-dot { background: #1D4ED8; }
+
+.badge--rejete {
+  background: #FEF2F2;
+  color: #DC2626;
+  border-color: #FECACA;
+}
+.badge--rejete .badge-dot { background: #DC2626; }
+
+/* ── Tech levels (shared for detail modal) ── */
+.lvl-green  { background: var(--color-accent-light);  color: var(--color-accent); }
+.lvl-yellow { background: var(--color-waiting-bg);    color: var(--color-waiting-text); }
+.lvl-orange { background: #FFF7ED;                    color: #EA580C; }
+.lvl-red    { background: #FEF2F2;                    color: #DC2626; }
+
+/* ── Buttons (shared for detail modal) ── */
+.btn-cancel {
+  padding: 0.55rem 1.2rem;
+  border-radius: 9px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 0.83rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.btn-new {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.1rem;
+  background: var(--color-accent);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.btn-new:hover {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+}
+
+/* ════════════════════════════════════════════════════════════
+   BOTTOM GRID — imported by StageBottomGrid
+   ════════════════════════════════════════════════════════════ */
+
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.info-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 1.25rem 1.3rem;
+}
+
+.info-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 0.9rem;
+}
+
+.info-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0;
+}
+
+.info-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.info-list li::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  flex-shrink: 0;
+  margin-top: 0.45rem;
+}
+
+.resources {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.resource-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 9px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.resource-item:hover {
+  border-color: var(--color-accent-border);
+  background: var(--color-surface-hover);
+}
+
+.resource-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+
+.resource-icon--pdf {
+  background: #FEF2F2;
+}
+
+.resource-icon--doc {
+  background: #EFF6FF;
+}
+
+.resource-name {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.resource-meta {
+  font-size: 0.72rem;
+  color: var(--color-text-tertiary);
+  margin-top: 0.05rem;
+}
+
+.resource-action {
+  margin-left: auto;
+  font-size: 0.82rem;
+  color: var(--color-text-tertiary);
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-hover);
+}

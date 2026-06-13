@@ -1,0 +1,149 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+vi.mock('@/services/api', () => ({
+  default: {
+    get:  vi.fn(),
+    post: vi.fn(),
+    interceptors: { response: { use: vi.fn() } },
+  }
+}))
+
+import api from '@/services/api'
+import {
+  fetchStats,
+  fetchProjects,
+  fetchRecos,
+  getAuteurLabel,
+} from '@/services/dashboardservices'
+
+beforeEach(() => vi.clearAllMocks())
+
+// ─────────────────────────────────────────────
+describe('dashboardServices — fetchStats', () => {
+
+  it('1 — retourne les stats depuis l\'API si la réponse n\'est pas vide', async () => {
+    api.get
+      .mockResolvedValueOnce({ data: { data: {
+        score_credibilite: 88,
+        _count: { participations_projets: 5, recommandations: 3 },
+      }}})
+      .mockResolvedValueOnce({ data: { data: [{ nombre_vues: 120 }] } })
+
+    const result = await fetchStats('u1')
+
+    expect(api.get).toHaveBeenCalledWith('/etudiants/u1')
+    expect(result.credibilite).toBe(88)
+    expect(result.recommandations).toBe(3)
+  })
+
+  it('2 — retourne les stats démo si la réponse est vide', async () => {
+    api.get.mockResolvedValue({ data: { data: {} } })
+
+    const result = await fetchStats('u1')
+
+    expect(result).toBeDefined()
+    expect(typeof result.credibilite).toBe('number')
+  })
+
+  it('3 — retourne les stats démo si l\'API échoue', async () => {
+    api.get.mockRejectedValue(new Error('Erreur réseau'))
+
+    const result = await fetchStats('u1')
+
+    expect(result).toBeDefined()
+    expect(typeof result.credibilite).toBe('number')
+  })
+})
+
+// ─────────────────────────────────────────────
+describe('dashboardServices — fetchProjects', () => {
+
+  it('4 — retourne les projets normalisés depuis l\'API', async () => {
+    api.get.mockResolvedValueOnce({ data: { data: [
+      { id_projet: '1', titre: 'Projet A', type_projet: 'PFA', status_validation: 'VALIDE', date_debut: '2024-01-01', description: 'desc', technologies: [], est_createur: true },
+    ]}})
+
+    const result = await fetchProjects('u1')
+
+    expect(Array.isArray(result)).toBe(true)
+    expect(result.length).toBeGreaterThan(0)
+    expect(result[0].titre).toBe('Projet A')
+  })
+
+  it('5 — retourne un tableau vide si aucun projet', async () => {
+    api.get.mockResolvedValueOnce({ data: { data: [] } })
+
+    const result = await fetchProjects('u1')
+
+    expect(Array.isArray(result)).toBe(true)
+    expect(result).toHaveLength(0)
+  })
+
+  it('6 — retourne les données démo si l\'API échoue', async () => {
+    api.get.mockRejectedValue(new Error('Erreur API'))
+
+    const result = await fetchProjects('u1')
+
+    expect(Array.isArray(result)).toBe(true)
+  })
+})
+
+// ─────────────────────────────────────────────
+describe('dashboardServices — fetchRecos', () => {
+
+  it('7 — retourne les recommandations normalisées', async () => {
+    api.get.mockResolvedValue({ data: { data: [
+      {
+        id_recommandation: 1,
+        message: 'Excellent travail',
+        status: 'VALIDE',
+        auteur: { prenom: 'Prof', nom: 'Martin', role: 'PROFESSEUR',
+                  professeur: { specialite: 'Info', departement: 'SI' } }
+      }
+    ]}})
+
+    const result = await fetchRecos('u1')
+
+    expect(Array.isArray(result)).toBe(true)
+    expect(result.length).toBeGreaterThan(0)
+  })
+
+  it('8 — retourne tableau vide ou données démo si l\'API échoue', async () => {
+    api.get.mockRejectedValue(new Error('Erreur'))
+
+    const result = await fetchRecos('u1')
+
+    expect(Array.isArray(result)).toBe(true)
+  })
+})
+
+// ─────────────────────────────────────────────
+describe('getAuteurLabel', () => {
+
+  it('9 — PROFESSEUR : retourne specialite · departement', () => {
+    expect(getAuteurLabel({ role: 'PROFESSEUR', specialite: 'Informatique', departement: 'SI' }))
+      .toBe('Informatique · SI')
+  })
+
+  it('10 — PROFESSIONNEL : retourne poste · entreprise', () => {
+    expect(getAuteurLabel({ role: 'PROFESSIONNEL', poste: 'Dev', entreprise: 'ENSA' }))
+      .toBe('Dev · ENSA')
+  })
+
+  it('11 — ETUDIANT : retourne filiere · Année X', () => {
+    expect(getAuteurLabel({ role: 'ETUDIANT', filiere: 'Informatique', annee: 3 }))
+      .toBe('Informatique · Année 3')
+  })
+
+  it('12 — auteur null/undefined : retourne chaîne vide', () => {
+    expect(getAuteurLabel(null)).toBe('')
+    expect(getAuteurLabel(undefined)).toBe('')
+  })
+
+  it('13 — champs imbriqués professeur.specialite : correctement extraits', () => {
+    expect(getAuteurLabel({
+      role: 'PROFESSEUR',
+      professeur: { specialite: 'Maths', departement: 'Sciences' }
+    })).toBe('Maths · Sciences')
+  })
+})
