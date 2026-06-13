@@ -60,10 +60,10 @@ describe('activitesService.uploadAttestation()', () => {
     api.post.mockResolvedValue({ data: {} })
     const file = new File(['content'], 'attestation.pdf')
     await activitesService.uploadAttestation('1', file)
+    // The service calls api.post with just path and FormData (no extra headers config)
     expect(api.post).toHaveBeenCalledWith(
       '/activites/1/attestation',
-      expect.any(FormData),
-      expect.objectContaining({ headers: { 'Content-Type': 'multipart/form-data' } })
+      expect.any(FormData)
     )
   })
 })

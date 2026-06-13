@@ -48,44 +48,48 @@ describe('ProfessionalSidebar.vue — Tests Unitaires', () => {
     expect(mountSidebar().find('.sidebar-nav').exists()).toBe(true)
   })
 
-  it('4 — affiche le lien Dashboard', () => {
-    expect(mountSidebar().text()).toContain('Dashboard')
+  it('4 — affiche le lien Profil', () => {
+    expect(mountSidebar().text()).toContain('Profil')
   })
 
   it('5 — affiche le lien Recommandations', () => {
     expect(mountSidebar().text()).toContain('Recommandations')
   })
 
-  it('6 — affiche le lien Commentaires', () => {
-    expect(mountSidebar().text()).toContain('Commentaires')
+  it('6 — affiche le lien Portfolio', () => {
+    expect(mountSidebar().text()).toContain('Portfolio')
   })
 
   it('7 — affiche le lien Notifications', () => {
     expect(mountSidebar().text()).toContain('Notifications')
   })
 
-  it('8 — affiche le lien Historique', () => {
-    expect(mountSidebar().text()).toContain('Historique')
+  it('8 — affiche le lien Paramètres dans .sidebar-bottom', () => {
+    expect(mountSidebar().find('.sidebar-bottom').text()).toContain('Paramètres')
   })
 
-  it('9 — affiche le lien Stages', () => {
-    expect(mountSidebar().text()).toContain('Stages')
+  it('9 — la nav contient 4 liens', () => {
+    expect(mountSidebar().findAll('.sidebar-nav .nav-item')).toHaveLength(4)
   })
 
-  it('10 — affiche le lien Projets', () => {
-    expect(mountSidebar().text()).toContain('Projets')
+  it('10 — le sidebar-bottom contient 2 éléments', () => {
+    expect(mountSidebar().find('.sidebar-bottom').findAll('.nav-item')).toHaveLength(2)
   })
 
-  it('11 — affiche le lien Étudiants', () => {
-    expect(mountSidebar().text()).toContain('Étudiants')
+  it('11 — affiche le logo Profil comme nav-icon', () => {
+    expect(mountSidebar().find('.sidebar-nav .nav-icon').exists()).toBe(true)
   })
 
-  it('12 — affiche le lien Portfolios', () => {
-    expect(mountSidebar().text()).toContain('Portfolios')
+  it('12 — chaque nav-item de la nav a une icône et un label', () => {
+    const items = mountSidebar().findAll('.sidebar-nav .nav-item')
+    items.forEach(item => {
+      expect(item.find('.nav-icon').exists()).toBe(true)
+      expect(item.find('.nav-label').exists()).toBe(true)
+    })
   })
 
-  it('13 — affiche le lien Mon Profil dans .sidebar-bottom', () => {
-    expect(mountSidebar().find('.sidebar-bottom').text()).toContain('Mon Profil')
+  it('13 — affiche Paramètres dans .sidebar-bottom', () => {
+    expect(mountSidebar().find('.sidebar-bottom').text()).toContain('Paramètres')
   })
 
   it('14 — affiche le bouton Déconnexion', () => {

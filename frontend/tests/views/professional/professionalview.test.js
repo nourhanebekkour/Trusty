@@ -2,6 +2,22 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 
+// Mock vue-router (component uses useRouter in onMounted for redirect)
+vi.mock('vue-router', () => ({
+  useRouter: vi.fn(() => ({ push: vi.fn(), replace: vi.fn() })),
+  useRoute:  vi.fn(() => ({ query: {}, params: {} })),
+  RouterLink: { template: '<a><slot /></a>' },
+}))
+
+// Mock authStore to simulate authenticated professional
+// Note: source checks role === 'PROFESSIONAL' (English, not French 'PROFESSIONNEL')
+vi.mock('@/stores/authstore', () => ({
+  useAuthStore: vi.fn(() => ({
+    user: { id_utilisateur: 'pro1', role: 'PROFESSIONAL' },
+    isAuthenticated: true,
+  })),
+}))
+
 // ProfessionalView.vue utilise directement @/services/professionalApi (pas de store)
 vi.mock('@/services/professionalApi', () => ({
   getProfessionalNotifications:  vi.fn(),

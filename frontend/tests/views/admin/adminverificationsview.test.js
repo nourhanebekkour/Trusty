@@ -21,12 +21,14 @@ import { useAuthStore }  from '@/stores/authstore'
 
 function makeMockStore(overrides = {}) {
   return reactive({
-    loading:         false,
-    error:           null,
+    loading:           false,
+    error:             null,
     verificationQueue: [],
-    validatingId:    null,
+    professionalQueue: [],
+    validatingId:      null,
     fetchVerificationQueue: vi.fn().mockResolvedValue(undefined),
-    validateEntity:  vi.fn().mockResolvedValue({ success: true }),
+    fetchProfessionalQueue: vi.fn().mockResolvedValue(undefined),
+    validateEntity:    vi.fn().mockResolvedValue({ success: true }),
     ...overrides,
   })
 }
@@ -38,7 +40,7 @@ function buildWrapper(storeOverrides = {}) {
   const store = makeMockStore(storeOverrides)
   useAdminStore.mockReturnValue(store)
 
-  const authStore = { user: { role: 'ADMINISTRATEUR' }, isAdmin: () => true }
+  const authStore = { user: { role: 'ADMINISTRATEUR' }, isAdmin: () => true, isSuperAdmin: true }
   useAuthStore.mockReturnValue(authStore)
 
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', component: AdminVerifications }] })
@@ -88,7 +90,7 @@ describe('AdminVerifications.vue', () => {
     it('affiche "Aucun élément en attente" si la file est vide', async () => {
       const { wrapper } = buildWrapper({ verificationQueue: [] })
       await flushPromises()
-      expect(wrapper.text()).toContain('Aucun élément en attente de vérification')
+      expect(wrapper.text()).toContain('Aucune activité en attente de vérification')
     })
   })
 
@@ -120,8 +122,8 @@ describe('AdminVerifications.vue', () => {
 
     it('affiche le badge "Professionnel" pour les items de type PROFESSIONNEL', async () => {
       const { wrapper } = buildWrapper({
-        verificationQueue: [
-          { id: 'p1', type: 'PROFESSIONNEL', title: 'Profil pro', author: 'Bob', description: '' },
+        professionalQueue: [
+          { id: 'p1', prenom: 'Bob', nom: 'Martin', email: 'bob@test.com', entreprise: 'TechCorp', siret: '' },
         ],
       })
       await flushPromises()

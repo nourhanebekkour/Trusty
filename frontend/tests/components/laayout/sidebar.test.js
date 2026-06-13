@@ -60,7 +60,7 @@ describe('SideBar.vue', () => {
 
   const navLabels = [
     'Dashboard', 'Mon Profil', 'Parcours', 'Stages', 'Projets',
-    'Recommandations', 'Lettres de reco.', 'Notifications', 'Activités parascolaires', 'Portfolio Complet',
+    'Recommandations', 'Suggestions IA', 'Lettres de reco.', 'Notifications', 'Activités parascolaires', 'Portfolio Complet',
   ]
 
   navLabels.forEach(label => {
@@ -69,8 +69,8 @@ describe('SideBar.vue', () => {
     })
   })
 
-  it('affiche 10 liens dans la nav principale', () => {
-    expect(mountSidebar().findAll('.sidebar-nav .nav-item').length).toBe(10)
+  it('affiche 11 liens dans la nav principale', () => {
+    expect(mountSidebar().findAll('.sidebar-nav .nav-item').length).toBe(11)
   })
 
   // ── Section bas ───────────────────────────────────────────

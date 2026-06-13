@@ -34,7 +34,7 @@ const BASE_ACTIVITE = {
   description:   'Solution IA en 48h.',
   date_debut:    '2024-03-01',
   date_fin:      '2024-03-31',
-  statut:        'VALIDEE',
+  statut:        'VALIDE',
   has_attestation: false,
   est_public:    true,
 }

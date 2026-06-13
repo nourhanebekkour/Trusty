@@ -5,7 +5,7 @@ import { createPinia, setActivePinia } from 'pinia'
 vi.mock('@/stores/adminStore', () => ({ useAdminStore: vi.fn() }))
 vi.mock('@/stores/authstore',  () => ({ useAuthStore:  vi.fn() }))
 vi.mock('vue-router',          () => ({ useRouter:     vi.fn() }))
-vi.mock('@/services/api',      () => ({ default: { post: vi.fn().mockResolvedValue({}) } }))
+vi.mock('@/services/api',      () => ({ default: { post: vi.fn().mockResolvedValue({ data: { id_badge: 'badge-1' } }) } }))
 vi.mock('@/components/ui/StatCard.vue', () => ({
   default: {
     template: '<div class="stat-card"><span class="stat-label">{{ label }}</span><span class="stat-value">{{ value }}</span></div>',
@@ -207,7 +207,12 @@ describe('AdminBadges.vue — Tests d\'Intégration', () => {
     expect(wrapper.find('.app-modal-stub').exists()).toBe(true)
   })
 
-  it('22 — handleCreate appelle api.post avec les bonnes données', async () => {
+  it('22 — handleCreate appelle api.post /badges (sans id_etudiant) puis /badges/:id/attribuer', async () => {
+    // Source: first calls /badges with { nom, description, categorie, icone, condition_attribution }
+    // then calls /badges/:id/attribuer with { id_etudiant }
+    api.post
+      .mockResolvedValueOnce({ data: { data: { id_badge: 'badge-1' } } }) // /badges
+      .mockResolvedValueOnce({})                                            // /badges/:id/attribuer
     useAdminStore.mockReturnValue(makeMockAdminStore({ students: MOCK_STUDENTS }))
     const wrapper = mount(AdminBadges)
     await flushPromises()
@@ -218,12 +223,17 @@ describe('AdminBadges.vue — Tests d\'Intégration', () => {
     await wrapper.find('.modal-confirm-btn').trigger('click')
     await flushPromises()
     expect(api.post).toHaveBeenCalledWith('/badges', expect.objectContaining({
-      id_etudiant: 'stu-1',
       nom: 'Badge Expert',
+    }))
+    expect(api.post).toHaveBeenCalledWith('/badges/badge-1/attribuer', expect.objectContaining({
+      id_etudiant: 'stu-1',
     }))
   })
 
-  it('23 — handleCreate affiche "Badge créé avec succès" après succès', async () => {
+  it('23 — handleCreate affiche "Badge créé et attribué avec succès" après succès', async () => {
+    api.post
+      .mockResolvedValueOnce({ data: { data: { id_badge: 'badge-1' } } })
+      .mockResolvedValueOnce({})
     useAdminStore.mockReturnValue(makeMockAdminStore({ students: MOCK_STUDENTS }))
     const wrapper = mount(AdminBadges)
     await flushPromises()
@@ -233,6 +243,6 @@ describe('AdminBadges.vue — Tests d\'Intégration', () => {
     await wrapper.find('input[type="text"]').setValue('Badge Expert')
     await wrapper.find('.modal-confirm-btn').trigger('click')
     await flushPromises()
-    expect(wrapper.find('.msg.msg--ok').text()).toContain('Badge créé avec succès')
+    expect(wrapper.find('.msg.msg--ok').text()).toContain('Badge créé et attribué avec succès')
   })
 })

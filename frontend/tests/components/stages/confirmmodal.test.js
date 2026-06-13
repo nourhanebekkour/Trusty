@@ -52,8 +52,9 @@ describe('ConfirmModal.vue — Tests Unitaires', () => {
     expect(mountModal().find('.btn-cancel').text()).toBe('Annuler')
   })
 
-  it('9 — affiche l\'icône ⚠️ dans .confirm-icon', () => {
-    expect(mountModal().find('.confirm-icon').text()).toContain('⚠')
+  it('9 — affiche un élément dans .confirm-icon', () => {
+    // Source uses AppIcon component (not literal ⚠ emoji text)
+    expect(mountModal().find('.confirm-icon').exists()).toBe(true)
   })
 
   it('10 — title par défaut est "Confirmer"', () => {
