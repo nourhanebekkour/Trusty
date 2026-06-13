@@ -1,4 +1,5 @@
 import prisma from "#Config/prismaClient.js";
+import * as minioService from "#Services/minio.service.js";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
@@ -8,6 +9,14 @@ import {
   envoyerEmailDemandeCompte,
   envoyerEmailVerification,
 } from '#Modules/systeme/emails/emails.service.js';
+
+const enrichirProfil = async (user) => {
+    if (user && user.photo) {
+        user.photo_url = await minioService.getFileUrl(user.photo);
+    }
+    return user;
+};
+
 
 async function register(email, password, nom, prenom, role, ecole) {
   const existingUser = await prisma.utilisateur.findUnique({ where: { email } });
@@ -201,6 +210,8 @@ async function login(email, password) {
     }
   });
 
+  await enrichirProfil(user);
+
   const { mot_de_passe, ...userSafe } = user;
   return { accessToken, refreshToken, user: userSafe };
 }
@@ -253,10 +264,9 @@ async function logout(userId) {
 
 async function getMe(id_utilisateur) {
   const user = await prisma.utilisateur.findUnique({
-    where: { id_utilisateur },
-    
+    where: { id_utilisateur }
   });
-  return user;
+  return await enrichirProfil(user);
 }
 
 async function oublierMDP(email) {

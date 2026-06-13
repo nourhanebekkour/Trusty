@@ -3,41 +3,41 @@
     <div class="modal">
       <div class="modal-header">
         <h3>Modifier le profil</h3>
-        <button class="close-btn" @click="$emit('close')">✕</button>
+        <button class="close-btn" aria-label="Fermer" @click="$emit('close')"><AppIcon name="x" /></button>
       </div>
 
       <div class="modal-body">
 
         <!-- ── Section verrouillée ───────────────────────── -->
         <p class="section-label">
-          <span>🔒</span> Informations officielles
+          <AppIcon name="lock" /> Informations officielles
           <span class="section-hint">Non modifiables — contacter l'administration</span>
         </p>
 
         <div class="locked-grid">
           <div class="locked-field">
-            <span class="locked-icon">👤</span>
+            <span class="locked-icon"><AppIcon name="user" /></span>
             <div>
               <p class="locked-label">Prénom</p>
               <p class="locked-value">{{ user.prenom }}</p>
             </div>
           </div>
           <div class="locked-field">
-            <span class="locked-icon">👤</span>
+            <span class="locked-icon"><AppIcon name="user" /></span>
             <div>
               <p class="locked-label">Nom</p>
               <p class="locked-value">{{ user.nom }}</p>
             </div>
           </div>
           <div class="locked-field">
-            <span class="locked-icon">✉</span>
+            <span class="locked-icon"><AppIcon name="mail" /></span>
             <div>
               <p class="locked-label">Email</p>
               <p class="locked-value">{{ user.email }}</p>
             </div>
           </div>
           <div class="locked-field">
-            <span class="locked-icon">📞</span>
+            <span class="locked-icon"><AppIcon name="phone" /></span>
             <div>
               <p class="locked-label">Téléphone</p>
               <p class="locked-value">{{ user.telephone || '—' }}</p>
@@ -47,7 +47,7 @@
 
         <!-- ── Section éditable : profil académique ─────── -->
         <p class="section-label" style="margin-top: 1.2rem">
-          <span>🎓</span> Profil académique
+          <AppIcon name="graduation" /> Profil académique
         </p>
 
         <div class="form-row">
@@ -79,7 +79,7 @@
 
         <!-- ── Section éditable : coordonnées ───────────── -->
         <p class="section-label" style="margin-top: 1.2rem">
-          <span>📍</span> Coordonnées
+          <AppIcon name="map" /> Coordonnées
         </p>
 
         <div class="form-row">
@@ -100,7 +100,7 @@
 
         <!-- ── Section éditable : liens ─────────────────── -->
         <p class="section-label" style="margin-top: 1.2rem">
-          <span>🔗</span> Liens & réseaux
+          <AppIcon name="link" /> Liens & réseaux
         </p>
 
         <div class="form-group with-prefix">
@@ -130,7 +130,7 @@
 
         <!-- ── Visibilité ─────────────────────────────────── -->
         <p class="section-label" style="margin-top: 1.2rem">
-          <span>👁</span> Visibilité du profil
+          <AppIcon name="eye" /> Visibilité du profil
         </p>
 
         <div class="visibility-options">
@@ -141,7 +141,7 @@
             :class="{ active: form.visibilite_profil === opt.value }"
           >
             <input type="radio" v-model="form.visibilite_profil" :value="opt.value" hidden />
-            <span class="vis-icon">{{ opt.icon }}</span>
+            <span class="vis-icon"><AppIcon :name="opt.icon" /></span>
             <div>
               <p class="vis-label">{{ opt.label }}</p>
               <p class="vis-desc">{{ opt.desc }}</p>
@@ -155,7 +155,8 @@
         <button class="btn-cancel" @click="$emit('close')">Annuler</button>
         <button class="btn-save" @click="submit" :disabled="saving">
           <span v-if="saving" class="spinner-sm"></span>
-          {{ saving ? 'Enregistrement...' : '💾 Enregistrer' }}
+          <template v-if="!saving"><AppIcon name="save" /> Enregistrer</template>
+          <template v-else>Enregistrement...</template>
         </button>
       </div>
     </div>
@@ -171,10 +172,10 @@ const emit  = defineEmits(['close', 'save'])
 const filieres = ['GINF', 'GSEA', 'GSR', 'GIND', 'G2EI', 'CSI']
 
 const visibiliteOptions = [
-  { value: 'PUBLIC',                 icon: '🌍', label: 'Public',               desc: 'Visible par tout le monde' },
-  { value: 'ENSEIGNANTS_UNIQUEMENT', icon: '🏫', label: 'Enseignants',           desc: 'Visible uniquement par les profs' },
-  { value: 'LIEN_PARTAGE',           icon: '🔗', label: 'Lien partagé',          desc: 'Accessible via un lien direct' },
-  { value: 'PRIVE',                  icon: '🔒', label: 'Privé',                 desc: 'Visible uniquement par vous' },
+  { value: 'PUBLIC',                 icon: 'globe', label: 'Public',               desc: 'Visible par tout le monde' },
+  { value: 'ENSEIGNANTS_UNIQUEMENT', icon: 'building', label: 'Enseignants',       desc: 'Visible uniquement par les profs' },
+  { value: 'LIEN_PARTAGE',           icon: 'link', label: 'Lien partagé',           desc: 'Accessible via un lien direct' },
+  { value: 'PRIVE',                  icon: 'lock', label: 'Privé',                  desc: 'Visible uniquement par vous' },
 ]
 
 // Slug LinkedIn extrait de l'URL complète
@@ -464,4 +465,15 @@ const submit = () => emit('save', { ...form })
   flex-shrink: 0;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 640px) {
+  .modal { max-width: 100%; margin: 0; border-radius: 0; max-height: 100vh; height: 100vh; }
+  .modal-header { padding: 16px 18px 12px; }
+  .modal-body { padding: 18px; }
+  .form-row { grid-template-columns: 1fr; }
+  .locked-grid { grid-template-columns: 1fr; }
+  .visibility-options { grid-template-columns: 1fr; }
+  .modal-footer { padding: 14px 18px; }
+  .modal-footer .btn-cancel, .modal-footer .btn-save { flex: 1; justify-content: center; }
+}
 </style>

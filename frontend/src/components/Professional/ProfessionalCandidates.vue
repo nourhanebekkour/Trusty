@@ -2,15 +2,16 @@
   <div class="card">
     <div class="card-header">
       <div class="card-title"><i class="ti ti-message-star"></i> Éléments à recommander</div>
-      <div class="tab-row">
-        <div
-          v-for="tab in VALID_TABS"
-          :key="tab"
-          class="tab"
-          :class="{ active: activeTab === tab }"
-          @click="setActiveTab(tab)"
-        >{{ tab }}</div>
-      </div>
+        <div class="tab-row" style="overflow-x: auto; flex-wrap: wrap;">
+          <div
+            v-for="tab in VALID_TABS"
+            :key="tab"
+            class="tab"
+            style="white-space: nowrap;"
+            :class="{ active: activeTab === tab }"
+            @click="setActiveTab(tab)"
+          >{{ tab }}</div>
+        </div>
     </div>
 
     <div

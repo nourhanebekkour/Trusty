@@ -78,25 +78,29 @@
         </button>
       </template>
       <template v-else>
-        <label class="footer-btn upload-btn">
+        <label class="footer-btn upload-btn" :class="{ 'is-uploading': uploading }">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
           </svg>
-          Joindre une attestation
-          <input type="file" hidden @change="onFileChange" accept=".pdf,image/*" />
+          {{ uploading ? 'Upload en cours...' : 'Joindre une attestation' }}
+          <input type="file" hidden :disabled="uploading" @change="onFileChange" accept=".pdf,image/*" />
         </label>
       </template>
+      <span v-if="uploadError" class="upload-error">{{ uploadError }}</span>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useActivitesStore } from '../../stores/activitesStore.js';
+import { getUploadErrorMessage, validateUploadFile } from '@/utils/fileUpload';
 
 const props = defineProps({ activite: { type: Object, required: true } });
 const emit = defineEmits(['edit', 'delete-attestation']);
 const store = useActivitesStore();
+const uploading = ref(false);
+const uploadError = ref(null);
 
 const typeLabels = {
   EVENEMENT: 'Événement', HACKATHON: 'Hackathon',
@@ -104,14 +108,14 @@ const typeLabels = {
 };
 
 const labelType = computed(() => typeLabels[props.activite.type_activite] || props.activite.type_activite);
-const labelStatut = computed(() => props.activite.statut === 'VALIDEE' ? 'Validée' : 'En attente');
+const labelStatut = computed(() => props.activite.statut === 'VALIDE' ? 'Validée' : 'En attente');
 
 const typeClass = computed(() => ({
   'EVENEMENT': 'type-evenement', 'HACKATHON': 'type-hackathon',
   'COMPETITION': 'type-competition', 'CLUB': 'type-club', 'ENGAGEMENT': 'type-engagement',
 }[props.activite.type_activite] || ''));
 
-const statutClass = computed(() => props.activite.statut === 'VALIDEE' ? 'statut-validee' : 'statut-attente');
+const statutClass = computed(() => props.activite.statut === 'VALIDE' ? 'statut-validee' : 'statut-attente');
 
 const formatDate = (d) => {
   if (!d) return '—';
@@ -132,9 +136,26 @@ function confirmDelete() {
   }
 }
 
-function onFileChange(e) {
+async function onFileChange(e) {
   const file = e.target.files[0];
-  if (file) store.uploadAttestation(props.activite.id, file);
+  e.target.value = '';
+  if (!file) return;
+
+  const fileError = validateUploadFile(file);
+  if (fileError) {
+    uploadError.value = fileError;
+    return;
+  }
+
+  uploading.value = true;
+  uploadError.value = null;
+  try {
+    await store.uploadAttestation(props.activite.id, file);
+  } catch (error) {
+    uploadError.value = getUploadErrorMessage(error, "Erreur lors de l'upload de l'attestation.");
+  } finally {
+    uploading.value = false;
+  }
 }
 </script>
 
@@ -317,10 +338,39 @@ function onFileChange(e) {
 }
 
 .upload-btn { cursor: pointer; }
+.upload-btn.is-uploading {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.upload-error {
+  font-size: 0.72rem;
+  color: #c45a5a;
+}
 
 .danger-sm:hover {
   background: rgba(196, 90, 90, 0.1);
   border-color: rgba(196, 90, 90, 0.25);
   color: #c45a5a;
+}
+
+@media (max-width: 768px) {
+  .activite-card {
+    padding: 1rem;
+  }
+
+  .card-meta {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .card-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .footer-btn {
+    justify-content: center;
+  }
 }
 </style>

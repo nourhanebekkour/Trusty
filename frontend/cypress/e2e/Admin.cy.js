@@ -37,10 +37,10 @@ describe('E2E – Admin – Rendu UI', () => {
   })
 
   it('affiche les cartes de statistiques', () => {
-    cy.contains('Étudiants Actifs').should('be.visible')
-    cy.contains('Portfolios Créés').should('be.visible')
+    cy.contains('Étudiants').should('be.visible')
     cy.contains('Professeurs').should('be.visible')
-    cy.contains('Partenaires Pro').should('be.visible')
+    cy.contains('Professionnels').should('be.visible')
+    cy.contains('Total Utilisateurs').should('be.visible')
   })
 })
 
@@ -48,25 +48,25 @@ describe('E2E – Admin – Rendu UI', () => {
 // 2. APPELS API
 // ============================================================
 describe('E2E – Admin – Appels API', () => {
-  it('déclenche un appel vers /admin/stats au chargement', () => {
+  it('charge les statistiques via /api/utilisateurs au chargement', () => {
     loginSession()
-    cy.intercept('GET', '**/admin/stats**').as('adminStats')
+    cy.intercept('GET', '**/api/utilisateurs/**').as('adminStats')
     cy.visit('/admin/dashboard')
-    cy.wait('@adminStats')
+    cy.wait('@adminStats').its('response.statusCode').should('be.oneOf', [200, 304])
   })
 
-  it('déclenche un appel vers /admin/users au chargement', () => {
+  it('charge les utilisateurs via /api/utilisateurs au chargement', () => {
     loginSession()
-    cy.intercept('GET', '**/admin/users**').as('adminUsers')
+    cy.intercept('GET', '**/api/utilisateurs/**').as('adminUsers')
     cy.visit('/admin/dashboard')
-    cy.wait('@adminUsers')
+    cy.wait('@adminUsers').its('response.statusCode').should('be.oneOf', [200, 304])
   })
 
-  it('déclenche un appel vers /admin/verifications au chargement', () => {
+  it('charge la file de vérification via /api/professionnels au chargement', () => {
     loginSession()
-    cy.intercept('GET', '**/admin/verifications**').as('verifications')
+    cy.intercept('GET', '**/api/professionnels/en-attente**').as('verifications')
     cy.visit('/admin/dashboard')
-    cy.wait('@verifications')
+    cy.wait('@verifications').its('response.statusCode').should('be.oneOf', [200, 304])
   })
 })
 

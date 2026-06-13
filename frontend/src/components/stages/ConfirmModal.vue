@@ -2,7 +2,7 @@
   <transition name="modal-fade">
     <div v-if="modelValue" class="confirm-overlay" @click.self="cancel">
       <div class="confirm-modal">
-        <div class="confirm-icon">⚠️</div>
+        <div class="confirm-icon"><AppIcon name="warning" :size="38" /></div>
         <h3 class="confirm-title">{{ title }}</h3>
         <p class="confirm-message">{{ message }}</p>
         <div class="confirm-actions">
@@ -60,7 +60,7 @@ export default {
   animation: fadeUp 0.2s ease;
 }
 .confirm-icon {
-  font-size: 36px;
+  color: var(--color-danger);
   margin-bottom: 12px;
 }
 .confirm-title {
@@ -125,4 +125,9 @@ export default {
   opacity: 0;
 }
 
+@media (max-width: 640px) {
+  .confirm-modal { max-width: 100%; margin: 12px; }
+  .confirm-body { padding: 18px; }
+  .confirm-footer { padding: 14px 18px; }
+}
 </style>

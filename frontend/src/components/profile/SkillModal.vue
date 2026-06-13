@@ -37,7 +37,7 @@
             <polyline points="20 6 9 17 4 12"/>
           </svg>
           <span>Sélectionnée : <strong>{{ selectedSkill.nom }}</strong></span>
-          <button @click="selectedSkill = null" class="skill-deselect">✕</button>
+          <button @click="selectedSkill = null" class="skill-deselect"><AppIcon name="x" /></button>
         </div>
 
         <!-- Sélecteur niveau de maîtrise -->
@@ -51,7 +51,9 @@
               :class="{ active: niveauMaitrise === n.value }"
               @click="niveauMaitrise = n.value"
             >
-              <span class="skill-niveau-stars">{{ '★'.repeat(n.stars) }}{{ '☆'.repeat(3 - n.stars) }}</span>
+              <span class="skill-niveau-stars">
+                <AppIcon v-for="star in 3" :key="star" name="star" :size="12" :stroke-width="star <= n.stars ? 3 : 1.5" />
+              </span>
               <span>{{ n.label }}</span>
             </button>
           </div>
@@ -94,7 +96,7 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
           </svg>
-          <span>✅ "{{ lastAdded }}" ajoutée avec succès !</span>
+          <span><AppIcon name="check-circle" /> "{{ lastAdded }}" ajoutée avec succès !</span>
         </div>
       </transition>
     </div>
@@ -236,4 +238,12 @@ async function submit() {
 .skill-loading { color: #888; }
 .skill-error   { color: #c0392b; }
 .skill-no-result { font-size: 13px; color: #aaa; font-style: italic; }
+
+@media (max-width: 640px) {
+  .skill-modal { max-width: 100%; margin: 0; border-radius: 0; max-height: 100vh; height: 100vh; }
+  .skill-modal-header { padding: 16px 18px 12px; }
+  .skill-modal-body { padding: 18px; }
+  .skill-niveau-options { flex-wrap: wrap; }
+  .skill-niveau-btn { flex: 1 1 40%; }
+}
 </style>

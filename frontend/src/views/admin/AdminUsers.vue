@@ -7,7 +7,7 @@
         <p class="page__subtitle">Administrez les comptes des étudiants et des professeurs de la plateforme.</p>
       </div>
       <div class="page__actions">
-        <button class="btn btn--secondary" @click="$router.push('/admin/portfolios')">Exporter</button>
+        <button class="btn btn--secondary" @click="exportUsers(filteredUsers, 'utilisateurs')">Exporter</button>
         <button class="btn btn--primary" @click="showCreateModal = true">+ Créer un utilisateur</button>
       </div>
     </div>
@@ -41,7 +41,21 @@
                  placeholder="Rechercher par nom, email..."
                  @input="currentPage = 1" />
         </div>
-        <button class="btn btn--secondary btn--sm">Filtres</button>
+        <button class="btn btn--secondary btn--sm" @click="showFilters = !showFilters">Filtres</button>
+      </div>
+      <div v-if="showFilters" class="filter-row">
+        <select v-model="roleFilter" @change="currentPage = 1">
+          <option value="">Tous les rôles</option>
+          <option value="ETUDIANT">Étudiants</option>
+          <option value="PROFESSEUR">Professeurs</option>
+        </select>
+        <select v-model="statusFilter" @change="currentPage = 1">
+          <option value="">Tous les statuts</option>
+          <option value="ACTIF">Actifs</option>
+          <option value="INACTIF">Inactifs</option>
+          <option value="EN_ATTENTE">En attente</option>
+          <option value="SUSPENDU">Suspendus</option>
+        </select>
       </div>
 
       <!-- Loader -->
@@ -52,6 +66,7 @@
           <tr>
             <th>Nom</th>
             <th>Rôle</th>
+            <th v-if="authStore.isSuperAdmin">Établissement</th>
             <th>Email</th>
             <th>Statut</th>
             <th>Date d'inscription</th>
@@ -72,6 +87,7 @@
               </div>
             </td>
             <td><StatusBadge :status="user.role || '—'" /></td>
+            <td v-if="authStore.isSuperAdmin" class="text-muted">{{ user.ecole || '—' }}</td>
             <td class="text-muted">{{ user.email }}</td>
             <td>
               <span :class="['statut', isOk(user.status_compte) ? 'statut--ok' : 'statut--pending']">
@@ -82,16 +98,16 @@
             <td>
               <div class="action-btns">
                 <button class="btn btn--icon btn--sm" title="Activer/Suspendre"
-                        @click="handleToggleStatus(user)">🔒</button>
+                        @click="handleToggleStatus(user)"><AppIcon name="lock" /></button>
                 <button class="btn btn--icon btn--sm" title="Changer rôle"
-                        @click="handleChangeRole(user)">🔄</button>
+                        @click="handleChangeRole(user)"><AppIcon name="refresh" /></button>
                 <button class="btn btn--icon btn--sm" title="Supprimer"
-                        @click="handleDelete(user.id_utilisateur)">🗑</button>
+                        @click="handleDelete(user.id_utilisateur)"><AppIcon name="trash" /></button>
               </div>
             </td>
           </tr>
           <tr v-if="!admin.loading && paginatedUsers.length === 0">
-            <td colspan="6" class="state-msg">Aucun utilisateur trouvé</td>
+            <td :colspan="authStore.isSuperAdmin ? 7 : 6" class="state-msg">Aucun utilisateur trouvé</td>
           </tr>
         </tbody>
       </table>
@@ -117,7 +133,7 @@
             <strong>{{ admin.verificationQueue.length }}</strong>
             éléments en attente de vérification.
           </p>
-          <a href="/admin/verifications" class="link">Accéder à la file d'attente →</a>
+          <router-link to="/admin/verifications" class="link">Accéder à la file d'attente →</router-link>
         </div>
       </div>
       <div class="info-card">
@@ -125,7 +141,7 @@
         <div>
           <strong>Rapports d'activité</strong>
           <p>Générez un rapport complet sur l'engagement des utilisateurs et les certifications.</p>
-          <a href="/admin/portfolios" class="link">Télécharger le rapport mensuel →</a>
+          <button class="link link--button" @click="exportMonthlyReport">Télécharger le rapport mensuel →</button>
         </div>
       </div>
     </div>
@@ -200,7 +216,7 @@
                    minlength="8" maxlength="128"
                    :class="{ 'input--error': v$.password.$error }"
                    @blur="v$.password.$touch()" />
-            <button type="button" class="input-group__btn" @click="showPwd = !showPwd">👁</button>
+            <button type="button" class="input-group__btn" @click="showPwd = !showPwd"><AppIcon name="eye" /></button>
             <button type="button" class="input-group__btn" @click="generatePassword">↻ Générer</button>
           </div>
           <span v-if="v$.password.$error" class="field-error">Min. 8 caractères requis</span>
@@ -252,6 +268,9 @@ const professorsCount = computed(() =>
 
 // ── Recherche + pagination ────────────────────────────────
 const searchQuery = ref('')
+const showFilters = ref(false)
+const roleFilter = ref('')
+const statusFilter = ref('')
 const currentPage = ref(1)
 const perPage     = 5
 
@@ -260,7 +279,10 @@ const filteredUsers = computed(() =>
     const fullName = `${u.prenom || ''} ${u.nom || ''}`.toLowerCase()
     const email    = (u.email || '').toLowerCase()
     const q        = searchQuery.value.toLowerCase()
-    return fullName.includes(q) || email.includes(q)
+    const matchesSearch = fullName.includes(q) || email.includes(q)
+    const matchesRole = !roleFilter.value || u.role === roleFilter.value
+    const matchesStatus = !statusFilter.value || u.status_compte === statusFilter.value
+    return matchesSearch && matchesRole && matchesStatus
   })
 )
 
@@ -395,6 +417,41 @@ async function handleChangeRole(user) {
   await admin.updateUserRole(user.id_utilisateur, nextRole)
 }
 
+function csvCell(value) {
+  return `"${String(value ?? '').replaceAll('"', '""')}"`
+}
+
+function exportUsers(users, filename) {
+  const header = ['Nom', 'Prénom', 'Rôle', 'Établissement', 'Email', 'Statut', 'Date inscription']
+  const rows = users.map(user => [
+    user.nom,
+    user.prenom,
+    user.role,
+    user.ecole,
+    user.email,
+    formatStatus(user.status_compte),
+    formatDate(user.date_creation),
+  ])
+  const csv = [header, ...rows].map(row => row.map(csvCell).join(';')).join('\n')
+  const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${filename}-${new Date().toISOString().slice(0, 10)}.csv`
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+function exportMonthlyReport() {
+  const now = new Date()
+  const monthlyUsers = (admin.users || []).filter(user => {
+    const createdAt = new Date(user.date_creation)
+    return createdAt.getFullYear() === now.getFullYear()
+      && createdAt.getMonth() === now.getMonth()
+  })
+  exportUsers(monthlyUsers, 'rapport-utilisateurs-mensuel')
+}
+
 // ── Chargement initial avec guard de rôle ────────────────
 onMounted(async () => {
   if (!authStore.user || authStore.user.role !== 'ADMINISTRATEUR') {
@@ -421,6 +478,11 @@ onMounted(async () => {
 .card { background: var(--color-surface); border: 1px solid var(--color-border-light); border-radius: 12px; padding: 20px; }
 
 .table-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.filter-row { display: flex; gap: 10px; margin: -4px 0 16px; }
+.filter-row select {
+  padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 8px;
+  background: var(--color-surface-alt); color: var(--color-text-primary);
+}
 .search-box {
   display: flex; align-items: center; gap: 8px;
   border: 1px solid var(--color-border); border-radius: 8px;
@@ -483,6 +545,7 @@ onMounted(async () => {
 
 .link { color: var(--color-accent); font-size: 13px; text-decoration: none; font-weight: 500; }
 .link:hover { text-decoration: underline; }
+.link--button { padding: 0; border: 0; background: none; cursor: pointer; }
 
 .form-section { margin-bottom: 20px; }
 .form-section--security {
@@ -518,4 +581,23 @@ onMounted(async () => {
 }
 .checkbox-group { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
 .checkbox-group label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-text-secondary); cursor: pointer; }
+
+@media (max-width: 768px) {
+  .page { padding: 20px 16px; }
+  .page__header { flex-direction: column; gap: 12px; }
+  .page__title { font-size: 20px; }
+  .page__actions { width: 100%; }
+  .page__actions .btn { flex: 1; justify-content: center; }
+  .stats-row { flex-wrap: wrap; }
+  .table-toolbar { flex-direction: column; gap: 12px; }
+  .search-box { width: 100%; }
+  .filter-row { flex-wrap: wrap; }
+  .filter-row select { flex: 1; min-width: 0; }
+}
+@media (max-width: 480px) {
+  .stats-row { flex-direction: column; }
+  .table { display: block; overflow-x: auto; white-space: nowrap; }
+  .form-grid { grid-template-columns: 1fr; }
+  .info-grid { grid-template-columns: 1fr; }
+}
 </style>

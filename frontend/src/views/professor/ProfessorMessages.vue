@@ -20,7 +20,7 @@
 
     <div v-else-if="error" class="state-box state-error">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <span>{{ error }}</span>
+      <span>{{ sanitizeText(error) }}</span>
       <button class="btn-ghost" @click="loadStudents">Réessayer</button>
     </div>
 
@@ -28,7 +28,13 @@
       <aside class="students-panel">
         <div class="search-box">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="search-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input v-model="search" class="search-input" placeholder="Rechercher un étudiant" />
+          <input
+            v-model="search"
+            class="search-input"
+            placeholder="Rechercher un étudiant"
+            maxlength="100"
+            autocomplete="off"
+          />
         </div>
         <div class="students-list">
           <button
@@ -40,7 +46,7 @@
           >
             <div class="student-item__avatar">{{ initials(conv.studentName) }}</div>
             <div class="student-item__info">
-              <div class="student-item__name">{{ conv.studentName }}</div>
+              <div class="student-item__name">{{ sanitizeText(conv.studentName) }}</div>
               <div class="student-item__count">{{ commentCounts[conv.id] || 0 }} commentaire{{ commentCounts[conv.id] > 1 ? 's' : '' }}</div>
             </div>
           </button>
@@ -60,7 +66,7 @@
             <div class="comment-header__info">
               <div class="comment-header__avatar">{{ initials(selectedConversation.studentName) }}</div>
               <div>
-                <div class="comment-header__name">{{ selectedConversation.studentName }}</div>
+                <div class="comment-header__name">{{ sanitizeText(selectedConversation.studentName) }}</div>
               </div>
             </div>
           </div>
@@ -74,7 +80,7 @@
             <div v-else-if="currentComments.length === 0" class="panel-empty panel-empty--center" style="padding: 2rem;">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" class="panel-empty__icon"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
               <p class="panel-empty__title">Aucun commentaire</p>
-              <p class="panel-empty__sub">Aucun commentaire pour {{ selectedConversation.studentName }}.</p>
+              <p class="panel-empty__sub">Aucun commentaire pour {{ sanitizeText(selectedConversation.studentName) }}.</p>
             </div>
 
             <div v-else class="timeline">
@@ -87,13 +93,17 @@
                 <div class="comment-card__avatar">{{ initials(msg.senderName) }}</div>
                 <div class="comment-card__body">
                   <div class="comment-card__top">
-                    <span class="comment-card__author">{{ msg.senderName || 'Inconnu' }}</span>
+                    <span class="comment-card__author">{{ sanitizeText(msg.senderName) || 'Inconnu' }}</span>
                     <span class="comment-card__role" :class="roleClass(msg.senderRole)">{{ roleLabel(msg.senderRole) }}</span>
                     <span class="comment-card__date">{{ formatDate(msg.createdAt) }}</span>
                   </div>
-                  <p class="comment-card__text">{{ msg.content }}</p>
+                  <p class="comment-card__text">{{ sanitizeText(msg.content) }}</p>
                   <div class="comment-card__actions" v-if="msg.senderRole === 'PROFESSOR'">
-                    <button class="btn-delete" @click="deleteComment(msg)">
+                    <button
+                      class="btn-delete"
+                      @click="confirmDelete(msg)"
+                      :disabled="deletingId === msg.id"
+                    >
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                       Supprimer
                     </button>
@@ -109,6 +119,7 @@
               class="comment-input"
               placeholder="Écrire un commentaire..."
               rows="1"
+              maxlength="2000"
               @keydown.enter.exact.prevent="sendComment"
             ></textarea>
             <button class="btn-send" @click="sendComment" :disabled="sending || !newMessage.trim()">
@@ -119,12 +130,23 @@
       </main>
     </section>
 
-    <div v-if="toast.show" class="toast">{{ toast.message }}</div>
+    <!-- Dialogue de confirmation suppression -->
+    <div v-if="confirmDialog.show" class="modal-overlay" @click.self="cancelConfirm">
+      <div class="confirm-modal">
+        <p class="confirm-modal__text">Supprimer ce commentaire définitivement ?</p>
+        <div class="confirm-modal__actions">
+          <button class="btn-delete" @click="confirmDialog.onConfirm" :disabled="deletingId !== null">Supprimer</button>
+          <button class="btn-ghost" @click="cancelConfirm">Annuler</button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="toast.show" class="toast">{{ sanitizeText(toast.message) }}</div>
   </div>
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import {
   getProfessorConversations,
   getProfessorComments,
@@ -132,19 +154,49 @@ import {
   deleteProfessorMessage,
 } from '@/services/professorApi'
 
-const conversations = ref([])
-const loading = ref(false)
-const error = ref(null)
-const search = ref('')
+const conversations       = ref([])
+const loading             = ref(false)
+const error               = ref(null)
+const search              = ref('')
 const selectedConversation = ref(null)
-const comments = reactive({})
-const commentsLoading = ref(false)
-const toast = ref({ show: false, message: '' })
-const newMessage = ref('')
-const sending = ref(false)
+const comments            = reactive({})
+const commentsLoading     = ref(false)
+const toast               = ref({ show: false, message: '' })
+const newMessage          = ref('')
+const sending             = ref(false)
+const deletingId          = ref(null)
+
+const confirmDialog = ref({ show: false, onConfirm: null })
+
+const MESSAGE_MAX   = 2000
+const SEARCH_MAX    = 100
+const ALLOWED_ROLES = ['PROFESSOR', 'STUDENT']
+
+function sanitizeText(value) {
+  if (!value) return ''
+  return String(value)
+    .replace(/<[^>]*>/g, '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .trim()
+    .slice(0, 500)
+}
+
+function isValidConversation(conv) {
+  return conv && conv.id != null
+}
+
+function isValidMessage(msg) {
+  return msg && msg.id != null
+}
+
+function safeRole(role) {
+  return ALLOWED_ROLES.includes(role) ? role : 'STUDENT'
+}
 
 const filteredConversations = computed(() => {
-  const q = search.value.trim().toLowerCase()
+  const q = search.value.slice(0, SEARCH_MAX).trim().toLowerCase()
   if (!q) return conversations.value
   return conversations.value.filter(c => c.studentName?.toLowerCase().includes(q))
 })
@@ -159,31 +211,35 @@ const currentComments = computed(() => comments[selectedConversation.value?.id] 
 
 function initials(name) {
   if (!name) return '?'
-  const parts = name.trim().split(/\s+/)
-  return parts.length > 1 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : parts[0][0].toUpperCase()
+  const clean = String(name).replace(/<[^>]*>/g, '').trim()
+  const parts = clean.split(/\s+/)
+  return parts.length > 1
+    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    : parts[0][0].toUpperCase()
 }
 
 function roleLabel(role) {
-  return role === 'PROFESSOR' ? 'Professeur' : 'Étudiant'
+  return safeRole(role) === 'PROFESSOR' ? 'Professeur' : 'Étudiant'
 }
 
 function roleClass(role) {
-  return role === 'PROFESSOR' ? 'role-prof' : 'role-student'
+  return safeRole(role) === 'PROFESSOR' ? 'role-prof' : 'role-student'
 }
 
 function formatDate(d) {
   if (!d) return '—'
   const date = new Date(d)
-  const now = new Date()
-  const diff = now - date
-  const mins = Math.floor(diff / 60000)
+  if (isNaN(date.getTime())) return '—'
+  const now   = new Date()
+  const diff  = now - date
+  const mins  = Math.floor(diff / 60000)
   const hours = Math.floor(diff / 3600000)
-  const days = Math.floor(diff / 86400000)
-  if (mins < 1) return 'À l\'instant'
-  if (mins < 60) return `Il y a ${mins} min`
+  const days  = Math.floor(diff / 86400000)
+  if (mins < 1)   return 'À l\'instant'
+  if (mins < 60)  return `Il y a ${mins} min`
   if (hours < 24) return `Il y a ${hours}h`
   if (days === 1) return 'Hier'
-  if (days < 7) return `Il y a ${days} jours`
+  if (days < 7)   return `Il y a ${days} jours`
   return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
@@ -192,57 +248,97 @@ function showToast(message) {
   setTimeout(() => { toast.value.show = false }, 2800)
 }
 
+function showConfirmDialog(onConfirm) {
+  confirmDialog.value = { show: true, onConfirm }
+}
+
+function cancelConfirm() {
+  confirmDialog.value = { show: false, onConfirm: null }
+}
+
 async function loadStudents() {
+  if (loading.value) return
   loading.value = true
-  error.value = null
+  error.value   = null
   try {
     const data = await getProfessorConversations()
-    const list = Array.isArray(data.conversations) ? data.conversations : []
+    const list = Array.isArray(data.conversations) ? data.conversations.filter(isValidConversation) : []
     conversations.value = list
     if (list.length > 0) await selectConversation(list[0])
   } catch (err) {
     error.value = err.response?.data?.message || 'Impossible de charger les étudiants.'
-  } finally { loading.value = false }
+  } finally {
+    loading.value = false
+  }
 }
 
 async function selectConversation(conv) {
+  if (!isValidConversation(conv)) return
   selectedConversation.value = conv
   if (comments[conv.id]) return
   commentsLoading.value = true
   try {
     const data = await getProfessorComments(conv.id)
-    comments[conv.id] = Array.isArray(data.comments) ? data.comments : []
+    comments[conv.id] = Array.isArray(data.comments)
+      ? data.comments.filter(isValidMessage)
+      : []
   } catch {
     comments[conv.id] = []
-  } finally { commentsLoading.value = false }
+  } finally {
+    commentsLoading.value = false
+  }
+}
+
+function confirmDelete(msg) {
+  if (!isValidMessage(msg)) return
+  showConfirmDialog(async () => {
+    cancelConfirm()
+    await deleteComment(msg)
+  })
 }
 
 async function deleteComment(msg) {
+  if (!isValidMessage(msg)) return
+  if (deletingId.value === msg.id) return
+  deletingId.value = msg.id
   try {
     await deleteProfessorMessage(msg.id)
-    const list = comments[selectedConversation.value.id]
-    if (list) comments[selectedConversation.value.id] = list.filter(m => m.id !== msg.id)
+    const convId = selectedConversation.value?.id
+    if (convId && comments[convId]) {
+      comments[convId] = comments[convId].filter(m => m.id !== msg.id)
+    }
   } catch (err) {
     showToast(err.response?.data?.message || 'Impossible de supprimer le commentaire.')
+  } finally {
+    deletingId.value = null
   }
 }
 
 async function sendComment() {
   const text = newMessage.value.trim()
   if (!text || !selectedConversation.value) return
+  if (text.length > MESSAGE_MAX) {
+    showToast(`Le commentaire ne peut pas dépasser ${MESSAGE_MAX} caractères.`)
+    return
+  }
+  if (sending.value) return
   sending.value = true
   try {
     await createProfessorComment({
       studentId: selectedConversation.value.id,
-      content: text,
+      content:   sanitizeText(text),
       typeCible: 'PROFIL',
     })
     newMessage.value = ''
     const data = await getProfessorComments(selectedConversation.value.id)
-    comments[selectedConversation.value.id] = Array.isArray(data.comments) ? data.comments : []
+    comments[selectedConversation.value.id] = Array.isArray(data.comments)
+      ? data.comments.filter(isValidMessage)
+      : []
   } catch (err) {
     showToast(err.response?.data?.message || 'Impossible d\'envoyer le commentaire.')
-  } finally { sending.value = false }
+  } finally {
+    sending.value = false
+  }
 }
 
 onMounted(loadStudents)
@@ -290,6 +386,7 @@ onMounted(loadStudents)
   cursor: pointer; transition: all 0.18s; white-space: nowrap;
 }
 .btn-delete:hover { background: #fef2f2; }
+.btn-delete:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .state-box {
   display: flex; align-items: center; justify-content: center; gap: 0.75rem;
@@ -463,6 +560,26 @@ onMounted(loadStudents)
 }
 .btn-send:hover { background: var(--color-accent-hover); }
 .btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200;
+}
+.confirm-modal {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px; padding: 1.5rem;
+  max-width: 360px; width: 90%;
+  box-shadow: var(--shadow-panel);
+  display: flex; flex-direction: column; gap: 1rem;
+}
+.confirm-modal__text {
+  font-size: 0.9rem; font-weight: 600;
+  color: var(--color-text-primary); margin: 0;
+}
+.confirm-modal__actions { display: flex; gap: 0.6rem; justify-content: flex-end; }
 
 .toast {
   position: fixed; bottom: 24px; right: 24px;

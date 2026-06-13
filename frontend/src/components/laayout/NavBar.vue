@@ -2,15 +2,22 @@
   <div class="navbar-wrapper">
     <nav class="navbar">
       <div class="navbar-left">
+        <button class="hamburger-btn" @click="toggleMobile" aria-label="Menu">
+          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
         <img :src="iconTrusty" class="logo-icon" alt="Trusty" />
         <span class="logo-text">TRUSTY</span>
       </div>
 
       <div class="navbar-right">
-        <div class="notif-wrap">
+        <button class="notif-wrap" type="button" aria-label="Ouvrir les notifications" @click="router.push('/notifications')">
           <img :src="iconNotifications" class="notif-icon" alt="notifications" />
-          <span class="notif-badge"></span>
-        </div>
+          <span v-if="unreadCount > 0" class="notif-badge">
+            {{ unreadCount > 9 ? '9+' : unreadCount }}
+          </span>
+        </button>
 
         <button class="theme-toggle" @click="theme.toggle()" :title="theme.isDark ? 'Mode clair' : 'Mode sombre'" type="button">
           <svg v-if="theme.isDark" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -53,20 +60,33 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authstore'
 import { useThemeStore } from '@/stores/themeStore'
+import { getStudentNotifications } from '@/services/studentNotificationService'
+import { useSidebar } from '@/composables/useSidebar'
 import iconTrusty        from '@/assets/icons/trusty.svg'
 import iconNotifications from '@/assets/icons/notifications.svg'
 
+const { toggleMobile } = useSidebar()
 const authStore = useAuthStore()
 const theme = useThemeStore()
+const router = useRouter()
+const unreadCount = ref(0)
 
 onMounted(async () => {
   if (typeof authStore.fetchProfile === 'function') {
     await authStore.fetchProfile()
   } else if (!authStore.user && typeof authStore.fetchUser === 'function') {
     await authStore.fetchUser()
+  }
+
+  try {
+    const notifications = await getStudentNotifications()
+    unreadCount.value = notifications.filter(notification => !notification.est_lue).length
+  } catch {
+    unreadCount.value = 0
   }
 })
 
@@ -116,8 +136,11 @@ const userInitials = computed(() => {
 
 .navbar {
   height: 60px;
-  background: var(--color-surface);
+  background: color-mix(in srgb, var(--color-surface) 86%, transparent);
   border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 8px 24px rgba(15, 27, 45, 0.07);
+  backdrop-filter: blur(14px) saturate(125%);
+  -webkit-backdrop-filter: blur(14px) saturate(125%);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -172,6 +195,12 @@ const userInitials = computed(() => {
 .notif-wrap {
   position: relative;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 .notif-icon {
@@ -181,12 +210,18 @@ const userInitials = computed(() => {
 
 .notif-badge {
   position: absolute;
-  top: 0;
-  right: 0;
-  width: 8px;
-  height: 8px;
+  top: -7px;
+  right: -8px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
   background: var(--color-accent);
-  border-radius: 50%;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+  border-radius: 999px;
   border: 1.5px solid var(--color-surface);
 }
 
@@ -237,5 +272,56 @@ const userInitials = computed(() => {
 .user-avatar--img {
   object-fit: cover;
   background: transparent;
+}
+
+.hamburger-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.hamburger-btn:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 768px) {
+  .hamburger-btn {
+    display: flex;
+  }
+
+  .navbar {
+    padding: 0 12px;
+  }
+
+  .navbar-right {
+    gap: 8px;
+  }
+
+  .user-text {
+    display: none;
+  }
+
+  .user-avatar {
+    width: 34px;
+    height: 34px;
+    font-size: 11px;
+  }
+
+  .logo-text {
+    display: none;
+  }
+
+  .divider {
+    display: none;
+  }
 }
 </style>

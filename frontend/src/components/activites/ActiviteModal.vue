@@ -22,24 +22,24 @@
             </div>
             <div class="form-group">
               <label>Nom de l'activité *</label>
-              <input v-model="form.nom_activite" placeholder="Ex: Hackathon IA Maroc" />
+              <input type="text" v-model="form.nom_activite" placeholder="Ex: Hackathon IA Maroc" />
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
               <label>Organisation *</label>
-              <input v-model="form.organisation" placeholder="Ex: ENSA Tanger" />
+              <input type="text" v-model="form.organisation" placeholder="Ex: ENSA Tanger" />
             </div>
             <div class="form-group">
               <label>Rôle *</label>
-              <input v-model="form.role" placeholder="Ex: Participant" />
+              <input type="text" v-model="form.role" placeholder="Ex: Participant" />
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label>Date de début</label>
+              <label>Date de début *</label>
               <input type="date" v-model="form.date_debut" />
             </div>
             <div class="form-group">
@@ -110,7 +110,7 @@ watch(() => props.activite, (val) => {
 }, { immediate: true });
 
 const isValid = computed(() =>
-  form.value.type_activite && form.value.nom_activite && form.value.organisation && form.value.role
+  form.value.type_activite && form.value.nom_activite && form.value.organisation && form.value.role && form.value.date_debut
 );
 
 function submit() {

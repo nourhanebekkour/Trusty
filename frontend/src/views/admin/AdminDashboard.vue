@@ -5,7 +5,11 @@
     <div class="page__header">
       <div>
         <h1 class="page__title">Tableau de Bord Administrateur</h1>
-        <p class="page__subtitle">Gérez les certifications et surveillez l'activité de la plateforme.</p>
+        <p class="page__subtitle">
+          <template v-if="authStore.isSuperAdmin">Vue globale — Tous les établissements.</template>
+          <template v-else>Établissement : {{ authStore.user?.ecole || 'Non défini' }}.</template>
+          Gérez les certifications et surveillez l'activité de la plateforme.
+        </p>
       </div>
       <div class="page__actions">
         <button class="btn btn--secondary" @click="$router.push('/admin/portfolios')"> Rapports</button>
@@ -26,8 +30,8 @@
         <template #icon></template>
       </StatCard>
       <StatCard label="Professionnels"
-                :value="admin.loading ? '…' : formatNumber(admin.stats.partners)"
-                sub="Partenaires certifiés">
+                :value="admin.loading ? '…' : formatNumber(authStore.isSuperAdmin ? admin.stats.partners + admin.professionalQueue.length : admin.stats.partners)"
+                :sub="authStore.isSuperAdmin ? 'Dont ' + admin.professionalQueue.length + ' en attente' : 'Partenaires certifiés'">
         <template #icon></template>
       </StatCard>
       <StatCard label="Total Utilisateurs"
@@ -76,7 +80,7 @@
                     <span>{{ item.author }}</span>
                   </div>
                 </td>
-                <td><span class="type-badge">{{ item.type === 'ACTIVITE' ? 'Activité' : 'Professionnel' }}</span></td>
+                <td><span class="type-badge">Activité</span></td>
                 <td>{{ item.title }}</td>
                 <td class="text-muted">{{ formatRelativeDate(item.date) }}</td>
                 <td>
@@ -85,13 +89,14 @@
                     <button class="btn btn--primary btn--sm"
                             :disabled="admin.validatingId === item.id"
                             @click="handleValidate(item)">
-                      {{ admin.validatingId === item.id ? '…' : '✓ Valider' }}
+                      <AppIcon v-if="admin.validatingId !== item.id" name="check" />
+                      {{ admin.validatingId === item.id ? '…' : 'Valider' }}
                     </button>
                   </div>
                 </td>
               </tr>
               <tr v-if="!admin.loading && admin.verificationQueue.length === 0">
-                <td colspan="5" class="state-msg">Aucun élément en attente ✓</td>
+                <td colspan="5" class="state-msg">Aucun élément en attente <AppIcon name="check" /></td>
               </tr>
             </tbody>
           </table>
@@ -156,7 +161,7 @@
 
           <div v-else class="cert-list">
             <div v-for="cert in admin.certHistory.slice(0, 10)" :key="cert.id_historique || cert.id" class="cert-item">
-              <div class="cert-item__icon">✓</div>
+              <div class="cert-item__icon"><AppIcon name="check" /></div>
               <div class="cert-item__body">
                 <p class="cert-item__text">
                   <strong>{{ cert.utilisateur?.prenom || '' }} {{ cert.utilisateur?.nom || '' }}</strong>
@@ -173,6 +178,34 @@
 
           <div class="card__footer">
             <a href="/admin/historique" class="link">Voir l'audit complet →</a>
+          </div>
+        </div>
+
+        <!-- ── Professionnels en attente (Super Admin) ── -->
+        <div v-if="authStore.isSuperAdmin" class="card" style="margin-top: 20px;">
+          <h2 class="card__title">Professionnels en attente</h2>
+          <p class="card__subtitle">Comptes professionnels à valider</p>
+
+          <div v-if="admin.loading" class="state-msg">Chargement…</div>
+
+          <div v-else class="cert-list">
+            <div v-for="pro in admin.professionalQueue.slice(0, 5)" :key="pro.id" class="cert-item">
+              <div class="cert-item__icon" style="background:var(--color-waiting-bg);color:var(--color-waiting-text);">!</div>
+              <div class="cert-item__body">
+                <p class="cert-item__text">
+                  <strong>{{ pro.prenom }} {{ pro.nom }}</strong>
+                  <span v-if="pro.entreprise"> — {{ pro.entreprise }}</span>
+                </p>
+                <span class="cert-item__time">{{ pro.email }}</span>
+              </div>
+            </div>
+            <div v-if="admin.professionalQueue.length === 0" class="state-msg">
+              Aucun professionnel en attente
+            </div>
+          </div>
+
+          <div class="card__footer">
+            <a href="/admin/verifications" class="link">Voir la file d'attente →</a>
           </div>
         </div>
       </div>
@@ -245,7 +278,7 @@
                    minlength="8" maxlength="128"
                    :class="{ 'input--error': v$.password.$error }"
                    @blur="v$.password.$touch()" />
-            <button type="button" class="input-group__btn" @click="showPwd = !showPwd">👁</button>
+            <button type="button" class="input-group__btn" @click="showPwd = !showPwd"><AppIcon name="eye" /></button>
             <button type="button" class="input-group__btn" @click="generatePassword">↻ Générer un mot de passe fort</button>
           </div>
           <span v-if="v$.password.$error" class="field-error">
@@ -431,6 +464,7 @@ onMounted(async () => {
     admin.fetchUsers(),
     admin.fetchVerificationQueue(),
     admin.fetchCertHistory(),
+    ...(authStore.isSuperAdmin ? [admin.fetchProfessionalQueue()] : []),
   ])
 })
 </script>
@@ -632,4 +666,26 @@ onMounted(async () => {
 }
 .checkbox-group { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
 .checkbox-group label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-text-secondary); cursor: pointer; }
+
+@media (max-width: 768px) {
+  .page { padding: 20px 16px; }
+  .page__header { flex-direction: column; gap: 12px; }
+  .page__title { font-size: 20px; }
+  .page__actions { width: 100%; }
+  .page__actions .btn { flex: 1; justify-content: center; }
+  .stats-row { flex-wrap: wrap; }
+  .content-grid { grid-template-columns: 1fr; }
+  .card__header { flex-direction: column; gap: 12px; }
+  .search-box { width: 100%; }
+  .search-box input { width: 100%; }
+  .table { display: block; overflow-x: auto; white-space: nowrap; }
+}
+@media (max-width: 480px) {
+  .stats-row { flex-direction: column; }
+  .form-grid { grid-template-columns: 1fr; }
+  .input-group { flex-direction: column; }
+  .page__actions { flex-wrap: wrap; }
+  .page__actions .btn { flex: 1 1 auto; text-align: center; white-space: normal; }
+  .action-btns { flex-wrap: wrap; }
+}
 </style>

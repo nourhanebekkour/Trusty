@@ -19,14 +19,14 @@ const results = JSON.parse(readFileSync(resolve(root, 'test-results.json'), 'utf
 const { numTotalTests = 0, numPassedTests = 0, numFailedTests = 0, startTime } = results
 
 const passRate  = numTotalTests > 0 ? Math.round((numPassedTests / numTotalTests) * 100) : 0
-const statusLabel = numFailedTests === 0 ? 'SUCCÈS ✅' : 'ÉCHEC ❌'
+const statusLabel = numFailedTests === 0 ? 'SUCCÈS' : 'ÉCHEC'
 const priority    = numFailedTests > 0  ? 'High'      : 'Low'
 const date = new Date(startTime || Date.now()).toLocaleString('fr-FR')
 
 // ── EMAIL ──────────────────────────────────────────────────────────────────────
 async function sendEmail() {
   if (!SMTP_USER || !SMTP_PASS || !SMTP_TO) {
-    console.warn('⚠️  Variables SMTP manquantes — email ignoré.')
+    console.warn('[ATTENTION] Variables SMTP manquantes — email ignoré.')
     return
   }
   const transporter = createTransport({
@@ -44,13 +44,13 @@ async function sendEmail() {
     html,
     attachments: [{ filename: 'test-report.html', content: html, contentType: 'text/html' }],
   })
-  console.log(`✅  Email envoyé à ${SMTP_TO}`)
+  console.log(`[OK] Email envoyé à ${SMTP_TO}`)
 }
 
 // ── JIRA ───────────────────────────────────────────────────────────────────────
 async function createJiraTicket() {
   if (!JIRA_BASE_URL || !JIRA_API_TOKEN || !JIRA_USER_EMAIL || !JIRA_PROJECT_KEY) {
-    console.warn('⚠️  Variables Jira manquantes — ticket ignoré.')
+    console.warn('[ATTENTION] Variables Jira manquantes — ticket ignoré.')
     return
   }
   const token = Buffer.from(`${JIRA_USER_EMAIL}:${JIRA_API_TOKEN}`).toString('base64')
@@ -99,7 +99,7 @@ async function createJiraTicket() {
   }
 
   const data = await res.json()
-  console.log(`✅  Ticket Jira créé : ${data.key}`)
+  console.log(`[OK] Ticket Jira créé : ${data.key}`)
   console.log(`    ${JIRA_BASE_URL}/browse/${data.key}`)
 }
 
@@ -110,5 +110,5 @@ function li(text) {
 // ── MAIN ───────────────────────────────────────────────────────────────────────
 const [emailResult, jiraResult] = await Promise.allSettled([sendEmail(), createJiraTicket()])
 
-if (emailResult.status === 'rejected') console.error('❌  Email :', emailResult.reason.message)
-if (jiraResult.status  === 'rejected') console.error('❌  Jira  :', jiraResult.reason.message)
+if (emailResult.status === 'rejected') console.error('[ERREUR] Email :', emailResult.reason.message)
+if (jiraResult.status  === 'rejected') console.error('[ERREUR] Jira  :', jiraResult.reason.message)

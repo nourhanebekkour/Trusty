@@ -10,7 +10,7 @@ async function main() {
   // await prisma.utilisateur.deleteMany();
 
   const salt = await bcrypt.genSalt(10);
-  const passwordHash = await bcrypt.hash('password123', salt);
+  const passwordHash = await bcrypt.hash('Password123!', salt);
 
   // 1. Écoles utilisées pour le seed
   const ecole1 = 'ENSATanger';

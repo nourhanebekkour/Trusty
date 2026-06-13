@@ -3,38 +3,42 @@
     <div class="page__header">
       <div>
         <h1 class="page__title">Vérifications</h1>
-        <p class="page__subtitle">Activités étudiantes et professionnels en attente de validation.</p>
+        <p class="page__subtitle">
+          <template v-if="authStore.isSuperAdmin">Activités étudiantes et professionnels en attente de validation (vue globale).</template>
+          <template v-else>Activités étudiantes en attente de validation — {{ authStore.user?.ecole || '' }}.</template>
+        </p>
       </div>
       <div class="page__actions">
-        <button class="btn btn--secondary" @click="load">🔄 Rafraîchir</button>
+        <button class="btn btn--secondary" @click="load"><AppIcon name="refresh" /> Rafraîchir</button>
       </div>
     </div>
 
     <div v-if="admin.error" class="error-banner">{{ admin.error }}</div>
 
     <div class="stats-row">
-      <StatCard label="En attente" :value="admin.loading ? '…' : String(admin.verificationQueue.length)">
-        <template #icon>🕐</template>
+      <StatCard label="En attente" :value="admin.loading ? '…' : String(totalPending)">
+        <template #icon><AppIcon name="clock" /></template>
       </StatCard>
       <StatCard label="Activités" :value="admin.loading ? '…' : String(activitiesCount)">
-        <template #icon>📋</template>
+        <template #icon><AppIcon name="activity" /></template>
       </StatCard>
-      <StatCard label="Professionnels" :value="admin.loading ? '…' : String(prosCount)">
-        <template #icon>🏢</template>
+      <StatCard v-if="authStore.isSuperAdmin" label="Professionnels" :value="admin.loading ? '…' : String(prosCount)">
+        <template #icon><AppIcon name="building" /></template>
       </StatCard>
     </div>
+
+    <!-- Activités en attente -->
+    <div class="section-label">ACTIVITÉS EN ATTENTE</div>
 
     <div v-if="admin.loading" class="state-msg">Chargement…</div>
 
     <template v-else>
-      <div v-if="admin.verificationQueue.length === 0" class="state-msg">Aucun élément en attente de vérification.</div>
+      <div v-if="admin.verificationQueue.length === 0" class="state-msg">Aucune activité en attente de vérification.</div>
 
       <div class="verif-list">
-        <div v-for="item in admin.verificationQueue" :key="item.id + '-' + item.type" class="verif-card">
+        <div v-for="item in admin.verificationQueue" :key="item.id" class="verif-card">
           <div class="verif-card__badge">
-            <span :class="['badge', item.type === 'ACTIVITE' ? 'badge--activity' : 'badge--pro']">
-              {{ item.type === 'ACTIVITE' ? 'Activité' : 'Professionnel' }}
-            </span>
+            <span class="badge badge--activity">Activité</span>
           </div>
 
           <div class="verif-card__body">
@@ -44,12 +48,47 @@
             </div>
             <p class="verif-card__desc">{{ item.description || 'Aucune description' }}</p>
             <div class="verif-card__actions">
-              <button class="btn btn--primary btn--sm" :disabled="admin.validatingId === item.id" @click="approve(item)">✓ Approuver</button>
-              <button class="btn btn--ghost btn--sm" :disabled="admin.validatingId === item.id" @click="reject(item)">✕ Rejeter</button>
+              <button class="btn btn--primary btn--sm" :disabled="admin.validatingId === item.id" @click="approve(item)"><AppIcon name="check" /> Approuver</button>
+              <button class="btn btn--ghost btn--sm" :disabled="admin.validatingId === item.id" @click="reject(item)"><AppIcon name="x" /> Rejeter</button>
             </div>
           </div>
         </div>
       </div>
+    </template>
+
+    <!-- Professionnels en attente (Super Admin uniquement) -->
+    <template v-if="authStore.isSuperAdmin">
+      <div class="section-label" style="margin-top: 32px;">PROFESSIONNELS EN ATTENTE DE VALIDATION</div>
+
+      <div v-if="admin.loading" class="state-msg">Chargement…</div>
+
+      <template v-else>
+        <div v-if="admin.professionalQueue.length === 0" class="state-msg">Aucun professionnel en attente de validation.</div>
+
+        <div class="verif-list">
+          <div v-for="item in admin.professionalQueue" :key="item.id" class="verif-card">
+            <div class="verif-card__badge">
+              <span class="badge badge--pro">Professionnel</span>
+            </div>
+
+            <div class="verif-card__body">
+              <div class="verif-card__header">
+                <h3 class="verif-card__title">{{ item.prenom }} {{ item.nom }}</h3>
+                <span class="text-muted">{{ item.email }}</span>
+              </div>
+              <p class="verif-card__desc">
+                <span v-if="item.entreprise">Entreprise : {{ item.entreprise }}</span>
+                <span v-if="item.siret"> — SIRET : {{ item.siret }}</span>
+                <span v-if="!item.entreprise && !item.siret">Aucune information professionnelle</span>
+              </p>
+              <div class="verif-card__actions">
+                <button class="btn btn--primary btn--sm" :disabled="admin.validatingId === item.id" @click="approvePro(item)"><AppIcon name="check" /> Approuver</button>
+                <button class="btn btn--ghost btn--sm" :disabled="admin.validatingId === item.id" @click="rejectPro(item)"><AppIcon name="x" /> Rejeter</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
     </template>
   </div>
 </template>
@@ -65,12 +104,16 @@ const admin = useAdminStore()
 const authStore = useAuthStore()
 const router = useRouter()
 
+const totalPending = computed(() =>
+  admin.verificationQueue.length + (authStore.isSuperAdmin ? admin.professionalQueue.length : 0)
+)
+
 const activitiesCount = computed(() =>
-  admin.verificationQueue.filter(v => v.type === 'ACTIVITE').length
+  admin.verificationQueue.length
 )
 
 const prosCount = computed(() =>
-  admin.verificationQueue.filter(v => v.type === 'PROFESSIONNEL').length
+  admin.professionalQueue.length
 )
 
 async function approve(item) {
@@ -81,8 +124,19 @@ async function reject(item) {
   await admin.validateEntity(item.type, item.id, 'REJETE')
 }
 
+async function approvePro(item) {
+  await admin.validateProfessional(item.id, 'VALIDE')
+}
+
+async function rejectPro(item) {
+  await admin.validateProfessional(item.id, 'REJETE')
+}
+
 async function load() {
-  await admin.fetchVerificationQueue()
+  await Promise.all([
+    admin.fetchVerificationQueue(),
+    ...(authStore.isSuperAdmin ? [admin.fetchProfessionalQueue()] : []),
+  ])
 }
 
 onMounted(async () => {
@@ -145,4 +199,28 @@ onMounted(async () => {
 .btn--ghost:hover { background: var(--color-surface-hover); }
 .btn--ghost:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn--sm  { padding: 6px 12px; font-size: 12px; }
+
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 768px) {
+  .page { padding: 20px 16px; }
+  .page__header { flex-direction: column; gap: 12px; }
+  .page__title { font-size: 20px; }
+  .page__actions { width: 100%; }
+  .page__actions .btn { flex: 1; justify-content: center; }
+  .stats-row { flex-wrap: wrap; }
+}
+@media (max-width: 480px) {
+  .stats-row { flex-direction: column; }
+  .verif-card { flex-direction: column; }
+  .verif-card__header { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .verif-card__actions { flex-wrap: wrap; }
+}
 </style>

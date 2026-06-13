@@ -1,6 +1,11 @@
 <template>
   <nav class="navbar">
     <div class="navbar-left">
+      <button class="hamburger-btn" @click="toggleMobile" type="button" aria-label="Menu">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
       <img :src="iconTrusty" class="logo-icon" alt="Trusty" />
       <span class="logo-text">TRUSTY</span>
     </div>
@@ -50,9 +55,11 @@ import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '@/stores/authstore'
 import { useThemeStore } from '@/stores/themeStore'
 import { getProfessionalProfile } from '@/services/professionalApi'
+import { useProfessionalSidebar } from '@/composables/useProfessionalSidebar'
 import iconTrusty from '@/assets/icons/trusty.svg'
 import iconNotifications from '@/assets/icons/notifications.svg'
 
+const { toggleMobile } = useProfessionalSidebar()
 const authStore = useAuthStore()
 const theme = useThemeStore()
 const profile = ref(null)
@@ -100,8 +107,11 @@ const userInitials = computed(() => {
   z-index: 100;
   width: 100%;
   height: 60px;
-  background: var(--color-surface, #FFFFFF);
+  background: color-mix(in srgb, var(--color-surface, #FFFFFF) 86%, transparent);
   border-bottom: 1px solid var(--color-border, #D6D0C4);
+  box-shadow: 0 8px 24px rgba(15, 27, 45, 0.07);
+  backdrop-filter: blur(14px) saturate(125%);
+  -webkit-backdrop-filter: blur(14px) saturate(125%);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -124,6 +134,24 @@ const userInitials = computed(() => {
   font-weight: 700;
   color: var(--color-text-primary, #0F1B2D);
   letter-spacing: 1.5px;
+}
+
+.hamburger-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-primary, #0F1B2D);
+  cursor: pointer;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.hamburger-btn:hover {
+  background: var(--color-surface-hover, #F0EDE6);
 }
 
 .navbar-right {
@@ -230,6 +258,15 @@ const userInitials = computed(() => {
     padding: 0 18px;
   }
   .user-text {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .hamburger-btn {
+    display: flex;
+  }
+  .logo-text {
     display: none;
   }
 }

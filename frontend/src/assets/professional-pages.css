@@ -42,6 +42,7 @@
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
+  box-shadow: var(--shadow-button);
 }
 .prof-page-head .btn-primary:hover {
   background: var(--color-accent-hover, #2E5449);
@@ -67,10 +68,14 @@
   border-radius: 12px;
   padding: 16px 18px;
   box-shadow: var(--shadow-panel, 0 8px 32px rgba(0,0,0,0.08));
-  transition: border-color 0.15s;
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--transition-base, 0.25s), box-shadow var(--transition-base, 0.25s), border-color var(--transition-base, 0.25s);
 }
 .prof-stat-card:hover {
   border-color: var(--color-accent, #3D6B5E);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-panel-hover);
 }
 .prof-stat-card svg {
   color: var(--color-accent, #3D6B5E);
@@ -935,4 +940,5 @@
 @media (max-width: 760px) {
   .prof-stats-row { grid-template-columns: 1fr; }
   .prof-page-head { flex-direction: column; }
+  .prof-page { padding: 16px 14px 40px; }
 }

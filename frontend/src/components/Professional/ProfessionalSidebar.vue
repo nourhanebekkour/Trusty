@@ -1,30 +1,42 @@
 <template>
-  <aside class="sidebar">
+  <Teleport to="body">
+    <div v-if="isMobileOpen" class="sidebar-overlay" @click="closeMobile"></div>
+  </Teleport>
+
+  <aside class="sidebar" :class="{ 'mobile-open': isMobileOpen }">
+    <div class="sidebar-header-mobile">
+      <span class="sidebar-title">Menu</span>
+      <button class="mobile-close-btn" @click="closeMobile" type="button">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
 
     <nav class="sidebar-nav">
-      <router-link to="/professional/profile" class="nav-item">
+      <router-link to="/professional/profile" class="nav-item" @click="closeMobile">
         <img :src="iconProfile" class="nav-icon" />
         <span class="nav-label">Profil</span>
       </router-link>
 
-      <router-link to="/professional/recommandations" class="nav-item">
+      <router-link to="/professional/recommandations" class="nav-item" @click="closeMobile">
         <img :src="iconRecommandations" class="nav-icon" />
         <span class="nav-label">Recommandations</span>
       </router-link>
 
-      <router-link to="/professional/portfolios" class="nav-item">
+      <router-link to="/professional/portfolios" class="nav-item" @click="closeMobile">
         <img :src="iconPortfolio" class="nav-icon" />
         <span class="nav-label">Portfolio</span>
       </router-link>
 
-      <router-link to="/professional/notifications" class="nav-item">
+      <router-link to="/professional/notifications" class="nav-item" @click="closeMobile">
         <img :src="iconNotifications" class="nav-icon" />
         <span class="nav-label">Notifications</span>
       </router-link>
     </nav>
 
     <div class="sidebar-bottom">
-      <router-link to="/professional/settings" class="nav-item">
+      <router-link to="/professional/settings" class="nav-item" @click="closeMobile">
         <img :src="iconSettings" class="nav-icon" />
         <span class="nav-label">Paramètres</span>
       </router-link>
@@ -41,6 +53,7 @@
 <script setup>
 import { useAuthStore } from '@/stores/authstore'
 import { useRouter } from 'vue-router'
+import { useProfessionalSidebar } from '@/composables/useProfessionalSidebar'
 
 import iconProfile         from '@/assets/icons/profile.svg'
 import iconRecommandations from '@/assets/icons/recommandations.svg'
@@ -49,6 +62,7 @@ import iconNotifications   from '@/assets/icons/notifications.svg'
 import iconSettings        from '@/assets/icons/settings.svg'
 import iconLogout          from '@/assets/icons/logout.svg'
 
+const { isMobileOpen, closeMobile } = useProfessionalSidebar()
 const authStore = useAuthStore()
 const router = useRouter()
 
@@ -133,9 +147,70 @@ async function handleLogout() {
   color: var(--color-danger, #ef4444);
 }
 
+.sidebar-header-mobile {
+  display: none;
+  padding: 16px;
+  border-bottom: 1px solid var(--color-border, #D6D0C4);
+  align-items: center;
+  justify-content: space-between;
+}
+.sidebar-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary, #0F1B2D);
+}
+.mobile-close-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary, #6B7280);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+}
+.mobile-close-btn:hover {
+  background: var(--color-surface-hover, #F0EDE6);
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 998;
+}
+
 @media (max-width: 900px) {
   .sidebar {
     display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 999;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    width: 260px;
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  .sidebar-overlay {
+    display: block;
+  }
+  .sidebar-header-mobile {
+    display: flex;
+  }
+  .mobile-close-btn {
+    display: flex;
   }
 }
 </style>

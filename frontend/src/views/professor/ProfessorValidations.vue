@@ -36,6 +36,8 @@
             v-model="search"
             class="prof-input"
             placeholder="Rechercher un étudiant ou un élément"
+            maxlength="100"
+            autocomplete="off"
           />
 
           <select v-model="typeFilter" class="prof-select">
@@ -63,9 +65,9 @@
 
           <tbody>
             <tr v-for="item in filteredValidations" :key="item.id">
-              <td>{{ item.studentName }}</td>
+              <td>{{ sanitizeText(item.studentName) }}</td>
               <td>{{ typeLabel(item.type) }}</td>
-              <td>{{ item.title }}</td>
+              <td>{{ sanitizeText(item.title) }}</td>
               <td>{{ formatDate(item.date) }}</td>
               <td>
                 <span :class="statusClass(item.status)">
@@ -74,13 +76,25 @@
               </td>
               <td>
                 <div class="prof-actions">
-                  <button class="prof-btn prof-btn-secondary prof-btn-small" @click="openDetails(item)">
+                  <button
+                    class="prof-btn prof-btn-secondary prof-btn-small"
+                    @click="openDetails(item)"
+                    :disabled="actionLoading"
+                  >
                     Voir
                   </button>
-                  <button class="prof-btn prof-btn-primary prof-btn-small" @click="approve(item)">
+                  <button
+                    class="prof-btn prof-btn-primary prof-btn-small"
+                    @click="confirmApprove(item)"
+                    :disabled="actionLoading"
+                  >
                     Valider
                   </button>
-                  <button class="prof-btn prof-btn-danger prof-btn-small" @click="openReject(item)">
+                  <button
+                    class="prof-btn prof-btn-danger prof-btn-small"
+                    @click="openReject(item)"
+                    :disabled="actionLoading"
+                  >
                     Correction
                   </button>
                 </div>
@@ -91,34 +105,72 @@
       </section>
     </template>
 
+    <!-- Modal détail / rejet -->
     <div v-if="selectedValidation" class="prof-modal-backdrop">
       <div class="prof-modal">
         <div class="prof-modal-head">
           <div>
-            <h2>{{ selectedValidation.title }}</h2>
-            <p>{{ selectedValidation.studentName }} - {{ typeLabel(selectedValidation.type) }}</p>
+            <h2>{{ sanitizeText(selectedValidation.title) }}</h2>
+            <p>{{ sanitizeText(selectedValidation.studentName) }} - {{ typeLabel(selectedValidation.type) }}</p>
           </div>
           <button class="prof-modal-close" @click="closeModal">×</button>
         </div>
 
-        <p class="prof-muted">{{ selectedValidation.description || 'Aucune description disponible.' }}</p>
+        <p class="prof-muted">{{ sanitizeText(selectedValidation.description) || 'Aucune description disponible.' }}</p>
 
         <textarea
           v-if="rejectMode"
           v-model="reason"
           class="prof-textarea"
           placeholder="Expliquez les corrections demandées"
+          maxlength="1000"
         ></textarea>
 
+        <!-- Compteur de caractères visible uniquement en mode rejet -->
+        <p v-if="rejectMode" class="prof-muted" style="text-align: right; font-size: 0.78em; margin-top: 4px;">
+          {{ reason.length }} / 1000
+        </p>
+
         <div class="prof-actions" style="margin-top: 16px;">
-          <button class="prof-btn prof-btn-primary" @click="approve(selectedValidation)">
+          <button
+            class="prof-btn prof-btn-primary"
+            @click="confirmApprove(selectedValidation)"
+            :disabled="actionLoading"
+          >
             Valider
           </button>
-          <button class="prof-btn prof-btn-danger" @click="reject(selectedValidation)">
+          <button
+            class="prof-btn prof-btn-danger"
+            @click="reject(selectedValidation)"
+            :disabled="actionLoading || (rejectMode && !reason.trim())"
+          >
             Demander correction
           </button>
           <button class="prof-btn prof-btn-secondary" @click="closeModal">
             Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dialogue de confirmation pour les actions destructives -->
+    <div v-if="confirmDialog.show" class="prof-modal-backdrop">
+      <div class="prof-modal" style="max-width: 420px;">
+        <div class="prof-modal-head">
+          <h2>{{ confirmDialog.title }}</h2>
+          <button class="prof-modal-close" @click="cancelConfirm">×</button>
+        </div>
+        <p class="prof-muted">{{ confirmDialog.message }}</p>
+        <div class="prof-actions" style="margin-top: 16px;">
+          <button
+            class="prof-btn prof-btn-primary"
+            @click="confirmDialog.onConfirm"
+            :disabled="actionLoading"
+          >
+            Confirmer
+          </button>
+          <button class="prof-btn prof-btn-secondary" @click="cancelConfirm">
+            Annuler
           </button>
         </div>
       </div>
@@ -137,6 +189,7 @@ import {
   requestProfessorChanges,
 } from '@/services/professorApi'
 
+// ─── État principal ─────────
 const loading = ref(false)
 const error = ref(null)
 const validations = ref([])
@@ -153,8 +206,75 @@ const rejectMode = ref(false)
 const reason = ref('')
 const toast = ref({ show: false, message: '' })
 
+// Etat additionnel ────
+const actionLoading = ref(false)
+const confirmDialog = ref({
+  show: false,
+  title: '',
+  message: '',
+  onConfirm: null,
+})
+
+// Utilitaires ──────────────────
+function sanitizeText(value) {
+  if (!value) return ''
+  return String(value)
+    .replace(/<[^>]*>/g, '')   // supprime toute balise HTML
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .trim()
+    .slice(0, 500)
+}
+
+function validateReason(text) {
+  const trimmed = text.trim()
+  if (!trimmed) return 'Veuillez écrire la correction demandée.'
+  if (trimmed.length < 10) return 'La correction doit comporter au moins 10 caractères.'
+  if (trimmed.length > 1000) return 'La correction ne peut pas dépasser 1 000 caractères.'
+  return null
+}
+
+function isValidItem(item) {
+  return item && item.id != null
+}
+
+function secureHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest', // signal CSRF côté serveur
+  }
+}
+
+// ─── Dialogue de confirmation ───────────
+
+function showConfirmDialog(title, message, onConfirm) {
+  confirmDialog.value = { show: true, title, message, onConfirm }
+}
+
+function cancelConfirm() {
+  confirmDialog.value = { show: false, title: '', message: '', onConfirm: null }
+}
+
+function confirmApprove(item) {
+  if (!isValidItem(item)) {
+    showToast('Élément invalide.')
+    return
+  }
+  showConfirmDialog(
+    'Confirmer la validation',
+    `Voulez-vous vraiment valider "${sanitizeText(item.title)}" pour ${sanitizeText(item.studentName)} ?`,
+    () => {
+      cancelConfirm()
+      approve(item)
+    }
+  )
+}
+
+// ─── Chargement des données ──────
+
 const filteredValidations = computed(() => {
-  const query = search.value.trim().toLowerCase()
+  const query = search.value.trim().toLowerCase().slice(0, 100) // borne la recherche
 
   return validations.value.filter(item => {
     const matchesSearch =
@@ -183,6 +303,7 @@ async function loadValidations() {
   }
 }
 
+// ─── Gestion des modales ────────────
 function openDetails(item) {
   selectedValidation.value = item
   rejectMode.value = false
@@ -201,35 +322,75 @@ function closeModal() {
   reason.value = ''
 }
 
+// ─── Actions ─────
+
 async function approve(item) {
+  // validation de l'item
+  if (!isValidItem(item)) {
+    showToast('Élément invalide.')
+    return
+  }
+
+  // verrou anti double-clic
+  if (actionLoading.value) return
+  actionLoading.value = true
+
   try {
-    await approveProfessorValidation(item.id, item.type)
+    await approveProfessorValidation(item.id, item.type, { headers: secureHeaders() })
 
     validations.value = validations.value.filter(validation => validation.id !== item.id)
     closeModal()
     showToast('Validation confirmée.')
   } catch (err) {
     showToast(err.response?.data?.message || 'Impossible de valider cet élément.')
+  } finally {
+    // libère le verrou dans tous les cas
+    actionLoading.value = false
   }
 }
 
 async function reject(item) {
-  if (!reason.value.trim()) {
+  // validation côté client du champ raison
+  const validationError = validateReason(reason.value)
+  if (validationError) {
     rejectMode.value = true
-    showToast('Veuillez écrire la correction demandée.')
+    showToast(validationError)
     return
   }
 
+  // validation de l'item
+  if (!isValidItem(item)) {
+    showToast('Élément invalide.')
+    return
+  }
+
+  // verrou anti double-clic
+  if (actionLoading.value) return
+  actionLoading.value = true
+
+  // sanitisation du contenu avant envoi
+  const sanitizedReason = reason.value.trim().slice(0, 1000)
+
   try {
-    await requestProfessorChanges(item.id, { reason: reason.value }, item.type)
+    await requestProfessorChanges(
+      item.id,
+      { reason: sanitizedReason },
+      item.type,
+      { headers: secureHeaders() }
+    )
 
     validations.value = validations.value.filter(validation => validation.id !== item.id)
     closeModal()
     showToast('Correction envoyée.')
   } catch (err) {
     showToast(err.response?.data?.message || 'Impossible d\'envoyer la correction.')
+  } finally {
+    // libère le verrou dans tous les cas
+    actionLoading.value = false
   }
 }
+
+// ─── Helpers d'affichage ────────
 
 function typeLabel(type) {
   const labels = {

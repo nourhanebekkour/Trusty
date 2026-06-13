@@ -6,7 +6,7 @@
         <!-- Header -->
         <div class="detail-header">
           <div class="detail-header-left">
-            <span class="detail-icon">📋</span>
+            <span class="detail-icon"><AppIcon name="briefcase" /></span>
             <h3 class="detail-title">Détail du stage</h3>
           </div>
           <button class="modal-close" @click="close">×</button>
@@ -20,7 +20,7 @@
 
         <!-- Error -->
         <div v-else-if="error" class="detail-error">
-          <span>⚠ {{ error }}</span>
+          <span><AppIcon name="warning" /> {{ error }}</span>
         </div>
 
         <!-- Content -->
@@ -41,10 +41,10 @@
                 {{ labelStatut(stage.status_validation) }}
               </span>
               <span class="badge badge--public" v-if="stage.est_public !== false">
-                🌐 Public
+                <AppIcon name="globe" /> Public
               </span>
               <span class="badge badge--private" v-else>
-                🔒 Privé
+                <AppIcon name="lock" /> Privé
               </span>
             </div>
           </div>
@@ -53,7 +53,7 @@
 
             <!-- Infos générales -->
             <div class="detail-section">
-              <h4 class="detail-section-title">📅 Période</h4>
+              <h4 class="detail-section-title"><AppIcon name="calendar" /> Période</h4>
               <div class="detail-field">
                 <span class="detail-label">Date de début</span>
                 <span class="detail-value">{{ formatDate(stage.date_debut) }}</span>
@@ -70,7 +70,7 @@
 
             <!-- Lieu -->
             <div class="detail-section" v-if="stage.adresse_entreprise">
-              <h4 class="detail-section-title">📍 Lieu</h4>
+              <h4 class="detail-section-title"><AppIcon name="map" /> Lieu</h4>
               <div class="detail-field">
                 <span class="detail-label">Adresse</span>
                 <span class="detail-value">{{ stage.adresse_entreprise }}</span>
@@ -79,7 +79,7 @@
 
             <!-- Encadrement -->
             <div class="detail-section">
-              <h4 class="detail-section-title">👤 Encadrement</h4>
+              <h4 class="detail-section-title"><AppIcon name="users" /> Encadrement</h4>
               <div class="detail-field">
                 <span class="detail-label">Professionnel</span>
                 <span class="detail-value">{{ stage.encadrant_professionnel || '—' }}</span>
@@ -98,16 +98,16 @@
 
           <!-- Missions -->
           <div class="detail-section detail-section--full">
-            <h4 class="detail-section-title">📋 Missions</h4>
+            <h4 class="detail-section-title"><AppIcon name="file-text" /> Missions</h4>
             <p class="detail-missions-text">{{ stage.missions || '—' }}</p>
           </div>
 
           <!-- Technologies -->
           <div v-if="technologies.length" class="detail-section detail-section--full">
-            <h4 class="detail-section-title">🛠️ Technologies</h4>
+            <h4 class="detail-section-title"><AppIcon name="wrench" /> Technologies</h4>
             <div class="detail-techs">
               <div v-for="tech in technologies" :key="tech.id_technologie" class="detail-tech-item">
-                <span class="detail-tech-emoji">{{ techEmoji(tech) }}</span>
+                <AppIcon class="detail-tech-emoji" :name="techEmoji(tech)" />
                 <div class="detail-tech-info">
                   <span class="detail-tech-name">{{ tech.nom }}</span>
                   <span v-if="tech.version" class="detail-tech-version">v{{ tech.version }}</span>
@@ -121,11 +121,11 @@
 
           <!-- Rapport -->
           <div class="detail-section detail-section--full">
-            <h4 class="detail-section-title">📄 Rapport</h4>
+            <h4 class="detail-section-title"><AppIcon name="file-text" /> Rapport</h4>
             <div v-if="rapportUrl" class="detail-rapport">
-              <span class="detail-rapport-icon">📄</span>
+              <span class="detail-rapport-icon"><AppIcon name="file-text" /></span>
               <span class="detail-rapport-label">Rapport de stage</span>
-              <a :href="rapportUrl" target="_blank" class="detail-rapport-link">👁 Voir le rapport</a>
+              <a :href="rapportUrl" target="_blank" class="detail-rapport-link"><AppIcon name="eye" /> Voir le rapport</a>
             </div>
             <p v-else class="detail-empty">Aucun rapport déposé.</p>
           </div>
@@ -135,7 +135,7 @@
         <!-- Footer -->
         <div class="detail-footer">
           <button class="btn-cancel" @click="close">Fermer</button>
-          <button class="btn-new" @click="goToEdit">✎ Modifier ce stage</button>
+          <button class="btn-new" @click="goToEdit"><AppIcon name="pencil" /> Modifier ce stage</button>
         </div>
 
       </div>
@@ -239,12 +239,12 @@ export default {
 
     techEmoji(tech) {
       const map = {
-        FRONTEND: '🎨', BACKEND: '⚙️', DATABASE: '🗄️',
-        DEVOPS: '🚀', MOBILE: '📱', IA: '🤖', AI: '🤖',
-        SECURITE: '🔒', CLOUD: '☁️', TESTING: '🧪',
-        DESIGN: '✏️', AUTRE: '🔧',
+        FRONTEND: 'palette', BACKEND: 'code', DATABASE: 'database',
+        DEVOPS: 'rocket', MOBILE: 'smartphone', IA: 'sparkles', AI: 'sparkles',
+        SECURITE: 'lock', CLOUD: 'cloud', TESTING: 'test',
+        DESIGN: 'pencil', AUTRE: 'wrench',
       }
-      return map[(tech.categorie || '').toUpperCase()] ?? '🔧'
+      return map[(tech.categorie || '').toUpperCase()] ?? 'wrench'
     },
   },
 }
@@ -564,5 +564,17 @@ export default {
 .modal-fade-enter-from,
 .modal-fade-leave-to {
   opacity: 0;
+}
+
+@media (max-width: 640px) {
+  .detail-modal { max-width: 100%; margin: 0; border-radius: 0; max-height: 100vh; height: 100vh; }
+  .detail-header { padding: 16px 18px; flex-wrap: wrap; gap: 8px; }
+  .detail-body { padding: 0; }
+  .detail-scroll { padding: 16px 18px; }
+  .detail-grid { grid-template-columns: 1fr; padding: 8px 18px; }
+  .detail-section { padding: 12px 0; }
+  .detail-hero-badges { flex-direction: column; }
+  .detail-footer { padding: 14px 18px; }
+  .detail-footer .btn { flex: 1; justify-content: center; }
 }
 </style>

@@ -145,6 +145,7 @@
     <!-- Modal joindre un rapport -->
     <ProjetRapportModal
       v-model="showRapportModal"
+      :projet-id="rapportTarget?.id_projet"
       @save="handleRapportSave"
     />
 
@@ -153,6 +154,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authstore'
 import { useProjetStore } from '@/stores/projetStore'
 import {
@@ -168,6 +170,8 @@ import ConfirmModal       from '@/components/stages/ConfirmModal.vue'
 
 const authStore = useAuthStore()
 const store = useProjetStore()
+const route = useRoute()
+const router = useRouter()
 const idEtudiant = authStore.user?.id_utilisateur ?? null
 
 // Modal state
@@ -237,6 +241,17 @@ function openNewModal() {
   showModal.value  = true
 }
 
+function applyRouteActions() {
+  if (route.query.action === 'new') {
+    openNewModal()
+    router.replace({ path: route.path, query: { ...route.query, action: undefined } })
+  }
+  if (route.query.filters === '1') {
+    showFilters.value = true
+    router.replace({ path: route.path, query: { ...route.query, filters: undefined } })
+  }
+}
+
 function openEditModal(projet) {
   editMode.value   = true
   editId.value     = projet.id_projet
@@ -302,10 +317,11 @@ function openRapportModal(projet) {
   showRapportModal.value = true
 }
 
-function handleRapportSave(data) {
+async function handleRapportSave(data) {
   const p = rapportTarget.value
   if (!p) return
   p.rapport = data.url || data.nom
+  await store.fetchProjets(idEtudiant)
   rapportTarget.value = null
 }
 
@@ -325,7 +341,12 @@ async function handleDeleteConfirmed() {
   }
 }
 
-onMounted(() => store.fetchProjets(idEtudiant))
+onMounted(() => {
+  store.fetchProjets(idEtudiant)
+  applyRouteActions()
+})
+
+watch(() => route.query, applyRouteActions)
 </script>
 
 <style scoped>
@@ -572,7 +593,14 @@ onMounted(() => store.fetchProjets(idEtudiant))
 }
 
 @media (max-width: 768px) {
+  .projets-page { padding: 1.25rem 1rem; }
+  .page-header { flex-direction: column; }
+  .page-title { font-size: 1.35rem; }
+  .add-btn { width: 100%; justify-content: center; }
+  .section-header { flex-direction: column; align-items: stretch; gap: 0.75rem; }
+  .section-actions { flex-wrap: wrap; }
+  .search-input { width: 100%; }
+  .filter-btn { flex: 1; justify-content: center; }
   .bottom-grid { grid-template-columns: 1fr; }
-  .search-input { width: 150px; }
 }
 </style>

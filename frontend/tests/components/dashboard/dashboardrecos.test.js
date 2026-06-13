@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import DashboardRecos from '@/components/dashboard/DashboardRecos.vue'
+import AppIcon from '@/components/ui/AppIcon.vue'
 
 // ── mock vue-router ──────────────────────────────────────────────────────────
 const mockPush = vi.fn()
@@ -32,6 +33,7 @@ const mountComponent = (props = {}) =>
   mount(DashboardRecos, {
     props: { recos: [], loading: false, ...props },
     global: {
+      components: { AppIcon },
       stubs: { 'router-link': true },
       mocks: { $router: { push: mockPush } },
     },
@@ -128,9 +130,9 @@ describe('DashboardRecos.vue', () => {
       expect(wrapper.find('.author__avatar').text()).toBe('MD')
     })
 
-    it('affiche les guillemets décoratifs', () => {
+    it('affiche l\'icône de citation', () => {
       const wrapper = mountComponent({ recos: [RECO_1] })
-      expect(wrapper.find('.reco-featured__quote-icon').text()).toContain('❝')
+      expect(wrapper.find('.reco-featured__quote-icon svg').exists()).toBe(true)
     })
   })
 
@@ -160,6 +162,29 @@ describe('DashboardRecos.vue', () => {
       const wrapper = mountComponent({ recos: [RECO_1, RECO_2] })
       // Les cartes secondaires utilisent .reco-card (sans suffixe __repost)
       expect(wrapper.findAll('.reco-card').length).toBeGreaterThan(0)
+    })
+
+    it('harmonise le conteneur et conserve les actions en attente', async () => {
+      const pending = {
+        ...RECO_2,
+        status: 'EN_ATTENTE',
+        date_creation: '2026-06-12T10:00:00Z',
+      }
+      const wrapper = mountComponent({ recos: [RECO_1, pending] })
+      const card = wrapper.find('.reco-card')
+
+      expect(card.classes()).toContain('reco-featured')
+      expect(card.classes()).toContain('reco-card--pending')
+      expect(card.find('.reco-featured__bar').exists()).toBe(true)
+      expect(card.find('.reco-featured__body').exists()).toBe(true)
+      expect(card.find('.author__date').exists()).toBe(true)
+
+      await card.find('.btn-accept').trigger('click')
+      await card.find('.btn-reject').trigger('click')
+      expect(wrapper.emitted('valider')).toEqual([
+        ['2', 'VALIDE'],
+        ['2', 'REJETE'],
+      ])
     })
   })
 

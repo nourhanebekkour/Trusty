@@ -46,15 +46,18 @@ export const useAuthStore = defineStore('auth', {
 
   getters: {
     isAuthenticated: (state) => !!state.user,
-    isAdmin:         (state) => state.user?.role?.toUpperCase() === 'ADMINISTRATEUR',
-    isEtudiant:      (state) => state.user?.role?.toUpperCase() === 'ETUDIANT',
-    isProfesseur:    (state) => state.user?.role?.toUpperCase() === 'PROFESSEUR',
+    isAdmin: (state) => state.user?.role?.toUpperCase() === 'ADMINISTRATEUR',
+    isSuperAdmin: (state) => state.user?.role?.toUpperCase() === 'ADMINISTRATEUR' && !state.user?.ecole,
+    isNormalAdmin: (state) => state.user?.role?.toUpperCase() === 'ADMINISTRATEUR' && !!state.user?.ecole,
+    isEtudiant: (state) => state.user?.role?.toUpperCase() === 'ETUDIANT',
+    isProfesseur: (state) => state.user?.role?.toUpperCase() === 'PROFESSEUR',
     isProfessionnel: (state) => state.user?.role?.toUpperCase() === 'PROFESSIONNEL',
+    etudiantId: (state) => state.user?.id_utilisateur ?? null,
   },
 
   actions: {
     // Login
-    async login(email, password) {
+    async login(email, password, remember = false) {
       if (typeof email !== 'string' || typeof password !== 'string') {
         this.error = 'Données de connexion invalides'
         return false
@@ -64,7 +67,7 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
 
       try {
-        await withTimeout(authService.login({ email: email.trim(), password }))
+        await withTimeout(authService.login({ email: email.trim(), password, remember: !!remember }))
         await this.fetchUser()
         return true
       } catch (err) {

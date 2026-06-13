@@ -3,6 +3,11 @@ config({ path: '.env.test' });
 
 export default {
     testEnvironment: "node",
+    testPathIgnorePatterns: [
+        "/node_modules/",
+        "/Tests/performance/",
+        "/tests/performance/"
+    ],
     transformIgnorePatterns: [
         "node_modules/(?!(.prisma|@prisma)/)"
     ],

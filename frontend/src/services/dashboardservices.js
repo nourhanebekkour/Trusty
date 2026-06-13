@@ -109,27 +109,32 @@ export async function recalculerScore(idEtudiant) {
 // ─── fetchStats ───────────────────────────────────────────────────────────────
 export async function fetchStats(idEtudiant) {
   try {
-    const [etudiantRes, portfolioRes] = await Promise.all([
+    const [etudiantRes, portfolioRes, projetsRes] = await Promise.all([
       api.get(`/etudiants/${idEtudiant}`),
       api.get('/portfolio/me'),
+      api.get(`/projets/etudiant/${idEtudiant}`),
     ])
 
     const etudiant  = extractData(etudiantRes)
     const portfolios = extractData(portfolioRes)
+    const projetsData = extractData(projetsRes)
+    const projets = Array.isArray(projetsData) ? projetsData : []
 
     const vuesProfil = Array.isArray(portfolios)
       ? portfolios.reduce((sum, p) => sum + (p.nombre_vues || 0), 0)
       : 0
 
+    const projetsCertifies = projets.filter(p => p.status_validation === 'VALIDE').length
+
     if (isEmpty(etudiant)) {
-      return { projetsCertifies: 0, credibilite: 0, vuesProfil, recommandations: 0 }
+      return { projetsCertifies, credibilite: 0, vuesProfil, recommandations: 0 }
     }
 
     return {
-      projetsCertifies: etudiant._count?.participations_projets ?? 0,
-      credibilite:      etudiant.score_credibilite               ?? 0,
+      projetsCertifies,
+      credibilite:      etudiant.score_credibilite ?? 0,
       vuesProfil,
-      recommandations:  etudiant._count?.recommandations         ?? 0,
+      recommandations:  etudiant._count?.recommendation ?? 0,
     }
   } catch (err) {
     console.error('[fetchStats] erreur API', err)

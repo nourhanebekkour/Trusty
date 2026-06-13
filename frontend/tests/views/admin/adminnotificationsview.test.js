@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import { createRouter, createMemoryHistory } from 'vue-router'
 
 vi.mock('@/services/adminNotificationService', () => ({
   getAdminNotifications:     vi.fn(),
@@ -9,8 +10,26 @@ vi.mock('@/services/adminNotificationService', () => ({
   deleteNotification:        vi.fn(),
 }))
 
+// Mock authStore to simulate authenticated admin
+// Note: source checks role === 'ADMIN' (not 'ADMINISTRATEUR')
+vi.mock('@/stores/authstore', () => ({
+  useAuthStore: vi.fn(() => ({
+    user: { id_utilisateur: 'admin1', role: 'ADMIN' },
+    isAuthenticated: true,
+  })),
+}))
+
 import AdminNotifications from '@/views/admin/AdminNotifications.vue'
 import * as adminNotifSvc from '@/services/adminNotificationService'
+
+const router = createRouter({
+  history: createMemoryHistory(),
+  routes: [
+    { path: '/', component: { template: '<div />' } },
+    { path: '/login', component: { template: '<div />' } },
+    { path: '/admin/notifications', component: AdminNotifications },
+  ],
+})
 
 const NOTIFS = [
   { id_notification: 1, titre: 'Alerte système', message: 'Serveur redémarré', est_lue: false, type_notification: 'SYSTEME', date_creation: new Date().toISOString() },
@@ -19,7 +38,7 @@ const NOTIFS = [
 
 function mountView() {
   return mount(AdminNotifications, {
-    global: { plugins: [createPinia()] }
+    global: { plugins: [createPinia(), router] }
   })
 }
 
@@ -32,21 +51,20 @@ describe('AdminNotifications.vue — rendu initial', () => {
   it('affiche le titre de la page', () => {
     adminNotifSvc.getAdminNotifications.mockResolvedValue([])
     const wrapper = mountView()
-    expect(wrapper.text()).toContain('Notifications administrateur')
+    expect(wrapper.text()).toContain('Notifications')
   })
 
-  it('affiche les boutons Actualiser et Tout marquer comme lu', () => {
+  it('affiche le bouton Actualiser', () => {
     adminNotifSvc.getAdminNotifications.mockResolvedValue([])
     const wrapper = mountView()
     expect(wrapper.text()).toContain('Actualiser')
-    expect(wrapper.text()).toContain('Tout marquer comme lu')
   })
 
   it('affiche l\'état vide si aucune notification', async () => {
     adminNotifSvc.getAdminNotifications.mockResolvedValue([])
     const wrapper = mountView()
-    await new Promise(r => setTimeout(r, 10))
-    expect(wrapper.text()).toContain('Aucune notification')
+    await flushPromises()
+    expect(wrapper.text()).toContain('Aucune notification trouvée')
   })
 })
 
@@ -54,15 +72,15 @@ describe('AdminNotifications.vue — statistiques', () => {
   it('affiche le compteur total de notifications', async () => {
     adminNotifSvc.getAdminNotifications.mockResolvedValue(NOTIFS)
     const wrapper = mountView()
-    await new Promise(r => setTimeout(r, 10))
+    await flushPromises()
     expect(wrapper.text()).toContain('2')
   })
 
   it('calcule unreadCount correctement', async () => {
     adminNotifSvc.getAdminNotifications.mockResolvedValue(NOTIFS)
     const wrapper = mountView()
-    await new Promise(r => setTimeout(r, 10))
-    const statValues = wrapper.findAll('.stat-card__value')
+    await flushPromises()
+    const statValues = wrapper.findAll('.stat-value')
     // [total=2, non_lues=1, lues=1]
     expect(statValues[0].text()).toBe('2')
     expect(statValues[1].text()).toBe('1')
@@ -71,27 +89,27 @@ describe('AdminNotifications.vue — statistiques', () => {
 })
 
 describe('AdminNotifications.vue — liste des notifications', () => {
-  it('affiche une notification-item par notification', async () => {
+  it('affiche une notif-card par notification', async () => {
     adminNotifSvc.getAdminNotifications.mockResolvedValue(NOTIFS)
     const wrapper = mountView()
-    await new Promise(r => setTimeout(r, 10))
-    const items = wrapper.findAll('.notification-item')
+    await flushPromises()
+    const items = wrapper.findAll('.notif-card')
     expect(items).toHaveLength(2)
   })
 
   it('affiche le titre des notifications', async () => {
     adminNotifSvc.getAdminNotifications.mockResolvedValue(NOTIFS)
     const wrapper = mountView()
-    await new Promise(r => setTimeout(r, 10))
+    await flushPromises()
     expect(wrapper.text()).toContain('Alerte système')
     expect(wrapper.text()).toContain('Nouveau utilisateur')
   })
 
-  it('applique la classe unread aux non lues', async () => {
+  it('applique la classe notif-unread aux non lues', async () => {
     adminNotifSvc.getAdminNotifications.mockResolvedValue(NOTIFS)
     const wrapper = mountView()
-    await new Promise(r => setTimeout(r, 10))
-    const unread = wrapper.find('.notification-item--unread')
+    await flushPromises()
+    const unread = wrapper.find('.notif-unread')
     expect(unread.exists()).toBe(true)
   })
 })
@@ -100,12 +118,12 @@ describe('AdminNotifications.vue — filtres', () => {
   it('filtre par statut non lu', async () => {
     adminNotifSvc.getAdminNotifications.mockResolvedValue(NOTIFS)
     const wrapper = mountView()
-    await new Promise(r => setTimeout(r, 10))
+    await flushPromises()
     const selects = wrapper.findAll('select.select-input')
     if (selects.length >= 1) {
       await selects[0].setValue('unread')
       await wrapper.vm.$nextTick()
-      const items = wrapper.findAll('.notification-item')
+      const items = wrapper.findAll('.notif-card')
       expect(items).toHaveLength(1)
     }
   })
@@ -113,7 +131,7 @@ describe('AdminNotifications.vue — filtres', () => {
   it('filtre par recherche textuelle', async () => {
     adminNotifSvc.getAdminNotifications.mockResolvedValue(NOTIFS)
     const wrapper = mountView()
-    await new Promise(r => setTimeout(r, 10))
+    await flushPromises()
     const searchInput = wrapper.find('input.search-input')
     if (searchInput.exists()) {
       await searchInput.setValue('Alerte')

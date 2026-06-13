@@ -140,7 +140,7 @@
         <div class="modal-box">
           <div class="modal-header">
             <h2>Nouvelle demande de lettre</h2>
-            <button class="modal-close" @click="showModal = false">✕</button>
+            <button class="modal-close" aria-label="Fermer" @click="showModal = false"><AppIcon name="x" /></button>
           </div>
           <div class="modal-body">
             <div class="form-grid">
@@ -183,7 +183,7 @@
     <!-- Notification succès -->
     <Transition name="fade">
       <div v-if="demandeEnvoyee" class="toast-success">
-        ✓ Demande envoyée avec succès au professeur.
+        <AppIcon name="check-circle" /> Demande envoyée avec succès au professeur.
       </div>
     </Transition>
 

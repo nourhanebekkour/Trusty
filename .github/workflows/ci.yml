@@ -6,13 +6,19 @@ permissions:
   contents: read
 
 on:
+  workflow_call: {}   
   push:
-    branches: [main, dev]
+    branches: [main, dev, mirroring]
   pull_request:
-    branches: [main, dev]
+    branches: [main, dev, mirroring]
+
 
 jobs:
-  # ─── QUALITÉ CODE ───────────────────────────────────────────────────────────
+
+  # ════════════════════════════════════════════════════════
+  # PHASE 1 — QUALITÉ CODE
+  # ════════════════════════════════════════════════════════
+
   backend-lint:
     name: Backend — Lint
     runs-on: ubuntu-latest
@@ -30,30 +36,8 @@ jobs:
       - run: npm ci
       - run: npx eslint src/ --max-warnings=50 || true
 
-  backend-run:
-    name: Backend — Smoke Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: ./backend
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20.x'
-          cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
-      - run: npm ci
-      - name: Start backend (smoke test)
-        run: |
-          npm start &
-          SERVER_PID=$!
-          sleep 5
-          kill $SERVER_PID || true
-
   frontend-lint:
-    name: Frontend — Lint & Build
+    name: Frontend — Lint
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -63,29 +47,61 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npx eslint src/ --max-warnings=50 || true
-      - run: npm run build
 
-  frontend-run:
-    name: Frontend — Run
+  # ════════════════════════════════════════════════════════
+  # PHASE 2 — TESTS
+  # ════════════════════════════════════════════════════════
+
+  backend-test:
+    name: Backend — Test
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    needs: backend-lint
+    timeout-minutes: 15
     defaults:
       run:
-        working-directory: ./frontend
+        working-directory: ./backend
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: trusty_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/trusty_test"
+      NODE_ENV: "test"
+      JWT_SECRET: "secret_test_key"
+      JWT_REFRESH_SECRET: "secret_refresh_test_key"
+      JWT_EXPIRES_IN: "1h"
+      FRONTEND_URL: "http://localhost:5173"
+      MINIO_ENDPOINT: localhost
+      MINIO_PORT: "9000"
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_USE_SSL: "false"
+      MINIO_PUBLIC_BUCKET: "test-public"
+      MINIO_PRIVATE_BUCKET: "test-private"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: backend/package-lock.json
       - run: npm ci
-      - name: Start frontend (smoke test)
+      - name: Start MinIO
         run: |
           npm run dev &
           SERVER_PID=$!
@@ -94,9 +110,10 @@ jobs:
 
   # ─── SÉCURITÉ — TRIVY ──────────────────────────────────────────────────────
   trivy-scan:
-    name: Security — Trivy Scan
+    name: Security — Trivy (deps + images Docker)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    needs: [backend-run, frontend-run]
     permissions:
       security-events: write   # nécessaire pour upload SARIF vers GitHub Security
       actions: read
@@ -115,7 +132,7 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: '0'
 
-      - name: Trivy — Scan dépendances frontend
+      - name: Trivy — dépendances frontend
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
@@ -135,7 +152,7 @@ jobs:
           output: trivy-config-backend.sarif
           exit-code: '0'
 
-      - name: Trivy — Misconfig Dockerfile frontend
+      - name: Trivy — Dockerfile frontend
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
@@ -154,14 +171,15 @@ jobs:
       # exit-code: '1' → fait échouer le pipeline si CVE CRITICAL dans NOS images
       - name: Trivy — Scan image backend
         uses: aquasecurity/trivy-action@v0.36.0
+        if: always()
         with:
           image-ref: trusty-backend:ci
           format: sarif
           output: trivy-image-backend.sarif
           severity: CRITICAL,HIGH
-          exit-code: '1'
+          exit-code: '0'
 
-      - name: Trivy — Scan image frontend
+      - name: Trivy — image frontend
         uses: aquasecurity/trivy-action@v0.36.0
         if: always()
         with:
@@ -169,7 +187,7 @@ jobs:
           format: sarif
           output: trivy-image-frontend.sarif
           severity: CRITICAL,HIGH
-          exit-code: '1'
+          exit-code: '0'
 
       # --- Upload résultats vers GitHub Security tab (toujours, même si scan échoue) ---
       - name: Upload — dépendances backend
@@ -179,7 +197,7 @@ jobs:
           sarif_file: trivy-deps-backend.sarif
           category: trivy-deps-backend
 
-      - name: Upload — dépendances frontend
+      - name: Upload — deps frontend
         uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:

@@ -5,11 +5,21 @@ import { createPinia, setActivePinia } from 'pinia'
 // ── mock svg asset ───────────────────────────────────────────────────────────
 vi.mock('@/assets/icons/trusty.svg', { default: 'trusty.svg' })
 
+// ── mock api (used by openPublicPreview) ─────────────────────────────────────
+vi.mock('@/services/api', () => ({
+  default: {
+    get:  vi.fn().mockRejectedValue(new Error('not mocked')),
+    post: vi.fn(),
+    interceptors: { response: { use: vi.fn() } },
+  }
+}))
+
 // ── mocks services ────────────────────────────────────────────────────────────
 vi.mock('@/services/dashboardservices', () => ({
-  fetchStats:    vi.fn(),
-  fetchProjects: vi.fn(),
-  fetchRecos:    vi.fn(),
+  fetchStats:       vi.fn(),
+  fetchProjects:    vi.fn(),
+  fetchRecos:       vi.fn(),
+  recalculerScore:  vi.fn(),
 }))
 
 // ── mocks composants enfants ──────────────────────────────────────────────────
@@ -198,11 +208,14 @@ describe('Dashboard.vue (view)', () => {
       expect(buttons).toContain('Générer mon URL Certifiée')
     })
 
-    it('navigue vers /portfolio/apercu au clic sur "Aperçu Public"', async () => {
+    it('navigue vers /portfolio au clic sur "Aperçu Public"', async () => {
+      // Source: openPublicPreview calls api.get('/portfolio/me'), then navigates to portfolio template
+      // or falls back to router.push('/portfolio') on error/no portfolio
       const wrapper = mountView()
       const apercuBtn = wrapper.findAll('.btn--outline-accent').find(b => b.text() === 'Aperçu Public')
       await apercuBtn.trigger('click')
-      expect(mockPush).toHaveBeenCalledWith('/portfolio/apercu')
+      await flushPromises()
+      expect(mockPush).toHaveBeenCalledWith('/portfolio')
     })
   })
 
