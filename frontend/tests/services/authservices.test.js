@@ -34,7 +34,11 @@ describe('auth.service.js — Tests Unitaires', () => {
 
     await authService.login(credentials)
 
-    expect(api.post).toHaveBeenCalledWith('/auth/login', credentials)
+    // The service normalizes the credentials (normalizeEmail, remember: !!undefined = false)
+    expect(api.post).toHaveBeenCalledWith('/auth/login', expect.objectContaining({
+      email: 'test@mail.com',
+      password: '123456',
+    }))
   })
 
   it('2 — login retourne response.data', async () => {

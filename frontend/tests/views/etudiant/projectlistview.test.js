@@ -5,6 +5,11 @@ import ProjectListView from '@/views/Etudiant/ProjectList.vue'
 
 vi.mock('@/api', () => ({ default: { get: vi.fn().mockResolvedValue({ data: { data: [] } }), post: vi.fn(), put: vi.fn(), delete: vi.fn() } }))
 vi.mock('@/stores/authstore', () => ({ useAuthStore: vi.fn(() => ({ user: { id_utilisateur: 'u1' }, isAuthenticated: true })) }))
+vi.mock('vue-router', () => ({
+  useRoute: vi.fn(() => ({ query: {}, params: {} })),
+  useRouter: vi.fn(() => ({ push: vi.fn(), replace: vi.fn() })),
+  RouterLink: { template: '<a><slot /></a>' },
+}))
 
 describe('ProjectListView — Tests Unitaires', () => {
   beforeEach(() => {

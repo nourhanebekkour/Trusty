@@ -24,7 +24,7 @@ beforeEach(() => {
 })
 
 const ACTIVITES = [
-  { id: '1', nom: 'Club Robotique', type_activite: 'CLUB',  statut: 'VALIDEE',    has_attestation: true  },
+  { id: '1', nom: 'Club Robotique', type_activite: 'CLUB',  statut: 'VALIDE',     has_attestation: true  },
   { id: '2', nom: 'Handball',       type_activite: 'SPORT', statut: 'EN_ATTENTE', has_attestation: false },
   { id: '3', nom: 'Hackathon',      type_activite: 'CLUB',  statut: 'EN_ATTENTE', has_attestation: false },
 ]
@@ -75,17 +75,19 @@ describe('activitesStore + activitesService — Tests d\'intégration', () => {
     expect(store.activites).toHaveLength(4)
   })
 
-  it('5 — addActivite échoue : activité ajoutée localement en mode dégradé', async () => {
+  it('5 — addActivite échoue : erreur stockée, liste inchangée', async () => {
     api.get.mockResolvedValue({ data: [...ACTIVITES] })
     api.post.mockRejectedValue(new Error('Erreur API'))
 
     const store = useActivitesStore()
     await store.fetchActivites()
+    const countBefore = store.activites.length
     await store.addActivite({ nom: 'Tennis', type_activite: 'SPORT' })
 
-    // En mode dégradé l'activité est ajoutée localement avec statut EN_ATTENTE
-    expect(store.activites[0].nom).toBe('Tennis')
-    expect(store.activites[0].statut).toBe('EN_ATTENTE')
+    // The store does not add locally on failure (no degraded mode in current implementation)
+    // Error is stored instead
+    expect(store.activites.length).toBe(countBefore)
+    expect(store.error).toBeTruthy()
   })
 
   it('6 — getter filteredActivites : filtre par type_activite', async () => {

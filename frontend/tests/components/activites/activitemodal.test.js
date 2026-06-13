@@ -123,6 +123,8 @@ describe('ActiviteModal.vue — Tests d\'Intégration', () => {
     await wrapper.find('input[placeholder*="Hackathon"]').setValue('Mon Hackathon')
     await wrapper.findAll('input[placeholder]')[1].setValue('ENSA Tanger')
     await wrapper.findAll('input[placeholder]')[2].setValue('Participant')
+    // date_debut is required by isValid — fill the date input
+    await wrapper.find('input[type="date"]').setValue('2024-03-01')
     expect(wrapper.find('.btn-submit').attributes('disabled')).toBeUndefined()
   })
 
@@ -132,6 +134,7 @@ describe('ActiviteModal.vue — Tests d\'Intégration', () => {
     await wrapper.find('input[placeholder*="Hackathon"]').setValue('Club Robotique')
     await wrapper.findAll('input[placeholder]')[1].setValue('ENIS Sfax')
     await wrapper.findAll('input[placeholder]')[2].setValue('Président')
+    await wrapper.find('input[type="date"]').setValue('2024-03-01')
     await wrapper.find('.btn-submit').trigger('click')
     expect(wrapper.emitted('submit')).toBeTruthy()
     expect(wrapper.emitted('submit')[0][0].type_activite).toBe('CLUB')
@@ -143,6 +146,7 @@ describe('ActiviteModal.vue — Tests d\'Intégration', () => {
     await wrapper.find('input[placeholder*="Hackathon"]').setValue('Forum Tech')
     await wrapper.findAll('input[placeholder]')[1].setValue('INSAT')
     await wrapper.findAll('input[placeholder]')[2].setValue('Speaker')
+    await wrapper.find('input[type="date"]').setValue('2024-05-01')
     await wrapper.find('.btn-submit').trigger('click')
     expect(wrapper.emitted('submit')[0][0].nom_activite).toBe('Forum Tech')
   })

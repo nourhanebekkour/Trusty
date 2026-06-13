@@ -48,44 +48,50 @@ describe('ProfessionalSidebar.vue — Tests Unitaires', () => {
     expect(mountSidebar().find('.sidebar-nav').exists()).toBe(true)
   })
 
-  it('4 — affiche le lien Dashboard', () => {
-    expect(mountSidebar().text()).toContain('Dashboard')
+  it('4 — affiche le lien Profil', () => {
+    expect(mountSidebar().text()).toContain('Profil')
   })
 
   it('5 — affiche le lien Recommandations', () => {
     expect(mountSidebar().text()).toContain('Recommandations')
   })
 
-  it('6 — affiche le lien Commentaires', () => {
-    expect(mountSidebar().text()).toContain('Commentaires')
+  it('6 — affiche le lien Portfolio', () => {
+    // Source has only 4 nav items: Profil, Recommandations, Portfolio, Notifications
+    expect(mountSidebar().text()).toContain('Portfolio')
   })
 
   it('7 — affiche le lien Notifications', () => {
     expect(mountSidebar().text()).toContain('Notifications')
   })
 
-  it('8 — affiche le lien Historique', () => {
-    expect(mountSidebar().text()).toContain('Historique')
+  it('8 — affiche Paramètres dans .sidebar-bottom', () => {
+    expect(mountSidebar().find('.sidebar-bottom').text()).toContain('Paramètres')
   })
 
-  it('9 — affiche le lien Stages', () => {
-    expect(mountSidebar().text()).toContain('Stages')
+  it('9 — affiche exactement 4 items dans .sidebar-nav', () => {
+    // Source: Profil, Recommandations, Portfolio, Notifications
+    expect(mountSidebar().findAll('.sidebar-nav .nav-item').length).toBe(4)
   })
 
-  it('10 — affiche le lien Projets', () => {
-    expect(mountSidebar().text()).toContain('Projets')
+  it('10 — le 1er item nav est Profil', () => {
+    const items = mountSidebar().findAll('.sidebar-nav .nav-item')
+    expect(items[0].text()).toContain('Profil')
   })
 
-  it('11 — affiche le lien Étudiants', () => {
-    expect(mountSidebar().text()).toContain('Étudiants')
+  it('11 — le 2e item nav est Recommandations', () => {
+    const items = mountSidebar().findAll('.sidebar-nav .nav-item')
+    expect(items[1].text()).toContain('Recommandations')
   })
 
-  it('12 — affiche le lien Portfolios', () => {
-    expect(mountSidebar().text()).toContain('Portfolios')
+  it('12 — le 3e item nav est Portfolio', () => {
+    const items = mountSidebar().findAll('.sidebar-nav .nav-item')
+    expect(items[2].text()).toContain('Portfolio')
   })
 
-  it('13 — affiche le lien Mon Profil dans .sidebar-bottom', () => {
-    expect(mountSidebar().find('.sidebar-bottom').text()).toContain('Mon Profil')
+  it('13 — le 4e item nav est Notifications', () => {
+    const items = mountSidebar().findAll('.sidebar-nav .nav-item')
+    expect(items[3].text()).toContain('Notifications')
   })
 
   it('14 — affiche le bouton Déconnexion', () => {
