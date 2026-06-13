@@ -26,7 +26,7 @@ beforeEach(() => {
   setActivePinia(createPinia())
   vi.clearAllMocks()
   mockPush = vi.fn()
-  useRouter.mockReturnValue({ push: mockPush })
+  useRouter.mockReturnValue({ push: mockPush, replace: vi.fn() })
   useRoute.mockReturnValue({ state: null, params: { id: '42' } })
 })
 

@@ -71,9 +71,11 @@ describe('RegisterView — Tests Unitaires', () => {
     expect(wrapper.find('button[type="submit"]').text()).toContain('Créer mon compte')
   })
 
-  it('6 — le bouton affiche "Création en cours..." quand loading est true', () => {
+  it('6 — le bouton affiche des points animés quand loading est true', () => {
     const { wrapper } = mountRegister({ loading: true })
-    expect(wrapper.find('button[type="submit"]').text()).toContain('Création en cours...')
+    // Source shows btn-loading span with btn-dot spans (animated dots), not "Création en cours..."
+    const btn = wrapper.find('button[type="submit"]')
+    expect(btn.find('.btn-loading').exists()).toBe(true)
   })
 
   it('7 — le bouton est désactivé quand loading est true', () => {
@@ -83,13 +85,14 @@ describe('RegisterView — Tests Unitaires', () => {
 
   it('8 — affiche le message d\'erreur si authStore.error est défini', () => {
     const { wrapper } = mountRegister({ error: 'Email déjà utilisé' })
-    expect(wrapper.find('.global-error').exists()).toBe(true)
-    expect(wrapper.find('.global-error').text()).toBe('Email déjà utilisé')
+    // Source uses class "form-message form-message--error"
+    expect(wrapper.find('.form-message--error').exists()).toBe(true)
+    expect(wrapper.find('.form-message--error').text()).toBe('Email déjà utilisé')
   })
 
   it('9 — n\'affiche pas d\'erreur si authStore.error est null', () => {
     const { wrapper } = mountRegister({ error: null })
-    expect(wrapper.find('.global-error').exists()).toBe(false)
+    expect(wrapper.find('.form-message--error').exists()).toBe(false)
   })
 })
 

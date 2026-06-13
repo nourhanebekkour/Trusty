@@ -207,7 +207,12 @@ describe('AdminBadges.vue — Tests d\'Intégration', () => {
     expect(wrapper.find('.app-modal-stub').exists()).toBe(true)
   })
 
-  it('22 — handleCreate appelle api.post avec les bonnes données', async () => {
+  it('22 — handleCreate appelle api.post /badges (sans id_etudiant) puis /badges/:id/attribuer', async () => {
+    // Source: first calls /badges with { nom, description, categorie, icone, condition_attribution }
+    // then calls /badges/:id/attribuer with { id_etudiant }
+    api.post
+      .mockResolvedValueOnce({ data: { data: { id_badge: 'badge-1' } } }) // /badges
+      .mockResolvedValueOnce({})                                            // /badges/:id/attribuer
     useAdminStore.mockReturnValue(makeMockAdminStore({ students: MOCK_STUDENTS }))
     const wrapper = mount(AdminBadges)
     await flushPromises()
@@ -225,7 +230,10 @@ describe('AdminBadges.vue — Tests d\'Intégration', () => {
     }))
   })
 
-  it('23 — handleCreate affiche "Badge créé avec succès" après succès', async () => {
+  it('23 — handleCreate affiche "Badge créé et attribué avec succès" après succès', async () => {
+    api.post
+      .mockResolvedValueOnce({ data: { data: { id_badge: 'badge-1' } } })
+      .mockResolvedValueOnce({})
     useAdminStore.mockReturnValue(makeMockAdminStore({ students: MOCK_STUDENTS }))
     const wrapper = mount(AdminBadges)
     await flushPromises()

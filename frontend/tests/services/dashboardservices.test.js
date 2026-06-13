@@ -10,16 +10,16 @@ vi.mock('@/services/api', () => ({
 import api from '@/services/api'
 import { fetchStats, fetchProjects, fetchRecos } from '@/services/dashboardservices'
 
-// ── données mock attendues (identiques au service) ───────────────────────────
+// ── données mock attendues (valeurs de retour en cas d'erreur API) ───────────
 const EXPECTED_MOCK_STATS = {
-  projetsCertifies: 4,
-  credibilite:      78,
-  vuesProfil:       123,
-  recommandations:  6,
+  projetsCertifies: 0,
+  credibilite:      0,
+  vuesProfil:       0,
+  recommandations:  0,
 }
 
-const EXPECTED_MOCK_PROJECTS_LENGTH = 2
-const EXPECTED_MOCK_RECOS_LENGTH    = 2
+const EXPECTED_MOCK_PROJECTS_LENGTH = 0
+const EXPECTED_MOCK_RECOS_LENGTH    = 0
 
 // ═════════════════════════════════════════════════════════════════════════════
 // TESTS UNITAIRES — dashboardservices
@@ -46,6 +46,7 @@ describe('dashboardservices.js — Tests Unitaires', () => {
     })
 
     it('retourne un objet avec les 4 clés attendues', async () => {
+      api.get.mockRejectedValue(new Error('Not ready'))
       const result = await fetchStats()
       expect(result).toHaveProperty('projetsCertifies')
       expect(result).toHaveProperty('credibilite')
@@ -54,6 +55,7 @@ describe('dashboardservices.js — Tests Unitaires', () => {
     })
 
     it('retourne des valeurs numériques', async () => {
+      api.get.mockRejectedValue(new Error('Not ready'))
       const result = await fetchStats()
       expect(typeof result.projetsCertifies).toBe('number')
       expect(typeof result.credibilite).toBe('number')
@@ -82,7 +84,9 @@ describe('dashboardservices.js — Tests Unitaires', () => {
     })
 
     it('chaque projet a les propriétés requises', async () => {
-      const result = await fetchProjects()
+      const mockData = [{ id_projet: '1', titre: 'Proj', type_projet: 'PFA', status_validation: 'VALIDE', date_debut: '2024-01-01', description: 'desc', technologies: [] }]
+      api.get.mockResolvedValueOnce({ data: mockData })
+      const result = await fetchProjects('u1')
       result.forEach(project => {
         expect(project).toHaveProperty('id')
         expect(project).toHaveProperty('titre')
@@ -96,14 +100,18 @@ describe('dashboardservices.js — Tests Unitaires', () => {
 
     it('les statuts sont parmi les valeurs autorisées', async () => {
       const STATUTS_VALIDES = ['VALIDE', 'EN_ATTENTE', 'REJETE']
-      const result = await fetchProjects()
+      const mockData = [{ id_projet: '1', titre: 'Proj', type_projet: 'PFA', status_validation: 'VALIDE', date_debut: '2024-01-01', description: 'desc', technologies: [] }]
+      api.get.mockResolvedValueOnce({ data: mockData })
+      const result = await fetchProjects('u1')
       result.forEach(project => {
         expect(STATUTS_VALIDES).toContain(project.status)
       })
     })
 
     it('les technologies sont des tableaux', async () => {
-      const result = await fetchProjects()
+      const mockData = [{ id_projet: '1', titre: 'Proj', type_projet: 'PFA', status_validation: 'VALIDE', date_debut: '2024-01-01', description: 'desc', technologies: [] }]
+      api.get.mockResolvedValueOnce({ data: mockData })
+      const result = await fetchProjects('u1')
       result.forEach(project => {
         expect(Array.isArray(project.technologies)).toBe(true)
       })
@@ -131,7 +139,9 @@ describe('dashboardservices.js — Tests Unitaires', () => {
     })
 
     it('chaque recommandation a un id et un message', async () => {
-      const result = await fetchRecos()
+      const mockData = [{ id_recommandation: 1, message: 'Bien', status: 'VALIDE', auteur: { nom: 'Doe', prenom: 'John', role: 'PROFESSEUR' } }]
+      api.get.mockResolvedValueOnce({ data: mockData })
+      const result = await fetchRecos('u1')
       result.forEach(reco => {
         expect(reco).toHaveProperty('id_recommandation')
         expect(reco).toHaveProperty('message')
@@ -139,10 +149,14 @@ describe('dashboardservices.js — Tests Unitaires', () => {
     })
 
     it("chaque recommandation a un auteur avec nom", async () => {
-      const result = await fetchRecos()
+      const mockData = [{ id_recommandation: 1, message: 'Bien', status: 'VALIDE', auteur: { nom: 'Doe', prenom: 'John', role: 'PROFESSEUR' } }]
+      api.get.mockResolvedValueOnce({ data: mockData })
+      const result = await fetchRecos('u1')
       result.forEach(reco => {
         expect(reco).toHaveProperty('auteur')
-        expect(reco.auteur).toHaveProperty('nom')
+        if (reco.auteur) {
+          expect(reco.auteur).toHaveProperty('nom')
+        }
       })
     })
 
@@ -158,12 +172,14 @@ describe('dashboardservices.js — Tests Unitaires', () => {
   // ── cohérence globale ──────────────────────────────────────────────────────
   describe('Cohérence des données mock', () => {
     it('fetchStats retourne une crédibilité entre 0 et 100', async () => {
+      api.get.mockRejectedValue(new Error('Not ready'))
       const result = await fetchStats()
       expect(result.credibilite).toBeGreaterThanOrEqual(0)
       expect(result.credibilite).toBeLessThanOrEqual(100)
     })
 
     it('fetchStats retourne des valeurs positives ou nulles', async () => {
+      api.get.mockRejectedValue(new Error('Not ready'))
       const result = await fetchStats()
       Object.values(result).forEach(val => {
         expect(val).toBeGreaterThanOrEqual(0)

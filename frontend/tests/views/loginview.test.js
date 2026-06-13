@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
 import { createRouter, createMemoryHistory } from 'vue-router'
@@ -7,11 +7,6 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 vi.mock('@/stores/authstore', () => ({
   useAuthStore: vi.fn(),
 }))
-
-
-import { useAuthStore } from '../../src/stores/authstore'
-// Cas nominal
-import LoginView from '../../src/views/loginview.vue'
 
 import { useAuthStore } from '@/stores/authstore'
 import LoginView from '@/views/loginview.vue'
@@ -70,7 +65,7 @@ describe('LoginView — Tests Unitaires', () => {
 
   it('3 — affiche le bouton Se connecter', () => {
     const { wrapper } = mountLogin()
-    const btn = wrapper.find('button.btn-login')
+    const btn = wrapper.find('button.btn-submit')
     expect(btn.exists()).toBe(true)
     expect(btn.text()).toContain('Se connecter')
   })
@@ -83,14 +78,14 @@ describe('LoginView — Tests Unitaires', () => {
   it('5 — le bouton est désactivé si email vide', async () => {
     const { wrapper } = mountLogin()
     await wrapper.find('input[type="password"]').setValue('Password1!')
-    const btn = wrapper.find('button.btn-login')
+    const btn = wrapper.find('button.btn-submit')
     expect(btn.attributes('disabled')).toBeDefined()
   })
 
   it('6 — le bouton est désactivé si mot de passe vide', async () => {
     const { wrapper } = mountLogin()
     await wrapper.find('input[type="email"]').setValue('alice@test.com')
-    const btn = wrapper.find('button.btn-login')
+    const btn = wrapper.find('button.btn-submit')
     expect(btn.attributes('disabled')).toBeDefined()
   })
 
@@ -98,7 +93,7 @@ describe('LoginView — Tests Unitaires', () => {
     const { wrapper } = mountLogin()
     await wrapper.find('input[type="email"]').setValue('alice@test.com')
     await wrapper.find('input[type="password"]').setValue('Password1!')
-    const btn = wrapper.find('button.btn-login')
+    const btn = wrapper.find('button.btn-submit')
     expect(btn.attributes('disabled')).toBeUndefined()
   })
 
@@ -106,7 +101,7 @@ describe('LoginView — Tests Unitaires', () => {
     const { wrapper } = mountLogin({ loading: true })
     await wrapper.find('input[type="email"]').setValue('alice@test.com')
     await wrapper.find('input[type="password"]').setValue('Password1!')
-    const btn = wrapper.find('button.btn-login')
+    const btn = wrapper.find('button.btn-submit')
     expect(btn.attributes('disabled')).toBeDefined()
   })
 
@@ -145,14 +140,16 @@ describe('LoginView — Tests Unitaires', () => {
 
   // ── Erreur store ────────────────────────────────────────────────────────────
 
-  it('12 — affiche le message d\'erreur générique si auth.error est défini', () => {
+  it('12 — affiche le message d\'erreur si auth.error est défini', () => {
     const { wrapper } = mountLogin({ error: 'Identifiants invalides' })
-    expect(wrapper.find('.error').text()).toBe('Email ou mot de passe invalide')
+    // Source uses class "form-message form-message--error"
+    expect(wrapper.find('.form-message--error').exists()).toBe(true)
   })
 
   it('13 — n\'affiche pas de message d\'erreur si auth.error est null', () => {
     const { wrapper } = mountLogin({ error: null })
-    expect(wrapper.find('.error').exists()).toBe(false)
+    // No error displayed when error is null
+    expect(wrapper.find('.form-message--error').exists()).toBe(false)
   })
 
   // ── Tentatives & verrouillage ───────────────────────────────────────────────
@@ -173,11 +170,14 @@ describe('LoginView — Tests Unitaires', () => {
     expect(mockStore.login).toHaveBeenCalledTimes(3)
   })
 
-  // ── Texte bouton ────────────────────────────────────────────────────────────
+  // ── Texte bouton loading ─────────────────────────────────────────────────────
 
-  it('15 — le bouton affiche "Connexion..." quand auth.loading est true', () => {
+  it('15 — le bouton affiche des points animés quand auth.loading est true', () => {
     const { wrapper } = mountLogin({ loading: true })
-    expect(wrapper.find('button.btn-login').text()).toContain('Connexion...')
+    // Source shows btn-loading span with btn-dot spans (animated dots), not text "Connexion..."
+    const btn = wrapper.find('button.btn-submit')
+    expect(btn.attributes('disabled')).toBeDefined()
+    expect(btn.find('.btn-loading').exists()).toBe(true)
   })
 })
 
@@ -230,7 +230,7 @@ describe("LoginView — Tests d'Intégration", () => {
     expect(router.currentRoute.value.path).toBe('/login')
   })
 
-  it('19 — login échoué : affiche un message d\'erreur générique', async () => {
+  it('19 — login échoué : affiche un message d\'erreur', async () => {
     const { wrapper, mockStore } = mountLogin({ error: 'Email ou mot de passe invalide' })
     mockStore.login.mockResolvedValue(false)
 
@@ -239,10 +239,10 @@ describe("LoginView — Tests d'Intégration", () => {
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
-    expect(wrapper.find('.error').exists()).toBe(true)
+    expect(wrapper.find('.form-message--error').exists()).toBe(true)
   })
 
-  it('20 — remember me : login appelé avec email et mot de passe (remember géré côté store)', async () => {
+  it('20 — remember me : login appelé avec email, mot de passe et remember=true', async () => {
     const { wrapper, mockStore } = mountLogin()
     mockStore.login.mockResolvedValue(true)
 

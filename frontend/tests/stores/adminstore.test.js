@@ -103,9 +103,9 @@ describe('adminStore — Tests Unitaires', () => {
     })
 
     it('stocke le message d\'erreur en cas d\'échec API', async () => {
-      api.get.mockRejectedValueOnce({
-        response: { data: { message: 'Accès refusé' } },
-      })
+      api.get
+        .mockRejectedValueOnce({ response: { data: { message: 'Accès refusé' } } })
+        .mockRejectedValueOnce({ response: { data: { message: 'Accès refusé' } } })
       const store = setupAdmin()
       await store.fetchDashboardStats()
       expect(store.error).toBe('Accès refusé')
@@ -114,9 +114,11 @@ describe('adminStore — Tests Unitaires', () => {
 
     it('refuse si l\'utilisateur n\'est pas admin', async () => {
       setActivePinia(createPinia())
+      // useAuthStore() will have user=null by default → isAdmin() returns false
       const store = useAdminStore()
       await store.fetchDashboardStats()
       expect(store.error).toBe('Accès refusé')
+      // No API calls because of the guard
       expect(api.get).not.toHaveBeenCalled()
     })
   })
@@ -146,9 +148,9 @@ describe('adminStore — Tests Unitaires', () => {
     })
 
     it('stocke l\'erreur en cas d\'échec', async () => {
-      api.get.mockRejectedValueOnce({
-        response: { data: { message: 'Non autorisé' } },
-      })
+      api.get
+        .mockRejectedValueOnce({ response: { data: { message: 'Non autorisé' } } })
+        .mockRejectedValueOnce({ response: { data: { message: 'Non autorisé' } } })
       const store = setupAdmin()
       await store.fetchUsers()
       expect(store.error).toBe('Non autorisé')
@@ -161,7 +163,8 @@ describe('adminStore — Tests Unitaires', () => {
   describe('createUser()', () => {
     it('envoie le bon payload au bon endpoint', async () => {
       api.post.mockResolvedValueOnce({ data: { id: '99' } })
-      api.get.mockResolvedValueOnce({ data: [] }) // fetchUsers après création
+      // fetchUsers calls /etudiants/ and /professeurs/
+      api.get.mockResolvedValueOnce({ data: [] }).mockResolvedValueOnce({ data: [] })
 
       const store = setupAdmin()
       const userData = {
@@ -187,7 +190,7 @@ describe('adminStore — Tests Unitaires', () => {
 
     it('n\'inclut pas telephone si phone est vide', async () => {
       api.post.mockResolvedValueOnce({ data: {} })
-      api.get.mockResolvedValueOnce({ data: [] })
+      api.get.mockResolvedValueOnce({ data: [] }).mockResolvedValueOnce({ data: [] })
 
       const store = setupAdmin()
       await store.createUser({
@@ -244,7 +247,7 @@ describe('adminStore — Tests Unitaires', () => {
     roles.forEach(([label, expected]) => {
       it(`mappe "${label}" → "${expected}"`, async () => {
         api.post.mockResolvedValueOnce({ data: {} })
-        api.get.mockResolvedValueOnce({ data: [] })
+        api.get.mockResolvedValueOnce({ data: [] }).mockResolvedValueOnce({ data: [] })
 
         const store = setupAdmin()
         await store.createUser({
@@ -304,7 +307,7 @@ describe('adminStore — Tests Unitaires', () => {
     it('reste vide et stocke l\'erreur si l\'API échoue', async () => {
       api.get.mockRejectedValueOnce(new Error('Network'))
 
-      const store = setupAdmin()
+      api.get.mockResolvedValueOnce({ data: [] })
       await store.fetchVerificationQueue()
 
       expect(store.verificationQueue).toHaveLength(0)
@@ -336,6 +339,7 @@ describe('adminStore — Tests Unitaires', () => {
       store.verificationQueue = [{ id: 'p1', type: 'PROFESSIONNEL' }]
       const result = await store.validateEntity('PROFESSIONNEL', 'p1', 'APPROUVE')
 
+      // Result is success:true (no error thrown), queue is filtered
       expect(result.success).toBe(true)
       expect(api.patch).not.toHaveBeenCalled()
       expect(store.verificationQueue).toHaveLength(0)
@@ -373,6 +377,7 @@ describe('adminStore — Tests Unitaires', () => {
       await store.fetchCertHistory()
 
       expect(api.get).toHaveBeenCalledWith('/historique-actions/')
+      // extractData(res) where res.data = mockHist → returns mockHist
       expect(store.certHistory).toEqual(mockHist)
     })
   })
