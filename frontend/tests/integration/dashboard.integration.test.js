@@ -22,15 +22,12 @@ beforeEach(() => vi.clearAllMocks())
 describe('dashboardServices — fetchStats', () => {
 
   it('1 — retourne les stats depuis l\'API si la réponse n\'est pas vide', async () => {
-    // fetchStats calls 3 APIs in parallel: /etudiants/:id, /portfolio/me, /projets/etudiant/:id
-    const fakeEtudiant = {
-      score_credibilite: 88,
-      _count: { recommendation: 3 },
-    }
     api.get
-      .mockResolvedValueOnce({ data: fakeEtudiant })   // /etudiants/u1
-      .mockResolvedValueOnce({ data: [] })              // /portfolio/me
-      .mockResolvedValueOnce({ data: [] })              // /projets/etudiant/u1
+      .mockResolvedValueOnce({ data: { data: {
+        score_credibilite: 88,
+        _count: { participations_projets: 5, recommandations: 3 },
+      }}})
+      .mockResolvedValueOnce({ data: { data: [{ nombre_vues: 120 }] } })
 
     const result = await fetchStats('u1')
 
@@ -61,12 +58,10 @@ describe('dashboardServices — fetchStats', () => {
 // ─────────────────────────────────────────────
 describe('dashboardServices — fetchProjects', () => {
 
-  it('4 — retourne les projets depuis l\'API pour un étudiant', async () => {
-    // fetchProjects calls /projets/etudiant/:id and normalizes the result
-    api.get.mockResolvedValueOnce({ data: [
-      { id_projet: '1', titre: 'Projet A', type_projet: 'PFA', status_validation: 'VALIDE', date_debut: '2024-01-01', description: 'desc', technologies: [] },
-      { id_projet: '2', titre: 'Projet B', type_projet: 'PFE', status_validation: 'EN_ATTENTE', date_debut: '2024-02-01', description: 'desc', technologies: [] },
-    ]})
+  it('4 — retourne les projets normalisés depuis l\'API', async () => {
+    api.get.mockResolvedValueOnce({ data: { data: [
+      { id_projet: '1', titre: 'Projet A', type_projet: 'PFA', status_validation: 'VALIDE', date_debut: '2024-01-01', description: 'desc', technologies: [], est_createur: true },
+    ]}})
 
     const result = await fetchProjects('u1')
 
@@ -75,14 +70,13 @@ describe('dashboardServices — fetchProjects', () => {
     expect(result[0].titre).toBe('Projet A')
   })
 
-  it('5 — retourne [] si aucun projet', async () => {
-    api.get.mockResolvedValueOnce({ data: [] })
+  it('5 — retourne un tableau vide si aucun projet', async () => {
+    api.get.mockResolvedValueOnce({ data: { data: [] } })
 
     const result = await fetchProjects('u1')
 
     expect(Array.isArray(result)).toBe(true)
-    // fetchProjects returns [] when data is empty array (no demo data)
-    expect(result.length).toBeGreaterThanOrEqual(0)
+    expect(result).toHaveLength(0)
   })
 
   it('6 — retourne les données démo si l\'API échoue', async () => {

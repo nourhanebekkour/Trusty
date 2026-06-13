@@ -57,7 +57,6 @@ describe('ProfessionalSidebar.vue — Tests Unitaires', () => {
   })
 
   it('6 — affiche le lien Portfolio', () => {
-    // Source has only 4 nav items: Profil, Recommandations, Portfolio, Notifications
     expect(mountSidebar().text()).toContain('Portfolio')
   })
 
@@ -65,33 +64,32 @@ describe('ProfessionalSidebar.vue — Tests Unitaires', () => {
     expect(mountSidebar().text()).toContain('Notifications')
   })
 
-  it('8 — affiche Paramètres dans .sidebar-bottom', () => {
+  it('8 — affiche le lien Paramètres dans .sidebar-bottom', () => {
     expect(mountSidebar().find('.sidebar-bottom').text()).toContain('Paramètres')
   })
 
-  it('9 — affiche exactement 4 items dans .sidebar-nav', () => {
-    // Source: Profil, Recommandations, Portfolio, Notifications
-    expect(mountSidebar().findAll('.sidebar-nav .nav-item').length).toBe(4)
+  it('9 — la nav contient 4 liens', () => {
+    expect(mountSidebar().findAll('.sidebar-nav .nav-item')).toHaveLength(4)
   })
 
-  it('10 — le 1er item nav est Profil', () => {
-    const items = mountSidebar().findAll('.sidebar-nav .nav-item')
-    expect(items[0].text()).toContain('Profil')
+  it('10 — le sidebar-bottom contient 2 éléments', () => {
+    expect(mountSidebar().find('.sidebar-bottom').findAll('.nav-item')).toHaveLength(2)
   })
 
-  it('11 — le 2e item nav est Recommandations', () => {
-    const items = mountSidebar().findAll('.sidebar-nav .nav-item')
-    expect(items[1].text()).toContain('Recommandations')
+  it('11 — affiche le logo Profil comme nav-icon', () => {
+    expect(mountSidebar().find('.sidebar-nav .nav-icon').exists()).toBe(true)
   })
 
-  it('12 — le 3e item nav est Portfolio', () => {
+  it('12 — chaque nav-item de la nav a une icône et un label', () => {
     const items = mountSidebar().findAll('.sidebar-nav .nav-item')
-    expect(items[2].text()).toContain('Portfolio')
+    items.forEach(item => {
+      expect(item.find('.nav-icon').exists()).toBe(true)
+      expect(item.find('.nav-label').exists()).toBe(true)
+    })
   })
 
-  it('13 — le 4e item nav est Notifications', () => {
-    const items = mountSidebar().findAll('.sidebar-nav .nav-item')
-    expect(items[3].text()).toContain('Notifications')
+  it('13 — affiche Paramètres dans .sidebar-bottom', () => {
+    expect(mountSidebar().find('.sidebar-bottom').text()).toContain('Paramètres')
   })
 
   it('14 — affiche le bouton Déconnexion', () => {

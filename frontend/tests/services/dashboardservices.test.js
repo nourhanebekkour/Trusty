@@ -37,10 +37,11 @@ describe('dashboardservices.js — Tests Unitaires', () => {
 
   // ── fetchStats ─────────────────────────────────────────────────────────────
   describe('fetchStats()', () => {
-    it('retourne les données mock quand API_READY est false', async () => {
-      // API is mocked but returns undefined by default → fetchStats catches error and returns zeros
-      api.get.mockRejectedValue(new Error('Not ready'))
-      const result = await fetchStats()
+    it('retourne les stats depuis l\'API', async () => {
+      api.get
+        .mockResolvedValueOnce({ data: { score_credibilite: 78, _count: { participations_projets: 4, recommandations: 6 } } })
+        .mockResolvedValueOnce({ data: [{ nombre_vues: 123 }] })
+      const result = await fetchStats('student-1')
       expect(result).toMatchObject(EXPECTED_MOCK_STATS)
     })
 
@@ -62,18 +63,22 @@ describe('dashboardservices.js — Tests Unitaires', () => {
       expect(typeof result.recommandations).toBe('number')
     })
 
-    it('retourne les données mock en cas d\'erreur API', async () => {
+    it('retourne des zéros en cas d\'erreur API', async () => {
       api.get.mockRejectedValueOnce(new Error('Network Error'))
-      const result = await fetchStats()
-      expect(result).toMatchObject(EXPECTED_MOCK_STATS)
+      const result = await fetchStats('student-1')
+      expect(result).toMatchObject({ projetsCertifies: 0, credibilite: 0, vuesProfil: 0, recommandations: 0 })
     })
   })
 
   // ── fetchProjects ──────────────────────────────────────────────────────────
   describe('fetchProjects()', () => {
-    it('retourne un tableau de projets mock quand API_READY est false', async () => {
-      api.get.mockRejectedValue(new Error('Not ready'))
-      const result = await fetchProjects()
+    it('retourne les projets depuis l\'API', async () => {
+      const mockRaw = [
+        { id_projet: 'p1', titre: 'Projet A', type_projet: 'PFA', status_validation: 'VALIDE', date_debut: '2024-01-01', description: 'desc', technologies: [] },
+        { id_projet: 'p2', titre: 'Projet B', type_projet: 'PFE', status_validation: 'EN_ATTENTE', date_debut: '2024-02-01', description: 'desc2', technologies: ['Vue.js'] },
+      ]
+      api.get.mockResolvedValueOnce({ data: mockRaw })
+      const result = await fetchProjects('student-1')
       expect(Array.isArray(result)).toBe(true)
       expect(result).toHaveLength(EXPECTED_MOCK_PROJECTS_LENGTH)
     })
@@ -112,20 +117,23 @@ describe('dashboardservices.js — Tests Unitaires', () => {
       })
     })
 
-    it('retourne les données mock en cas d\'erreur API', async () => {
+    it('retourne un tableau vide en cas d\'erreur API', async () => {
       api.get.mockRejectedValueOnce(new Error('Network Error'))
-      const result = await fetchProjects()
+      const result = await fetchProjects('student-1')
       expect(Array.isArray(result)).toBe(true)
-      // Returns [] on error
-      expect(result.length).toBeGreaterThanOrEqual(0)
+      expect(result).toHaveLength(0)
     })
   })
 
   // ── fetchRecos ─────────────────────────────────────────────────────────────
   describe('fetchRecos()', () => {
-    it('retourne un tableau de recommandations mock quand API_READY est false', async () => {
-      api.get.mockRejectedValue(new Error('Not ready'))
-      const result = await fetchRecos()
+    it('retourne les recommandations depuis l\'API', async () => {
+      const mockRaw = [
+        { id_recommandation: 'r1', message: 'Excellent!', status: 'VALIDE', auteur: { nom: 'Doe', prenom: 'John', role: 'PROFESSEUR' } },
+        { id_recommandation: 'r2', message: 'Bon travail', status: 'EN_ATTENTE', auteur: { nom: 'Smith', prenom: 'Jane', role: 'PROFESSIONNEL' } },
+      ]
+      api.get.mockResolvedValueOnce({ data: mockRaw })
+      const result = await fetchRecos('student-1')
       expect(Array.isArray(result)).toBe(true)
       expect(result).toHaveLength(EXPECTED_MOCK_RECOS_LENGTH)
     })
@@ -152,12 +160,12 @@ describe('dashboardservices.js — Tests Unitaires', () => {
       })
     })
 
-    it('retourne les données mock en cas d\'erreur API', async () => {
+    it('retourne un tableau vide en cas d\'erreur API', async () => {
       api.get.mockRejectedValueOnce(new Error('Network Error'))
-      const result = await fetchRecos()
+      api.get.mockRejectedValueOnce(new Error('Network Error'))
+      const result = await fetchRecos('student-1')
       expect(Array.isArray(result)).toBe(true)
-      // Returns [] on all-errors fallback
-      expect(result.length).toBeGreaterThanOrEqual(0)
+      expect(result).toHaveLength(0)
     })
   })
 

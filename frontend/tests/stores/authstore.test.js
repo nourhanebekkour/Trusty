@@ -47,11 +47,7 @@ describe('authStore — Tests Unitaires', () => {
 
     await store.login('alice@test.com', '1234')
 
-    // The store passes { email, password, remember: false } to the service
-    expect(authService.login).toHaveBeenCalledWith(expect.objectContaining({
-      email: 'alice@test.com',
-      password: '1234',
-    }))
+    expect(authService.login).toHaveBeenCalledWith({ email: 'alice@test.com', password: '1234', remember: false })
   })
 
   it('3 — login : user mis à jour via fetchUser après succès', async () => {

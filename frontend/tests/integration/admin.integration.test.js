@@ -22,21 +22,19 @@ beforeEach(() => {
   vi.clearAllMocks()
   // Définit un user ADMINISTRATEUR pour passer le guard isAdmin()
   const auth = useAuthStore()
-  auth.user = { id_utilisateur: 'admin1', role: 'ADMINISTRATEUR' }
+  auth.user = { id_utilisateur: 'admin1', role: 'ADMINISTRATEUR', ecole: 'UNIV' }
 })
 
 // ─────────────────────────────────────────────
 describe('adminStore + adminApi — Tests d\'intégration', () => {
 
-  it('1 — fetchDashboardStats : store → api.get /etudiants/ + /professeurs/ → stats calculées', async () => {
-    // Admin is ADMINISTRATEUR without ecole → isSuperAdmin() = true
-    // fetches /etudiants/ and /professeurs/
+  it('1 — fetchDashboardStats : store → api.get /etudiants/ecole + /professeurs/ecole → stats calculées', async () => {
     const fakeEtudiants = [
-      { utilisateur: { status_compte: 'ACTIF' } },
-      { utilisateur: { status_compte: 'ACTIF' } },
+      { id_etudiant: 'e1', utilisateur: { status_compte: 'ACTIF' } },
+      { id_etudiant: 'e2', utilisateur: { status_compte: 'ACTIF' } },
     ]
     const fakeProfesseurs = [
-      { utilisateur: { nom: 'Prof1' } },
+      { id_professeur: 'p1' },
     ]
     api.get
       .mockResolvedValueOnce({ data: fakeEtudiants })
@@ -45,10 +43,11 @@ describe('adminStore + adminApi — Tests d\'intégration', () => {
     const store = useAdminStore()
     await store.fetchDashboardStats()
 
-    expect(api.get).toHaveBeenCalledWith('/etudiants/')
-    expect(api.get).toHaveBeenCalledWith('/professeurs/')
+    expect(api.get).toHaveBeenCalledWith('/etudiants/ecole/UNIV')
+    expect(api.get).toHaveBeenCalledWith('/professeurs/ecole/UNIV')
     expect(store.stats.studentsActive).toBe(2)
     expect(store.stats.professors).toBe(1)
+    expect(store.stats.partners).toBe(0)
     expect(store.loading).toBe(false)
   })
 
@@ -64,12 +63,12 @@ describe('adminStore + adminApi — Tests d\'intégration', () => {
     expect(store.loading).toBe(false)
   })
 
-  it('3 — fetchUsers : store → api.get /etudiants/ + /professeurs/ → users normalisés', async () => {
+  it('3 — fetchUsers : store → api.get /etudiants/ecole + /professeurs/ecole → users mis à jour', async () => {
     const fakeEtudiants = [
-      { id_etudiant: 'u1', utilisateur: { prenom: 'Alice', nom: 'Martin', status_compte: 'ACTIF' } },
+      { id_etudiant: 'u1', utilisateur: { prenom: 'Alice', nom: 'Martin', email: 'a@test.fr' } },
     ]
     const fakeProfesseurs = [
-      { id_professeur: 'u2', utilisateur: { prenom: 'Bob', nom: 'Dupont', status_compte: 'ACTIF' } },
+      { id_professeur: 'u2', utilisateur: { prenom: 'Bob', nom: 'Dupont', email: 'b@test.fr' } },
     ]
     api.get
       .mockResolvedValueOnce({ data: fakeEtudiants })
@@ -78,8 +77,8 @@ describe('adminStore + adminApi — Tests d\'intégration', () => {
     const store = useAdminStore()
     await store.fetchUsers()
 
-    expect(api.get).toHaveBeenCalledWith('/etudiants/')
-    expect(api.get).toHaveBeenCalledWith('/professeurs/')
+    expect(api.get).toHaveBeenCalledWith('/etudiants/ecole/UNIV')
+    expect(api.get).toHaveBeenCalledWith('/professeurs/ecole/UNIV')
     expect(store.users).toHaveLength(2)
     expect(store.users[0].prenom).toBe('Alice')
   })
@@ -106,12 +105,11 @@ describe('adminStore + adminApi — Tests d\'intégration', () => {
     expect(store.error).toBe('Erreur serveur')
   })
 
-  it('6 — fetchVerificationQueue : store → api.get /activites/a-valider + /professionnels/en-attente', async () => {
+  it('6 — fetchVerificationQueue : store → api.get /activites/a-valider', async () => {
     api.get
       .mockResolvedValueOnce({ data: { data: [
         { id_activite: 'a1', nom_activite: 'Projet X', etudiant: { utilisateur: { prenom: 'Alice', nom: 'Dupont' } } }
       ]}})
-      .mockResolvedValueOnce({ data: { data: [] } })
 
     const store = useAdminStore()
     await store.fetchVerificationQueue()
@@ -168,12 +166,13 @@ describe('adminStore + adminApi — Tests d\'intégration', () => {
   it('10 — workflow : fetchUsers puis deleteUser → liste cohérente', async () => {
     const fakeEtudiants = [
       { id_etudiant: 'u1', utilisateur: { prenom: 'Alice', nom: 'Martin' } },
-      { id_etudiant: 'u2', utilisateur: { prenom: 'Bob', nom: 'Dupont' } },
     ]
-    // Use mockResolvedValueOnce twice for the two parallel calls in fetchUsers (Promise.all)
+    const fakeProfesseurs = [
+      { id_professeur: 'u2', utilisateur: { prenom: 'Bob', nom: 'Dupont' } },
+    ]
     api.get
       .mockResolvedValueOnce({ data: fakeEtudiants })
-      .mockResolvedValueOnce({ data: [] })
+      .mockResolvedValueOnce({ data: fakeProfesseurs })
     api.delete.mockResolvedValue({})
 
     const store = useAdminStore()

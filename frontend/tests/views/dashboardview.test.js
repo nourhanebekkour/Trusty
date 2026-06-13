@@ -16,10 +16,10 @@ vi.mock('@/services/api', () => ({
 
 // ── mocks services ────────────────────────────────────────────────────────────
 vi.mock('@/services/dashboardservices', () => ({
-  fetchStats:      vi.fn(),
-  fetchProjects:   vi.fn(),
-  fetchRecos:      vi.fn(),
-  recalculerScore: vi.fn(),
+  fetchStats:       vi.fn(),
+  fetchProjects:    vi.fn(),
+  fetchRecos:       vi.fn(),
+  recalculerScore:  vi.fn(),
 }))
 
 // ── mocks composants enfants ──────────────────────────────────────────────────

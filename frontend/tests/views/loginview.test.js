@@ -202,7 +202,6 @@ describe("LoginView — Tests d'Intégration", () => {
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
-    // Source calls authStore.login(cleanEmail, password, remember) — remember defaults to false
     expect(mockStore.login).toHaveBeenCalledWith('alice@test.com', 'Password1!', false)
   })
 
@@ -253,7 +252,6 @@ describe("LoginView — Tests d'Intégration", () => {
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
-    // Source calls authStore.login(cleanEmail, password, remember) — remember=true when checked
     expect(mockStore.login).toHaveBeenCalledWith('alice@test.com', 'Password1!', true)
   })
 })

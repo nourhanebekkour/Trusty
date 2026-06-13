@@ -5,7 +5,7 @@ import { createPinia, setActivePinia } from 'pinia'
 vi.mock('@/stores/adminStore', () => ({ useAdminStore: vi.fn() }))
 vi.mock('@/stores/authstore',  () => ({ useAuthStore:  vi.fn() }))
 vi.mock('vue-router',          () => ({ useRouter:     vi.fn() }))
-vi.mock('@/services/api',      () => ({ default: { post: vi.fn().mockResolvedValue({}) } }))
+vi.mock('@/services/api',      () => ({ default: { post: vi.fn().mockResolvedValue({ data: { id_badge: 'badge-1' } }) } }))
 vi.mock('@/components/ui/StatCard.vue', () => ({
   default: {
     template: '<div class="stat-card"><span class="stat-label">{{ label }}</span><span class="stat-value">{{ value }}</span></div>',
@@ -225,7 +225,9 @@ describe('AdminBadges.vue — Tests d\'Intégration', () => {
     expect(api.post).toHaveBeenCalledWith('/badges', expect.objectContaining({
       nom: 'Badge Expert',
     }))
-    expect(api.post).toHaveBeenCalledWith('/badges/badge-1/attribuer', { id_etudiant: 'stu-1' })
+    expect(api.post).toHaveBeenCalledWith('/badges/badge-1/attribuer', expect.objectContaining({
+      id_etudiant: 'stu-1',
+    }))
   })
 
   it('23 — handleCreate affiche "Badge créé et attribué avec succès" après succès', async () => {

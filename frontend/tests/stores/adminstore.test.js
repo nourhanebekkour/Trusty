@@ -22,7 +22,7 @@ vi.mock('../../src/services/auth.service', () => ({
 function setupAdmin() {
   setActivePinia(createPinia())
   const auth = useAuthStore()
-  auth.user = { id_utilisateur: 'admin1', role: 'ADMINISTRATEUR' }
+  auth.user = { id_utilisateur: 'admin1', role: 'ADMINISTRATEUR', ecole: 'UNIV' }
   return useAdminStore()
 }
 
@@ -66,15 +66,13 @@ describe('adminStore — Tests Unitaires', () => {
   // ══════════════════════════════════════════════════════
   describe('fetchDashboardStats()', () => {
     it('calcule les stats depuis la liste des utilisateurs', async () => {
-      // setupAdmin crée un admin sans ecole → isSuperAdmin() = true
-      // Le store appelle /etudiants/ et /professeurs/ en parallèle
       const mockEtudiants = [
-        { utilisateur: { status_compte: 'ACTIF' } },
-        { utilisateur: { status_compte: 'ACTIF' } },
-        { utilisateur: { status_compte: 'INACTIF' } },
+        { id_etudiant: 'e1', utilisateur: { status_compte: 'ACTIF' } },
+        { id_etudiant: 'e2', utilisateur: { status_compte: 'ACTIF' } },
+        { id_etudiant: 'e3', utilisateur: { status_compte: 'INACTIF' } },
       ]
       const mockProfesseurs = [
-        { utilisateur: { nom: 'Prof1' } },
+        { id_professeur: 'p1' },
       ]
       api.get
         .mockResolvedValueOnce({ data: mockEtudiants })
@@ -83,8 +81,8 @@ describe('adminStore — Tests Unitaires', () => {
       const store = setupAdmin()
       await store.fetchDashboardStats()
 
-      expect(api.get).toHaveBeenCalledWith('/etudiants/')
-      expect(api.get).toHaveBeenCalledWith('/professeurs/')
+      expect(api.get).toHaveBeenCalledWith('/etudiants/ecole/UNIV')
+      expect(api.get).toHaveBeenCalledWith('/professeurs/ecole/UNIV')
       expect(store.stats.studentsActive).toBe(2)
       expect(store.stats.professors).toBe(1)
       expect(store.stats.partners).toBe(0)
@@ -92,14 +90,14 @@ describe('adminStore — Tests Unitaires', () => {
     })
 
     it('passe loading à true pendant le chargement puis false après', async () => {
-      let resolvePromise
+      let resolveEtudiants
       api.get
-        .mockReturnValueOnce(new Promise(res => { resolvePromise = res }))
-        .mockReturnValueOnce(new Promise(res => res({ data: [] })))
+        .mockReturnValueOnce(new Promise(res => { resolveEtudiants = res }))
+        .mockResolvedValueOnce({ data: [] })
       const store = setupAdmin()
       const p = store.fetchDashboardStats()
       expect(store.loading).toBe(true)
-      resolvePromise({ data: [] })
+      resolveEtudiants({ data: [] })
       await p
       expect(store.loading).toBe(false)
     })
@@ -130,19 +128,22 @@ describe('adminStore — Tests Unitaires', () => {
   // ══════════════════════════════════════════════════════
   describe('fetchUsers()', () => {
     it('remplit users avec la réponse API', async () => {
-      // The store fetches /etudiants/ and /professeurs/ (for superAdmin without ecole)
-      // and normalizes results
+      const mockEtudiants = [
+        { id_etudiant: '1', utilisateur: { nom: 'Dupont', prenom: 'Jean', email: 'j@test.fr' } },
+      ]
+      const mockProfesseurs = [
+        { id_professeur: '2', utilisateur: { nom: 'Martin', prenom: 'Marie', email: 'm@test.fr' } },
+      ]
       api.get
-        .mockResolvedValueOnce({ data: [{ id_etudiant: '1', utilisateur: { nom: 'Dupont', prenom: 'Jean', status_compte: 'ACTIF' } }] })
-        .mockResolvedValueOnce({ data: [] })
+        .mockResolvedValueOnce({ data: mockEtudiants })
+        .mockResolvedValueOnce({ data: mockProfesseurs })
 
       const store = setupAdmin()
       await store.fetchUsers()
 
-      expect(api.get).toHaveBeenCalledWith('/etudiants/')
-      expect(api.get).toHaveBeenCalledWith('/professeurs/')
-      expect(store.users).toHaveLength(1)
-      expect(store.users[0].nom).toBe('Dupont')
+      expect(api.get).toHaveBeenCalledWith('/etudiants/ecole/UNIV')
+      expect(api.get).toHaveBeenCalledWith('/professeurs/ecole/UNIV')
+      expect(store.users).toHaveLength(2)
       expect(store.loading).toBe(false)
     })
 
@@ -216,9 +217,8 @@ describe('adminStore — Tests Unitaires', () => {
 
     it('appelle fetchUsers après une création réussie', async () => {
       api.post.mockResolvedValueOnce({ data: {} })
-      // fetchUsers calls both /etudiants/ and /professeurs/
       api.get
-        .mockResolvedValueOnce({ data: [{ id_etudiant: '1', utilisateur: {} }] })
+        .mockResolvedValueOnce({ data: [] })
         .mockResolvedValueOnce({ data: [] })
 
       const store = setupAdmin()
@@ -227,7 +227,8 @@ describe('adminStore — Tests Unitaires', () => {
         firstName: 'A', lastName: 'B', role: 'Étudiant',
       })
 
-      expect(api.get).toHaveBeenCalledWith('/etudiants/')
+      expect(api.get).toHaveBeenCalledWith('/etudiants/ecole/UNIV')
+      expect(api.get).toHaveBeenCalledWith('/professeurs/ecole/UNIV')
     })
   })
 
@@ -290,33 +291,27 @@ describe('adminStore — Tests Unitaires', () => {
   // 7. fetchVerificationQueue
   // ══════════════════════════════════════════════════════
   describe('fetchVerificationQueue()', () => {
-    it('combine activités dans verificationQueue', async () => {
-      // The store only fetches /activites/a-valider (for non-superAdmin)
-      // or /activites/?status_validation=EN_ATTENTE (for superAdmin)
-      // setupAdmin creates user without ecole → isSuperAdmin() = true
-      // So it uses /activites/?status_validation=EN_ATTENTE
-      const mockActivite  = { id_activite: 'a1', nom_activite: 'Hackathon', description: 'Desc' }
+    it('remplit verificationQueue avec les activités à valider', async () => {
+      const mockActivite = { id_activite: 'a1', nom_activite: 'Hackathon', description: 'Desc' }
 
       api.get.mockResolvedValueOnce({ data: [mockActivite] })
 
       const store = setupAdmin()
       await store.fetchVerificationQueue()
 
+      expect(api.get).toHaveBeenCalledWith('/activites/a-valider')
       expect(store.verificationQueue).toHaveLength(1)
       expect(store.verificationQueue[0].type).toBe('ACTIVITE')
     })
 
-    it('appelle /activites/a-valider pour un admin non super', async () => {
-      // Create a normal admin (with ecole) → not superAdmin
-      setActivePinia(createPinia())
-      const auth = useAuthStore()
-      auth.user = { id_utilisateur: 'admin1', role: 'ADMINISTRATEUR', ecole: 'ENSATanger' }
-      const store = useAdminStore()
+    it('reste vide et stocke l\'erreur si l\'API échoue', async () => {
+      api.get.mockRejectedValueOnce(new Error('Network'))
 
       api.get.mockResolvedValueOnce({ data: [] })
       await store.fetchVerificationQueue()
 
-      expect(api.get).toHaveBeenCalledWith('/activites/a-valider')
+      expect(store.verificationQueue).toHaveLength(0)
+      expect(store.error).toBeTruthy()
     })
   })
 
@@ -339,16 +334,14 @@ describe('adminStore — Tests Unitaires', () => {
       expect(store.verificationQueue[0].type).toBe('PROFESSIONNEL')
     })
 
-    it('valide un professionnel — retourne success (aucun appel API direct via validateEntity)', async () => {
-      // The actual store's validateEntity only handles ACTIVITE type
-      // For PROFESSIONNEL, use validateProfessional() instead
-      // validateEntity with unknown type just filters the queue without API call
+    it('valide un professionnel sans appel API et le retire de la queue', async () => {
       const store = setupAdmin()
       store.verificationQueue = [{ id: 'p1', type: 'PROFESSIONNEL' }]
       const result = await store.validateEntity('PROFESSIONNEL', 'p1', 'APPROUVE')
 
       // Result is success:true (no error thrown), queue is filtered
       expect(result.success).toBe(true)
+      expect(api.patch).not.toHaveBeenCalled()
       expect(store.verificationQueue).toHaveLength(0)
     })
 
@@ -394,15 +387,13 @@ describe('adminStore — Tests Unitaires', () => {
   // ══════════════════════════════════════════════════════
   describe('fetchStudents()', () => {
     it('remplit students avec la réponse API', async () => {
-      const mockStudents = [{ id_utilisateur: 's1', nom: 'Martin' }]
+      const mockStudents = [{ id_etudiant: 's1', utilisateur: { nom: 'Martin' } }]
       api.get.mockResolvedValueOnce({ data: mockStudents })
 
       const store = setupAdmin()
       await store.fetchStudents()
 
-      // setupAdmin creates superAdmin (no ecole) → calls /etudiants/
-      expect(api.get).toHaveBeenCalledWith('/etudiants/')
-      // extractData({data: mockStudents}) returns mockStudents
+      expect(api.get).toHaveBeenCalledWith('/etudiants/ecole/UNIV')
       expect(store.students).toEqual(mockStudents)
     })
   })
