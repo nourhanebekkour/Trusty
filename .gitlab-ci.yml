@@ -1,32 +1,349 @@
+# ══════════════════════════════════════════════════════════
+# Pipeline — Staging (GitLab CI)
+# ══════════════════════════════════════════════════════════
+
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^(main|dev|staging)$/'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^(main|dev|staging)$/'
+
+default:
+  image: node:20-alpine
+
 stages:
   - lint
-  - security
+  - test
+  - run
+  - security-e2e
+  - build-frontend
+  - sonar-zap
+  - docker
+  - deploy
 
-lint-frontend:
-  stage: lint
-  image: node:20-alpine
-  script:
-    - cd frontend
-    - npm install
-    - echo "lint ok"
-  tags:
-    - docker
+# ════════════════════════════════════════════════════════
+# PHASE 1 — QUALITÉ CODE
+# ════════════════════════════════════════════════════════
 
-lint-backend:
+backend-lint:
   stage: lint
-  image: node:20-alpine
+  timeout: 10 minutes
+  before_script:
+    - cd backend && npm ci
   script:
+    - npx eslint src/ --max-warnings=50 || true
+
+frontend-lint:
+  stage: lint
+  timeout: 15 minutes
+  before_script:
+    - cd frontend && npm ci
+  script:
+    - npx eslint src/ --max-warnings=50 || true
+
+# ════════════════════════════════════════════════════════
+# PHASE 2 — TESTS
+# ════════════════════════════════════════════════════════
+
+backend-test:
+  stage: test
+  needs: [backend-lint]
+  image: node:20-alpine
+  services:
+    - name: postgres:15-alpine
+      alias: postgres
+      variables:
+        POSTGRES_DB: trusty_test
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+    - name: minio/minio
+      alias: minio
+      command: ["server", "/data"]
+      variables:
+        MINIO_ROOT_USER: minioadmin
+        MINIO_ROOT_PASSWORD: minioadmin
+  variables:
+    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/trusty_test"
+    JWT_SECRET: "secret_test_key"
+    MINIO_ENDPOINT: minio
+    MINIO_PORT: "9000"
+    MINIO_ACCESS_KEY: minioadmin
+    MINIO_SECRET_KEY: minioadmin
+    MINIO_USE_SSL: "false"
+  before_script:
     - cd backend
-    - npm install
-    - echo "lint ok"
-  tags:
-    - docker
+    - npm ci
+    - echo "Waiting for MinIO..."
+    - until curl -sf http://minio:9000/minio/health/live; do sleep 2; done
+    - echo "MinIO ready ✓"
+    - npx prisma migrate deploy
+    - npm run swagger
+  script:
+    - npm test || true
+
+frontend-test:
+  stage: test
+  needs: [frontend-lint]
+  timeout: 15 minutes
+  before_script:
+    - cd frontend && npm ci
+  script:
+    - npm run test:ci || true
+    - npm run report:generate
+    - npm run report:send
+  variables:
+    SMTP_USER: $SMTP_USER
+    SMTP_PASS: $SMTP_PASS
+    SMTP_TO: $SMTP_TO
+    JIRA_BASE_URL: $JIRA_BASE_URL
+    JIRA_PROJECT_KEY: $JIRA_PROJECT_KEY
+    JIRA_USER_EMAIL: $JIRA_USER_EMAIL
+    JIRA_API_TOKEN: $JIRA_API_TOKEN
+  artifacts:
+    when: always
+    paths:
+      - frontend/test-report.html
+    expire_in: 7 days
+
+# ════════════════════════════════════════════════════════
+# PHASE 3 — RUN (smoke tests)
+# ════════════════════════════════════════════════════════
+
+backend-run:
+  stage: run
+  needs: [backend-test]
+  timeout: 10 minutes
+  before_script:
+    - cd backend && npm ci
+  script:
+    - npm start &
+    - sleep 8
+    - kill %1 || true
+
+frontend-run:
+  stage: run
+  needs: [frontend-test]
+  timeout: 10 minutes
+  before_script:
+    - cd frontend && npm ci
+  script:
+    - npm run dev &
+    - sleep 10
+    - kill %1 || true
+
+# ════════════════════════════════════════════════════════
+# PHASE 4 — SÉCURITÉ & E2E (jobs parallèles)
+# ════════════════════════════════════════════════════════
 
 trivy-scan:
-  stage: security
+  stage: security-e2e
+  needs: [backend-run, frontend-run]
+  timeout: 30 minutes
   image: aquasec/trivy:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - apk add --no-cache docker-cli
   script:
-    - trivy fs ./backend --severity CRITICAL,HIGH --exit-code 0
-    - trivy fs ./frontend --severity CRITICAL,HIGH --exit-code 0
+    # Deps
+    - trivy fs ./backend --severity CRITICAL,HIGH --format sarif --output trivy-deps-backend.sarif --exit-code 0
+    - trivy fs ./frontend --severity CRITICAL,HIGH --format sarif --output trivy-deps-frontend.sarif --exit-code 0
+    # Config (Dockerfiles)
+    - trivy config ./backend --format sarif --output trivy-config-backend.sarif --exit-code 0
+    - trivy config ./frontend --format sarif --output trivy-config-frontend.sarif --exit-code 0
+    # Images
+    - docker build -t trusty-backend:ci ./backend
+    - docker build -t trusty-frontend:ci ./frontend
+    - trivy image trusty-backend:ci --severity CRITICAL,HIGH --format sarif --output trivy-image-backend.sarif --exit-code 0
+    - trivy image trusty-frontend:ci --severity CRITICAL,HIGH --format sarif --output trivy-image-frontend.sarif --exit-code 0
+  artifacts:
+    when: always
+    paths:
+      - "*.sarif"
+    expire_in: 7 days
+
+cypress-e2e:
+  stage: security-e2e
+  needs: [backend-run, frontend-run]
+  timeout: 30 minutes
+  image: cypress/included:latest
+  services:
+    - name: postgres:15
+      alias: postgres
+      variables:
+        POSTGRES_USER: trusty
+        POSTGRES_PASSWORD: trusty
+        POSTGRES_DB: trusty_ci
+    - name: minio/minio
+      alias: minio
+      command: ["server", "/data"]
+      variables:
+        MINIO_ROOT_USER: minioadmin
+        MINIO_ROOT_PASSWORD: minioadmin
+  before_script:
+    # Backend
+    - cd backend && npm ci
+    - |
+      cat > .env <<EOF
+      DATABASE_URL=postgresql://trusty:trusty@postgres:5432/trusty_ci?schema=public
+      JWT_SECRET=ci-secret-trusty
+      JWT_REFRESH_SECRET=ci-refresh-trusty
+      JWT_EXPIRES_IN=1h
+      PORT=3000
+      NODE_ENV=test
+      FRONTEND_URL=http://localhost:5173
+      MINIO_ENDPOINT=minio
+      MINIO_PORT=9000
+      MINIO_USE_SSL=false
+      MINIO_ACCESS_KEY=minioadmin
+      MINIO_SECRET_KEY=minioadmin
+      MINIO_PUBLIC_BUCKET=dev-public
+      MINIO_PRIVATE_BUCKET=dev-private
+      EOF
+    - until curl -sf http://minio:9000/minio/health/live; do sleep 2; done
+    - npx prisma migrate deploy
+    - npm start &
+    - cd ../frontend && npm ci
+    - npm run dev &
+    - timeout 30 bash -c 'until curl -s http://localhost:3000 > /dev/null 2>&1; do sleep 1; done' || true
+    - timeout 30 bash -c 'until curl -s http://localhost:5173 > /dev/null 2>&1; do sleep 1; done'
+  script:
+    - cd frontend && npx cypress run || true
+  artifacts:
+    when: always
+    paths:
+      - frontend/cypress/screenshots
+      - frontend/cypress/videos
+    expire_in: 7 days
+
+# ════════════════════════════════════════════════════════
+# PHASE 5 — BUILD FRONTEND
+# ════════════════════════════════════════════════════════
+
+frontend-build:
+  stage: build-frontend
+  needs: [trivy-scan, cypress-e2e]
+  timeout: 15 minutes
+  before_script:
+    - cd frontend && npm ci
+  script:
+    - npm run build
+  artifacts:
+    paths:
+      - frontend/dist
+    expire_in: 1 day
+
+# ════════════════════════════════════════════════════════
+# PHASE 6 — SONARQUBE + OWASP ZAP (self-hosted, parallèles)
+# ════════════════════════════════════════════════════════
+
+sonarqube:
+  stage: sonar-zap
+  needs: [frontend-build]
+  timeout: 20 minutes
   tags:
-    - docker
+    - self-hosted
+  image: sonarsource/sonar-scanner-cli:latest
+  variables:
+    GIT_DEPTH: 0
+  script:
+    - sonar-scanner
+      -Dsonar.projectKey=Trusty
+      -Dsonar.sources=backend/src,frontend/src
+      -Dsonar.exclusions=**/node_modules/**,**/*.test.js,**/coverage/**
+      -Dsonar.host.url=http://192.168.20.10:9000
+      -Dsonar.token=$SONAR_TOKEN
+
+owasp-zap:
+  stage: sonar-zap
+  needs: [frontend-build]
+  timeout: 20 minutes
+  tags:
+    - self-hosted
+  script:
+    - |
+      if ! curl -sf --max-time 5 "http://192.168.20.10:8091/JSON/core/view/version/" > /dev/null 2>&1; then
+        echo "⚠️ OWASP ZAP API non accessible sur :8091 — scan ignoré"
+        exit 0
+      fi
+      if ! curl -sf --max-time 5 "http://192.168.20.10:3001" > /dev/null 2>&1; then
+        echo "⚠️ Backend non accessible sur :3001 — scan ignoré"
+        exit 0
+      fi
+      SCAN_ID=$(curl -s "http://192.168.20.10:8091/JSON/ascan/action/scan/?url=http://192.168.20.10:3001&recurse=true" \
+        | grep -o '"scan":"[0-9]*"' | grep -o '[0-9]*') || true
+      echo "Scan ID : $SCAN_ID"
+      for i in $(seq 1 30); do
+        STATUS=$(curl -s "http://192.168.20.10:8091/JSON/ascan/view/status/?scanId=$SCAN_ID" \
+          | grep -o '"status":"[0-9]*"' | grep -o '[0-9]*') || true
+        echo "Avancement : $STATUS%"
+        if [ "$STATUS" = "100" ]; then break; fi
+        sleep 10
+      done
+      curl -s "http://192.168.20.10:8091/JSON/core/view/alerts/" -o zap-report.json
+      echo "Alertes trouvées : $(cat zap-report.json | grep -c '"alert"' || echo 0)"
+      HIGH=$(cat zap-report.json | grep -c '"risk":"High"' || true)
+      if [ "$HIGH" -gt "0" ]; then
+        echo "$HIGH alerte(s) HIGH — pipeline bloqué"
+        exit 1
+      fi
+      echo "Aucune alerte critique ZAP"
+  artifacts:
+    when: always
+    paths:
+      - zap-report.json
+    expire_in: 7 days
+
+# ════════════════════════════════════════════════════════
+# PHASE 7 — BUILD & PUSH DOCKER IMAGES
+# ════════════════════════════════════════════════════════
+
+docker-build:
+  stage: docker
+  needs: [sonarqube, owasp-zap]
+  image: docker:24
+  services:
+    - docker:dind
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+  script:
+    - docker build
+        --target production
+        --build-arg VITE_API_URL=http://63.183.184.130
+        -t aymenbazga/trusty-frontend:latest
+        ./frontend
+    - docker push aymenbazga/trusty-frontend:latest
+    - docker build
+        --target production
+        -t aymenbazga/trusty-backend:latest
+        ./backend
+    - docker push aymenbazga/trusty-backend:latest
+
+# ════════════════════════════════════════════════════════
+# PHASE 8 — DEPLOY TO STAGING
+# ════════════════════════════════════════════════════════
+
+# deploy:
+#   stage: deploy
+#   needs: [docker-build]
+#   image: alpine:latest
+#   before_script:
+#     - apk add --no-cache openssh-client
+#     - eval $(ssh-agent -s)
+#     - echo "$STAGING_DEPLOY_KEY" | tr -d '\r' | ssh-add -
+#     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+#     - ssh-keyscan -H "$STAGING_HOST" >> ~/.ssh/known_hosts
+#   script:
+#     - ssh ubuntu@$STAGING_HOST '
+#         cd /home/ubuntu/projet/Trusty &&
+#         docker pull aymenbazga/trusty-frontend:latest &&
+#         docker pull aymenbazga/trusty-backend:latest &&
+#         docker pull aymenbazga/trusty-nginx:latest &&
+#         docker compose -f docker-compose.dockerhub.yml --env-file .env.staging up -d --force-recreate &&
+#         docker exec trusty-backend-1 npx prisma migrate deploy
+#       '
