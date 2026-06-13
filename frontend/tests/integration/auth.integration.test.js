@@ -30,41 +30,37 @@ describe("authStore + authService — Tests d'intégration", () => {
   })
 
   // ── login ──────────────────────────────────────────────────────────────────
+it('1 — login réussi : store → service → api.post /auth/login → api.get /auth/me → user mis à jour', async () => {
+  api.post.mockResolvedValue({ data: {} })
+  api.get.mockResolvedValue({ data: { data: {
+    id_utilisateur: 'u1', nom: 'Alice', email: 'alice@test.com', role: 'ETUDIANT'
+  }}})
+  const store = useAuthStore()
+  const result = await store.login('alice@test.com', '1234')
 
-  it('1 — login réussi : store → service → api.post /auth/login → api.get /auth/me → user mis à jour', async () => {
-    api.post.mockResolvedValue({ data: {} })
-    api.get.mockResolvedValue({ data: { data: {
-      id_utilisateur: 'u1', nom: 'Alice', email: 'alice@test.com', role: 'ETUDIANT'
-    }}})
+  expect(result).toBe(true)
+  // The authService adds remember:false to the payload
+  expect(api.post).toHaveBeenCalledWith('/auth/login', expect.objectContaining({
+    email: 'alice@test.com',
+    password: '1234',
+    remember: false,
+  }))
+  expect(api.get).toHaveBeenCalledWith('/auth/me')
+  expect(store.user).not.toBeNull()
+  expect(store.loading).toBe(false)
+  expect(store.error).toBeNull()
+}) // ← fermeture du it('1 — ...')
 
-    const store = useAuthStore()
-    const result = await store.login('alice@test.com', '1234')
-
-    expect(result).toBe(true)
-    // The authService adds remember:false to the payload
-    expect(api.post).toHaveBeenCalledWith('/auth/login', expect.objectContaining({
-      email: 'alice@test.com',
-      password: '1234',
-      remember: false,
-    })
-    expect(api.get).toHaveBeenCalledWith('/auth/me')
-    expect(store.user).not.toBeNull()
-    expect(store.loading).toBe(false)
-    expect(store.error).toBeNull()
-  })
-
-  it('2 — login échoue : erreur générique stockée dans le store', async () => {
-    api.post.mockRejectedValue({ response: { data: { message: 'Identifiants invalides' } } })
-
-    const store = useAuthStore()
-    const result = await store.login('wrong@test.com', 'wrong')
-
-    expect(result).toBe(false)
-    expect(store.user).toBeNull()
-    expect(store.error).toBe('Email ou mot de passe invalide')
-    expect(store.loading).toBe(false)
-    expect(api.get).not.toHaveBeenCalled()
-  })
+it('2 — login échoue : erreur générique stockée dans le store', async () => {
+  api.post.mockRejectedValue({ response: { data: { message: 'Identifiants invalides' } } })
+  const store = useAuthStore()
+  const result = await store.login('wrong@test.com', 'wrong')
+  expect(result).toBe(false)
+  expect(store.user).toBeNull()
+  expect(store.error).toBe('Email ou mot de passe invalide')
+  expect(store.loading).toBe(false)
+  expect(api.get).not.toHaveBeenCalled()
+})
 
   it('3 — login échoue sans message serveur : message générique', async () => {
     api.post.mockRejectedValue(new Error('Network error'))

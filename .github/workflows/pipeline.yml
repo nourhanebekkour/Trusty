@@ -1,0 +1,84 @@
+# .github/workflows/pipeline.yml
+name: Pipeline — CI + Security + CD
+
+on:
+  push:
+    branches: [main, dev, mirroring, staging]
+  pull_request:
+    branches: [main, dev, mirroring]
+
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+
+jobs:
+  # ─── PHASE 1 : Qualité & Tests ──────────────────────────────────────────
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
+  # ─── PHASE 2 : Sécurité (après CI) ─────────────────────────────────────
+  security:
+    name: Security
+    uses: ./.github/workflows/security.yml
+    needs: ci
+    secrets: inherit
+
+  # ─── PHASE 3 : Build & Push Docker (staging uniquement) ─────────────────
+  build:
+    name: Build & Push Docker Images
+    runs-on: ubuntu-latest
+    needs: security
+    if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          target: production
+          push: true
+          tags: aymenbazga/trusty-frontend:latest
+          build-args: |
+            VITE_API_URL=http://63.183.184.130
+
+      - name: Build and push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          target: production
+          push: true
+          tags: aymenbazga/trusty-backend:latest
+
+  # ─── PHASE 4 : Deploy to Staging ────────────────────────────────────────
+  deploy:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
+    steps:
+      - name: Deploy to staging via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ubuntu
+          key: ${{ secrets.STAGING_DEPLOY_KEY }}
+          script: |
+            cd /home/ubuntu/projet/Trusty
+            docker pull aymenbazga/trusty-frontend:latest
+            docker pull aymenbazga/trusty-backend:latest
+            docker pull aymenbazga/trusty-nginx:latest
+            docker compose -f docker-compose.dockerhub.yml \
+              --env-file .env.staging \
+              up -d --force-recreate
+            docker exec trusty-backend-1 npx prisma migrate deploy

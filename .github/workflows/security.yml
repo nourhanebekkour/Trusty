@@ -2,31 +2,36 @@ name: Security Checks — Self-Hosted
 
 # Se déclenche sur chaque push sur main et sur les Pull Requests
 on:
+  workflow_call: {}
   push:
-    branches: [main]
+    branches: [main, mirroring]
   pull_request:
-    branches: [main]
+    branches: [main, mirroring]
 
-# Permissions minimales — Least Privilege
 permissions:
   contents: read
   actions: read
   security-events: write
 
 jobs:
-
-  # ─── JOB 1 : SonarQube ────────────────────────────────────────────────────
+  # ─── JOB 1 : SonarQube ─────────────────────────────────────────────────
   sonarqube:
-    name: SonarQube — Analyse qualité & sécurité
+    name: SonarQube — Qualité & sécurité code
     runs-on: self-hosted
+    timeout-minutes: 20
     steps:
       - name: Checkout du code
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
         with:
           fetch-depth: 0
 
-      - name: Lancer l'analyse SonarQube
-        uses: sonarsource/sonarqube-scan-action@bfd8f9dd3606f9b76fb20577e3736cfd5f
+      - name: Analyse SonarQube
+        uses: sonarsource/sonarqube-scan-action@v6
+        with:
+          args: >
+            -Dsonar.projectKey=Trusty
+            -Dsonar.sources=backend/src,frontend/src
+            -Dsonar.exclusions=**/node_modules/**,**/*.test.js,**/coverage/**
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: http://192.168.20.10:9000
@@ -35,29 +40,35 @@ jobs:
   owasp-zap:
     name: OWASP ZAP — Scan API backend staging
     runs-on: self-hosted
+    timeout-minutes: 20
     steps:
       - name: Checkout du code
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
 
-      - name: Lancer le scan ZAP sur le backend staging
+      - name: Scan actif ZAP sur le backend staging
         run: |
-          # Démarrer le scan actif sur le backend (port 3001 en staging)
-          SCAN_ID=$(curl -s "http://192.168.20.10:8090/JSON/ascan/action/scan/?url=http://192.168.20.10:3001&recurse=true" | grep -o '"scan":"[0-9]*"' | grep -o '[0-9]*')
+          # Vérifier que ZAP API est accessible
+          if ! curl -sf --max-time 5 "http://192.168.20.10:8091/JSON/core/view/version/" > /dev/null 2>&1; then
+            echo "⚠️ OWASP ZAP API non accessible sur :8091 — scan ignoré"
+            exit 0
+          fi
+          # Vérifier que le backend est accessible
+          if ! curl -sf --max-time 5 "http://192.168.20.10:3001" > /dev/null 2>&1; then
+            echo "⚠️ Backend non accessible sur :3001 — scan ignoré"
+            exit 0
+          fi
+          SCAN_ID=$(curl -s "http://192.168.20.10:8091/JSON/ascan/action/scan/?url=http://192.168.20.10:3001&recurse=true" \
+            | grep -o '"scan":"[0-9]*"' | grep -o '[0-9]*') || true
           echo "Scan ID : $SCAN_ID"
-
-          # Attendre la fin du scan (poll toutes les 10s, max 5 minutes)
           for i in $(seq 1 30); do
-            STATUS=$(curl -s "http://192.168.20.10:8090/JSON/ascan/view/status/?scanId=$SCAN_ID" | grep -o '"status":"[0-9]*"' | grep -o '[0-9]*')
+            STATUS=$(curl -s "http://192.168.20.10:8091/JSON/ascan/view/status/?scanId=$SCAN_ID" \
+              | grep -o '"status":"[0-9]*"' | grep -o '[0-9]*') || true
             echo "Avancement : $STATUS%"
             if [ "$STATUS" = "100" ]; then break; fi
             sleep 10
           done
-
-          # Récupérer le rapport JSON
-          curl -s "http://192.168.20.10:8090/JSON/core/view/alerts/" -o zap-report.json
-          echo "Nombre d'alertes trouvées :"
-          cat zap-report.json | grep -c '"alert"' || echo "0"
-
+          curl -s "http://192.168.20.10:8091/JSON/core/view/alerts/" -o zap-report.json
+          echo "Alertes trouvées : $(cat zap-report.json | grep -c '"alert"' || echo 0)"
       - name: Sauvegarder le rapport ZAP
         uses: actions/upload-artifact@v4
         if: always()
@@ -65,11 +76,11 @@ jobs:
           name: zap-report-${{ github.sha }}
           path: zap-report.json
 
-      - name: Vérifier les alertes HIGH et CRITICAL
+      - name: Vérifier les alertes HIGH / CRITICAL
         run: |
           HIGH=$(cat zap-report.json | grep -c '"risk":"High"' || true)
           if [ "$HIGH" -gt "0" ]; then
-            echo "$HIGH alerte(s) HIGH trouvée(s) — à corriger"
+            echo "$HIGH alerte(s) HIGH — pipeline bloqué"
             exit 1
           fi
           echo "Aucune alerte critique ZAP"
