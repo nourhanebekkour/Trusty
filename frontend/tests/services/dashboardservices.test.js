@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 // ── mock api ─────────────────────────────────────────────────────────────────
-vi.mock('@/services/api', () => ({
+vi.mock('@/api', () => ({
   default: {
     get: vi.fn(),
   },
 }))
 
-import api from '@/services/api'
+import api from '@/api'
 import { fetchStats, fetchProjects, fetchRecos } from '@/services/dashboardservices'
 
 // ── données mock attendues (identiques au service) ───────────────────────────
@@ -21,8 +21,11 @@ const EXPECTED_MOCK_STATS = {
 const EXPECTED_MOCK_PROJECTS_LENGTH = 2
 const EXPECTED_MOCK_RECOS_LENGTH    = 2
 
-// ─────────────────────────────────────────────────────────────────────────────
-describe('dashboardservices.js', () => {
+// ═════════════════════════════════════════════════════════════════════════════
+// TESTS UNITAIRES — dashboardservices
+// api toujours mockée. Tests du contrat de chaque fonction (retour, structure).
+// ═════════════════════════════════════════════════════════════════════════════
+describe('dashboardservices.js — Tests Unitaires', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -57,7 +60,6 @@ describe('dashboardservices.js', () => {
 
     it('retourne les données mock en cas d\'erreur API', async () => {
       api.get.mockRejectedValueOnce(new Error('Network Error'))
-      // Même en mode API_READY=false, le fallback est assuré
       const result = await fetchStats()
       expect(result).toMatchObject(EXPECTED_MOCK_STATS)
     })
@@ -74,28 +76,28 @@ describe('dashboardservices.js', () => {
     it('chaque projet a les propriétés requises', async () => {
       const result = await fetchProjects()
       result.forEach(project => {
-        expect(project).toHaveProperty('id')
+        expect(project).toHaveProperty('id_projet')
         expect(project).toHaveProperty('titre')
-        expect(project).toHaveProperty('type')
-        expect(project).toHaveProperty('statut')
-        expect(project).toHaveProperty('dateDebut')
+        expect(project).toHaveProperty('type_projet')
+        expect(project).toHaveProperty('status_validation')
+        expect(project).toHaveProperty('date_debut')
         expect(project).toHaveProperty('description')
-        expect(project).toHaveProperty('tags')
+        expect(project).toHaveProperty('technologies')
       })
     })
 
     it('les statuts sont parmi les valeurs autorisées', async () => {
-      const STATUTS_VALIDES = ['Certifié', 'En cours', 'En attente']
+      const STATUTS_VALIDES = ['VALIDE', 'EN_ATTENTE', 'REJETE']
       const result = await fetchProjects()
       result.forEach(project => {
-        expect(STATUTS_VALIDES).toContain(project.statut)
+        expect(STATUTS_VALIDES).toContain(project.status_validation)
       })
     })
 
-    it('les tags sont des tableaux', async () => {
+    it('les technologies sont des tableaux', async () => {
       const result = await fetchProjects()
       result.forEach(project => {
-        expect(Array.isArray(project.tags)).toBe(true)
+        expect(Array.isArray(project.technologies)).toBe(true)
       })
     })
 
@@ -115,22 +117,19 @@ describe('dashboardservices.js', () => {
       expect(result).toHaveLength(EXPECTED_MOCK_RECOS_LENGTH)
     })
 
-    it('chaque recommandation a un id et un contenu/message', async () => {
+    it('chaque recommandation a un id et un message', async () => {
       const result = await fetchRecos()
       result.forEach(reco => {
-        expect(reco).toHaveProperty('id')
-        // le service mock utilise "contenu", le composant utilise "message"
-        const hasContent = 'contenu' in reco || 'message' in reco
-        expect(hasContent).toBe(true)
+        expect(reco).toHaveProperty('id_recommandation')
+        expect(reco).toHaveProperty('message')
       })
     })
 
-    it("chaque recommandation a un auteur avec nom et poste", async () => {
+    it("chaque recommandation a un auteur avec nom", async () => {
       const result = await fetchRecos()
       result.forEach(reco => {
         expect(reco).toHaveProperty('auteur')
         expect(reco.auteur).toHaveProperty('nom')
-        expect(reco.auteur).toHaveProperty('poste')
       })
     })
 

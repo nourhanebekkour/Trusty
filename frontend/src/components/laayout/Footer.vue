@@ -58,7 +58,7 @@ import iconApps from '@/assets/icons/apps.svg'
 
 <style scoped>
 .footer {
-  background: #1A3021;
+  background: var(--color-surface);
   width: 100%;
   font-family: 'Inter', sans-serif;
 }
@@ -68,7 +68,7 @@ import iconApps from '@/assets/icons/apps.svg'
   grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 24px;
   padding: 20px 36px 16px;
-  border-top: 1px solid #1F2937;
+  border-top: 1px solid var(--color-border);
 }
 
 /* Brand */
@@ -91,7 +91,7 @@ import iconApps from '@/assets/icons/apps.svg'
   font-size: 16px;
   line-height: 16px;
   font-weight: 700;
-  color: #F4F2EC;
+  color: var(--color-text);
 }
 
 .footer__tagline {
@@ -99,7 +99,7 @@ import iconApps from '@/assets/icons/apps.svg'
   font-family: 'Roboto', sans-serif;
   font-size: 12px;
   line-height: 17px;
-  color: #F4F2EC;
+  color: var(--color-text-muted);
 }
 
 /* Columns */
@@ -109,7 +109,7 @@ import iconApps from '@/assets/icons/apps.svg'
   font-size: 13px;
   line-height: 20px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--color-text);
 }
 
 .footer__links {
@@ -123,12 +123,12 @@ import iconApps from '@/assets/icons/apps.svg'
   font-size: 12px;
   line-height: 18px;
   transition: color 0.2s;
-  color: #9CA3AF;        /* ← ajoute cette ligne */
+  color: var(--color-text-muted);
   text-decoration: none; 
 }
 
 .footer__links a:hover {
-  color: #ffffff;
+  color: var(--color-text);
 }
 
 /* Social */
@@ -153,11 +153,11 @@ import iconApps from '@/assets/icons/apps.svg'
 }
 
 .footer__social-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-background-mute);
 }
 
 .footer__social-btn:active {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--color-background-soft);
 }
 
 .footer__social-btn:disabled {
@@ -171,7 +171,7 @@ import iconApps from '@/assets/icons/apps.svg'
 
 /* Bottom bar */
 .footer__bottom {
-  border-top: 1px solid #1F2937;
+  border-top: 1px solid var(--color-border);
   padding: 10px 36px;
   text-align: center;
 }
@@ -182,7 +182,7 @@ import iconApps from '@/assets/icons/apps.svg'
   font-size: 14px;
   line-height: 20px;
   font-weight: 400;
-  color: #9CA3AF;
+  color: var(--color-text-muted);
 }
 
 /* Responsive */

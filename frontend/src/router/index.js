@@ -9,11 +9,16 @@ import StageList from '@/views/Etudiant/StageList.vue'
 import Recommendations from '@/views/Etudiant/Recommendations.vue'
 import Notification from '@/views/Etudiant/Notification.vue'
 import Profile from '@/views/Etudiant/Profile.vue'
-import Modele from '@/views/Etudiant/Modele.vue'
+import activites from '@/views/Etudiant/activites.vue'
 import Portfolio from '@/views/Etudiant/Portfolio.vue'
 import ProfessionalView from '@/views/ProfessionalView.vue'
 import ProfessorView from '@/views/ProfessorView.vue'
 import { useAuthStore } from '@/stores/authstore'
+import Parcours from '../views/Etudiant/Parcours.vue'
+import registerview from '@/views/registerview.vue'
+import ProfessorLayout from '../components/professor/ProfessorLayout.vue'
+import VerifyEmailView from '@/views/VerifyEmailView.vue'
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,12 +31,22 @@ const router = createRouter({
     {
       path: '/about',
       name: 'about',
-      component: () => import('../views/AboutView.vue'),
+      component: () => import('../views/Etudiant/Parcours.vue'),
+    },
+    {
+      path: '/register',
+      name: 'register',
+      component: registerview,
     },
     {
       path: '/login',
       name: 'login',
       component: LoginView,
+    },
+    {
+      path: '/verify-email',
+      name: 'verify-email',
+      component: VerifyEmailView,
     },
 
     // ── Admin ──────────────────────────────────────────
@@ -64,6 +79,11 @@ const router = createRouter({
           name: 'admin-portfolios',
           component: () => import('../views/admin/AdminPortfolios.vue'),
         },
+        {
+          path: 'notifications',
+          name: 'admin-notifications',
+          component: () => import('../views/admin/AdminNotifications.vue'),
+        },
       ],
     },
 
@@ -72,7 +92,7 @@ const router = createRouter({
       path: '/dashboard',
       name: 'dashboard',
       component: Dashboard,
-      //meta: { requiresAuth: true }
+      meta: { requiresAuth: true }
     },
     {
       path: '/notifications',
@@ -84,7 +104,7 @@ const router = createRouter({
       path: '/profile',
       name: 'profile',
       component: Profile,
-      //meta: { requiresAuth: true } 
+      meta: { requiresAuth: true } 
     },
     {
       path: '/projets',
@@ -111,9 +131,9 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/modele',
-      name: 'modele',
-      component: Modele,
+      path: '/parcours',
+      name: 'parcours',
+      component: Parcours,
     },
     {
       path: '/portfolio',
@@ -121,27 +141,53 @@ const router = createRouter({
       component: Portfolio,
     },
     {
+      path: '/activites',
+      name: 'activites',
+      component: activites,
+    },
+    {
       path: '/professional',
       name: 'professional',
       component: ProfessionalView,
     },
     {
-      path: '/professor',
-      name: 'professor',
-      component: ProfessorView,
-    },
+  path: '/professor',
+  name: 'professor',
+  component: ProfessorView,
+  meta: { requiresAuth: true }
+},
   ],  
 })
 
 router.beforeEach(async (to, from) => {
   const authStore = useAuthStore()
 
+  if (['home', 'login', 'register', 'about', 'verify-email'].includes(to.name)) {
+    return true
+  }
+
   if (!authStore.user) {
-    await authStore.fetchUser()   // ← appel API /auth/me
+    await authStore.fetchUser()
+  }
+
+  if (authStore.isAuthenticated) {
+
+    if (authStore.isAdmin) {
+      if (!to.path.startsWith('/admin')) return '/admin/dashboard'
+    }
+
+    else if (authStore.isProfesseur) {
+  if (to.name !== 'professor') return '/professor'
+}
+
+    else if (authStore.isProfessionnel) {
+      if (!to.path.startsWith('/professional')) return '/professional'
+    }
+
   }
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return '/login'   // ← redirige si pas authentifié
+    return '/login'
   }
 })
 // ── Auth guard ─────────────────────────────────────────

@@ -2,7 +2,6 @@ import prisma from "#Config/prismaClient.js";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { isAcademic } from 'swot-node';
 import {
   envoyerEmailReinitialisation,
   envoyerEmailCredentiels,
@@ -14,10 +13,14 @@ async function register(email, password, nom, prenom, role, ecole) {
   const existingUser = await prisma.utilisateur.findUnique({ where: { email } });
   if (existingUser) throw new Error('Cet email est déjà utilisé');
 
-  const isInstitutional = await isAcademic(email);
-
-  if ((role === 'ETUDIANT' || role === 'PROFESSEUR') && !isInstitutional) {
-    throw new Error('Un email académique institutionnel est requis pour ce rôle');
+  if (role === 'ETUDIANT') {
+    if (!email.endsWith('@etu.uae.ac.ma')) {
+      throw new Error('Un email étudiant (@etu.uae.ac.ma) est requis');
+    }
+  } else if (role === 'PROFESSEUR') {
+    if (!email.endsWith('@uae.ac.ma')) {
+      throw new Error('Un email professeur (@uae.ac.ma) est requis');
+    }
   }
 
   const salt = await bcrypt.genSalt(12);
@@ -25,6 +28,9 @@ async function register(email, password, nom, prenom, role, ecole) {
 
   const tokenEmail = crypto.randomBytes(32).toString('hex');
   const expiresEmail = new Date(Date.now() + 24 * 3600000);
+
+  // Pour un professionnel, l'école doit être null
+  const finalEcole = role === 'PROFESSIONNEL' ? null : (ecole ?? null);
 
   const user = await prisma.$transaction(async (tx) => {
     const created = await tx.utilisateur.create({
@@ -34,7 +40,7 @@ async function register(email, password, nom, prenom, role, ecole) {
         nom,
         prenom,
         role,
-        ecole: ecole ?? null,
+        ecole: finalEcole,
         status_compte: 'INACTIF',
         email_verifie: false,
         token_reinitialisation_email: tokenEmail,
@@ -105,6 +111,9 @@ async function creerUtilisateurAdmin({ nom, prenom, email, niveau_acces, ecole }
   const salt = await bcrypt.genSalt(12);
   const hashedPassword = await bcrypt.hash(motDePasseGenere, salt);
 
+  // Pour un super admin, l'école doit être null
+  const finalEcole = niveau_acces === 'SUPER_ADMIN' ? null : (ecole ?? null);
+
   const user = await prisma.$transaction(async (tx) => {
     const created = await tx.utilisateur.create({
       data: {
@@ -113,7 +122,7 @@ async function creerUtilisateurAdmin({ nom, prenom, email, niveau_acces, ecole }
         nom,
         prenom,
         role: 'ADMINISTRATEUR',
-        ecole: niveau_acces === 'SUPER_ADMIN' ? null : (ecole ?? null),
+        ecole: finalEcole,
         status_compte: 'ACTIF',
         email_verifie: true,
       },
@@ -150,7 +159,12 @@ async function login(email, password) {
     throw new Error('Email ou mot de passe incorrect');
   }
 
-  // 2. Vérifier le statut du compte
+  // 2. Vérifier si l'email est vérifié
+  if (!user.email_verifie) {
+    throw new Error('Veuillez vérifier votre email avant de vous connecter');
+  }
+
+  // 3. Vérifier le statut du compte
   if (user.status_compte === 'INACTIF') {
     throw new Error('Compte inactif. En attente de validation par un administrateur');
   }
