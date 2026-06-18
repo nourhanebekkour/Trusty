@@ -2,178 +2,50 @@
   <footer>
     <div class="footer-top">
       <div class="footer-brand">
-        <a href="#" class="nav-logo">
-          <div class="logo-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              <polyline points="9 12 11 14 15 10"/>
-            </svg>
-          </div>
-          TRUSTY
-        </a>
-        <p>Plateforme de Portfolios Numériques Adaptatifs et Certifiés.</p>
+        <a href="#" class="nav-logo">TRUSTY</a>
+        <p>Portfolios Numériques Adaptatifs et Certifiés</p>
       </div>
 
       <div class="footer-col">
         <h4>Plateforme</h4>
-        <ul>
-          <li><a href="#">Comment ça marche</a></li>
-          <li><a href="#">Sécurité &amp; Certification</a></li>
-          <li><a href="#">Tarifs</a></li>
-        </ul>
+        <a href="#">Comment ça marche</a>
+        <a href="#">Tarifs</a>
+        <a href="#">Fonctionnalités</a>
       </div>
 
       <div class="footer-col">
         <h4>Support</h4>
-        <ul>
-          <li><a href="#">Centre d'aide</a></li>
-          <li><a href="#">Contact</a></li>
-          <li><a href="#">Mentions Légales</a></li>
-        </ul>
+        <a href="#">Centre d'aide</a>
+        <a href="#">Contact</a>
+        <a href="#">Mentions Légales</a>
       </div>
 
       <div class="footer-col">
         <h4>Suivez-nous</h4>
-        <div class="social-btns">
-          <div class="social-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2"/>
-              <rect x="7" y="7" width="3" height="3"/><rect x="14" y="7" width="3" height="3"/><rect x="7" y="14" width="3" height="3"/>
+        <div class="social-links">
+          <button class="social-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+              <path d="M24 4.6a10 10 0 01-2.9.8 5 5 0 002.2-2.8c-1 .6-2 1-3.1 1.2a5 5 0 00-8.5 4.5A14.2 14.2 0 011.6 3.2a5 5 0 001.5 6.7 5 5 0 01-2.3-.6v.1a5 5 0 004 4.9 5 5 0 01-2.2.1 5 5 0 004.6 3.5A10 10 0 010 19.5a14.2 14.2 0 007.7 2.3c9.1 0 14.1-7.6 14.1-14.1v-.6A10 10 0 0024 4.6z"/>
             </svg>
-          </div>
-          <div class="social-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </button>
+          <button class="social-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+              <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.36V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.59 0 4.26 2.37 4.26 5.45v6.3zM5.34 7.43a2.06 2.06 0 110-4.12 2.06 2.06 0 010 4.12zm1.78 13.02H3.56V9h3.56v11.45zM22.23 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.46c.98 0 1.77-.77 1.77-1.72V1.72C24 .77 23.21 0 22.23 0z"/>
             </svg>
-          </div>
+          </button>
         </div>
       </div>
     </div>
 
     <div class="footer-bottom">
-      <p>© 2026 TRUSTY. Tous droits réservés.</p>
-      <p class="made-with">Made with care for the future of education.</p>
+      <span>© 2026 TRUSTY. Tous droits réservés.</span>
+      <span class="made-with">Made with care by the Trusty team</span>
     </div>
   </footer>
 </template>
 
 <script>
 export default {
-  name: 'FooterVue'
+  name: 'FooterVue',
 }
 </script>
-
-<style scoped>
-footer {
-  background: var(--surface);
-  color: var(--muted);
-  padding: 60px 5rem 32px;
-  border-top: 1px solid var(--border);
-}
-
-.footer-top {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 3rem;
-  margin-bottom: 48px;
-}
-
-.footer-brand .nav-logo {
-  color: var(--dark);
-  margin-bottom: 12px;
-  display: flex;
-}
-
-.footer-brand p {
-  font-size: 0.87rem;
-  line-height: 1.6;
-  color: var(--muted);
-  max-width: 260px;
-}
-
-.footer-col h4 {
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--dark);
-  margin-bottom: 16px;
-}
-
-.footer-col ul {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.footer-col a {
-  text-decoration: none;
-  color: var(--muted);
-  font-size: 0.87rem;
-  transition: color 0.2s;
-}
-
-.footer-col a:hover {
-  color: var(--mint);
-}
-
-.footer-bottom {
-  border-top: 1px solid var(--border);
-  padding-top: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.footer-bottom p {
-  font-size: 0.82rem;
-  color: var(--muted);
-  opacity: 0.6;
-}
-
-.made-with {
-  font-size: 0.75rem;
-  opacity: 0.4 !important;
-}
-
-.social-btns {
-  display: flex;
-  gap: 10px;
-  margin-top: 4px;
-}
-
-.social-btn {
-  width: 36px;
-  height: 36px;
-  background: var(--bg);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  cursor: pointer;
-  border: 1px solid var(--border);
-}
-
-.social-btn:hover {
-  background: rgba(214, 237, 232, 0.1);
-  border-color: rgba(214, 237, 232, 0.3);
-}
-
-.social-btn svg {
-  width: 16px;
-  height: 16px;
-  color: var(--muted);
-}
-
-@media (max-width: 900px) {
-  footer {
-    padding: 48px 2rem 32px;
-  }
-
-  .footer-top {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-</style>

@@ -28,7 +28,7 @@ async function sendEmail(reportHtml) {
     // envoi du mail
     await transporter.sendMail({
         from: process.env.GMAIL_USER,
-        to: 'nourhan221app@gmail.com , adjoint@gmail.com',
+        to: 'nourhan221app@gmail.com , younes.elamraoui2040@gmail.com',
         subject: 'Rapport de Tests Backend',
         html: reportHtml,
         attachments: [

@@ -67,7 +67,7 @@ export const listerActivitesParEtudiant = async (req, res) => {
 };
 
 export const listerActivitesAValider = async (req, res) => {
-    // #swagger.tags = ['Tableaux de Bord - Professeurs']
+    // #swagger.tags = ['Tableaux de Bord - Admin']
     // #swagger.summary = "Lister les activités en attente de ma validation"
     try {
         const activites = await activiteParascolaireService.recupererActivitesAValider(req.user.id);
@@ -98,8 +98,8 @@ export const modifierActivite = async (req, res) => {
 };
 
 export const validerActivite = async (req, res) => {
-    // #swagger.tags = ['Tableaux de Bord - Professeurs']
-    // #swagger.summary = 'Valider ou rejeter une activité (Professeur uniquement)'
+    // #swagger.tags = ['Tableaux de Bord - Admin']
+    // #swagger.summary = 'Valider ou rejeter une activité (Admin uniquement)'
     /* #swagger.parameters['id'] = { in: 'path' } */
     try {
         const { id } = req.params;

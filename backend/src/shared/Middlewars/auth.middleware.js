@@ -36,9 +36,9 @@ const authMiddleware = async (req, res, next) => {
     }
 
     // 4. Attacher les infos à la requête
-    req.user = { 
+    req.user = {
       id: user.id_utilisateur,
-      role: user.role 
+      role: user.role
     };
     next();
 

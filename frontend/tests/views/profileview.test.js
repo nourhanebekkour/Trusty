@@ -1,13 +1,14 @@
 import { mount, flushPromises } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createPinia, setActivePinia }  from 'pinia'
-import Profile from '@/views/Profile.vue'
+import Profile from '@/views/Etudiant/Profile.vue'
 
 // ─── Mocks des services ────────────────────────────────────────────────────────
 vi.mock('@/services/profileservices', () => ({
   getProfile:   vi.fn(),
-  patchProfile: vi.fn(),
+  saveProfile:  vi.fn(),
   addSkill:     vi.fn(),
+  uploadAvatar: vi.fn(),
 }))
 
 // ─── Mocks des composants enfants (stubs légers) ──────────────────────────────
@@ -47,7 +48,7 @@ vi.mock('@/stores/authstore', () => ({
   useAuthStore: vi.fn(() => ({ user: null })),
 }))
 
-import { getProfile, patchProfile, addSkill } from '@/services/profileservices'
+import { getProfile, saveProfile, addSkill } from '@/services/profileservices'
 import { useAuthStore } from '@/stores/authstore'
 
 // ─── Données de test ──────────────────────────────────────────────────────────
@@ -292,18 +293,18 @@ describe('Profile.vue (vue principale)', () => {
       expect(wrapper.find('.stub-edit-modal').exists()).toBe(false)
     })
 
-    it('appelle patchProfile avec l\'id utilisateur et le formData', async () => {
-      patchProfile.mockResolvedValue({ data: UPDATED_USER })
+    it('appelle saveProfile avec l\'id utilisateur et le formData', async () => {
+      saveProfile.mockResolvedValue({ data: UPDATED_USER })
       wrapper = mountView()
       await flushPromises()
       await wrapper.find('.stub-profile-card').trigger('click')
       await wrapper.find('.stub-save').trigger('click')
       await flushPromises()
-      expect(patchProfile).toHaveBeenCalledWith('user-001', expect.objectContaining({ prenom: 'Updated' }))
+      expect(saveProfile).toHaveBeenCalledWith('user-001', expect.objectContaining({ prenom: 'Updated' }))
     })
 
     it('met à jour user.value après sauvegarde réussie', async () => {
-      patchProfile.mockResolvedValue({ data: UPDATED_USER })
+      saveProfile.mockResolvedValue({ data: UPDATED_USER })
       wrapper = mountView()
       await flushPromises()
       await wrapper.find('.stub-profile-card').trigger('click')
@@ -313,7 +314,7 @@ describe('Profile.vue (vue principale)', () => {
     })
 
     it('ferme le modal après sauvegarde réussie', async () => {
-      patchProfile.mockResolvedValue({ data: UPDATED_USER })
+      saveProfile.mockResolvedValue({ data: UPDATED_USER })
       wrapper = mountView()
       await flushPromises()
       await wrapper.find('.stub-profile-card').trigger('click')
@@ -322,9 +323,9 @@ describe('Profile.vue (vue principale)', () => {
       expect(wrapper.find('.stub-edit-modal').exists()).toBe(false)
     })
 
-    it('affiche une alerte si patchProfile échoue', async () => {
+    it('affiche une alerte si saveProfile échoue', async () => {
       const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => {})
-      patchProfile.mockRejectedValue({ response: { data: { message: 'Erreur serveur' } } })
+      saveProfile.mockRejectedValue({ response: { data: { message: 'Erreur serveur' } } })
       wrapper = mountView()
       await flushPromises()
       await wrapper.find('.stub-profile-card').trigger('click')
@@ -336,7 +337,7 @@ describe('Profile.vue (vue principale)', () => {
 
     it('affiche l\'alerte par défaut si pas de message serveur', async () => {
       const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => {})
-      patchProfile.mockRejectedValue(new Error('fail'))
+      saveProfile.mockRejectedValue(new Error('fail'))
       wrapper = mountView()
       await flushPromises()
       await wrapper.find('.stub-profile-card').trigger('click')
@@ -377,7 +378,7 @@ describe('Profile.vue (vue principale)', () => {
       await wrapper.find('.stub-profile-skills').trigger('click')
       await wrapper.find('.stub-add-skill').trigger('click')
       await flushPromises()
-      expect(addSkill).toHaveBeenCalledWith('Docker')
+      expect(addSkill).toHaveBeenCalledWith('user-001', 'Docker')
     })
 
     it('ajoute la compétence à user.etudiant.competences', async () => {
@@ -415,7 +416,7 @@ describe('Profile.vue (vue principale)', () => {
   describe('Intégration : cycle de vie complet', () => {
     it('charge → édite → sauvegarde → affiche le profil mis à jour', async () => {
       getProfile.mockResolvedValue({ data: makeMockUser() })
-      patchProfile.mockResolvedValue({ data: makeUpdatedUser() })
+      saveProfile.mockResolvedValue({ data: makeUpdatedUser() })
 
       wrapper = mountView()
       await flushPromises()

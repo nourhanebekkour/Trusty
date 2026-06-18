@@ -16,8 +16,17 @@ export const registerSchema = z.object({
             }),
   ecole:    z.enum(ECOLES, { errorMap: () => ({ message: `École invalide. Valeurs : ${ECOLES.join(', ')}` }) }).optional(),
 }).refine(
-  (data) => data.role === 'PROFESSIONNEL' || !!data.ecole,
+  (data) => {
+    if (data.role === 'PROFESSIONNEL') return true;
+    return !!data.ecole;
+  },
   { message: 'L\'école est obligatoire pour les rôles ETUDIANT et PROFESSEUR', path: ['ecole'] }
+).refine(
+  (data) => {
+    if (data.role === 'PROFESSIONNEL' && data.ecole) return false;
+    return true;
+  },
+  { message: 'Un professionnel ne doit pas être rattaché à une école', path: ['ecole'] }
 );
 
 export const verifyEmailSchema = z.object({
@@ -32,7 +41,17 @@ export const createUserAdminSchema = z.object({
                   errorMap: () => ({ message: 'Niveau d\'accès invalide. Valeurs : SUPER_ADMIN, ADMIN' }),
                 }),
   ecole:        z.enum(ECOLES, { errorMap: () => ({ message: `École invalide` }) }).optional(),
-});
+}).refine(
+  (data) => {
+    if (data.niveau_acces === 'ADMIN' && !data.ecole) return false;
+    if (data.niveau_acces === 'SUPER_ADMIN' && data.ecole) return false;
+    return true;
+  },
+  { 
+    message: 'L\'école est obligatoire pour un ADMIN et doit être absente pour un SUPER_ADMIN', 
+    path: ['ecole'] 
+  }
+);
 
 export const requestAccountSchema = z.object({
   nom:     z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),

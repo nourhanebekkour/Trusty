@@ -10,19 +10,21 @@ export const useAuthStore = defineStore('auth', {
   }),
 
   getters: {
-    isAuthenticated: (state) => !!state.user,
-    isAdmin: (state) => state.user?.role === 'ADMINISTRATEUR',
-    isEtudiant: (state) => state.user?.role === 'ETUDIANT'
-  },
+  isAuthenticated: (state) => !!state.user,
+  isAdmin: (state) => state.user?.role === 'ADMINISTRATEUR',
+  isEtudiant: (state) => state.user?.role === 'ETUDIANT',
+  isProfesseur: (state) => state.user?.role === 'PROFESSEUR',      // vérifie le nom exact du rôle 
+  isProfessionnel: (state) => state.user?.role === 'PROFESSIONNEL' // idem
+},
 
   actions: {
 
     // Login 
-    async login(email, password) {
+    async login(email, password, remember = false) {
       this.loading = true
       this.error = null
       try {
-        await authService.login({ email, password })
+        await authService.login({ email, password, remember })
         await this.fetchUser()
         return true
       } catch (err) {
@@ -66,6 +68,21 @@ export const useAuthStore = defineStore('auth', {
         await api.post('/auth/logout') 
       } catch {}
       this.user = null
+    },
+
+    // Verify Email
+    async verifyEmail(token) {
+      this.loading = true
+      this.error = null
+      try {
+        await authService.verifyEmail(token)
+        return true
+      } catch (err) {
+        this.error = err.response?.data?.message || 'Erreur lors de la vérification'
+        throw err
+      } finally {
+        this.loading = false
+      }
     }
   }
 })
