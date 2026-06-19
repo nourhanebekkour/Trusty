@@ -26,8 +26,8 @@ const props = defineProps({
   border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 20px;
-  flex: 1;
-  min-width: 0;
+  flex: 1 1 180px;
+  min-width: 180px;
 }
 .stat-card--highlight {
   background: var(--color-surface);

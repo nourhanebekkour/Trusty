@@ -47,6 +47,7 @@ export const authService = {
     const safeCredentials = {
       email: normalizeEmail(credentials.email ?? ''),
       password: sanitizeString(credentials.password ?? '', SECURITY.MAX_PASSWORD_LENGTH),
+      remember: !!credentials.remember,
     }
 
     if (!safeCredentials.email || !safeCredentials.password) {

@@ -23,7 +23,7 @@
 
 <style scoped>
 .professor-footer {
-  margin-left: 235px;
+  margin-left: 0;
   background: #0D2B2B;
   color: #D6EDE8;
   padding: 28px;
@@ -43,5 +43,14 @@
   margin: 5px 0;
   color: #D6EDE8;
   opacity: 0.85;
+}
+
+@media (max-width: 768px) {
+  .professor-footer {
+    grid-template-columns: 1fr;
+    padding: 20px;
+    gap: 16px;
+    text-align: center;
+  }
 }
 </style>

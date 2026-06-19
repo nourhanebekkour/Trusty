@@ -2,6 +2,11 @@
   <div class="navbar-wrapper">
     <nav class="navbar">
       <div class="navbar-left">
+        <button class="hamburger-btn" @click="toggleMobile" aria-label="Menu">
+          <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
         <img :src="iconTrusty" class="logo-icon" alt="Trusty" />
         <span class="logo-text">TRUSTY</span>
       </div>
@@ -60,9 +65,11 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authstore'
 import { useThemeStore } from '@/stores/themeStore'
 import { getStudentNotifications } from '@/services/studentNotificationService'
+import { useSidebar } from '@/composables/useSidebar'
 import iconTrusty        from '@/assets/icons/trusty.svg'
 import iconNotifications from '@/assets/icons/notifications.svg'
 
+const { toggleMobile } = useSidebar()
 const authStore = useAuthStore()
 const theme = useThemeStore()
 const router = useRouter()
@@ -265,5 +272,56 @@ const userInitials = computed(() => {
 .user-avatar--img {
   object-fit: cover;
   background: transparent;
+}
+
+.hamburger-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.hamburger-btn:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 768px) {
+  .hamburger-btn {
+    display: flex;
+  }
+
+  .navbar {
+    padding: 0 12px;
+  }
+
+  .navbar-right {
+    gap: 8px;
+  }
+
+  .user-text {
+    display: none;
+  }
+
+  .user-avatar {
+    width: 34px;
+    height: 34px;
+    font-size: 11px;
+  }
+
+  .logo-text {
+    display: none;
+  }
+
+  .divider {
+    display: none;
+  }
 }
 </style>

@@ -365,4 +365,19 @@
   .prof-input {
     width: 100%;
   }
+
+  .prof-page {
+    padding: 16px 14px 40px;
+  }
+
+  .prof-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .prof-toolbar {
+    flex-direction: column;
+    gap: 10px;
+  }
 }

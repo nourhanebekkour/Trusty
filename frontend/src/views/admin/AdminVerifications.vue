@@ -208,4 +208,19 @@ onMounted(async () => {
   text-transform: uppercase;
   margin-bottom: 12px;
 }
+
+@media (max-width: 768px) {
+  .page { padding: 20px 16px; }
+  .page__header { flex-direction: column; gap: 12px; }
+  .page__title { font-size: 20px; }
+  .page__actions { width: 100%; }
+  .page__actions .btn { flex: 1; justify-content: center; }
+  .stats-row { flex-wrap: wrap; }
+}
+@media (max-width: 480px) {
+  .stats-row { flex-direction: column; }
+  .verif-card { flex-direction: column; }
+  .verif-card__header { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .verif-card__actions { flex-wrap: wrap; }
+}
 </style>

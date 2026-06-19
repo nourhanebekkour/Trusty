@@ -238,4 +238,12 @@ async function submit() {
 .skill-loading { color: #888; }
 .skill-error   { color: #c0392b; }
 .skill-no-result { font-size: 13px; color: #aaa; font-style: italic; }
+
+@media (max-width: 640px) {
+  .skill-modal { max-width: 100%; margin: 0; border-radius: 0; max-height: 100vh; height: 100vh; }
+  .skill-modal-header { padding: 16px 18px 12px; }
+  .skill-modal-body { padding: 18px; }
+  .skill-niveau-options { flex-wrap: wrap; }
+  .skill-niveau-btn { flex: 1 1 40%; }
+}
 </style>

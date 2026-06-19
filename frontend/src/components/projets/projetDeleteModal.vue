@@ -37,4 +37,12 @@ export default {
 </script>
 <style scoped>
    @import "@/assets/projet"
+
+   @media (max-width: 640px) {
+     .modal-sm { max-width: 100%; margin: 12px; }
+     .modal-body { padding: 18px; }
+     .modal-footer { padding: 14px 18px; }
+     .modal-footer .btn-cancel,
+     .modal-footer .btn-delete { flex: 1; justify-content: center; }
+   }
 </style>

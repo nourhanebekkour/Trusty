@@ -34,4 +34,9 @@ import SettingsPage from '@/components/settings/SettingsPage.vue'
   color: var(--color-text-secondary);
   margin-top: 4px;
 }
+
+@media (max-width: 768px) {
+  .page { padding: 20px 16px; }
+  .page__title { font-size: 20px; }
+}
 </style>

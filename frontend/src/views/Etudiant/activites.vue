@@ -236,4 +236,24 @@ onMounted(() => store.fetchActivites());
 }
 
 .add-btn-sm:hover { background: var(--color-accent-border); }
+
+@media (max-width: 768px) {
+  .page-wrapper {
+    padding: 1.25rem 1rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .page-title {
+    font-size: 1.1rem;
+  }
+
+  .add-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
 </style>

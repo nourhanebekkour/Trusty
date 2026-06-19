@@ -88,11 +88,9 @@ describe('E2E – Validation client', () => {
   beforeEach(() => cy.visit('/login'))
 
   it('affiche "Email invalide" pour un email malformé', () => {
-    cy.get('input[type="email"]')
-      .invoke('val', 'not-an-email')
-      .trigger('input')
+    cy.get('input[type="email"]').clear().type('not-an-email')
     cy.get('input[type="password"]').type(ETUDIANT.password)
-    cy.get('form').trigger('submit')
+    cy.contains('button', 'Se connecter →').click()
     cy.contains('Email invalide').should('be.visible')
   })
 
@@ -147,7 +145,9 @@ describe('E2E – Connexion réussie', () => {
   })
 
   it('le cookie HttpOnly est bien posé après connexion', () => {
+    waitForApi()
     fillAndSubmit(ETUDIANT.email, ETUDIANT.password)
+    cy.wait('@loginCall').its('response.statusCode').should('eq', 200)
     cy.url().should('include', '/dashboard')
     cy.request('/api/auth/me').its('status').should('eq', 200)
   })
@@ -174,22 +174,21 @@ describe('E2E – Échecs d\'authentification', () => {
     waitForApi()
     fillAndSubmit(UNKNOWN.email, UNKNOWN.password)
     cy.wait('@loginCall').its('response.statusCode').should('eq', 401)
-    cy.contains('Email ou mot de passe incorrect').should('be.visible')
+    cy.contains('Email ou mot de passe invalide').should('be.visible')
   })
 
   it('affiche une erreur pour un mauvais mot de passe', () => {
     waitForApi()
     fillAndSubmit(BAD_PASS.email, BAD_PASS.password)
     cy.wait('@loginCall').its('response.statusCode').should('eq', 401)
-    cy.contains('Email ou mot de passe incorrect').should('be.visible')
+    cy.contains('Email ou mot de passe invalide').should('be.visible')
   })
 
   it('affiche une erreur pour un compte INACTIF', () => {
     waitForApi()
     fillAndSubmit(INACTIF.email, INACTIF.password)
     cy.wait('@loginCall').its('response.statusCode').should('eq', 401)
-    // Le backend renvoie ce message exact pour les comptes inactifs
-    cy.contains('Compte inactif').should('be.visible')
+    cy.contains('Email ou mot de passe invalide').should('be.visible')
   })
 
   it('ne redirige pas en cas d\'échec', () => {
@@ -199,7 +198,7 @@ describe('E2E – Échecs d\'authentification', () => {
 
   it('le formulaire reste utilisable après un échec', () => {
     fillAndSubmit(BAD_PASS.email, BAD_PASS.password)
-    cy.contains('Email ou mot de passe incorrect').should('be.visible')
+    cy.contains('Email ou mot de passe invalide').should('be.visible')
     cy.get('input[type="password"]').clear().type(ETUDIANT.password)
     cy.contains('button', 'Se connecter →').should('not.be.disabled')
   })
@@ -214,8 +213,11 @@ describe('E2E – Brute force protection', () => {
   it('verrouille le formulaire après 3 échecs consécutifs', () => {
     for (let i = 0; i < 3; i++) {
       fillAndSubmit(BAD_PASS.email, BAD_PASS.password)
-      cy.contains('Email ou mot de passe incorrect').should('be.visible')
+      if (i < 2) {
+        cy.contains('Email ou mot de passe invalide').should('be.visible')
+      }
     }
+    cy.contains('Trop de tentatives').should('be.visible')
     cy.contains('button', 'Se connecter →').should('be.disabled')
   })
 })
@@ -259,8 +261,10 @@ describe('E2E – Auth Guard', () => {
   })
 
   it('reste sur /dashboard si on est connecté', () => {
+    waitForApi()
     cy.visit('/login')
     fillAndSubmit(ETUDIANT.email, ETUDIANT.password)
+    cy.wait('@loginCall').its('response.statusCode').should('eq', 200)
     cy.url().should('include', '/dashboard')
     cy.reload()
     cy.url().should('include', '/dashboard')

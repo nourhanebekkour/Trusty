@@ -1,11 +1,20 @@
 <template>
-  <aside class="sidebar" :class="{ collapsed: isCollapsed }">
+  <Teleport to="body">
+    <div v-if="isMobileOpen" class="sidebar-overlay" @click="closeMobile"></div>
+  </Teleport>
+
+  <aside class="sidebar" :class="{ collapsed: isCollapsed, 'mobile-open': isMobileOpen }">
     <div class="sidebar-header">
-      <button class="toggle-btn" @click="toggleSidebar">
+      <button class="toggle-btn" @click="toggleCollapsed">
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <line x1="3" y1="12" x2="21" y2="12"></line>
           <line x1="3" y1="6" x2="21" y2="6"></line>
           <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+      <button class="mobile-close-btn" @click="closeMobile">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
       <div v-show="!isCollapsed" class="sidebar-badge">
@@ -66,12 +75,14 @@
 import { ref } from 'vue'
 import { useAuthStore } from '@/stores/authstore'
 import { useRouter } from 'vue-router'
+import { useSidebar } from '@/composables/useSidebar'
 
-const isCollapsed = ref(false)
-const authStore   = useAuthStore()
-const router      = useRouter()
+const { isMobileOpen, closeMobile } = useSidebar()
+const isCollapsed   = ref(false)
+const authStore     = useAuthStore()
+const router        = useRouter()
 
-function toggleSidebar() {
+function toggleCollapsed() {
   isCollapsed.value = !isCollapsed.value
 }
 
@@ -215,5 +226,46 @@ async function handleLogout() {
 
 .logout-btn:hover {
   color: var(--color-danger);
+}
+
+.mobile-close-btn { display: none; }
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 998;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 999;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    width: 260px;
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  .sidebar-overlay {
+    display: block;
+  }
+  .mobile-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    margin-left: auto;
+  }
+  .toggle-btn { display: none; }
 }
 </style>

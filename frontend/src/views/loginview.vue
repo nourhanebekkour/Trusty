@@ -310,7 +310,7 @@ const handleLogin = async () => {
   try {
     const cleanEmail = normalizeEmail(email.value)
 
-    const success = await authStore.login(cleanEmail, password.value)
+    const success = await authStore.login(cleanEmail, password.value, remember.value)
 
     if (success) {
       loginAttempts.value = 0

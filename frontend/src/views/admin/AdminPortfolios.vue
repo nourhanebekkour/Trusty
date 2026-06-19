@@ -250,4 +250,19 @@ onMounted(async () => {
 .btn--icon { background: transparent; border: 1px solid var(--color-border); color: var(--color-text-tertiary); padding: 5px 9px; }
 .btn--icon:hover { background: var(--color-surface-hover); }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+@media (max-width: 768px) {
+  .page { padding: 20px 16px; }
+  .page__header { flex-direction: column; gap: 12px; }
+  .page__title { font-size: 20px; }
+  .page__actions { width: 100%; }
+  .page__actions .btn { flex: 1; justify-content: center; }
+  .stats-row { flex-wrap: wrap; }
+  .table-toolbar { flex-direction: column; gap: 12px; }
+  .search-box { width: 100%; }
+}
+@media (max-width: 480px) {
+  .stats-row { flex-direction: column; }
+  .table { display: block; overflow-x: auto; white-space: nowrap; }
+}
 </style>

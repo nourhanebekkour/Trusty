@@ -940,4 +940,5 @@
 @media (max-width: 760px) {
   .prof-stats-row { grid-template-columns: 1fr; }
   .prof-page-head { flex-direction: column; }
+  .prof-page { padding: 16px 14px 40px; }
 }

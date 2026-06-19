@@ -210,4 +210,18 @@ onMounted(async () => {
 .field input:focus, .field select:focus, .field textarea:focus {
   border-color: var(--color-accent);
 }
+
+@media (max-width: 768px) {
+  .page { padding: 20px 16px; }
+  .page__header { flex-direction: column; gap: 12px; }
+  .page__title { font-size: 20px; }
+  .page__actions { width: 100%; }
+  .page__actions .btn { flex: 1; justify-content: center; }
+  .stats-row { flex-wrap: wrap; }
+}
+@media (max-width: 480px) {
+  .stats-row { flex-direction: column; }
+  .table { display: block; overflow-x: auto; white-space: nowrap; }
+  .form-grid { grid-template-columns: 1fr; }
+}
 </style>

@@ -118,3 +118,13 @@
 .divider { border: none; border-top: 1px solid var(--color-border, #D6D0C4); margin: 8px 0; }
 
 .empty-state { text-align: center; color: var(--color-text-secondary, #6B7280); font-size: 13px; padding: 20px; }
+
+@media (max-width: 768px) {
+  .professor-page { padding: 16px 14px 40px; }
+  .columns { grid-template-columns: 1fr; }
+  .tab-row { overflow-x: auto; }
+  .card-header { flex-direction: column; gap: 8px; }
+  .proj-right { flex-direction: row; flex-wrap: wrap; }
+  .student-row { flex-wrap: wrap; }
+  .stage-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+}

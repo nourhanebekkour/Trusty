@@ -1,12 +1,21 @@
 <template>
-  <aside class="sidebar" :class="{ 'collapsed': isCollapsed }">
+  <Teleport to="body">
+    <div v-if="isMobileOpen" class="sidebar-overlay" @click="closeMobile"></div>
+  </Teleport>
+
+  <aside class="sidebar" :class="{ 'collapsed': isCollapsed, 'mobile-open': isMobileOpen }">
     
     <div class="sidebar-header">
-      <button class="toggle-btn" @click="toggleSidebar">
+      <button class="toggle-btn" @click="toggleCollapsed">
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <line x1="3" y1="12" x2="21" y2="12"></line>
           <line x1="3" y1="6" x2="21" y2="6"></line>
           <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+      <button class="mobile-close-btn" @click="closeMobile">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
     </div>
@@ -84,10 +93,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
 import { getActivePinia } from 'pinia'
 import { useAuthStore } from '@/stores/authstore'
 import { useRouter } from 'vue-router'
+import { useSidebar } from '@/composables/useSidebar'
 
 import iconDashboard        from '@/assets/icons/dashboard.svg'
 import iconProfile          from '@/assets/icons/profile.svg'
@@ -101,15 +110,11 @@ import iconNotifications    from '@/assets/icons/notifications.svg'
 import iconModeles          from '@/assets/icons/modeles.svg'
 import iconPortfolioComplet from '@/assets/icons/portfoliocomplet.svg'
 
-const isCollapsed = ref(false)
+const { isCollapsed, isMobileOpen, toggleCollapsed, closeMobile } = useSidebar()
 const emit        = defineEmits(['logout'])
 const activePinia = getActivePinia()
 const authStore   = activePinia ? useAuthStore(activePinia) : null
 const router      = useRouter()
-
-function toggleSidebar() {
-  isCollapsed.value = !isCollapsed.value
-}
 
 async function handleLogout() {
   emit('logout')
@@ -255,5 +260,67 @@ async function handleLogout() {
 
 .logout-btn:hover {
   color: var(--color-danger);
+}
+
+.mobile-close-btn {
+  display: none;
+  background: var(--color-surface-hover);
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-primary);
+  padding: 8px;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 98;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 99;
+    height: 100vh;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .sidebar.collapsed {
+    width: 235px;
+  }
+
+  .sidebar-header {
+    justify-content: space-between;
+  }
+
+  .toggle-btn {
+    display: none;
+  }
+
+  .mobile-close-btn {
+    display: flex;
+  }
+
+  .sidebar-nav {
+    padding: 8px;
+  }
 }
 </style>

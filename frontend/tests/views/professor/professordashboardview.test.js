@@ -10,6 +10,14 @@ vi.mock('@/stores/professorStore', () => ({
   normaliserNotif:     vi.fn(n => n),
 }))
 
+// Mock authStore with PROFESSEUR role so isAuthorized = true
+vi.mock('@/stores/authstore', () => ({
+  useAuthStore: vi.fn(() => ({
+    user: { id_utilisateur: 'prof1', role: 'PROFESSEUR' },
+    isAuthenticated: true,
+  })),
+}))
+
 import { useProfessorStore } from '@/stores/professorStore'
 import ProfessorView from '@/views/professor/ProfessorView.vue'
 

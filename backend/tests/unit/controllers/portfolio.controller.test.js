@@ -70,7 +70,8 @@ describe('getPublicPortfolio', () => {
 
     test('retourne 404 si portfolio non publié et non propriétaire', async () => {
         mockGetPortfolioByUrl.mockResolvedValue({
-            id_portfolio: 'p-1', id_etudiant: 'etu-1', est_publie: false, nombre_vues: 10
+            id_portfolio: 'p-1', id_etudiant: 'etu-1', est_publie: false, nombre_vues: 10,
+            etudiant: { utilisateur: { id_utilisateur: 'etu-1' } },
         });
         const req = makeReq({
             params: { url_publique: 'jean-dupont' },
@@ -86,7 +87,8 @@ describe('getPublicPortfolio', () => {
 
     test('retourne 200 si portfolio non publié mais propriétaire', async () => {
         const portfolio = {
-            id_portfolio: 'p-1', id_etudiant: 'etu-1', est_publie: false, nombre_vues: 5
+            id_portfolio: 'p-1', id_etudiant: 'etu-1', est_publie: false, nombre_vues: 5,
+            etudiant: { utilisateur: { id_utilisateur: 'etu-1' } },
         };
         mockGetPortfolioByUrl.mockResolvedValue(portfolio);
         mockIncrementPortfolioViews.mockResolvedValue(undefined);

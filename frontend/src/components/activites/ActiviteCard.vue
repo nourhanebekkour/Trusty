@@ -108,14 +108,14 @@ const typeLabels = {
 };
 
 const labelType = computed(() => typeLabels[props.activite.type_activite] || props.activite.type_activite);
-const labelStatut = computed(() => props.activite.statut === 'VALIDEE' ? 'Validée' : 'En attente');
+const labelStatut = computed(() => props.activite.statut === 'VALIDE' ? 'Validée' : 'En attente');
 
 const typeClass = computed(() => ({
   'EVENEMENT': 'type-evenement', 'HACKATHON': 'type-hackathon',
   'COMPETITION': 'type-competition', 'CLUB': 'type-club', 'ENGAGEMENT': 'type-engagement',
 }[props.activite.type_activite] || ''));
 
-const statutClass = computed(() => props.activite.statut === 'VALIDEE' ? 'statut-validee' : 'statut-attente');
+const statutClass = computed(() => props.activite.statut === 'VALIDE' ? 'statut-validee' : 'statut-attente');
 
 const formatDate = (d) => {
   if (!d) return '—';
@@ -352,5 +352,25 @@ async function onFileChange(e) {
   background: rgba(196, 90, 90, 0.1);
   border-color: rgba(196, 90, 90, 0.25);
   color: #c45a5a;
+}
+
+@media (max-width: 768px) {
+  .activite-card {
+    padding: 1rem;
+  }
+
+  .card-meta {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .card-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .footer-btn {
+    justify-content: center;
+  }
 }
 </style>

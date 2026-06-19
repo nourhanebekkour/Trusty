@@ -558,11 +558,16 @@
 
 /* ── Responsive ─────────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  .dashboard-page { padding: 20px 16px 40px; }
+  .page-header { flex-direction: column; }
+  .page-title { font-size: 1.35rem; }
   .project-grid,
   .stats-grid,
   .reco-grid {
     grid-template-columns: 1fr;
   }
+  .reco-featured__body { padding: 16px 18px; }
+  .btn { white-space: normal; }
 }
 
 @media (max-width: 580px) {
@@ -596,16 +601,4 @@
   }
 }
 
-@media (max-width: 900px) {
-  .layout {
-    flex-direction: column;
-  }
-  .sidebar {
-    width: 100%;
-  }
-  .stats-grid,
-  .project-grid,
-  .reco-grid {
-    grid-template-columns: 1fr;
-  }
-}
+

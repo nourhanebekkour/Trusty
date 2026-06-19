@@ -71,6 +71,9 @@
         class="search-input"
         type="text"
         placeholder="Rechercher une notification…"
+        maxlength="100"
+        autocomplete="off"
+        spellcheck="false"
       />
     </div>
 
@@ -97,7 +100,7 @@
     <!-- ── Error ── -->
     <div v-else-if="error" class="state-box state-error">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <span>{{ error }}</span>
+      <span>{{ sanitizedError }}</span>
       <button class="btn-ghost" @click="loadNotifications">Réessayer</button>
     </div>
 
@@ -132,7 +135,7 @@
         <!-- Content -->
         <div class="notif-content">
           <div class="notif-header">
-            <span class="notif-title">{{ notif.titre || 'Notification' }}</span>
+            <span class="notif-title">{{ sanitizeText(notif.titre) || 'Notification' }}</span>
             <div class="notif-meta">
               <span class="notif-type-badge" :class="typeBadgeClass(notif.type_notification)">
                 {{ formatType(notif.type_notification) }}
@@ -140,7 +143,7 @@
               <span class="notif-date">{{ formatRelativeDate(notif.date_creation) }}</span>
             </div>
           </div>
-          <p class="notif-message">{{ notif.message }}</p>
+          <p class="notif-message">{{ sanitizeText(notif.message) }}</p>
           <div class="notif-footer">
             <span class="notif-read-status">
               <template v-if="notif.est_lue">
@@ -165,7 +168,7 @@
               </button>
               <button
                 class="btn-delete"
-                @click.stop="handleDelete(notif)"
+                @click.stop="confirmDelete(notif)"
                 :disabled="actionLoadingId === notif.id_notification"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -179,10 +182,10 @@
 
     <!-- ── Details Panel ── -->
     <div v-if="selectedNotification" class="details-overlay" @click.self="selectedNotification = null">
-      <div class="details-panel">
+      <div class="details-panel" role="dialog" aria-modal="true" aria-labelledby="details-title">
         <div class="details-panel__header">
           <div>
-            <h2 class="details-panel__title">{{ selectedNotification.titre || 'Détail de la notification' }}</h2>
+            <h2 id="details-title" class="details-panel__title">{{ sanitizeText(selectedNotification.titre) || 'Détail de la notification' }}</h2>
             <p class="details-panel__subtitle">{{ formatDate(selectedNotification.date_creation) }}</p>
           </div>
           <button class="btn-ghost btn--sm" @click="selectedNotification = null">
@@ -214,7 +217,7 @@
 
           <div class="details-message-box">
             <p class="details-message-label">Message</p>
-            <p class="details-message">{{ selectedNotification.message }}</p>
+            <p class="details-message">{{ sanitizeText(selectedNotification.message) }}</p>
           </div>
         </div>
 
@@ -229,9 +232,28 @@
             <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             Marquer comme lu
           </button>
-          <button class="btn-delete" @click="handleDelete(selectedNotification)">
+          <button class="btn-delete" @click="confirmDelete(selectedNotification)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             Supprimer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Confirm Delete Modal ── -->
+    <div v-if="notifToDelete" class="details-overlay" @click.self="notifToDelete = null">
+      <div class="confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="confirm-icon">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
+        <h3 id="confirm-title" class="confirm-title">Supprimer la notification ?</h3>
+        <p class="confirm-message">Cette action est irréversible.</p>
+        <div class="confirm-actions">
+          <button class="btn-ghost" @click="notifToDelete = null">Annuler</button>
+          <button class="btn-delete btn-delete--confirm" @click="executeDelete">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Confirmer la suppression
           </button>
         </div>
       </div>
@@ -241,13 +263,18 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/authstore'
 import {
   getAdminNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
   deleteNotification,
 } from '@/services/adminNotificationService'
+
+const router = useRouter()
+const authStore = useAuthStore()
 
 const notifications = ref([])
 const loading = ref(false)
@@ -257,6 +284,60 @@ const activeTab = ref('all')
 const selectedNotification = ref(null)
 const actionLoadingId = ref(null)
 const markingAll = ref(false)
+const notifToDelete = ref(null) 
+
+// Guard de rôle admin ──
+onMounted(async () => {
+  if (!authStore.isAuthenticated) {
+    await router.replace('/login')
+    return
+  }
+  if (!authStore.isAdmin) {
+    await router.replace('/')
+    return
+  }
+  loadNotifications()
+})
+
+// Fermeture du panel avec Escape ──
+function handleKeydown(e) {
+  if (e.key === 'Escape') {
+    if (notifToDelete.value)        { notifToDelete.value = null; return }
+    if (selectedNotification.value) { selectedNotification.value = null }
+  }
+}
+onMounted(() => document.addEventListener('keydown', handleKeydown))
+onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
+
+// Sanitisation XSS ──
+function sanitizeText(value) {
+  if (!value || typeof value !== 'string') return ''
+  if (value.length > 2000) return value.slice(0, 2000) + '…'
+  const div = document.createElement('div')
+  div.appendChild(document.createTextNode(value))
+  return div.innerHTML
+}
+
+// Message d'erreur générique 
+const ERRORS = {
+  load:   'Impossible de charger les notifications.',
+  read:   'Impossible de marquer cette notification comme lue.',
+  delete: 'Impossible de supprimer cette notification.',
+  default:'Une erreur inattendue est survenue.',
+}
+
+const sanitizedError = computed(() => {
+  if (!error.value) return ''
+  if (error.value.length > 120) return ERRORS.default
+  return error.value
+})
+
+// Validation de l'ID notification
+function isValidId(id) {
+  if (id === null || id === undefined) return false
+  const n = Number(id)
+  return Number.isInteger(n) && n > 0
+}
 
 // ── Tabs ──
 const tabs = computed(() => {
@@ -271,19 +352,25 @@ const tabs = computed(() => {
 
 // ── Computed ──
 const unreadCount = computed(() => notifications.value.filter(n => !n.est_lue).length)
-const readCount = computed(() => notifications.value.filter(n => n.est_lue).length)
+const readCount   = computed(() => notifications.value.filter(n => n.est_lue).length)
 
 const todayCount = computed(() => {
   const today = new Date().toDateString()
   return notifications.value.filter(n => new Date(n.date_creation).toDateString() === today).length
 })
 
+// limite longueur et échappe les caractères regex ──
+const sanitizedSearch = computed(() => {
+  const raw = search.value.trim().slice(0, 100)
+  return raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+})
+
 const filteredNotifications = computed(() => {
-  const query = search.value.trim().toLowerCase()
+  const query = sanitizedSearch.value.toLowerCase()
   return notifications.value.filter(notification => {
-    const title = (notification.titre || '').toLowerCase()
+    const title   = (notification.titre || '').toLowerCase()
     const message = (notification.message || '').toLowerCase()
-    const type = notification.type_notification || ''
+    const type    = notification.type_notification || ''
     const matchesSearch = !query || title.includes(query) || message.includes(query)
     const matchesTab =
       activeTab.value === 'all' ||
@@ -367,14 +454,19 @@ function tabCount(key) {
 
 function formatDate(date) {
   if (!date) return 'Date inconnue'
-  return new Date(date).toLocaleString('fr-FR', {
+  const d = new Date(date)
+  if (isNaN(d.getTime())) return 'Date invalide'
+  return d.toLocaleString('fr-FR', {
     day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
   })
 }
 
 function formatRelativeDate(date) {
   if (!date) return '—'
-  const diff = Date.now() - new Date(date).getTime()
+  const d = new Date(date)
+  if (isNaN(d.getTime())) return '—'
+  const diff  = Date.now() - d.getTime()
+  if (diff < 0) return 'À l\'instant'   // 8. Date future : ne pas afficher de valeur négative
   const mins  = Math.floor(diff / 60000)
   const hours = Math.floor(diff / 3600000)
   const days  = Math.floor(diff / 86400000)
@@ -383,7 +475,20 @@ function formatRelativeDate(date) {
   if (hours < 24) return `Il y a ${hours} h`
   if (days === 1) return 'Hier'
   if (days < 7)   return `Il y a ${days} jours`
-  return new Date(date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+// Normalisation des données reçues du backend ──
+function normalizeNotification(raw) {
+  if (!raw || typeof raw !== 'object') return null
+  return {
+    id_notification:    raw.id_notification ?? raw.id ?? null,
+    titre:              typeof raw.titre   === 'string' ? raw.titre.slice(0, 200)   : '',
+    message:            typeof raw.message === 'string' ? raw.message.slice(0, 2000): '',
+    type_notification:  typeof raw.type_notification === 'string' ? raw.type_notification : '',
+    est_lue:            Boolean(raw.est_lue),
+    date_creation:      raw.date_creation ?? null,
+  }
 }
 
 // ── API ──
@@ -393,17 +498,33 @@ async function loadNotifications() {
   error.value = null
   try {
     const data = await getAdminNotifications()
-    notifications.value = (Array.isArray(data) ? data : []).sort((a, b) => {
-      if (a.est_lue !== b.est_lue) return a.est_lue ? 1 : -1
-      return new Date(b.date_creation) - new Date(a.date_creation)
-    })
+    // Normaliser et filtrer les entrées invalides avant de stocker
+    const raw = Array.isArray(data) ? data : []
+    notifications.value = raw
+      .map(normalizeNotification)
+      .filter(n => n !== null && isValidId(n.id_notification))
+      .sort((a, b) => {
+        if (a.est_lue !== b.est_lue) return a.est_lue ? 1 : -1
+        return new Date(b.date_creation) - new Date(a.date_creation)
+      })
   } catch (err) {
-    error.value = err.response?.data?.message || 'Impossible de charger les notifications.'
-  } finally { loading.value = false }
+    if (import.meta.env.DEV) console.error('[AdminNotifications] loadNotifications:', err)
+    // Message générique selon le statut HTTP
+    const status = err.response?.status
+    if (status === 401 || status === 403) {
+      await router.replace('/login')
+      return
+    }
+    error.value = ERRORS.load
+  } finally {
+    loading.value = false
+  }
 }
 
 async function handleMarkAsRead(notification) {
   if (!notification?.id_notification || notification.est_lue) return
+  // Validation de l'ID avant l'appel
+  if (!isValidId(notification.id_notification)) return
   actionLoadingId.value = notification.id_notification
   try {
     await markNotificationAsRead(notification.id_notification)
@@ -416,8 +537,13 @@ async function handleMarkAsRead(notification) {
       selectedNotification.value = { ...selectedNotification.value, est_lue: true }
     }
   } catch (err) {
-    error.value = err.response?.data?.message || 'Impossible de marquer cette notification comme lue.'
-  } finally { actionLoadingId.value = null }
+    if (import.meta.env.DEV) console.error('[AdminNotifications] handleMarkAsRead:', err)
+    const status = err.response?.status
+    if (status === 401 || status === 403) { await router.replace('/login'); return }
+    error.value = ERRORS.read
+  } finally {
+    actionLoadingId.value = null
+  }
 }
 
 async function handleMarkAllAsRead() {
@@ -425,19 +551,44 @@ async function handleMarkAllAsRead() {
   try {
     await markAllNotificationsAsRead(notifications.value)
     notifications.value = notifications.value.map(n => ({ ...n, est_lue: true }))
-  } catch (_) {}
-  finally { markingAll.value = false }
+  } catch (err) {
+    if (import.meta.env.DEV) console.error('[AdminNotifications] handleMarkAllAsRead:', err)
+  } finally {
+    markingAll.value = false
+  }
 }
 
-async function handleDelete(notification) {
+// Suppression en deux étapes avec modal de confirmation ──
+function confirmDelete(notification) {
   if (!notification) return
-  const id = notification.id_notification || notification.id
+  notifToDelete.value = notification
+}
+
+async function executeDelete() {
+  const notification = notifToDelete.value
+  if (!notification) return
+  const id = notification.id_notification ?? notification.id
+  // Validation de l'ID avant suppression
+  if (!isValidId(id)) {
+    notifToDelete.value = null
+    return
+  }
+  notifToDelete.value = null
   try {
     await deleteNotification(id)
-  } catch (_) {}
-  notifications.value = notifications.value.filter(n => (n.id_notification || n.id) !== id)
-  if (selectedNotification.value === notification ||
-      selectedNotification.value?.id_notification === id) {
+  } catch (err) {
+    if (import.meta.env.DEV) console.error('[AdminNotifications] executeDelete:', err)
+    const status = err.response?.status
+    if (status === 401 || status === 403) { await router.replace('/login'); return }
+    error.value = ERRORS.delete
+  }
+  notifications.value = notifications.value.filter(
+    n => (n.id_notification ?? n.id) !== id
+  )
+  if (
+    selectedNotification.value === notification ||
+    (selectedNotification.value?.id_notification ?? selectedNotification.value?.id) === id
+  ) {
     selectedNotification.value = null
   }
 }
@@ -445,8 +596,6 @@ async function handleDelete(notification) {
 function openDetails(notification) {
   selectedNotification.value = notification
 }
-
-onMounted(loadNotifications)
 </script>
 
 <style scoped>
@@ -623,7 +772,6 @@ onMounted(loadNotifications)
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Unread dot */
 .unread-dot {
   position: absolute; top: 14px; right: 14px;
   width: 8px; height: 8px; border-radius: 50%;
@@ -633,7 +781,6 @@ onMounted(loadNotifications)
 }
 @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
 
-/* Icon */
 .notif-icon {
   width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
@@ -651,7 +798,6 @@ onMounted(loadNotifications)
 .icon-compte  { background: rgba(140,80,120,0.15);   color: #b05a8a; }
 .icon-default { background: var(--color-surface-hover); color: var(--color-text-secondary); }
 
-/* Content */
 .notif-content { flex: 1; min-width: 0; }
 
 .notif-header {
@@ -692,7 +838,6 @@ onMounted(loadNotifications)
   overflow: hidden;
 }
 
-/* Footer */
 .notif-footer {
   display: flex; align-items: center;
   justify-content: space-between; gap: 0.75rem;
@@ -798,6 +943,32 @@ onMounted(loadNotifications)
   border-top: 1px solid var(--color-border);
 }
 
+/* ── Confirm Modal ── */
+.confirm-modal {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px; padding: 2rem 1.75rem;
+  width: 360px; max-width: 90vw;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0.75rem; text-align: center;
+  animation: slideUp 0.2s ease;
+}
+@keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+.confirm-icon { color: var(--color-danger); opacity: 0.8; }
+.confirm-title {
+  font-size: 1rem; font-weight: 700; color: var(--color-text-primary); margin: 0;
+}
+.confirm-message {
+  font-size: 0.84rem; color: var(--color-text-secondary); margin: 0;
+}
+.confirm-actions {
+  display: flex; gap: 0.6rem; margin-top: 0.5rem; justify-content: center;
+}
+.btn-delete--confirm {
+  padding: 0.5rem 1.1rem; font-size: 0.82rem; font-weight: 600;
+}
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .notifications-page { padding: 1.25rem 1rem 3rem; }
@@ -811,5 +982,6 @@ onMounted(loadNotifications)
   .notif-meta { align-items: flex-start; }
   .notif-footer { flex-direction: column; align-items: flex-start; }
   .details-panel { width: 100%; }
+  .confirm-modal { width: 100%; border-radius: 12px 12px 0 0; }
 }
 </style>

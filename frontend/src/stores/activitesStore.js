@@ -29,7 +29,7 @@ export const useActivitesStore = defineStore('activites', {
     },
     validees(state) {
       return Array.isArray(state.activites)
-        ? state.activites.filter((a) => a.statut === 'VALIDEE').length : 0;
+        ? state.activites.filter((a) => a.statut === 'VALIDE').length : 0;
     },
     enAttente(state) {
       return Array.isArray(state.activites)
@@ -66,15 +66,10 @@ export const useActivitesStore = defineStore('activites', {
       this.loading = true;
       try {
         const newActivite = await activitesService.createActivite(this.currentEtudiantId, data);
-        this.activites.unshift(newActivite);
+        const created = newActivite?.data ?? newActivite;
+        this.activites.unshift(normalizeActivite(created));
       } catch (e) {
-        this.activites.unshift({
-          id: Date.now().toString(),
-          ...data,
-          statut: 'EN_ATTENTE',
-          has_attestation: false,
-          est_public: data.est_public ?? true,
-        });
+        this.error = e.response?.data?.message || "Erreur lors de la création de l'activité";
       } finally {
         this.loading = false;
       }

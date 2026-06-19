@@ -641,4 +641,15 @@ export default {
 .modal-fade-leave-to {
   opacity: 0;
 }
+
+@media (max-width: 640px) {
+  .detail-modal { max-width: 100%; margin: 0; border-radius: 0; max-height: 100vh; height: 100vh; }
+  .detail-header { padding: 16px 18px; flex-wrap: wrap; gap: 8px; }
+  .detail-body { padding: 0; }
+  .detail-scroll { padding: 16px 18px; }
+  .detail-grid { grid-template-columns: 1fr; padding: 8px 18px; }
+  .detail-section { padding: 12px 0; }
+  .detail-footer { padding: 14px 18px; }
+  .detail-footer .btn { flex: 1; justify-content: center; }
+}
 </style>

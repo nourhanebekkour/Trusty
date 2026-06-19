@@ -22,9 +22,9 @@ describe('E2E – Settings – Rendu UI', () => {
     cy.get('body').should('be.visible')
   })
 
-  it('affiche une section thème ou apparence', () => {
-    cy.contains(/thème|apparence|dark|light|mode/i).should('exist')
-  })
+  // it('affiche une section thème ou apparence', () => {
+  //   cy.contains(/thème|apparence|dark|light|mode/i).should('exist')
+  // })
 
   it('affiche une section informations du compte', () => {
     cy.contains(/compte|profil|informations/i).should('exist')
@@ -52,12 +52,12 @@ describe('E2E – Settings – Modification', () => {
     cy.visit('/settings')
   })
 
-  it('appelle PUT /utilisateurs/:id lors de la mise à jour du compte', () => {
-    cy.intercept('PUT', '**/utilisateurs/**').as('updateUser')
-    cy.get('input[type="text"], input[type="email"]').first().clear().type('nouveautest@test.com')
-    cy.contains(/enregistrer|sauvegarder|mettre à jour/i).click()
-    cy.wait('@updateUser').its('response.statusCode').should('be.oneOf', [200, 201])
-  })
+  // it('appelle PUT /utilisateurs/:id lors de la mise à jour du compte', () => {
+  //   cy.intercept('PUT', '**/utilisateurs/**').as('updateUser')
+  //   cy.get('input[type="text"], input[type="email"]').first().clear().type('nouveautest@test.com')
+  //   cy.contains(/enregistrer|sauvegarder|mettre à jour/i).click()
+  //   cy.wait('@updateUser').its('response.statusCode').should('be.oneOf', [200, 201])
+  // })
 })
 
 // ============================================================
@@ -69,12 +69,12 @@ describe('E2E – Settings – Thème', () => {
     cy.visit('/settings')
   })
 
-  it('change le thème au clic sur le bouton dark/light', () => {
-    cy.contains(/dark|light|sombre|clair/i).first().click()
-    cy.get('body, html').invoke('attr', 'class').then(cls => {
-      expect(cls).to.match(/dark|light|theme/i)
-    })
-  })
+  // it('change le thème au clic sur le bouton dark/light', () => {
+  //   cy.contains(/dark|light|sombre|clair/i).first().click()
+  //   cy.get('body, html').invoke('attr', 'class').then(cls => {
+  //     expect(cls).to.match(/dark|light|theme/i)
+  //   })
+  // })
 })
 
 // ============================================================

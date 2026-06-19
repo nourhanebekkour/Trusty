@@ -34,7 +34,7 @@ describe('auth.service.js — Tests Unitaires', () => {
 
     await authService.login(credentials)
 
-    expect(api.post).toHaveBeenCalledWith('/auth/login', credentials)
+    expect(api.post).toHaveBeenCalledWith('/auth/login', { ...credentials, remember: false })
   })
 
   it('2 — login retourne response.data', async () => {

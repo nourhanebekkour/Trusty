@@ -52,7 +52,7 @@
         v-if="showSkillModal"
         :user="user"
         @close="showSkillModal = false"
-        @added="handleAddSkill"
+        @added="onSkillAdded"
       />
     </template>
   </div>
@@ -112,7 +112,7 @@ const closeEditModal = () => { showEditModal.value = false }
 const onSaveProfile = async (formData) => {
   saving.value = true
   try {
-    const res      = await patchProfile(user.value.id_utilisateur, formData)
+    const res      = await saveProfile(user.value.id_utilisateur, formData)
     user.value     = res.data
     authStore.user = res.data
     closeEditModal()
@@ -142,16 +142,16 @@ const onAvatarChange = async (file) => {
 
 // ── Compétences ───────────────────────────────────────────────────────────────
 
-const onSkillAdded = async (skillName) => {
+const onSkillAdded = async ({ competence, niveau_maitrise = 'DEBUTANT' }) => {
+  const idEtudiant = user.value?.etudiant?.id_etudiant ?? user.value?.id_utilisateur
   try {
-    const res = await addSkill(skillName)
+    const res = await addSkill(idEtudiant, competence.nom, niveau_maitrise)
     if (!user.value.etudiant) user.value.etudiant = {}
     if (!user.value.etudiant.competences) user.value.etudiant.competences = []
     user.value.etudiant.competences.push(res.data)
-
     showSkillModal.value = false
   } catch (e) {
-    console.error('[handleAddSkill] :', e.response?.status, e.response?.data)
+    console.error('[onSkillAdded] :', e.response?.status, e.response?.data)
     alert(e.response?.data?.message || "Impossible d'ajouter cette compétence.")
   }
 }

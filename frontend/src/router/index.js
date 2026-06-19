@@ -43,6 +43,7 @@ const router = createRouter({
       path: '/register',
       name: 'register',
       component: registerview,
+      meta: { guestOnly: true },
     },
     {
       path: '/login',
