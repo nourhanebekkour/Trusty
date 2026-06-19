@@ -178,13 +178,14 @@ jobs:
       - run: npm ci
       - name: Générer Prisma Client
         run: npx prisma generate
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/trusty_dummy"
       - name: Start backend (smoke test)
         run: |
           npm start &
           SERVER_PID=$!
           sleep 8
           kill $SERVER_PID || true
-
   frontend-run:
     name: Frontend — Run
     runs-on: ubuntu-latest
