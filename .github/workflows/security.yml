@@ -4,9 +4,9 @@ name: Security Checks — Self-Hosted
 on:
   workflow_call: {}
   push:
-    branches: [main, mirroring]
+    branches: [main]
   pull_request:
-    branches: [main, mirroring]
+    branches: [main]
 
 permissions:
   contents: read
