@@ -160,7 +160,7 @@ jobs:
   # PHASE 3 — RUN
   # ════════════════════════════════════════════════════════
 
-  backend-run:
+ backend-run:
     name: Backend — Run
     runs-on: ubuntu-latest
     needs: backend-test
@@ -176,6 +176,8 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
+      - name: Générer Prisma Client
+        run: npx prisma generate
       - name: Start backend (smoke test)
         run: |
           npm start &
