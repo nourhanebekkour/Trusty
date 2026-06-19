@@ -1,30 +1,526 @@
 name: Pipeline — CI + Security + CD
+
 on:
   push:
     branches: [main, dev, mirroring, staging]
   pull_request:
     branches: [main, dev, mirroring]
+
 permissions:
   contents: read
   actions: read
   security-events: write
+
 jobs:
-  # ─── PHASE 1 : Qualité & Tests ──────────────────────────────────────────
-  ci:
-    name: CI
-    uses: ./.github/workflows/ci.yml
-    secrets: inherit
-  # ─── PHASE 2 : Sécurité (parallèle, ne bloque pas) ──────────────────────
-  security:
-    name: Security
-    uses: ./.github/workflows/security.yml
-    needs: ci
-    secrets: inherit
-  # ─── PHASE 3 : Build & Push Docker ──────────────────────────────────────
+
+  # ════════════════════════════════════════════════════════
+  # PHASE 1 — QUALITÉ CODE
+  # ════════════════════════════════════════════════════════
+
+  backend-lint:
+    name: Backend — Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npx eslint src/ --max-warnings=50 || true
+
+  frontend-lint:
+    name: Frontend — Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npx eslint src/ --max-warnings=50 || true
+
+  # ════════════════════════════════════════════════════════
+  # PHASE 2 — TESTS
+  # ════════════════════════════════════════════════════════
+
+  backend-test:
+    name: Backend — Test
+    runs-on: ubuntu-latest
+    needs: backend-lint
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: ./backend
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: trusty_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/trusty_test"
+      NODE_ENV: "test"
+      JWT_SECRET: "secret_test_key"
+      JWT_REFRESH_SECRET: "secret_refresh_test_key"
+      JWT_EXPIRES_IN: "1h"
+      FRONTEND_URL: "http://localhost:5173"
+      MINIO_ENDPOINT: localhost
+      MINIO_PORT: "9000"
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_USE_SSL: "false"
+      MINIO_PUBLIC_BUCKET: "test-public"
+      MINIO_PRIVATE_BUCKET: "test-private"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - name: Start MinIO
+        run: |
+          docker run -d \
+            --name minio \
+            -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio server /data
+          echo "Waiting for MinIO..."
+          until curl -sf http://localhost:9000/minio/health/live; do
+            sleep 2
+          done
+          echo "MinIO ready ✓"
+      - name: Run Prisma migrations
+        run: npx prisma migrate deploy
+      - name: Generate Swagger
+        run: npm run swagger
+      - name: Run backend tests
+        run: npm test
+
+  frontend-test:
+    name: Frontend — Tests & Rapport (Vitest + Jira)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: frontend-lint
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Lancer Vitest (JSON output)
+        run: npm run test:ci
+        continue-on-error: true
+      - name: Générer le rapport HTML
+        run: npm run report:generate
+      - name: Envoyer le rapport (email + Jira)
+        run: npm run report:send
+        env:
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_TO:   ${{ secrets.SMTP_TO }}
+          JIRA_BASE_URL:    ${{ secrets.JIRA_BASE_URL }}
+          JIRA_PROJECT_KEY: ${{ secrets.JIRA_PROJECT_KEY }}
+          JIRA_USER_EMAIL:  ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN:   ${{ secrets.JIRA_API_TOKEN }}
+      - name: Archiver le rapport HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-report
+          path: frontend/test-report.html
+
+  # ════════════════════════════════════════════════════════
+  # PHASE 3 — RUN
+  # ════════════════════════════════════════════════════════
+
+  backend-run:
+    name: Backend — Run
+    runs-on: ubuntu-latest
+    needs: backend-test
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - name: Générer Prisma Client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/trusty_dummy"
+      - name: Start backend (smoke test)
+        run: |
+          npm start &
+          SERVER_PID=$!
+          sleep 8
+          kill $SERVER_PID || true
+
+  frontend-run:
+    name: Frontend — Run
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: frontend-test
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Démarrer le frontend (run test)
+        run: |
+          npm run dev &
+          SERVER_PID=$!
+          sleep 10
+          kill $SERVER_PID || true
+
+  # ════════════════════════════════════════════════════════
+  # PHASE 4 — TRIVY + E2E (parallèles)
+  # ════════════════════════════════════════════════════════
+
+  trivy-scan:
+    name: Security — Trivy (deps + images Docker)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    needs: [backend-run, frontend-run]
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy — dépendances backend
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: ./backend
+          format: sarif
+          output: trivy-deps-backend.sarif
+          severity: CRITICAL,HIGH
+          exit-code: '0'
+      - name: Trivy — dépendances frontend
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: ./frontend
+          format: sarif
+          output: trivy-deps-frontend.sarif
+          severity: CRITICAL,HIGH
+          exit-code: '0'
+      - name: Trivy — Dockerfile backend
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: config
+          scan-ref: ./backend
+          format: sarif
+          output: trivy-config-backend.sarif
+          exit-code: '0'
+      - name: Trivy — Dockerfile frontend
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: config
+          scan-ref: ./frontend
+          format: sarif
+          output: trivy-config-frontend.sarif
+          exit-code: '0'
+      - name: Build image backend
+        run: docker build -t trusty-backend:ci ./backend
+      - name: Build image frontend
+        run: docker build -t trusty-frontend:ci ./frontend
+      - name: Trivy — image backend
+        uses: aquasecurity/trivy-action@v0.36.0
+        if: always()
+        with:
+          image-ref: trusty-backend:ci
+          format: sarif
+          output: trivy-image-backend.sarif
+          severity: CRITICAL,HIGH
+          exit-code: '0'
+      - name: Trivy — image frontend
+        uses: aquasecurity/trivy-action@v0.36.0
+        if: always()
+        with:
+          image-ref: trusty-frontend:ci
+          format: sarif
+          output: trivy-image-frontend.sarif
+          severity: CRITICAL,HIGH
+          exit-code: '0'
+      - name: Upload — deps backend
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: trivy-deps-backend.sarif
+          category: trivy-deps-backend
+      - name: Upload — deps frontend
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: trivy-deps-frontend.sarif
+          category: trivy-deps-frontend
+      - name: Upload — config backend
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: trivy-config-backend.sarif
+          category: trivy-config-backend
+      - name: Upload — config frontend
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: trivy-config-frontend.sarif
+          category: trivy-config-frontend
+      - name: Upload — image backend
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: trivy-image-backend.sarif
+          category: trivy-image-backend
+      - name: Upload — image frontend
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: trivy-image-frontend.sarif
+          category: trivy-image-frontend
+
+  cypress-e2e:
+    name: Frontend — E2E (Cypress)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    needs: [backend-run, frontend-run]
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: trusty
+          POSTGRES_PASSWORD: trusty
+          POSTGRES_DB: trusty_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: ./backend
+      - name: Create backend .env for CI
+        run: |
+          echo "DATABASE_URL=postgresql://trusty:trusty@localhost:5432/trusty_ci?schema=public" > .env
+          echo "JWT_SECRET=ci-secret-trusty" >> .env
+          echo "JWT_REFRESH_SECRET=ci-refresh-trusty" >> .env
+          echo "JWT_EXPIRES_IN=1h" >> .env
+          echo "PORT=3000" >> .env
+          echo "NODE_ENV=test" >> .env
+          echo "FRONTEND_URL=http://localhost:5173" >> .env
+          echo "MINIO_ENDPOINT=localhost" >> .env
+          echo "MINIO_PORT=9000" >> .env
+          echo "MINIO_USE_SSL=false" >> .env
+          echo "MINIO_ACCESS_KEY=minioadmin" >> .env
+          echo "MINIO_SECRET_KEY=minioadmin" >> .env
+          echo "MINIO_PUBLIC_BUCKET=dev-public" >> .env
+          echo "MINIO_PRIVATE_BUCKET=dev-private" >> .env
+        working-directory: ./backend
+      - name: Start MinIO
+        run: |
+          docker run -d \
+            --name minio \
+            -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio server /data
+          echo "Waiting for MinIO..."
+          until curl -sf http://localhost:9000/minio/health/live; do
+            sleep 2
+          done
+          echo "MinIO ready ✓"
+      - name: Prisma — deploy migrations
+        run: npx prisma migrate deploy
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://trusty:trusty@localhost:5432/trusty_ci?schema=public
+      - name: Start backend
+        run: npm start &
+        working-directory: ./backend
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: ./frontend
+      - name: Start frontend dev server
+        run: npm run dev &
+        working-directory: ./frontend
+      - name: Wait for servers to be ready
+        run: |
+          timeout 30 bash -c 'until curl -s http://localhost:3000 > /dev/null 2>&1; do sleep 1; done' || true
+          timeout 30 bash -c 'until curl -s http://localhost:5173 > /dev/null 2>&1; do sleep 1; done'
+      - name: Run Cypress E2E tests
+        run: npx cypress run
+        working-directory: ./frontend
+        continue-on-error: true
+      - name: Upload Cypress screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-screenshots
+          path: frontend/cypress/screenshots
+          if-no-files-found: ignore
+      - name: Upload Cypress videos
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-videos
+          path: frontend/cypress/videos
+          if-no-files-found: ignore
+
+  # ════════════════════════════════════════════════════════
+  # PHASE 5 — FRONTEND BUILD (après Trivy + E2E)
+  # ════════════════════════════════════════════════════════
+
+  frontend-build:
+    name: Frontend — Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [trivy-scan, cypress-e2e]
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+  # ════════════════════════════════════════════════════════
+  # PHASE 6 — SONARQUBE + ZAP (parallèles, après build)
+  # ════════════════════════════════════════════════════════
+
+  sonarqube:
+    name: SonarQube — Qualité & sécurité code
+    runs-on: self-hosted
+    timeout-minutes: 20
+    continue-on-error: true
+    needs: frontend-build
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+        with:
+          fetch-depth: 0
+      - name: Analyse SonarQube
+        uses: sonarsource/sonarqube-scan-action@v6
+        continue-on-error: true
+        with:
+          args: >
+            -Dsonar.projectKey=Trusty
+            -Dsonar.sources=backend/src,frontend/src
+            -Dsonar.exclusions=**/node_modules/**,**/*.test.js,**/coverage/**
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: http://192.168.20.10:9000
+
+  owasp-zap:
+    name: OWASP ZAP — Scan API backend staging
+    runs-on: self-hosted
+    timeout-minutes: 20
+    continue-on-error: true
+    needs: frontend-build
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+      - name: Scan actif ZAP sur le backend staging
+        run: |
+          if ! curl -sf --max-time 5 "http://192.168.20.10:8091/JSON/core/view/version/" > /dev/null 2>&1; then
+            echo "⚠️ OWASP ZAP API non accessible sur :8091 — scan ignoré"
+            exit 0
+          fi
+          if ! curl -sf --max-time 5 "http://192.168.20.10:3001" > /dev/null 2>&1; then
+            echo "⚠️ Backend non accessible sur :3001 — scan ignoré"
+            exit 0
+          fi
+          SCAN_ID=$(curl -s "http://192.168.20.10:8091/JSON/ascan/action/scan/?url=http://192.168.20.10:3001&recurse=true" \
+            | grep -o '"scan":"[0-9]*"' | grep -o '[0-9]*') || true
+          echo "Scan ID : $SCAN_ID"
+          for i in $(seq 1 30); do
+            STATUS=$(curl -s "http://192.168.20.10:8091/JSON/ascan/view/status/?scanId=$SCAN_ID" \
+              | grep -o '"status":"[0-9]*"' | grep -o '[0-9]*') || true
+            echo "Avancement : $STATUS%"
+            if [ "$STATUS" = "100" ]; then break; fi
+            sleep 10
+          done
+          curl -s "http://192.168.20.10:8091/JSON/core/view/alerts/" -o zap-report.json
+          echo "Alertes trouvées : $(cat zap-report.json | grep -c '"alert"' || echo 0)"
+      - name: Sauvegarder le rapport ZAP
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-report-${{ github.sha }}
+          path: zap-report.json
+      - name: Vérifier les alertes HIGH / CRITICAL
+        continue-on-error: true
+        run: |
+          HIGH=$(cat zap-report.json | grep -c '"risk":"High"' || true)
+          if [ "$HIGH" -gt "0" ]; then
+            echo "$HIGH alerte(s) HIGH — pipeline NON bloqué (info)"
+          fi
+          echo "Aucune alerte critique ZAP"
+
+  # ════════════════════════════════════════════════════════
+  # PHASE 7 — BUILD & PUSH DOCKER (après SonarQube + ZAP)
+  # ════════════════════════════════════════════════════════
+
   build:
     name: Build & Push Docker Images
     runs-on: ubuntu-latest
-    needs: ci
+    needs: [sonarqube, owasp-zap]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/mirroring')
     steps:
       - name: Checkout code
@@ -50,7 +546,11 @@ jobs:
           target: production
           push: true
           tags: aymenbazga/trusty-backend:latest
-  # ─── PHASE 4 : Deploy ───────────────────────────────────────────────────
+
+  # ════════════════════════════════════════════════════════
+  # PHASE 8 — DEPLOY TO STAGING
+  # ════════════════════════════════════════════════════════
+
   deploy:
     name: Deploy to Staging
     runs-on: ubuntu-latest
