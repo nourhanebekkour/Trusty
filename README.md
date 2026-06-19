@@ -12,7 +12,7 @@
 
 ## 📖 Description
 
-**Trusty** est une **plateforme de portfolio étudiant certifié** destinée aux étudiants en formation informatique. Elle permet aux étudiants de construire, publier et certifier un portfolio professionnel complet, validé par leurs professeurs et professionnels du secteur.
+**Trusty** est une **plateforme de portfolio étudiant certifié** destinée aux étudiants en formation. Elle permet aux étudiants de construire, publier et certifier un portfolio professionnel complet, validé par leurs professeurs et professionnels du secteur.
 
 La plateforme repose sur un **système de validation à plusieurs niveaux** garantissant l'authenticité et la fiabilité des informations présentées par chaque étudiant. Chaque projet, stage, compétence ou activité est soumis à un flux de validation avant d'être certifié.
 
