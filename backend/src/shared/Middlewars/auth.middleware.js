@@ -15,7 +15,7 @@ const authMiddleware = async (req, res, next) => {
     }
 
     // 2. Vérifier la signature du token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key_123');
 
     // 3. Vérifier que l'utilisateur existe et est ACTIF
     const user = await prisma.utilisateur.findUnique({
@@ -65,7 +65,7 @@ export const optionalAuth = (req, res, next) => {
     return next()
   }
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret_key_123')
     req.user = { id: decoded.userId, role: decoded.role }
   } catch (e) {
     req.user = null
