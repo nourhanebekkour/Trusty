@@ -6,9 +6,9 @@ permissions:
 on:
   workflow_call: {}   
   push:
-    branches: [main, dev, mirroring]
+    branches: [main, dev, mirroring, devloppement]
   pull_request:
-    branches: [main, dev, mirroring]
+    branches: [main, dev, mirroring, devloppement]
 
 
 jobs:
