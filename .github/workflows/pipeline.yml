@@ -25,14 +25,14 @@ jobs:
       run:
         working-directory: ./backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
+      - uses: actions/setup-node@v4.4.0
         with:
           node-version: '20.x'
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
-      - run: npx eslint src/ --max-warnings=50 || true
+      - run: npx eslint src/ --max-warnings=50 --format compact || true
 
   frontend-lint:
     name: Frontend — Lint
@@ -42,14 +42,14 @@ jobs:
       run:
         working-directory: ./frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
+      - uses: actions/setup-node@v4.4.0
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
-      - run: npx eslint src/ --max-warnings=50 || true
+      - run: npx eslint src/ --max-warnings=50 --format compact || true
 
   # ════════════════════════════════════════════════════════
   # PHASE 2 — TESTS
@@ -92,8 +92,8 @@ jobs:
       MINIO_PUBLIC_BUCKET: "test-public"
       MINIO_PRIVATE_BUCKET: "test-private"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
+      - uses: actions/setup-node@v4.4.0
         with:
           node-version: '20.x'
           cache: 'npm'
@@ -128,8 +128,8 @@ jobs:
       run:
         working-directory: ./frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
+      - uses: actions/setup-node@v4.4.0
         with:
           node-version: '20.x'
           cache: 'npm'
@@ -151,7 +151,7 @@ jobs:
           JIRA_USER_EMAIL:  ${{ secrets.JIRA_USER_EMAIL }}
           JIRA_API_TOKEN:   ${{ secrets.JIRA_API_TOKEN }}
       - name: Archiver le rapport HTML
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: frontend-test-report
           path: frontend/test-report.html
@@ -169,8 +169,8 @@ jobs:
       run:
         working-directory: ./backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
+      - uses: actions/setup-node@v4.4.0
         with:
           node-version: '20'
           cache: npm
@@ -196,8 +196,8 @@ jobs:
       run:
         working-directory: ./frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
+      - uses: actions/setup-node@v4.4.0
         with:
           node-version: '20.x'
           cache: 'npm'
@@ -225,7 +225,7 @@ jobs:
       actions: read
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
       - name: Trivy — dépendances backend
         uses: aquasecurity/trivy-action@v0.36.0
         with:
@@ -340,8 +340,8 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
+      - uses: actions/setup-node@v4.4.0
         with:
           node-version: '20.x'
           cache: 'npm'
@@ -404,14 +404,14 @@ jobs:
         working-directory: ./frontend
         continue-on-error: true
       - name: Upload Cypress screenshots
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         if: always()
         with:
           name: cypress-screenshots
           path: frontend/cypress/screenshots
           if-no-files-found: ignore
       - name: Upload Cypress videos
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         if: always()
         with:
           name: cypress-videos
@@ -431,8 +431,8 @@ jobs:
       run:
         working-directory: ./frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
+      - uses: actions/setup-node@v4.4.0
         with:
           node-version: '20.x'
           cache: 'npm'
@@ -451,7 +451,7 @@ jobs:
     needs: frontend-build
     steps:
       - name: Checkout du code
-        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
         with:
           fetch-depth: 0
 
@@ -477,7 +477,7 @@ jobs:
     needs: frontend-build
     steps:
       - name: Checkout du code
-        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
 
       - name: ZAP scan ou skip
         run: |
@@ -505,7 +505,7 @@ jobs:
           echo "Alertes HIGH : $HIGH"
 
       - name: Sauvegarder le rapport ZAP
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         if: always()
         with:
           name: zap-report-${{ github.sha }}
@@ -523,14 +523,14 @@ jobs:
     if: github.event_name == 'push' && (github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/mirroring')
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v3.4.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push Frontend
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./frontend
           target: production
@@ -539,7 +539,7 @@ jobs:
           build-args: |
             VITE_API_URL=http://63.183.184.130
       - name: Build and push Backend
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./backend
           target: production
