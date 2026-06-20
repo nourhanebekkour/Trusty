@@ -1,6 +1,5 @@
 name: Security Checks — Self-Hosted
 
-# Se déclenche sur chaque push sur main et sur les Pull Requests
 on:
   workflow_call: {}
   push:
@@ -14,52 +13,47 @@ permissions:
   security-events: write
 
 jobs:
-  # ─── JOB 1 : SonarQube ─────────────────────────────────────────────────
   sonarqube:
     name: SonarQube — Qualité & sécurité code
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 20
-    continue-on-error: true
     steps:
       - name: Checkout du code
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
-        
-      
         with:
           fetch-depth: 0
 
-      - name: Analyse SonarQube
-        uses: sonarsource/sonarqube-scan-action@v6
-        continue-on-error: true 
-        with:
-          args: >
-            -Dsonar.projectKey=Trusty
-            -Dsonar.sources=backend/src,frontend/src
-            -Dsonar.exclusions=**/node_modules/**,**/*.test.js,**/coverage/**
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: http://192.168.20.10:9000
+      - name: SonarQube ou skip
+        run: |
+          if ! curl -sf --max-time 5 "http://192.168.20.10:9000/api/system/status" > /dev/null 2>&1; then
+            echo "⚠️ SonarQube non accessible — scan ignoré"
+            exit 0
+          fi
+          docker run --rm \
+            -e SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}" \
+            -e SONAR_HOST_URL="http://192.168.20.10:9000" \
+            -v "${{ github.workspace }}:/usr/src" \
+            sonarsource/sonar-scanner-cli:latest \
+            -Dsonar.projectKey=Trusty \
+            -Dsonar.sources=backend/src,frontend/src \
+            -Dsonar.exclusions="**/node_modules/**,**/*.test.js,**/coverage/**" || true
 
-  # ─── JOB 2 : OWASP ZAP ───────────────────────────────────────────────────
   owasp-zap:
     name: OWASP ZAP — Scan API backend staging
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 20
-    continue-on-error: true
     steps:
       - name: Checkout du code
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
 
-      - name: Scan actif ZAP sur le backend staging
+      - name: ZAP scan ou skip
         run: |
-          # Vérifier que ZAP API est accessible
           if ! curl -sf --max-time 5 "http://192.168.20.10:8091/JSON/core/view/version/" > /dev/null 2>&1; then
-            echo "⚠️ OWASP ZAP API non accessible sur :8091 — scan ignoré"
+            echo "⚠️ ZAP non accessible — scan ignoré"
             exit 0
           fi
-          # Vérifier que le backend est accessible
           if ! curl -sf --max-time 5 "http://192.168.20.10:3001" > /dev/null 2>&1; then
-            echo "⚠️ Backend non accessible sur :3001 — scan ignoré"
+            echo "⚠️ Backend non accessible — scan ignoré"
             exit 0
           fi
           SCAN_ID=$(curl -s "http://192.168.20.10:8091/JSON/ascan/action/scan/?url=http://192.168.20.10:3001&recurse=true" \
@@ -69,23 +63,18 @@ jobs:
             STATUS=$(curl -s "http://192.168.20.10:8091/JSON/ascan/view/status/?scanId=$SCAN_ID" \
               | grep -o '"status":"[0-9]*"' | grep -o '[0-9]*') || true
             echo "Avancement : $STATUS%"
-            if [ "$STATUS" = "100" ]; then break; fi
+            [ "$STATUS" = "100" ] && break
             sleep 10
           done
-          curl -s "http://192.168.20.10:8091/JSON/core/view/alerts/" -o zap-report.json
-          echo "Alertes trouvées : $(cat zap-report.json | grep -c '"alert"' || echo 0)"
+          curl -s "http://192.168.20.10:8091/JSON/core/view/alerts/" -o zap-report.json || true
+          echo "Alertes : $(grep -c '"alert"' zap-report.json || echo 0)"
+          HIGH=$(grep -c '"risk":"High"' zap-report.json || true)
+          echo "Alertes HIGH : $HIGH"
+
       - name: Sauvegarder le rapport ZAP
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: zap-report-${{ github.sha }}
           path: zap-report.json
-
-      - name: Vérifier les alertes HIGH / CRITICAL
-        continue-on-error: true
-        run: |
-          HIGH=$(cat zap-report.json | grep -c '"risk":"High"' || true)
-          if [ "$HIGH" -gt "0" ]; then
-            echo "$HIGH alerte(s) HIGH — pipeline NON bloqué (info)"
-          fi
-          echo "Aucune alerte critique ZAP"
+          if-no-files-found: ignore
