@@ -11,15 +11,15 @@ import api from '@/services/api'
 import { fetchStats, fetchProjects, fetchRecos } from '@/services/dashboardservices'
 
 // ── données mock attendues (valeurs de retour en cas d'erreur API) ───────────
-const EXPECTED_MOCK_STATS = {
+const FALLBACK_MOCK_STATS = {
   projetsCertifies: 0,
   credibilite:      0,
   vuesProfil:       0,
   recommandations:  0,
 }
 
-const EXPECTED_MOCK_PROJECTS_LENGTH = 0
-const EXPECTED_MOCK_RECOS_LENGTH    = 0
+const FALLBACK_MOCK_PROJECTS_LENGTH = 0
+const FALLBACK_MOCK_RECOS_LENGTH    = 0
 
 // ═════════════════════════════════════════════════════════════════════════════
 // TESTS UNITAIRES — dashboardservices
@@ -39,10 +39,13 @@ describe('dashboardservices.js — Tests Unitaires', () => {
   describe('fetchStats()', () => {
     it('retourne les stats depuis l\'API', async () => {
       api.get
-        .mockResolvedValueOnce({ data: { score_credibilite: 78, _count: { participations_projets: 4, recommandations: 6 } } })
+        .mockResolvedValueOnce({ data: { score_credibilite: 78, _count: { recommendation: 6 } } })
         .mockResolvedValueOnce({ data: [{ nombre_vues: 123 }] })
+        .mockResolvedValueOnce({ data: [] })
       const result = await fetchStats('student-1')
-      expect(result).toMatchObject(EXPECTED_MOCK_STATS)
+      expect(result.credibilite).toBe(78)
+      expect(result.vuesProfil).toBe(123)
+      expect(result.recommandations).toBe(6)
     })
 
     it('retourne un objet avec les 4 clés attendues', async () => {
@@ -66,7 +69,7 @@ describe('dashboardservices.js — Tests Unitaires', () => {
     it('retourne des zéros en cas d\'erreur API', async () => {
       api.get.mockRejectedValueOnce(new Error('Network Error'))
       const result = await fetchStats('student-1')
-      expect(result).toMatchObject({ projetsCertifies: 0, credibilite: 0, vuesProfil: 0, recommandations: 0 })
+      expect(result).toMatchObject(FALLBACK_MOCK_STATS)
     })
   })
 
@@ -80,7 +83,7 @@ describe('dashboardservices.js — Tests Unitaires', () => {
       api.get.mockResolvedValueOnce({ data: mockRaw })
       const result = await fetchProjects('student-1')
       expect(Array.isArray(result)).toBe(true)
-      expect(result).toHaveLength(EXPECTED_MOCK_PROJECTS_LENGTH)
+      expect(result).toHaveLength(2)
     })
 
     it('chaque projet a les propriétés requises', async () => {
@@ -135,7 +138,7 @@ describe('dashboardservices.js — Tests Unitaires', () => {
       api.get.mockResolvedValueOnce({ data: mockRaw })
       const result = await fetchRecos('student-1')
       expect(Array.isArray(result)).toBe(true)
-      expect(result).toHaveLength(EXPECTED_MOCK_RECOS_LENGTH)
+      expect(result).toHaveLength(2)
     })
 
     it('chaque recommandation a un id et un message', async () => {

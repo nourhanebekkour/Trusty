@@ -61,8 +61,8 @@
 <script setup>
 import { ref } from 'vue'
 
-const props = defineProps({ user: Object })
-const emit  = defineEmits(['add', 'remove'])
+defineProps({ user: Object })
+defineEmits(['add', 'remove'])
 
 const pendingDelete = ref(null)
 

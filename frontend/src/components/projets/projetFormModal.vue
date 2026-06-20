@@ -652,7 +652,7 @@ export default {
       showProfDropdown: false,
       selectedValidateur: null,
       validateurPosting: false,
-      _lastEcoleProfesseurs: '',
+      lastEcoleProfesseurs: '',
 
       // ── Étudiants ─────────────────────────────────────────
       etudiants: [],
@@ -666,7 +666,7 @@ export default {
       pendingRole: '',
       pendingEstCreateur: false,
       pendingEstVisiblePortfolio: true,
-      _lastEcoleEtudiants: '',
+      lastEcoleEtudiants: '',
 
       // ── Technologies ──────────────────────────────────────
       technologies: [],
@@ -930,11 +930,11 @@ export default {
       if (!this.selectedEcole) return
       this.loadingProfesseurs = true
       this.professeurs = []
-      if (this._lastEcoleProfesseurs !== this.selectedEcole) {
+      if (this.lastEcoleProfesseurs !== this.selectedEcole) {
         this.selectedValidateur = null
         this.localForm.id_validateur = null
       }
-      this._lastEcoleProfesseurs = this.selectedEcole
+      this.lastEcoleProfesseurs = this.selectedEcole
       try {
         const { data } = await api.get(`/professeurs/ecole/${encodeURIComponent(this.selectedEcole)}`)
         this.professeurs = Array.isArray(data.data) ? data.data : []
@@ -958,10 +958,10 @@ export default {
       if (!this.selectedEcoleEtudiants) return
       this.loadingEtudiants = true
       this.etudiantsEndpointUnavailable = false
-      if (this._lastEcoleEtudiants !== this.selectedEcoleEtudiants) {
+      if (this.lastEcoleEtudiants !== this.selectedEcoleEtudiants) {
         this.etudiants = []
       }
-      this._lastEcoleEtudiants = this.selectedEcoleEtudiants
+      this.lastEcoleEtudiants = this.selectedEcoleEtudiants
       try {
         const { data } = await api.get(`/etudiants/ecole/${encodeURIComponent(this.selectedEcoleEtudiants)}`)
         this.etudiants = Array.isArray(data.data) ? data.data : []

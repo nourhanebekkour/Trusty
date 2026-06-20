@@ -14,7 +14,6 @@ import Profile from '@/views/Etudiant/Profile.vue'
 import Suggestions from '@/views/Etudiant/Suggestions.vue'
 import activites from '@/views/Etudiant/activites.vue'
 import Portfolio from '@/views/portfolio/PortfolioManagement.vue'
-import ProfessionalView from '@/views/Professional/ProfessionalView.vue'
 import ProfessionalLayout from '@/components/Professional/ProfessionalLayout.vue'
 import ProfessorView from '@/views/professor/ProfessorView.vue'
 import { useAuthStore } from '@/stores/authstore'
@@ -321,7 +320,6 @@ router.beforeEach(async (to) => {
     }
   }
 
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const allowedRoles = to.matched.flatMap(record => record.meta.roles ?? [])
   const isPublicPortfolio = to.name === 'portfolio-template1'
 

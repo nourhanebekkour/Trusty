@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import SideBar from '@/components/laayout/SideBar.vue'
+import { useSidebar } from '@/composables/useSidebar'
 
 vi.mock('@/assets/icons/dashboard.svg',        { default: 'dashboard.svg' })
 vi.mock('@/assets/icons/profile.svg',          { default: 'profile.svg' })
@@ -40,6 +41,9 @@ describe('SideBar.vue', () => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
     mockLogout.mockResolvedValue(undefined)
+    const sb = useSidebar()
+    sb.isCollapsed.value = false
+    sb.isMobileOpen.value = false
   })
 
   // ── Rendu initial ─────────────────────────────────────────

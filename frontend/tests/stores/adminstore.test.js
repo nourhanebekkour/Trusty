@@ -307,7 +307,7 @@ describe('adminStore — Tests Unitaires', () => {
     it('reste vide et stocke l\'erreur si l\'API échoue', async () => {
       api.get.mockRejectedValueOnce(new Error('Network'))
 
-      api.get.mockResolvedValueOnce({ data: [] })
+      const store = setupAdmin()
       await store.fetchVerificationQueue()
 
       expect(store.verificationQueue).toHaveLength(0)

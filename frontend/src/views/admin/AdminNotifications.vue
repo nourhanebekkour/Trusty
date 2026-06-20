@@ -129,7 +129,7 @@
 
         <!-- Icon -->
         <div class="notif-icon" :class="iconClass(notif.type_notification)">
-          <component :is="'svg'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" v-html="iconPath(notif.type_notification)"></component>
+          <span v-html="fullSvgIcon(notif.type_notification)"></span>
         </div>
 
         <!-- Content -->
@@ -444,6 +444,10 @@ function iconPath(type) {
     STAGE:          '<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>',
   }
   return paths[type] || '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>'
+}
+
+function fullSvgIcon(type) {
+  return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">' + iconPath(type) + '</svg>'
 }
 
 function tabCount(key) {

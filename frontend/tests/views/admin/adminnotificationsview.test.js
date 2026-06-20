@@ -11,11 +11,11 @@ vi.mock('@/services/adminNotificationService', () => ({
 }))
 
 // Mock authStore to simulate authenticated admin
-// Note: source checks role === 'ADMIN' (not 'ADMINISTRATEUR')
 vi.mock('@/stores/authstore', () => ({
   useAuthStore: vi.fn(() => ({
-    user: { id_utilisateur: 'admin1', role: 'ADMIN' },
+    user: { id_utilisateur: 'admin1', role: 'ADMINISTRATEUR' },
     isAuthenticated: true,
+    get isAdmin() { return true },
   })),
 }))
 

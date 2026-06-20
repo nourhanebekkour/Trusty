@@ -97,7 +97,6 @@ import { useActivitesStore } from '../../stores/activitesStore.js';
 import { getUploadErrorMessage, validateUploadFile } from '@/utils/fileUpload';
 
 const props = defineProps({ activite: { type: Object, required: true } });
-const emit = defineEmits(['edit', 'delete-attestation']);
 const store = useActivitesStore();
 const uploading = ref(false);
 const uploadError = ref(null);

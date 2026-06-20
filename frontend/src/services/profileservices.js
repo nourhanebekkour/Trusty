@@ -62,15 +62,7 @@ export async function fetchGithubRepos(username) {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const MOCK_DEPOTS = [
-  {
-    id_depot: 'depot1',
-    nom_depot: 'my-portfolio',
-    url_github: 'https://github.com/ahmed/my-portfolio',
-    description_github: 'Portfolio personnel en Vue.js',
-    langage_principal: 'JavaScript',
-  },
-]
+
 
 function extractData(res) {
   const body = res?.data ?? res
@@ -144,7 +136,7 @@ export async function getProfile() {
 export async function saveProfile(id, formData) {
   // Séparer les champs utilisateur des champs étudiant
   const {
-    prenom, nom, telephone,
+    nom, telephone,
     // champs système à exclure
     score_credibilite, niveau_credibilite, id_validateur,
     id_etudiant, id_utilisateur, role, date_creation,

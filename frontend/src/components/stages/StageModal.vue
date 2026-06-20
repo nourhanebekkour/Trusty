@@ -33,7 +33,7 @@
         </div>
 
         <div class="modal-body">
-          <div v-if="modalError" class="modal-error">{{ modalError }}</div>
+          <div v-if="createError" class="modal-error">{{ createError }}</div>
 
           <div :key="'step-' + currentStep" class="step-content">
 
@@ -435,7 +435,7 @@ export default {
       profSearch: '',
       showProfDropdown: false,
       selectedValidateur: null,
-      _lastEcoleProfesseurs: '',
+      lastEcoleProfesseurs: '',
 
       // Technologies
       technologies: [],
@@ -621,7 +621,7 @@ export default {
       } catch (e) {
         console.error('Erreur création stage', e)
         this.createError = e?.response?.data?.message || 'Impossible de créer le stage.'
-        this.modalError = this.createError
+        this.createError = this.createError
       } finally {
         this.stageCreating = false
       }
@@ -697,11 +697,11 @@ export default {
       if (!this.selectedEcole) return
       this.loadingProfesseurs = true
       this.professeurs = []
-      if (this._lastEcoleProfesseurs !== this.selectedEcole) {
+      if (this.lastEcoleProfesseurs !== this.selectedEcole) {
         this.selectedValidateur = null
         this.localForm.id_validateur = null
       }
-      this._lastEcoleProfesseurs = this.selectedEcole
+      this.lastEcoleProfesseurs = this.selectedEcole
       try {
         const { data } = await api.get(`/professeurs/ecole/${encodeURIComponent(this.selectedEcole)}`)
         this.professeurs = Array.isArray(data.data) ? data.data : []
@@ -899,7 +899,7 @@ export default {
           this.$emit('updated', this.activeStageId)
         } catch (e) {
           console.error('Erreur mise à jour stage', e)
-          this.modalError = e?.response?.data?.message || 'Erreur lors de la modification.'
+          this.createError = e?.response?.data?.message || 'Erreur lors de la modification.'
           return
         }
       }

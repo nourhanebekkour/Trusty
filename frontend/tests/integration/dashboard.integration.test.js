@@ -22,12 +22,12 @@ beforeEach(() => vi.clearAllMocks())
 describe('dashboardServices — fetchStats', () => {
 
   it('1 — retourne les stats depuis l\'API si la réponse n\'est pas vide', async () => {
-    api.get
-      .mockResolvedValueOnce({ data: { data: {
-        score_credibilite: 88,
-        _count: { participations_projets: 5, recommandations: 3 },
-      }}})
-      .mockResolvedValueOnce({ data: { data: [{ nombre_vues: 120 }] } })
+      api.get
+        .mockResolvedValueOnce({ data: { data: {
+          score_credibilite: 88,
+          _count: { recommendation: 3 },
+        }}})
+        .mockResolvedValueOnce({ data: { data: [{ nombre_vues: 120 }] } })
 
     const result = await fetchStats('u1')
 

@@ -12,7 +12,7 @@
 </template>
 
 <script setup>
-const props = defineProps({
+defineProps({
   label:     { type: String, required: true },
   value:     { type: [String, Number], required: true },
   sub:       { type: String, default: null },

@@ -4,7 +4,6 @@ import { RouterView, useRoute, useRouter } from 'vue-router'
 import SideBar from './components/laayout/SideBar.vue'
 import NavBar from './components/laayout/NavBar.vue'
 import Footer from './components/laayout/Footer.vue'
-import ProfessionalSideBar from './components/Professional/ProfessionalSidebar.vue'
 
 import { useAuthStore } from './stores/authstore'
 import { useThemeStore } from './stores/themeStore'
@@ -23,33 +22,6 @@ const ROLE_ALLOWED_PREFIXES = {
   PROFESSIONNEL:  ['/professional'],
   PROFESSEUR:     ['/professor'],
   ADMINISTRATEUR: ['/admin'],
-}
-
-// ── Garde de sécurité : vérifie rôle vs route courante ───
-function enforceRoleGuard() {
-  // Pages publiques : toujours autorisées
-  if (!route.name || PUBLIC_ROUTES.includes(route.name)) return
-
-  const user = authStore.user
-  // Pas connecté → login
-  if (!user) {
-    router.replace({ name: 'login' })
-    return
-  }
-
-  const allowed = ROLE_ALLOWED_PREFIXES[user.role] ?? []
-  const isAllowed = allowed.some(prefix => route.path.startsWith(prefix))
-
-  if (!isAllowed) {
-    // Redirige vers la page d'accueil du rôle
-    const homeByRole = {
-      ETUDIANT:       '/dashboard',
-      PROFESSIONNEL:  '/professional',
-      PROFESSEUR:     '/professor',
-      ADMINISTRATEUR: '/admin/dashboard',
-    }
-    router.replace(homeByRole[user.role] ?? '/login')
-  }
 }
 
 onMounted(async () => {

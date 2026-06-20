@@ -28,6 +28,7 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: 'jsdom'
+    environment: 'jsdom',
+    setupFiles: ['./tests/setup/localstorage.js']
   },
 })
