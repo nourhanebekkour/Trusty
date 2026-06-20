@@ -25,8 +25,8 @@ jobs:
       run:
         working-directory: ./backend
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
-      - uses: actions/setup-node@v4.4.0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           cache: 'npm'
@@ -42,8 +42,8 @@ jobs:
       run:
         working-directory: ./frontend
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
-      - uses: actions/setup-node@v4.4.0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
@@ -92,8 +92,8 @@ jobs:
       MINIO_PUBLIC_BUCKET: "test-public"
       MINIO_PRIVATE_BUCKET: "test-private"
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
-      - uses: actions/setup-node@v4.4.0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           cache: 'npm'
@@ -128,8 +128,8 @@ jobs:
       run:
         working-directory: ./frontend
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
-      - uses: actions/setup-node@v4.4.0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           cache: 'npm'
@@ -169,8 +169,8 @@ jobs:
       run:
         working-directory: ./backend
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
-      - uses: actions/setup-node@v4.4.0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: npm
@@ -196,8 +196,8 @@ jobs:
       run:
         working-directory: ./frontend
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
-      - uses: actions/setup-node@v4.4.0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           cache: 'npm'
@@ -225,7 +225,7 @@ jobs:
       actions: read
       contents: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
+      - uses: actions/checkout@v4
       - name: Trivy — dépendances backend
         uses: aquasecurity/trivy-action@v0.36.0
         with:
@@ -340,8 +340,8 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
-      - uses: actions/setup-node@v4.4.0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           cache: 'npm'
@@ -431,8 +431,8 @@ jobs:
       run:
         working-directory: ./frontend
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
-      - uses: actions/setup-node@v4.4.0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           cache: 'npm'
@@ -451,7 +451,7 @@ jobs:
     needs: frontend-build
     steps:
       - name: Checkout du code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -477,7 +477,7 @@ jobs:
     needs: frontend-build
     steps:
       - name: Checkout du code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
+        uses: actions/checkout@v4
 
       - name: ZAP scan ou skip
         run: |
@@ -523,7 +523,7 @@ jobs:
     if: github.event_name == 'push' && (github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/mirroring')
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af68
+        uses: actions/checkout@v4
       - name: Login to Docker Hub
         uses: docker/login-action@v3.4.0
         with:
