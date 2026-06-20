@@ -222,10 +222,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '@/api'
-import { useAuthStore } from '@/stores/authstore' 
-
-const router = useRouter()
-const authStore = useAuthStore() 
+const router = useRouter() 
 
 // ── Static display data (ne vient pas de l'API) ──────────────────────
 const TEMPLATE_COLORS = {

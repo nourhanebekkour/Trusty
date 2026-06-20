@@ -68,11 +68,6 @@ function formatRole(role) {
   return roles[role] || role || '—'
 }
 
-function formatDate(d) {
-  if (!d) return '—'
-  return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
-}
-
 async function save() {
   saving.value = true
   message.value = ''

@@ -98,11 +98,6 @@ function formatDate(d) {
   if (days < 7) return `Il y a ${days}j`
   return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 }
-function showToast(m) {
-  toast.value = { show: true, message: m }
-  setTimeout(() => { toast.value.show = false }, 3000)
-}
-
 async function loadHistory() {
   loading.value = true
   error.value = null

@@ -190,12 +190,12 @@ function openEditModal(stage) {
   showModal.value   = true
 }
 
-function handleCreated(stageId) {
+function handleCreated(_stageId) {
   store.showToast('Stage créé avec succès !')
   store.chargerStages()
 }
 
-function handleUpdated(stageId) {
+function handleUpdated(_stageId) {
   store.showToast('Stage modifié avec succès !')
   store.chargerStages()
 }

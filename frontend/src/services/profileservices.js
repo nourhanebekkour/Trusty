@@ -134,19 +134,9 @@ export async function getProfile() {
 // ─── Sauvegarde profil ───────────────────────────────────────────────────────
 
 export async function saveProfile(id, formData) {
-  // Séparer les champs utilisateur des champs étudiant
-  const {
-    nom, telephone,
-    // champs système à exclure
-    score_credibilite, niveau_credibilite, id_validateur,
-    id_etudiant, id_utilisateur, role, date_creation,
-    date_modification, email_verifie, status_compte,
-    ...etudiantFields
-  } = formData
-
-  // Nettoyage : supprimer les champs vides optionnels
+  const STUDENT_FIELDS = ['filiere', 'annee', 'nom_entreprise', 'poste', 'description', 'compétences', 'url_github', 'bio', 'titre', 'specialite', 'departement', 'siret', 'nom_entreprise']
   const cleanEtudiantFields = Object.fromEntries(
-    Object.entries(etudiantFields).filter(([, v]) => v !== '' && v !== null && v !== undefined)
+    Object.entries(formData).filter(([k, v]) => STUDENT_FIELDS.includes(k) && v !== '' && v !== null && v !== undefined)
   )
 
   if (!cleanEtudiantFields.filiere) cleanEtudiantFields.filiere = 'GINF'

@@ -158,7 +158,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authstore'
 import { useProjetStore } from '@/stores/projetStore'
 import {
-  nomComplet, formatType, formatStatut, formatDate, emptyForm,
+  nomComplet, emptyForm,
 } from '@/components/projets/projetHelpers'
 
 import ProjetStatsCards   from '@/components/projets/projetStatsCards.vue'

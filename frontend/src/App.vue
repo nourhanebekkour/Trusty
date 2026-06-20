@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted } from 'vue'
-import { RouterView, useRoute, useRouter } from 'vue-router'
+import { RouterView, useRoute } from 'vue-router'
 import SideBar from './components/laayout/SideBar.vue'
 import NavBar from './components/laayout/NavBar.vue'
 import Footer from './components/laayout/Footer.vue'
@@ -11,18 +11,9 @@ import { useThemeStore } from './stores/themeStore'
 const authStore = useAuthStore()
 const theme = useThemeStore()
 const route = useRoute()
-const router = useRouter()
 
 // ── Routes publiques (aucune auth requise) ────
 const PUBLIC_ROUTES = ['login', 'home', 'about', 'portfolio-template1']
-
-// ── Mapping rôle → préfixe de route autorisé ──────
-const ROLE_ALLOWED_PREFIXES = {
-  ETUDIANT:       ['/dashboard', '/notifications', '/profile', '/projets', '/settings', '/recommendations', '/suggestions', '/stage', '/modele', '/portfolio','/lettres'],
-  PROFESSIONNEL:  ['/professional'],
-  PROFESSEUR:     ['/professor'],
-  ADMINISTRATEUR: ['/admin'],
-}
 
 onMounted(async () => {
   theme.init()

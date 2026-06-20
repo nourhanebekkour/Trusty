@@ -95,8 +95,6 @@ const sanitizeText = (value) => {
 
 // Validation des inputs (prompt utilisateur) ────────
 const MAX_MESSAGE_LENGTH = 1000
-const MAX_STUDENT_NAME_LENGTH = 100
-
 const validateMessage = (message) => {
   if (!message || typeof message !== 'string') return false
   const trimmed = message.trim()

@@ -106,7 +106,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { getProfessionalComments, createProfessionalComment, deleteProfessionalComment } from '@/services/professionalApi'
 
 const loading = ref(true)

@@ -104,10 +104,6 @@ const admin = useAdminStore()
 const authStore = useAuthStore()
 const router = useRouter()
 
-const scope = computed(() =>
-  authStore.isSuperAdmin ? 'global' : (authStore.user?.ecole || '')
-)
-
 const activeCount = computed(() =>
   (admin.students || []).filter(s =>
     (s.status_compte || s.utilisateur?.status_compte) === 'ACTIF'
