@@ -554,10 +554,13 @@ jobs:
     name: Deploy to Staging
     runs-on: ubuntu-latest
     needs: build
-    continue-on-error: true
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/mirroring' || github.ref == 'refs/heads/devloppement')
+    if: always()
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Deploy to staging via SSH
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/mirroring' || github.ref == 'refs/heads/devloppement')
+        continue-on-error: true
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.STAGING_HOST }}
