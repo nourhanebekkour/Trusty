@@ -1,4 +1,4 @@
-# 🎓 Trusty—Plateforme de Portfolio Étudiant Certifié
+# 🎓 Trusty — Plateforme de Portfolio Étudiant Certifié
 
 ![Node.js](https://img.shields.io/badge/Node.js-20+-339933?logo=node.js)
 ![Express](https://img.shields.io/badge/Express-5-000?logo=express)
